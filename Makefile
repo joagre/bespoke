@@ -20,6 +20,4 @@ runtest:
 mrproper: clean cleanfluff
 
 cleanfluff:
-	@for lib in $(ALL_LIST) ; do \
-		find $(LPATH)/$$lib \( -name erl_crash.dump -or -name '*.beam' -or -name "*~" -or -name '#*' -or -name '.#*' \) -exec rm {} \;; \
-	done
+	find . \( -name erl_crash.dump -or -name '*.beam' -or -name "*~" -or -name '#*' -or -name '.#*' \) -exec rm {} \;

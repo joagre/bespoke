@@ -1,0 +1,8 @@
+%% -*- erlang -*-
+{application, db,
+ [{description,"Bespoke database"},
+  {vsn, git},
+  {modules, ["@@MODULES@@"]},
+  {registered, [db_serv]},
+  {mod, {db_app, []}},
+  {applications, [kernel, stdlib, apptools, rester]}]}.

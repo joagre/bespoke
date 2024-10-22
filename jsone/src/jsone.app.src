@@ -1,0 +1,6 @@
+%% -*- erlang -*-
+{application, jsone,
+ [{description,"Encoding/decoding of JSON"},
+  {vsn, git},
+  {modules, ["@@MODULES@@"]},
+  {applications, [kernel, stdlib]}]}.

@@ -1,0 +1,72 @@
+#!/bin/sh
+
+usage () {
+    >&2 echo "bespoke --help | -h"
+    >&2 echo "    Display available options"
+    >&2 echo "bespoke [--sname <NODE-NAME>] [--]"
+    >&2 echo "    Start Bespoke (put erl options after --)"
+    >&2 echo "bespoke --stop"
+    >&2 echo "    Stop Bespoke"
+    exit 100
+}
+
+isparam () {
+    case $1 in
+        --*)
+            usage;
+            ;;
+        *)
+            ;;
+    esac
+}
+
+erl=`which erl`
+erl_call=`which erl_call`
+if [ -z "${erl}" ]; then
+    >&2 echo "Could not find erl in path!"
+    exit 1
+fi
+
+bin_dir=${0%/*}
+erl_libs=${bin_dir}/../..
+pa="-pa ${erl_libs}/*/test"
+perform="-eval main:start()"
+sname="-sname bespoke@localhost"
+
+while :; do
+    case $1 in
+        --help | -h)
+            usage
+            ;;
+        --stop)
+            ${erl_call} ${sname} -a 'main stop'
+            exit 0
+            ;;
+	--sname)
+            if [ $# -lt 2 ]; then
+                usage
+            fi
+            isparam $2
+	    sname="-sname $2"
+            shift
+            ;;
+        --)
+            shift
+            erl_options=$@
+            break
+            ;;
+        "")
+            break
+            ;;
+        *)
+            usage
+    esac
+    command shift
+done
+
+erl_config="-config ${bin_dir}/bespoke.config"
+
+# Needed for servator
+export ERL_LIBS=${erl_libs}:$ERL_LIBS
+
+${erl} ${sname} ${pa} ${erl_config} ${shell} ${perform} ${erl_options}

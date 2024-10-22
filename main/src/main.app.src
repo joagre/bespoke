@@ -1,0 +1,8 @@
+%% -*- erlang -*-
+{application, main,
+ [{description,"Main application"},
+  {vsn, git},
+  {modules, ["@@MODULES@@"]},
+  {registered, []},
+  {mod, {db_app, []}},
+  {applications, [kernel, stdlib, apptools, rester, db]}]}.
