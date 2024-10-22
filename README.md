@@ -13,11 +13,15 @@ $ make
 ## Testing
 
 ```
-$ make runtests
+$ make runtest
 ```
 
-## Starting
+## Start server
 
 ```
 $ bin/bespoke
 ```
+
+## Start browser
+
+Go to http://localhost:8080/

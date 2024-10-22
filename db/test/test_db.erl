@@ -20,7 +20,7 @@ start() ->
             created = Created,
             replies = []}] =
         db_serv:lookup_topic(InsertedTopic1#topic.id),
-    is_integer(Created) == true,
+    true = is_integer(Created),
     %% Add reply to topic
     Reply1 = #reply{
                 topic_id = InsertedTopic1#topic.id,

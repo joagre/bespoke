@@ -13,7 +13,7 @@ clean:
 
 runtest:
 	for lib in $(TESTS) ; do \
-		(cd $$lib/test && env $(MAKE)) || exit 1; \
+		(cd $$lib/test && env ERL_LIBS=. $(MAKE) runtest) || exit 1; \
 	done
 
 
