@@ -161,6 +161,33 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                               Socket, Request, {error, bad_request})
                     end
             end;
+        ["insert_reply"] ->
+            case rest_util:parse_body(
+                   Request, Body,
+                   [{jsone_options, [{object_format, proplist}]}]) of
+                {error, _Reason} ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"});
+                RequestJsonTerm ->
+                    case json_term_to_reply(RequestJsonTerm) of
+                        {ok, Reply} ->
+                            case db_serv:insert_reply(Reply) of
+                                {ok, InsertedReply} ->
+                                    ResponseJsonTerm =
+                                        reply_to_json_term(InsertedReply),
+                                    rest_util:response(
+                                      Socket, Request,
+                                      {ok, {format, ResponseJsonTerm}});
+                                {error, no_such_topic} ->
+                                    rest_util:response(
+                                      Socket, Request, {error, not_found})
+                            end;
+                        invalid ->
+                            rest_util:response(
+                              Socket, Request, {error, bad_request})
+                    end
+            end;
 	_ ->
 	    ?log_error("~p not found", [Tokens]),
 	    rest_util:response(Socket, Request, {error, not_found})
@@ -215,4 +242,31 @@ json_term_to_topic(JsonTerm) when is_list(JsonTerm) ->
             invalid
     end;
 json_term_to_topic(_) ->
+    invalid.
+
+json_term_to_reply(JsonTerm) when is_list(JsonTerm) ->
+    case lists:keysort(1, JsonTerm) of
+        [{<<"topic-id">>, TopicId},
+         {<<"reply-id">>, ReplyId},
+         {<<"body">>, Body},
+         {<<"author">>, Author}] ->
+            case string:to_integer(ReplyId) of
+                {ReplyIdInteger, ""} ->
+                    {ok, #reply{topic_id = TopicId,
+                                reply_id = ReplyIdInteger,
+                                body = Body,
+                                author = Author}};
+                _ ->
+                    invalid
+            end;
+        [{<<"topic-id">>, TopicId},
+         {<<"body">>, Body},
+         {<<"author">>, Author}] ->
+            {ok, #reply{topic_id = TopicId,
+                        body = Body,
+                        author = Author}};
+        _ ->
+            invalid
+    end;
+json_term_to_reply(_) ->
     invalid.
