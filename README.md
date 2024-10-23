@@ -22,7 +22,7 @@ $ make runtest
 $ ./main/bin/bespoke
 ```
 
-## Testing in browser
+## Testing with web client
 
 ```
 $ curl http://localhost:8080/list_topics
