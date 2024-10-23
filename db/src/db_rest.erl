@@ -79,28 +79,34 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                 {IdInteger, ""} ->
                     case db_serv:lookup_topic(IdInteger) of
                         [] ->
-                            rest_util:response(Socket, Request, {error, not_found});
+                            rest_util:response(Socket, Request,
+                                               {error, not_found});
                         [Topic]->
                             JsonTerm = topic_to_json_term(Topic),
                             rest_util:response(Socket, Request,
                                                {ok, {format, JsonTerm}})
                     end;
                 _ ->
-                    rest_util:response(Socket, Request, {error, bad_request})
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "topic-id must be an integer"})
             end;
         ["lookup_reply", Id] ->
             case string:to_integer(Id) of
                 {IdInteger, ""} ->
                     case db_serv:lookup_reply(IdInteger) of
                         [] ->
-                            rest_util:response(Socket, Request, {error, not_found});
+                            rest_util:response(Socket, Request,
+                                               {error, not_found});
                         [Reply]->
                             JsonTerm = reply_to_json_term(Reply),
                             rest_util:response(Socket, Request,
                                                {ok, {format, JsonTerm}})
                     end;
                 _ ->
-                    rest_util:response(Socket, Request, {error, bad_request})
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "reply-id must be an integer"})
             end;
         %% Try to act as a static web server
 	Tokens ->
@@ -154,11 +160,13 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                             InsertedTopic = db_serv:insert_topic(Topic),
                             ResponseJsonTerm =
                                 topic_to_json_term(InsertedTopic),
-                            rest_util:response(Socket, Request,
-                                               {ok, {format, ResponseJsonTerm}});
+                            rest_util:response(
+                              Socket, Request,
+                              {ok, {format, ResponseJsonTerm}});
                         invalid ->
                             rest_util:response(
-                              Socket, Request, {error, bad_request})
+                              Socket, Request,
+                              {error, bad_request, "Invalid topic"})
                     end
             end;
         ["insert_reply"] ->
@@ -185,7 +193,8 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                             end;
                         invalid ->
                             rest_util:response(
-                              Socket, Request, {error, bad_request})
+                              Socket, Request,
+                              {error, bad_request, "Invalid reply"})
                     end
             end;
 	_ ->
@@ -204,7 +213,7 @@ topic_to_json_term(#topic{
                       author = Author,
                       created = Created,
                       replies = Replies}) ->
-    [{<<"id">>, ?l2b(Id)},
+    [{<<"id">>, Id},
      {<<"title">>, ?l2b(Title)},
      {<<"body">>, ?l2b(Body)},
      {<<"author">>, ?l2b(Author)},
@@ -232,9 +241,9 @@ format_reply_id(Id) ->
 
 json_term_to_topic(JsonTerm) when is_list(JsonTerm) ->
     case lists:keysort(1, JsonTerm) of
-        [{<<"title">>, Title},
+        [{<<"author">>, Author},
          {<<"body">>, Body},
-         {<<"author">>, Author}] ->
+         {<<"title">>, Title}] ->
             {ok, #topic{title = Title,
                         body = Body,
                         author = Author}};
@@ -246,10 +255,10 @@ json_term_to_topic(_) ->
 
 json_term_to_reply(JsonTerm) when is_list(JsonTerm) ->
     case lists:keysort(1, JsonTerm) of
-        [{<<"topic-id">>, TopicId},
-         {<<"reply-id">>, ReplyId},
+        [{<<"author">>, Author},
          {<<"body">>, Body},
-         {<<"author">>, Author}] ->
+         {<<"reply-id">>, ReplyId},
+         {<<"topic-id">>, TopicId}] ->
             case string:to_integer(ReplyId) of
                 {ReplyIdInteger, ""} ->
                     {ok, #reply{topic_id = TopicId,

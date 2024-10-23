@@ -19,7 +19,7 @@ $ make runtest
 ## Start server
 
 ```
-$ bin/bespoke
+$ ./main/bin/bespoke
 ```
 
 ## Start browser
