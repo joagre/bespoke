@@ -49,10 +49,6 @@ request_handler_(Socket, Request, Body, Options) ->
 	    rest_util:response(Socket, Request, {error, not_allowed})
     end.
 
-%% Handle GET request
-%% - [vi]/index.htm[l]
-%% - /versions                        return an json array of supported versions
-
 http_get(Socket, Request, Body, Options) ->
     Url = Request#http_request.uri,
     case string:tokens(Url#url.path, "/") of
@@ -132,9 +128,6 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             end
     end.
 
-%% General POST request uri:
-%% - [/vi]/item
-%%
 http_post(Socket, Request, Body, Options) ->
     Url = Request#http_request.uri,
     case string:tokens(Url#url.path, "/") of
