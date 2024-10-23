@@ -16,12 +16,14 @@ $ make
 $ make runtest
 ```
 
-## Start server
+## Starting server
 
 ```
 $ ./main/bin/bespoke
 ```
 
-## Start browser
+## Testing in browser
 
-Go to http://localhost:8080/
+```
+$ curl http://localhost:8080/list_topics
+```
