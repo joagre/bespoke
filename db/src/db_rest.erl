@@ -227,17 +227,17 @@ reply_to_json_term(#reply{
                       body = Body,
                       author = Author,
                       created = Created}) ->
-    [{<<"id">>, ?l2b(Id)},
-     {<<"topic-id">>, ?l2b(TopicId)},
+    [{<<"id">>, Id},
+     {<<"topic-id">>, TopicId},
      {<<"reply-id">>, format_reply_id(ReplyId)},
      {<<"body">>, ?l2b(Body)},
      {<<"author">>, ?l2b(Author)},
      {<<"created">>, Created}].
 
 format_reply_id(not_set) ->
-    <<"">>;
+    -1;
 format_reply_id(Id) ->
-    ?l2b(Id).
+    Id.
 
 json_term_to_topic(JsonTerm) when is_list(JsonTerm) ->
     case lists:keysort(1, JsonTerm) of
@@ -259,18 +259,13 @@ json_term_to_reply(JsonTerm) when is_list(JsonTerm) ->
          {<<"body">>, Body},
          {<<"reply-id">>, ReplyId},
          {<<"topic-id">>, TopicId}] ->
-            case string:to_integer(ReplyId) of
-                {ReplyIdInteger, ""} ->
-                    {ok, #reply{topic_id = TopicId,
-                                reply_id = ReplyIdInteger,
-                                body = ?b2l(Body),
-                                author = ?b2l(Author)}};
-                _ ->
-                    invalid
-            end;
-        [{<<"topic-id">>, TopicId},
+            {ok, #reply{topic_id = TopicId,
+                        reply_id = ReplyId,
+                        body = ?b2l(Body),
+                        author = ?b2l(Author)}};
+        [{<<"author">>, Author},
          {<<"body">>, Body},
-         {<<"author">>, Author}] ->
+         {<<"topic-id">>, TopicId}] ->
             {ok, #reply{topic_id = TopicId,
                         body = ?b2l(Body),
                         author = ?b2l(Author)}};

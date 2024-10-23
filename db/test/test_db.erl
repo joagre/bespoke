@@ -30,7 +30,7 @@ start() ->
     %% Add reply to reply
     Reply2 = #reply{
                 topic_id = InsertedTopic1#topic.id,
-                reply_id = Reply1#reply.topic_id,
+                reply_id = InsertedReply1#reply.id,
                 body = "reply2",
                 author = "author3"},
     {ok, InsertedReply2} = db_serv:insert_reply(Reply2),
