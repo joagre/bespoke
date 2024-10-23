@@ -244,9 +244,9 @@ json_term_to_topic(JsonTerm) when is_list(JsonTerm) ->
         [{<<"author">>, Author},
          {<<"body">>, Body},
          {<<"title">>, Title}] ->
-            {ok, #topic{title = Title,
-                        body = Body,
-                        author = Author}};
+            {ok, #topic{title = ?b2l(Title),
+                        body = ?b2l(Body),
+                        author = ?b2l(Author)}};
         _ ->
             invalid
     end;
@@ -263,8 +263,8 @@ json_term_to_reply(JsonTerm) when is_list(JsonTerm) ->
                 {ReplyIdInteger, ""} ->
                     {ok, #reply{topic_id = TopicId,
                                 reply_id = ReplyIdInteger,
-                                body = Body,
-                                author = Author}};
+                                body = ?b2l(Body),
+                                author = ?b2l(Author)}};
                 _ ->
                     invalid
             end;
@@ -272,8 +272,8 @@ json_term_to_reply(JsonTerm) when is_list(JsonTerm) ->
          {<<"body">>, Body},
          {<<"author">>, Author}] ->
             {ok, #reply{topic_id = TopicId,
-                        body = Body,
-                        author = Author}};
+                        body = ?b2l(Body),
+                        author = ?b2l(Author)}};
         _ ->
             invalid
     end;
