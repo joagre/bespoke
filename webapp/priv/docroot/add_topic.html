@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Add Topic</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke.css" />
+    <script src="js/uikit.min.js"></script>
+    <script src="js/uikit-icons.min.js"></script>
+    <script src="js/bespoke.js"></script>
+    <script src="js/add_topic.js"></script>
+  </head>
+  <body>
+    <!-- Header -->
+    <div class="uk-card uk-card-default uk-padding-small uk-margin-small-bottom uk-box-shadow-small uk-background-muted">
+      <div class="uk-flex uk-flex-between uk-flex-middle">
+        <a href="#" onclick="Bespoke.navigateToPage(event)" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5" data-destination="topics.html"></a>
+        <div class="uk-flex-1 uk-flex uk-flex-center">
+          <div class="uk-text-bold">Add New Topic</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="uk-container uk-margin-top">
+      <form class="uk-form-stacked">
+        <!-- Title text field -->
+        <div class="uk-margin">
+          <label class="uk-form-label" for="form-title">Title</label>
+          <div class="uk-form-controls">
+            <input class="uk-input" id="form-title" type="text" required>
+          </div>
+        </div>
+
+        <!-- Author text field -->
+        <div class="uk-margin">
+          <label class="uk-form-label" for="form-author">Author</label>
+          <div class="uk-form-controls">
+            <input class="uk-input" id="form-author" type="text" required>
+          </div>
+        </div>
+
+        <!-- Body text area-->
+        <div class="uk-margin">
+          <label class="uk-form-label" for="form-body">Body</label>
+          <div class="uk-form-controls">
+            <textarea class="uk-textarea" id="form-body" rows="5" required></textarea>
+          </div>
+        </div>
+
+        <!-- Create button -->
+        <div class="uk-margin uk-text-right">
+          <button type="submit" class="uk-button uk-button-primary" id="create-button" disabled>Create Topic</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
