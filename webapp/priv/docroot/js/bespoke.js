@@ -1,6 +1,10 @@
 const Bespoke = (function() {
     let touchStartX = 0;
     let touchEndX = 0;
+    let touchStartY = 0;
+    let touchEndY = 0;
+    const SWIPE_THRESHOLD = 30;  // Reduced threshold for sensitivity
+    const VERTICAL_THRESHOLD = 75; // Prevent accidental vertical swipes
 
     function navigateToPage(event) {
         if (event) event.preventDefault();
@@ -15,7 +19,10 @@ const Bespoke = (function() {
     }
 
     function handleSwipeGesture() {
-        if (touchEndX - touchStartX > 50) {
+        const horizontalSwipe = touchEndX - touchStartX;
+        const verticalSwipe = Math.abs(touchEndY - touchStartY);
+
+        if (horizontalSwipe > SWIPE_THRESHOLD && verticalSwipe < VERTICAL_THRESHOLD) {
             const swipeTarget = document.querySelector('[data-destination]');
             if (swipeTarget) {
                 navigateToPage({ currentTarget: swipeTarget });
@@ -26,10 +33,12 @@ const Bespoke = (function() {
     function initSwipeListeners() {
         document.addEventListener('touchstart', (event) => {
             touchStartX = event.changedTouches[0].screenX;
+            touchStartY = event.changedTouches[0].screenY;
         });
 
         document.addEventListener('touchend', (event) => {
             touchEndX = event.changedTouches[0].screenX;
+            touchEndY = event.changedTouches[0].screenY;
             handleSwipeGesture();
         });
     }
