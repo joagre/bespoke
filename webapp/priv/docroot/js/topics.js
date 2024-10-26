@@ -1,7 +1,9 @@
 const Topics = (function() {
     let currentTopicId = null;
 
-    function openDeleteModal(button) {
+    function openDeleteModal(event, button) {
+        event.stopPropagation();
+
         // Get the topic ID from the button's data attribute
         currentTopicId = button.getAttribute('data-topic-id');
 
