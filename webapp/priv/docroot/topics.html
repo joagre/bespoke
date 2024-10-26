@@ -10,6 +10,7 @@
     <script src="js/uikit.min.js"></script>
     <script src="js/uikit-icons.min.js"></script>
     <script src="js/bespoke.js"></script>
+    <script src="js/topics.js"></script>
   </head>
   <body>
     <div class="uk-container uk-container-xsmall">
@@ -33,8 +34,9 @@
               <span uk-icon="comment"></span> 189
             </div>
           </div>
-          <button class="uk-button-icon" uk-icon="trash" uk-toggle="target: #modal-remove-topic"
-                  onclick="event.stopPropagation()"></button>
+          <button class="uk-button-icon" uk-icon="trash"
+                  data-topic-id="0" data-topic-title="Vad hette egentligen Slas?"
+                  onclick="event.stopPropagation(); Topics.openDeleteModal(this)"></button>
         </div>
       </div>
       <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
@@ -46,8 +48,9 @@
               <span uk-icon="comment"></span> 0
             </div>
           </div>
-          <button class="uk-button-icon" uk-icon="trash" uk-toggle="target: #modal-remove-topic"
-                  onclick="event.stopPropagation()"></button>
+          <button class="uk-button-icon" uk-icon="trash"
+                  data-topic-id="1" data-topic-title="Vem är Ulf Kristersson?"
+                  onclick="event.stopPropagation(); Topics.openDeleteModal(this)"></button>
         </div>
       </div>
 
@@ -60,20 +63,20 @@
               <span uk-icon="comment"></span> 15
             </div>
           </div>
-          <button class="uk-button-icon" uk-icon="trash" uk-toggle="target: #modal-remove-topic"
-                  onclick="event.stopPropagation()"></button>
+          <button class="uk-button-icon" uk-icon="trash"
+                  data-topic-id="2" data-topic-title="Björkarna på gården"
+                  onclick="event.stopPropagation(); Topics.openDeleteModal(this)"></button>
         </div>
       </div>
-      <!-- Modal dialog to remove a topic -->
-      <div id="modal-remove-topic" uk-modal>
-        <div class="uk-modal-dialog uk-modal-body">
-          <h2 class="uk-modal-title">Headline</h2>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-          <p class="uk-text-right">
-            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
-            <button class="uk-button uk-button-primary" type="button">Save</button>
-          </p>
-        </div>
+    </div>
+    <!-- Modal dialog to delete a topic -->
+    <div id="delete-modal" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Delete topic</h2>
+        <p>Do you really want to delete "<span class="uk-text-bold" id="modal-topic-title"></span>"?</p>
+        <p class="uk-text-right">
+          <button class="uk-button uk-button-default uk-modal-close" type="button">No</button>
+          <button class="uk-button uk-button-danger" onclick="Topics.deleteTopic()">Yes</button>
       </div>
     </div>
   </body>
