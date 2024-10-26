@@ -2,13 +2,14 @@ const Topics = (function() {
     let currentTopicId = null;
 
     function openDeleteModal(button) {
-        event.stopPropagation()
-
-        // Get the topic ID and title from the button's data attributes
+        // Get the topic ID from the button's data attribute
         currentTopicId = button.getAttribute('data-topic-id');
-        const topicTitle = button.getAttribute('data-topic-title');
 
-        // Set the topic title in the modal
+        // Find the title element using the topic ID and set it in the modal
+        const topicTitleElement = document.getElementById(`topic-title-${currentTopicId}`);
+        const topicTitle = topicTitleElement ? topicTitleElement.textContent : 'Unknown Topic';
+
+        // Update the modal content
         document.getElementById('modal-topic-title').textContent = topicTitle;
 
         // Open the modal
@@ -21,13 +22,12 @@ const Topics = (function() {
             return;
         }
 
-        // Example: Here you would add the code to delete the topic using currentTopicId
         console.log(`Deleting topic with ID: ${currentTopicId}`);
 
         // Close the modal after deletion
         UIkit.modal('#delete-modal').hide();
 
-        // Reset the current topic ID after action
+        // Reset the current topic ID
         currentTopicId = null;
     }
 

@@ -26,46 +26,49 @@
 
       <!-- Topics -->
       <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
+        <!-- Topic 0 -->
         <div class="uk-flex uk-flex-between">
           <div>
-            Vad hette egenligen Slas?
+            <span id="topic-title-0">Vad hette egentligen Slas?</span>
             <div class="uk-text-meta">
               Tony Rogvall • 30d •
               <span uk-icon="comment"></span> 189
             </div>
           </div>
           <button class="uk-button-icon" uk-icon="trash"
-                  data-topic-id="0" data-topic-title="Vad hette egentligen Slas?"
+                  data-topic-id="0"
                   onclick="event.stopPropagation(); Topics.openDeleteModal(this)"></button>
         </div>
       </div>
+
+      <!-- Topic 1 -->
       <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
         <div class="uk-flex uk-flex-between">
           <div>
-            Vem är Ulf Kristersson?
+            <span id="topic-title-1">Vem är Ulf Kristersson?</span>
             <div class="uk-text-meta">
               Tony Rogvall • 1h •
               <span uk-icon="comment"></span> 0
             </div>
           </div>
           <button class="uk-button-icon" uk-icon="trash"
-                  data-topic-id="1" data-topic-title="Vem är Ulf Kristersson?"
+                  data-topic-id="1"
                   onclick="event.stopPropagation(); Topics.openDeleteModal(this)"></button>
         </div>
       </div>
 
+      <!-- Topic 2 -->
       <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
         <div class="uk-flex uk-flex-between">
           <div>
-            Björkarna på gården
+            <span id="topic-title-2">Björkarna på gården</span>
             <div class="uk-text-meta">
               Tony Rogvall • 2h •
               <span uk-icon="comment"></span> 15
             </div>
           </div>
           <button class="uk-button-icon" uk-icon="trash"
-                  data-topic-id="2" data-topic-title="Björkarna på gården"
-                  onclick="event.stopPropagation(); Topics.openDeleteModal(this)"></button>
+                  data-topic-id="2" onclick="event.stopPropagation(); Topics.openDeleteModal(this)"></button>
         </div>
       </div>
     </div>
