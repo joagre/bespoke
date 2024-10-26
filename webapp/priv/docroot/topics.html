@@ -12,53 +12,68 @@
     <script src="js/bespoke.js"></script>
   </head>
   <body>
-    <!-- Header -->
-    <div class="uk-card uk-card-default uk-padding-small uk-background-muted">
-      <div class="uk-flex uk-flex-between uk-flex-middle">
-        <div class="uk-flex-1 uk-flex uk-flex-center">
-          <div class="uk-text-bold">Topics</div>
-        </div>
-        <a href="#" onclick="Bespoke.navigateToPage(event)" class="uk-icon-button" uk-icon="plus" data-destination="add_topic.html"></a>
-      </div>
-    </div>
-
-    <!-- Topics -->
-    <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
-      <div class="uk-flex uk-flex-between">
-        <div>
-          Vad hette egenligen Slas?
-          <div class="uk-text-meta">
-            Tony Rogvall • 30d •
-            <span uk-icon="comment"></span> 189
+    <div class="uk-container uk-container-xsmall">
+      <!-- Header -->
+      <div class="uk-card uk-card-default uk-padding-small uk-background-muted">
+        <div class="uk-flex uk-flex-between uk-flex-middle">
+          <div class="uk-flex-1 uk-flex uk-flex-center">
+            <div class="uk-text-bold">Topics</div>
           </div>
+          <a href="#" onclick="Bespoke.navigateToPage(event)" class="uk-icon-button" uk-icon="plus" data-destination="add_topic.html"></a>
         </div>
-        <button class="uk-button-icon" uk-icon="trash" onclick="event.stopPropagation(); Bespoke.doNothing()"></button>
       </div>
-    </div>
 
-    <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
-      <div class="uk-flex uk-flex-between">
-        <div>
-          Vem är Ulf Kristersson?
-          <div class="uk-text-meta">
-            Tony Rogvall • 1h •
-            <span uk-icon="comment"></span> 0
+      <!-- Topics -->
+      <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
+        <div class="uk-flex uk-flex-between">
+          <div>
+            Vad hette egenligen Slas?
+            <div class="uk-text-meta">
+              Tony Rogvall • 30d •
+              <span uk-icon="comment"></span> 189
+            </div>
           </div>
+          <button class="uk-button-icon" uk-icon="trash" uk-toggle="target: #modal-remove-topic"
+                  onclick="event.stopPropagation()"></button>
         </div>
-        <button class="uk-button-icon" uk-icon="trash" onclick="event.stopPropagation(); Bespoke.doNothing()"></button>
       </div>
-    </div>
-
-    <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
-      <div class="uk-flex uk-flex-between">
-        <div>
-          Björkarna på gården
-          <div class="uk-text-meta">
-            Tony Rogvall • 2h •
-            <span uk-icon="comment"></span> 15
+      <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
+        <div class="uk-flex uk-flex-between">
+          <div>
+            Vem är Ulf Kristersson?
+            <div class="uk-text-meta">
+              Tony Rogvall • 1h •
+              <span uk-icon="comment"></span> 0
+            </div>
           </div>
+          <button class="uk-button-icon" uk-icon="trash" uk-toggle="target: #modal-remove-topic"
+                  onclick="event.stopPropagation()"></button>
         </div>
-        <button class="uk-button-icon" uk-icon="trash" onclick="event.stopPropagation(); Bespoke.doNothing()"></button>
+      </div>
+
+      <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
+        <div class="uk-flex uk-flex-between">
+          <div>
+            Björkarna på gården
+            <div class="uk-text-meta">
+              Tony Rogvall • 2h •
+              <span uk-icon="comment"></span> 15
+            </div>
+          </div>
+          <button class="uk-button-icon" uk-icon="trash" uk-toggle="target: #modal-remove-topic"
+                  onclick="event.stopPropagation()"></button>
+        </div>
+      </div>
+      <!-- Modal dialog to remove a topic -->
+      <div id="modal-remove-topic" uk-modal>
+        <div class="uk-modal-dialog uk-modal-body">
+          <h2 class="uk-modal-title">Headline</h2>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+          <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+            <button class="uk-button uk-button-primary" type="button">Save</button>
+          </p>
+        </div>
       </div>
     </div>
   </body>
