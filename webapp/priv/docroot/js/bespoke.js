@@ -57,7 +57,6 @@ const Bespoke = (function() {
     };
 })();
 
-// Initialize the Bespoke singleton
-document.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('load', () => {
     Bespoke.init();
 });
