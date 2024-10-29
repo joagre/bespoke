@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Vad hette egentligen Slas?</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke.css" />
+    <link rel="stylesheet" href="css/topic.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <script src="js/uikit.min.js"></script>
+    <script src="js/uikit-icons.min.js"></script>
+    <script src="js/bespoke.js"></script>
+  </head>
+  <body>
+    <div class="uk-container uk-container-xsmall">
+      <!-- Header -->
+      <div class="uk-card uk-card-default uk-padding-small uk-background-muted">
+        <div class="uk-flex uk-flex-between uk-flex-middle">
+          <a href="#" onclick="Bespoke.navigateToPage(event)" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5" data-destination="topics.html"></a>
+          <div class="uk-flex-1 uk-flex uk-flex-center">
+            <div class="uk-text-bold">Vad hette egentligen Hans?</div>
+          </div>
+          <div>
+            <a href="#" onclick="Bespoke.navigateToPage(event)" class="uk-icon-button" uk-icon="trash" data-destination="add_topic.html"></a>
+            <a href="#" onclick="Bespoke.navigateToPage(event)" class="uk-icon-button" uk-icon="reply" data-destination="add_topic.html"></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Origin message -->
+      <div class="uk-container uk-margin-top">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum vulputate mollis massa, blandit fermentum urna luctus a. Aenean purus enim, mattis sed lacinia vitae, dapibus dapibus arcu. Ut iaculis, nisl non viverra malesuada, nulla dui vehicula nibh, volutpat scelerisque nisi magna sed eros.
+      </div>
+      <div class="uk-text-meta uk-margin-small">
+        Tony Rogvall • 30d •
+        <span uk-icon="comment"></span> 189
+      </div>
+
+
+
+
+
+      <!-- Replies -->
+      <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-reply" onclick="Bespoke.doNothing()">
+        <!-- Reply 0 -->
+        <div>
+          <span id="topic-title-0">Nulla et diam id nisi aliquam maximus. Donec enim ante, placerat eu finibus in, cursus vitae ante. Duis ac tortor augue. Nullam at convallis libero.</span>
+          <div class="uk-text-meta uk-margin-small">
+            <div class="uk-flex uk-flex-between uk-flex-middle">
+              <div>
+                Tony Rogvall • 30d •
+                <span uk-icon="comment"></span> 189
+              </div>
+              <a href="#" onclick="Bespoke.navigateToPage(event)" class="uk-icon-button" uk-icon="reply" data-destination="reply.html"></a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+
+
+      <!-- Reply -->
+      <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-reply" onclick="Bespoke.doNothing()">
+        <!-- Reply 0 -->
+        <div>
+          <span id="topic-title-0">Nulla et diam id nisi aliquam maximus. Donec enim ante, placerat eu finibus in, cursus vitae ante. Duis ac tortor augue. Nullam at convallis libero.</span>
+          <div class="uk-text-meta uk-margin-small">
+            <div class="uk-flex uk-flex-between uk-flex-middle">
+              <div>
+                Tony Rogvall • 30d •
+                <span uk-icon="comment"></span> 189 • in reply to <a class="uk-text-italic" href="#">zedric</a>
+              </div>
+              <a href="#" onclick="Bespoke.navigateToPage(event)" class="uk-icon-button" uk-icon="reply" data-destination="reply.html"></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
