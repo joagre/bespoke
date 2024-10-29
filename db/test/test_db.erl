@@ -5,45 +5,47 @@
 -include("../../apptools/include/log.hrl").
 
 start() ->
-    %% No topics inserted yet
-    [] = db_serv:list_topics(),
-    %% Add topic
-    Topic1 = #topic{title = "title1",
-                    body = "body1",
-                    author = "author1"},
-    InsertedTopic1 = db_serv:insert_topic(Topic1),
-    %% Verify topic
-    [#topic{id = 0,
-            title = "title1",
-            body = "body1",
-            author = "author1",
-            created = Created,
-            replies = []}] =
-        db_serv:lookup_topic(InsertedTopic1#topic.id),
+    %% No root messages inserted yet
+    [] = db_serv:list_root_messages(),
+    %% Add root message
+    RootMessage1 = #message{title = "title1",
+                            body = "body1",
+                            author = "author1"},
+    {ok, InsertedRootMessage1} = db_serv:insert_message(RootMessage1),
+    %% Verify message
+    [#message{id = 0,
+              title = "title1",
+              reply_message_id = not_set,
+              root_message_id = not_set,
+              body = "body1",
+              author = "author1",
+              created = Created,
+              replies = []}] =
+        db_serv:lookup_messages([InsertedRootMessage1#message.id]),
     true = is_integer(Created),
-    %% Add reply to topic
-    Reply1 = #reply{
-                topic_id = InsertedTopic1#topic.id,
-                body = "reply1",
-                author = "author2"},
-    {ok, InsertedReply1} = db_serv:insert_reply(Reply1),
-    %% Add reply to reply
-    Reply2 = #reply{
-                topic_id = InsertedTopic1#topic.id,
-                reply_id = InsertedReply1#reply.id,
-                body = "reply2",
-                author = "author3"},
-    {ok, InsertedReply2} = db_serv:insert_reply(Reply2),
-    %% Verify topic again
-    [#topic{id = 0,
-            title = "title1",
-            body = "body1",
-            author = "author1",
-            created = Created,
-            replies = [0, 1]}] =
-        db_serv:lookup_topic(InsertedTopic1#topic.id),
-    %% Verify replies
-    [InsertedReply1] = db_serv:lookup_reply(InsertedReply1#reply.id),
-    [InsertedReply2] = db_serv:lookup_reply(InsertedReply2#reply.id),
+    %% Add reply message to root message
+    ReplyMessage1 =
+        #message{reply_message_id = InsertedRootMessage1#message.id,
+                 root_message_id = InsertedRootMessage1#message.id,
+                 body = "reply1",
+                 author = "author2"},
+    {ok, InsertedReplyMessage1} = db_serv:insert_message(ReplyMessage1),
+    %% Add reply message to reply message
+    ReplyMessage2 =
+        #message{reply_message_id = InsertedReplyMessage1#message.id,
+                 root_message_id = InsertedRootMessage1#message.id,
+                 body = "reply2",
+                 author = "author3"},
+    {ok, InsertedReplyMessage2} = db_serv:insert_message(ReplyMessage2),
+    %% Verify root message
+    ReplyMessageId1 = InsertedReplyMessage1#message.id,
+    [#message{replies = [ReplyMessageId1]}] =
+        db_serv:lookup_messages([InsertedRootMessage1#message.id]),
+    %% Verify reply messages
+    ReplyMessageId2 = InsertedReplyMessage2#message.id,
+    [#message{replies = [ReplyMessageId2]}] =
+        db_serv:lookup_messages([InsertedReplyMessage1#message.id]),
+    [#message{replies = []}] =
+        db_serv:lookup_messages([InsertedReplyMessage2#message.id]),
     %% Stop server
     ok = db_serv:stop().

@@ -20,5 +20,5 @@ clean:
 ERLC_FLAGS=-I ../.. +debug_info -Ddebug
 
 runtest: all
-	rm -f ../priv/*.db; ../../main/bin/run_test db || exit 1
-	rm -f ../priv/*.db; ../../main/bin/run_test rest || exit 1
+	rm -f ../priv/*.db; ../../main/bin/run_test db
+	rm -f ../priv/*.db; ../../main/bin/run_test rest

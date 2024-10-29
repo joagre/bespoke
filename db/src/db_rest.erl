@@ -64,46 +64,12 @@ http_get(Socket, Request, Body, Options) ->
 
 http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
     case Tokens of
-        ["list_topics"] ->
-            Topics = db_serv:list_topics(),
-            JsonTerm = lists:map(fun(Topic) ->
-                                         topic_to_json_term(Topic)
-                                 end, Topics),
+        ["list_root_messages"] ->
+            Messages = db_serv:list_root_messages(),
+            JsonTerm = lists:map(fun(Message) ->
+                                         message_to_json_term(Message)
+                                 end, Messages),
             rest_util:response(Socket, Request, {ok, {format, JsonTerm}});
-        ["lookup_topic", Id] ->
-            case string:to_integer(Id) of
-                {IdInteger, ""} ->
-                    case db_serv:lookup_topic(IdInteger) of
-                        [] ->
-                            rest_util:response(Socket, Request,
-                                               {error, not_found});
-                        [Topic]->
-                            JsonTerm = topic_to_json_term(Topic),
-                            rest_util:response(Socket, Request,
-                                               {ok, {format, JsonTerm}})
-                    end;
-                _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "topic-id must be an integer"})
-            end;
-        ["lookup_reply", Id] ->
-            case string:to_integer(Id) of
-                {IdInteger, ""} ->
-                    case db_serv:lookup_reply(IdInteger) of
-                        [] ->
-                            rest_util:response(Socket, Request,
-                                               {error, not_found});
-                        [Reply]->
-                            JsonTerm = reply_to_json_term(Reply),
-                            rest_util:response(Socket, Request,
-                                               {ok, {format, JsonTerm}})
-                    end;
-                _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "reply-id must be an integer"})
-            end;
         %% Try to act as a static web server
 	Tokens ->
             UriPath =
@@ -139,55 +105,57 @@ http_post(Socket, Request, Body, Options) ->
 
 http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
     case Tokens of
-        ["insert_topic"] ->
-            case rest_util:parse_body(
-                   Request, Body,
-                   [{jsone_options, [{object_format, proplist}]}]) of
+        ["lookup_messages"] ->
+            case rest_util:parse_body(Request, Body) of
                 {error, _Reason} ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
-                RequestJsonTerm ->
-                    case json_term_to_topic(RequestJsonTerm) of
-                        {ok, Topic} ->
-                            InsertedTopic = db_serv:insert_topic(Topic),
-                            ResponseJsonTerm =
-                                topic_to_json_term(InsertedTopic),
+                MessageIds when is_list(MessageIds) ->
+                    case lists:all(fun(MessageId) when is_integer(MessageId) ->
+                                           true;
+                                      (_) ->
+                                           false
+                                   end, MessageIds) of
+                        true ->
+                            Messages = db_serv:lookup_messages(MessageIds),
+                            JsonTerm =
+                                lists:map(fun(Message) ->
+                                                  message_to_json_term(Message)
+                                          end, Messages),
+                            rest_util:response(
+                              Socket, Request, {ok, {format, JsonTerm}});
+                        false ->
                             rest_util:response(
                               Socket, Request,
-                              {ok, {format, ResponseJsonTerm}});
-                        invalid ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request, "Invalid topic"})
-                    end
+                              {error, bad_request,
+                               "message-ids must be integers"})
+                    end;
+                _ ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"})
             end;
-        ["insert_reply"] ->
-            case rest_util:parse_body(
-                   Request, Body,
-                   [{jsone_options, [{object_format, proplist}]}]) of
+        ["insert_message"] ->
+            case rest_util:parse_body(Request, Body) of
                 {error, _Reason} ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
-                RequestJsonTerm ->
-                    case json_term_to_reply(RequestJsonTerm) of
-                        {ok, Reply} ->
-                            case db_serv:insert_reply(Reply) of
-                                {ok, InsertedReply} ->
-                                    ResponseJsonTerm =
-                                        reply_to_json_term(InsertedReply),
-                                    rest_util:response(
-                                      Socket, Request,
-                                      {ok, {format, ResponseJsonTerm}});
-                                {error, no_such_topic} ->
-                                    rest_util:response(
-                                      Socket, Request, {error, not_found})
-                            end;
-                        invalid ->
+                MessageJsonTerm ->
+                    case json_term_to_message(MessageJsonTerm) of
+                        {ok, Message} ->
+                            {ok, InsertedMessage} =
+                                db_serv:insert_message(Message),
+                            InsertedMessageJsonTerm =
+                                message_to_json_term(InsertedMessage),
                             rest_util:response(
                               Socket, Request,
-                              {error, bad_request, "Invalid reply"})
+                              {ok, {format, InsertedMessageJsonTerm}});
+                        {error, invalid} ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request, "Invalid message"})
                     end
             end;
 	_ ->
@@ -196,74 +164,66 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
     end.
 
 %%
-%% Utilities
+%% Marshalling
 %%
 
-topic_to_json_term(#topic{
-                      id = Id,
-                      title = Title,
-                      body = Body,
-                      author = Author,
-                      created = Created,
-                      replies = Replies}) ->
+message_to_json_term(#message{id = Id,
+                              title = Title,
+                              reply_message_id = ReplyMessageId,
+                              root_message_id = RootMessageId,
+                              body = Body,
+                              author = Author,
+                              created = Created,
+                              replies = Replies}) ->
     [{<<"id">>, Id},
-     {<<"title">>, ?l2b(Title)},
+     {<<"title">>, title_to_json_term(Title)},
+     {<<"reply-message-id">>, id_to_json_term(ReplyMessageId)},
+     {<<"root-message-id">>, id_to_json_term(RootMessageId)},
      {<<"body">>, ?l2b(Body)},
      {<<"author">>, ?l2b(Author)},
      {<<"created">>, Created},
      {<<"replies">>, Replies}].
 
-reply_to_json_term(#reply{
-                      id = Id,
-                      topic_id = TopicId,
-                      reply_id = ReplyId,
-                      body = Body,
-                      author = Author,
-                      created = Created}) ->
-    [{<<"id">>, Id},
-     {<<"topic-id">>, TopicId},
-     {<<"reply-id">>, format_reply_id(ReplyId)},
-     {<<"body">>, ?l2b(Body)},
-     {<<"author">>, ?l2b(Author)},
-     {<<"created">>, Created}].
+title_to_json_term(not_set) ->
+    "";
+title_to_json_term(Title) ->
+    ?l2b(Title).
 
-format_reply_id(not_set) ->
+id_to_json_term(not_set) ->
     -1;
-format_reply_id(Id) ->
+id_to_json_term(Id) ->
     Id.
 
-json_term_to_topic(JsonTerm) when is_list(JsonTerm) ->
-    case lists:keysort(1, JsonTerm) of
-        [{<<"author">>, Author},
-         {<<"body">>, Body},
-         {<<"title">>, Title}] ->
-            {ok, #topic{title = ?b2l(Title),
-                        body = ?b2l(Body),
-                        author = ?b2l(Author)}};
-        _ ->
-            invalid
+json_term_to_message(#{<<"title">> := Title,
+                       <<"body">> := Body,
+                       <<"author">> := Author} = MessageJsonTerm) ->
+    case no_more_keys([<<"title">>, <<"body">>, <<"author">>],
+                      MessageJsonTerm) of
+        true ->
+            {ok, #message{title = ?b2l(Title),
+                          body = ?b2l(Body),
+                          author = ?b2l(Author)}};
+        false ->
+            {error, invalid}
     end;
-json_term_to_topic(_) ->
-    invalid.
+json_term_to_message(#{<<"reply-message-id">> := ReplyMessageId,
+                       <<"root-message-id">> := RootMessageId,
+                       <<"body">> := Body,
+                       <<"author">> := Author} = MessageJsonTerm) ->
+    case no_more_keys([<<"reply-message-id">>,
+                       <<"root-message-id">>,
+                       <<"body">>,
+                       <<"author">>], MessageJsonTerm) of
+        true ->
+            {ok, #message{reply_message_id = ReplyMessageId,
+                          root_message_id = RootMessageId,
+                          body = ?b2l(Body),
+                          author = ?b2l(Author)}};
+        false ->
+            {error, invalid}
+    end;
+json_term_to_message(_) ->
+    {error, invalid}.
 
-json_term_to_reply(JsonTerm) when is_list(JsonTerm) ->
-    case lists:keysort(1, JsonTerm) of
-        [{<<"author">>, Author},
-         {<<"body">>, Body},
-         {<<"reply-id">>, ReplyId},
-         {<<"topic-id">>, TopicId}] ->
-            {ok, #reply{topic_id = TopicId,
-                        reply_id = ReplyId,
-                        body = ?b2l(Body),
-                        author = ?b2l(Author)}};
-        [{<<"author">>, Author},
-         {<<"body">>, Body},
-         {<<"topic-id">>, TopicId}] ->
-            {ok, #reply{topic_id = TopicId,
-                        body = ?b2l(Body),
-                        author = ?b2l(Author)}};
-        _ ->
-            invalid
-    end;
-json_term_to_reply(_) ->
-    invalid.
+no_more_keys(RequiredKeys, Map) ->
+    lists:sort(maps:keys(Map)) =:= lists:sort(RequiredKeys).

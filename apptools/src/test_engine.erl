@@ -53,5 +53,5 @@ run(BaseDir, [Module|Rest]) ->
             io:format("Class: ~w\nReason: ~p\nStackTrace: ~p\n",
                       [Class, Reason, StackTrace]),
             io:format("---- FAILURE!\n\n"),
-            run(BaseDir, Rest)
+            erlang:halt(1)
     end.

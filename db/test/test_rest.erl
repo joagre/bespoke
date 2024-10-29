@@ -7,53 +7,48 @@
 
 start() ->
     {ok, _Pid} = init_httpc(),
-    %% No topics inserted yet
-    {ok, []} = http_get("http://localhost:8080/list_topics"),
-    %% Add topic
-    {ok, InsertedTopic1} =
-        http_post("http://localhost:8080/insert_topic",
+    %% No root messages inserted yet
+    {ok, []} = http_get("http://localhost:8080/list_root_messages"),
+    %% Add root message
+    {ok, RootMessage1} =
+        http_post("http://localhost:8080/insert_message",
                   #{<<"title">> => <<"title1">>,
                     <<"body">> => <<"body1">>,
                     <<"author">> => <<"author1">>}),
-    %% Verify topic
-    {ok, #{<<"id">> := 0,
-           <<"title">> := <<"title1">>,
-           <<"body">> := <<"body1">>,
-           <<"author">> := <<"author1">>,
-           <<"created">> := Created,
-           <<"replies">> := []}} =
-        http_get("http://localhost:8080/lookup_topic/" ++
-                     ?i2l(maps:get(<<"id">>, InsertedTopic1))),
+    %% Verify message
+    {ok, [#{<<"id">> := 0,
+            <<"title">> := <<"title1">>,
+            <<"body">> := <<"body1">>,
+            <<"author">> := <<"author1">>,
+            <<"created">> := Created,
+            <<"replies">> := []}]} =
+        http_post("http://localhost:8080/lookup_messages", [0]),
     true = is_integer(Created),
-    %% Add reply to topic
-    {ok, InsertedReply1} =
-        http_post("http://localhost:8080/insert_reply",
-                  #{<<"topic-id">> => maps:get(<<"id">>, InsertedTopic1),
+    %% Add reply message to root message
+    RootMessageId1 = maps:get(<<"id">>, RootMessage1),
+    {ok, ReplyMessage1} =
+        http_post("http://localhost:8080/insert_message",
+                  #{<<"reply-message-id">> => RootMessageId1,
+                    <<"root-message-id">> => RootMessageId1,
                     <<"body">> => <<"reply1">>,
                     <<"author">> => <<"author2">>}),
-    %% Add reply to reply
-    {ok, InsertedReply2} =
-        http_post("http://localhost:8080/insert_reply",
-                  #{<<"topic-id">> => maps:get(<<"id">>, InsertedTopic1),
-                    <<"reply-id">> => maps:get(<<"id">>, InsertedReply1),
+    %% Add repply message to reply message
+    {ok, ReplyMessage2} =
+        http_post("http://localhost:8080/insert_message",
+                  #{<<"reply-message-id">> => maps:get(<<"id">>, ReplyMessage1),
+                    <<"root-message-id">> => RootMessageId1,
                     <<"body">> => <<"reply2">>,
                     <<"author">> => <<"author3">>}),
-    %% Verify topic again
-    {ok, #{<<"id">> := 0,
-           <<"title">> := <<"title1">>,
-           <<"body">> := <<"body1">>,
-           <<"author">> := <<"author1">>,
-           <<"created">> := Created,
-           <<"replies">> := [0, 1]}} =
-        http_get("http://localhost:8080/lookup_topic/" ++
-                     ?i2l(maps:get(<<"id">>, InsertedTopic1))),
-    %% Verify replies
-    {ok, InsertedReply1} =
-        http_get("http://localhost:8080/lookup_reply/" ++
-                     ?i2l(maps:get(<<"id">>, InsertedReply1))),
-    {ok, InsertedReply2} =
-        http_get("http://localhost:8080/lookup_reply/" ++
-                     ?i2l(maps:get(<<"id">>, InsertedReply2))).
+    %% Verify root message
+    ReplyMessageId1 = maps:get(<<"id">>, ReplyMessage1),
+    {ok, [#{<<"replies">> := [ReplyMessageId1]}]} =
+        http_post("http://localhost:8080/lookup_messages", [RootMessageId1]),
+    %% Verify reply messages
+    ReplyMessageId2 = maps:get(<<"id">>, ReplyMessage2),
+    {ok, [#{<<"replies">> := [ReplyMessageId2]}]} =
+        http_post("http://localhost:8080/lookup_messages", [ReplyMessageId1]),
+    {ok, [#{<<"replies">> := []}]} =
+        http_post("http://localhost:8080/lookup_messages", [ReplyMessageId2]).
 
 %%
 %% Utilities

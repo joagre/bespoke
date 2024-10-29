@@ -70,3 +70,5 @@ erl_config="-config ${bin_dir}/bespoke.config"
 export ERL_LIBS=${erl_libs}:$ERL_LIBS
 
 ${erl} ${sname} ${pa} ${erl_config} ${shell} ${perform} ${erl_options}
+
+exit $?

@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('load', () => {
     const formFields = Array.from(document.querySelectorAll('#form-title, #form-author, #form-body'));
     const createButton = document.getElementById('create-button');
 

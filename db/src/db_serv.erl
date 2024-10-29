@@ -1,29 +1,25 @@
 -module(db_serv).
 
 -export([start_link/0, stop/0]).
--export([list_topics/0, lookup_topic/1, insert_topic/1]).
--export([lookup_reply/1, insert_reply/1]).
+-export([list_root_messages/0, lookup_messages/1, insert_message/1]).
 -export([message_handler/1]).
 
--export_type([topic_id/0, title/0, body/0, author/0,
-              seconds_from_epoch/0, reply_id/0]).
+-export_type([message_id/0, title/0, body/0, author/0, seconds_from_epoch/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
 -include_lib("apptools/include/serv.hrl").
 -include("db.hrl").
 
--type topic_id() :: integer().
+-type message_id() :: integer().
 -type title() :: string().
 -type body() :: string().
 -type author() :: string().
 -type seconds_from_epoch() :: integer().
--type reply_id() :: integer().
 
 -record(state, {
                 parent :: pid(),
-                next_topic_id = 0 :: topic_id(),
-                next_reply_id = 0 :: reply_id()
+                next_message_id = 0 :: message_id()
                }).
 
 %%
@@ -46,64 +42,41 @@ stop() ->
     serv:call(?MODULE, stop).
 
 %%
-%% Exported: list_topics
+%% Exported: list_root_messages
 %%
 
--spec list_topics() -> [#topic{}].
+-spec list_root_messages() -> [#message{}].
 
-list_topics() ->
-    serv:call(?MODULE, list_topics).
-
-%%
-%% Exported: lookup_topic
-%%
-
--spec lookup_topic(topic_id()) -> [#topic{}].
-
-lookup_topic(TopicId) ->
-    serv:call(?MODULE, {lookup_topic, TopicId}).
+list_root_messages() ->
+    serv:call(?MODULE, list_root_messages).
 
 %%
-%% Exported: insert_topic
+%% Exported: lookup_messages
 %%
 
--spec insert_topic(#topic{}) -> #topic{}.
+-spec lookup_messages([message_id()]) -> [#message{}].
 
-insert_topic(Topic) ->
-    serv:call(?MODULE, {insert_topic, Topic}).
-
-%%
-%% Exported: lookup_reply
-%%
-
--spec lookup_reply(reply_id()) -> [#reply{}].
-
-lookup_reply(ReplyId) ->
-    serv:call(?MODULE, {lookup_reply, ReplyId}).
+lookup_messages(MessageIds) ->
+    serv:call(?MODULE, {lookup_messages, MessageIds}).
 
 %%
-%% Exported: insert_reply
+%% Exported: insert_message
 %%
 
--spec insert_reply(#reply{}) ->
-          {ok, #reply{}} | {error, no_such_topic}.
+-spec insert_message(#message{}) -> {ok, #message{}} | {error, invalid_message}.
 
-insert_reply(Reply) ->
-    serv:call(?MODULE, {insert_reply, Reply}).
+insert_message(Message) ->
+    serv:call(?MODULE, {insert_message, Message}).
 
 %%
 %% Server
 %%
 
 init(Parent) ->
-    {ok, topics} =
-        dets:open_file(topics,
-                       [{file, filename:join(code:priv_dir(db), "topics.db")},
-                        {keypos, #topic.id}]),
-    {ok, replies} =
-        dets:open_file(replies,
-                       [{file, filename:join(code:priv_dir(db), "replies.db")},
-                        {keypos, #reply.id}]),
+    {ok, messages} =
+        dets:open_file(messages,
+                       [{file, filename:join(code:priv_dir(db), "messages.db")},
+                        {keypos, #message.id}]),
     ?log_info("Database server has been started"),
     {ok, #state{parent = Parent}}.
 
@@ -111,37 +84,37 @@ message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug(#{call => Call}),
-            ok = dets:close(topics),
+            ok = dets:close(messages),
             {reply, From, ok};
-        {call, From, list_topics = Call} ->
+        {call, From, list_root_messages = Call} ->
             ?log_debug(#{call => Call}),
-            AllTopics = dets:foldl(fun(Topic, Acc) ->
-                                           [Topic|Acc] end,
-                                   [], topics),
-            SortedTopics =
-                lists:sort(fun(TopicA, TopicB) ->
-                                   TopicA#topic.created =< TopicB#topic.created
-                           end, AllTopics),
-            {reply, From, SortedTopics};
-        {call, From, {lookup_topic, TopicId} = Call} ->
+            RootMessages =
+                dets:match_object(
+                  messages, #message{root_message_id = not_set, _ = '_'}),
+            SortedRootMessages =
+                lists:sort(
+                  fun(MessageA, MessageB) ->
+                          MessageA#message.created =< MessageB#message.created
+                  end, RootMessages),
+            {reply, From, SortedRootMessages};
+        {call, From, {lookup_messages, MessageIds} = Call} ->
             ?log_debug(#{call => Call}),
-            {reply, From, dets:lookup(topics, TopicId)};
-        {call, From, {insert_topic, Topic} = Call} ->
+            Messages =
+                lists:foldl(fun(MessageId, Acc) ->
+                                    case dets:lookup(messages, MessageId) of
+                                        [Message] ->
+                                            [Message|Acc];
+                                        [] ->
+                                            Acc
+                                    end
+                            end, [], MessageIds),
+            {reply, From, Messages};
+        {call, From, {insert_message, Message} = Call} ->
             ?log_debug(#{call => Call}),
-            NextTopicId = S#state.next_topic_id,
-            UpdatedTopic = Topic#topic{id = NextTopicId,
-                                       created = seconds_from_epoch()},
-            ok = dets:insert(topics, UpdatedTopic),
-            {reply, From, UpdatedTopic, S#state{next_topic_id = NextTopicId + 1}};
-        {call, From, {lookup_reply, ReplyId} = Call} ->
-            ?log_debug(#{call => Call}),
-            {reply, From, dets:lookup(replies, ReplyId)};
-        {call, From, {insert_reply, Reply} = Call} ->
-            ?log_debug(#{call => Call}),
-            case add_reply(S#state.next_reply_id, Reply) of
-                {ok, NextReplyId, AddedReply} ->
-                    {reply, From, {ok, AddedReply},
-                     S#state{next_reply_id = NextReplyId}};
+            case add_message(S#state.next_message_id, Message) of
+                {ok, NextUpcomingMessageId, AddedMessage} ->
+                    {reply, From, {ok, AddedMessage},
+                     S#state{next_message_id = NextUpcomingMessageId}};
                 {error, Reason} ->
                     {reply, From, {error, Reason}}
             end;
@@ -156,36 +129,55 @@ message_handler(S) ->
     end.
 
 %%
-%% Insert reply
+%% Insert message
 %%
 
-add_reply(ReplyId, Reply) ->
-    case dets:lookup(topics, Reply#reply.topic_id) of
-        [Topic] ->
-            case valid_reply(Reply#reply.reply_id) of
-                true ->
-                    UpdatedReply = Reply#reply{id = ReplyId,
-                                               created = seconds_from_epoch()},
-                    ok = dets:insert(replies, UpdatedReply),
-                    Replies = Topic#topic.replies ++ [ReplyId],
-                    ok = dets:insert(topics, Topic#topic{replies = Replies}),
-                    {ok, ReplyId + 1, UpdatedReply};
-                false ->
-                    {error, no_such_reply}
+add_message(NextMessageId, Message) ->
+    case is_valid_message(Message) of
+        {true, ReplyMessage, _RootMessage}  ->
+            NewMessage = Message#message{id = NextMessageId,
+                                         created = seconds_from_epoch()},
+            ok = dets:insert(messages, NewMessage),
+            case ReplyMessage of
+                not_set ->
+                    {ok, NextMessageId + 1, NewMessage};
+                #message{replies = Replies} ->
+                    UpdatedReplyMessage =
+                        ReplyMessage#message{
+                          replies = Replies ++ [NextMessageId]},
+                    ok = dets:insert(messages, UpdatedReplyMessage),
+                    {ok, NextMessageId + 1, NewMessage}
             end;
-        [] ->
-            {error, no_such_topic}
+        false ->
+            {error, invalid_message}
     end.
 
-valid_reply(not_set) ->
-    true;
-valid_reply(ReplyId) ->
-    case dets:lookup(replies, ReplyId) of
-        [_Reply] ->
-            true;
+is_valid_message(#message{id = not_set,
+                          title = Title,
+                          reply_message_id = not_set,
+                          root_message_id = not_set,
+                          created = not_set}) when Title /= not_set ->
+    {true, not_set, not_set};
+is_valid_message(#message{id = not_set,
+                          title = not_set,
+                          reply_message_id = ReplyMessageId,
+                          root_message_id = RootMessageId,
+                          created = not_set})
+  when ReplyMessageId /= not_set andalso
+       RootMessageId /= not_set ->
+    case dets:lookup(messages, ReplyMessageId) of
+        [ReplyMessage] ->
+            case dets:lookup(messages, RootMessageId) of
+                [RootMessage] ->
+                    {true, ReplyMessage, RootMessage};
+                [] ->
+                    false
+            end;
         [] ->
             false
-    end.
+    end;
+is_valid_message(_) ->
+    false.
 
 %%
 %% Utilities
