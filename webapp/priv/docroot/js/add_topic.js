@@ -1,18 +1,21 @@
 const AddTopic = (function() {
-    let formFields = [];
+    let _formFields = [];
     let createButton = null;
 
     function init() {
-        formFields = Array.from(document.querySelectorAll('#form-title, #form-author, #form-body'));
+        _formFields = Array.from(document.querySelectorAll('#form-title, #form-author, #form-body'));
         createButton = document.getElementById('create-button');
     }
 
     function checkFormCompletion() {
-        const allFilled = formFields.every(field => field.value.trim() !== '');
+        const allFilled = _formFields.every(field => field.value.trim() !== '');
         createButton.disabled = !allFilled;
     }
 
     return {
+        formFields: function() {
+            return _formFields;
+        },
         init: init,
         checkFormCompletion: checkFormCompletion
     };
@@ -21,5 +24,6 @@ const AddTopic = (function() {
 document.addEventListener("DOMContentLoaded", function() {
     Bespoke.init();
     AddTopic.init();
-    formFields.forEach(field => field.addEventListener('input', AddTopic.checkFormCompletion));
+    AddTopic.formFields().forEach(
+        field => field.addEventListener('input', AddTopic.checkFormCompletion));
 });

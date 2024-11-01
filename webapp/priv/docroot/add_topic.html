@@ -20,13 +20,12 @@
       <!-- Header -->
       <div class="uk-card uk-card-default uk-padding-small uk-background-muted">
         <div class="uk-flex uk-flex-between uk-flex-middle">
-          <a href="#" onclick="Bespoke.navigateToPage(event)" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5" data-destination="topics.html"></a>
+          <button onclick="Bespoke.gotoPage(event)" data-destination="topics.html" class="uk-button-icon" uk-icon="arrow-left" ratio="1.5"></button>
           <div class="uk-flex-1 uk-flex uk-flex-center">
             <div class="uk-text-bold">Add New Topic</div>
           </div>
         </div>
       </div>
-
       <!-- Form -->
       <div class="uk-container uk-margin-top">
         <form class="uk-form-stacked">
@@ -36,21 +35,18 @@
               <input class="uk-input" placeholder="Title" id="form-title" type="text" required>
             </div>
           </div>
-
           <!-- Author text field -->
           <div class="uk-margin">
             <div class="uk-form-controls">
               <input class="uk-input" placeholder="Author" id="form-author" type="text" required>
             </div>
           </div>
-
           <!-- Body text area-->
           <div class="uk-margin">
             <div class="uk-form-controls">
               <textarea class="uk-textarea" placeholder="Body" id="form-body" rows="5" required></textarea>
             </div>
           </div>
-
           <!-- Create button -->
           <div class="uk-margin uk-text-right">
             <button type="submit" class="uk-button uk-button-primary" id="create-button" disabled>Create Topic</button>
