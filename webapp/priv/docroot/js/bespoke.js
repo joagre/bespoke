@@ -41,11 +41,6 @@ const Bespoke = (function() {
             return;
         }
 
-        console.log("Navigating to: " + destination);
-        console.log("Message stack: " + bespokeState.messageStack);
-
-
-
         if (destination === "message.html" && bespokeState.messageStack.length === 0) {
             window.location.href = "topics.html";
         } else {
