@@ -2,6 +2,7 @@
 
 -export([start_link/0, stop/0]).
 -export([list_root_messages/0, lookup_messages/1, insert_message/1]).
+-export([sync/0]).
 -export([message_handler/1]).
 
 -export_type([message_id/0, title/0, body/0, author/0, seconds_from_epoch/0]).
@@ -69,6 +70,15 @@ insert_message(Message) ->
     serv:call(?MODULE, {insert_message, Message}).
 
 %%
+%% Exported: sync
+%%
+
+-spec sync() -> ok.
+
+sync() ->
+    serv:call(?MODULE, sync).
+
+%%
 %% Server
 %%
 
@@ -118,6 +128,10 @@ message_handler(S) ->
                 {error, Reason} ->
                     {reply, From, {error, Reason}}
             end;
+        {call, From, sync = Call} ->
+            ?log_debug(#{call => Call}),
+            ok = dets:sync(messages),
+            {reply, From, ok};
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             exit(Reason);
         {system, From, Request} ->

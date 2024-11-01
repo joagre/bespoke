@@ -46,6 +46,4 @@ start() ->
     [#message{replies = [ReplyMessageId2]}] =
         db_serv:lookup_messages([InsertedReplyMessage1#message.id]),
     [#message{replies = []}] =
-        db_serv:lookup_messages([InsertedReplyMessage2#message.id]),
-    %% Stop server
-    ok = db_serv:stop().
+        db_serv:lookup_messages([InsertedReplyMessage2#message.id]).

@@ -13,6 +13,9 @@ $(ERL_OBJECTS): $(ERL_HEADERS)
 clean:
 	rm -f $(ALL_OBJECTS) *.core
 
+create_dummy_db:
+	rm -f ../priv/*.db; ../../main/bin/bespoke -- -noinput -run db_tools create_dummy_db -run init stop
+
 %.beam: %.erl
 	env $(ERLC) $(ERLC_FLAGS) $<
 #@END-TEST-DEFAULT-RULES@
