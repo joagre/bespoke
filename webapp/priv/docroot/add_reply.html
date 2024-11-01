@@ -1,4 +1,39 @@
-<!--
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Add Reply</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <script src="js/uikit.min.js"></script>
+    <script src="js/uikit-icons.min.js"></script>
+    <script src="js/bespoke.js"></script>
+    <script src="js/add_reply.js"></script>
+  </head>
+  <body>
+    <div class="uk-container uk-container-xsmall">
+      <!-- Header -->
+      <div class="uk-card uk-card-default uk-padding-small uk-background-muted">
+        <div class="uk-flex uk-flex-between uk-flex-middle">
+          <button onclick="Bespoke.gotoPage(event)" data-destination="message.html" class="uk-button-icon" uk-icon="arrow-left" ratio="1.5"></button>
+          <div class="uk-flex-1 uk-flex uk-flex-center">
+            <div class="uk-text-bold">Add Reply</div>
+          </div>
+        </div>
+      </div>
+      <!-- Parent message -->
+      <div class="uk-container uk-margin-top">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum vulputate mollis massa, blandit fermentum urna luctus a. Aenean purus enim, mattis sed lacinia vitae, dapibus dapibus arcu. Ut iaculis, nisl non viverra malesuada, nulla dui vehicula nibh, volutpat scelerisque nisi magna sed eros.
+      </div>
+      <div class="uk-text-meta uk-margin-small">
+        Sigvard Trolle • 30d •
+        <span uk-icon="comment"></span> 191
+      </div>
       <!-- Form -->
       <div class="uk-container uk-margin-top">
         <form class="uk-form-stacked">
@@ -8,19 +43,18 @@
               <input class="uk-input" placeholder="Author" id="form-author" type="text" required>
             </div>
           </div>
-
           <!-- Body text area-->
           <div class="uk-margin">
             <div class="uk-form-controls">
               <textarea class="uk-textarea" placeholder="Body" id="form-body" rows="5" required></textarea>
             </div>
           </div>
-
           <!-- Create button -->
           <div class="uk-margin uk-text-right">
-            <button type="submit" class="uk-button uk-button-primary" id="create-button" disabled>Create Reply</button>
+            <button type="submit" class="uk-button uk-button-primary" id="create-button" disabled>Create Topic</button>
           </div>
         </form>
       </div>
-
--->
+    </div>
+  </body>
+</html>

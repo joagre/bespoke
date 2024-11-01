@@ -1,9 +1,9 @@
-const AddTopic = (function() {
+const AddReply = (function() {
     let _formFields = [];
     let createButton = null;
 
     function init() {
-        _formFields = Array.from(document.querySelectorAll('#form-title, #form-author, #form-body'));
+        _formFields = Array.from(document.querySelectorAll('#form-author, #form-body'));
         createButton = document.getElementById('create-button');
     }
 
@@ -12,14 +12,12 @@ const AddTopic = (function() {
         createButton.disabled = !allFilled;
     }
 
-    function addTopic(event) {
+    function addReply(event) {
         event.preventDefault();
-        const title = document.getElementById('form-title').value;
         const author = document.getElementById('form-author').value;
         const body = document.getElementById('form-body').value;
-        console.log("Adding topic with title: " + title);
-        console.log("Adding topic with author: " + author);
-        console.log("Adding topic with body: " +
+        console.log("Adding reply with author: " + author);
+        console.log("Adding reply with body: " +
                     body.substring(0, 50) + (body.length > 50 ? "..." : ""));
     }
 
@@ -29,13 +27,13 @@ const AddTopic = (function() {
         },
         init: init,
         checkFormCompletion: checkFormCompletion,
-        addTopic: addTopic
+        addReply: addReply
     };
 })();
 
 document.addEventListener("DOMContentLoaded", function() {
     Bespoke.init();
-    AddTopic.init();
-    AddTopic.formFields().forEach(
-        field => field.addEventListener('input', AddTopic.checkFormCompletion));
+    AddReply.init();
+    AddReply.formFields().forEach(
+        field => field.addEventListener('input', AddReply.checkFormCompletion));
 });

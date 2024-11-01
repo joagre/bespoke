@@ -22,7 +22,7 @@
         <div class="uk-flex uk-flex-between uk-flex-middle">
           <button onclick="Bespoke.gotoPage(event)" data-destination="topics.html" class="uk-button-icon" uk-icon="arrow-left" ratio="1.5"></button>
           <div class="uk-flex-1 uk-flex uk-flex-center">
-            <div class="uk-text-bold">Add New Topic</div>
+            <div class="uk-text-bold">Add Topic</div>
           </div>
         </div>
       </div>
@@ -49,7 +49,7 @@
           </div>
           <!-- Create button -->
           <div class="uk-margin uk-text-right">
-            <button type="submit" class="uk-button uk-button-primary" id="create-button" disabled>Create Topic</button>
+            <button onclick="AddTopic.createTopic(event)" type="submit" class="uk-button uk-button-primary" id="create-button" disabled>Create Topic</button>
           </div>
         </form>
       </div>
