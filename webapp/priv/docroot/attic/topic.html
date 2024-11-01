@@ -83,5 +83,15 @@
         </div>
       </div>
     </div>
+    <!-- Modal dialog to delete a message -->
+    <div id="delete-modal" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Delete message</h2>
+        <p>Do you really want to delete "<span class="uk-text-bold" id="modal-topic-title"></span>"?</p>
+        <p class="uk-text-right">
+          <button class="uk-button uk-button-default uk-modal-close" type="button">No</button>
+          <button class="uk-button uk-button-danger" onclick="Topic.deleteMessage()">Yes</button>
+      </div>
+    </div>
   </body>
 </html>

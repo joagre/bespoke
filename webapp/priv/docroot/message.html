@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Vad hette egentligen Slas?</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke.css" />
+    <link rel="stylesheet" href="css/message.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <script src="js/uikit.min.js"></script>
+    <script src="js/uikit-icons.min.js"></script>
+    <script src="js/bespoke.js"></script>
+    <script src="js/message.js"></script>
+  </head>
+  <body>
+    <div class="uk-container uk-container-xsmall">
+      <!-- Header -->
+      <div class="uk-card uk-card-default uk-padding-small uk-background-muted">
+        <div class="uk-flex uk-flex-between uk-flex-middle">
+          <button onclick="Bespoke.popMessageStack(); Bespoke.gotoPage(event)" data-destination="message.html" class="uk-button-icon" uk-icon="arrow-left" ratio="1.5"></button>
+          <div class="uk-flex-1 uk-flex uk-flex-center">
+            <div>
+              <span class="uk-text-bold">Vad hette egentligen Slas?</span>
+              <span class="uk-text-italic" id="reply-depth">(8)</span>
+            </div>
+          </div>
+          <div>
+            <button onclick="Message.openDeleteMessageModal(event, this)" data-message-id="4711" data-message-title="Vad hette egentligen Slas?" class="uk-button-icon" uk-icon="trash"></button>
+            <button onclick="Bespoke.gotoPage(event)" data-destination="add_reply.html" class="uk-icon-button" uk-icon="reply"></button>
+          </div>
+        </div>
+      </div>
+      <!-- Parent message -->
+      <div class="uk-container uk-margin-top">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum vulputate mollis massa, blandit fermentum urna luctus a. Aenean purus enim, mattis sed lacinia vitae, dapibus dapibus arcu. Ut iaculis, nisl non viverra malesuada, nulla dui vehicula nibh, volutpat scelerisque nisi magna sed eros.
+      </div>
+      <div class="uk-text-meta uk-margin-small">
+        Sigvard Trolle • 30d •
+        <span uk-icon="comment"></span> 191
+      </div>
+      <!-- Reply message -->
+      <div onclick="Bespoke.pushMessageStack(4716); Bespoke.gotoPage(event)" data-destination="message.html" class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-reply">
+        <div>
+          Nulla et diam id nisi aliquam maximus. Donec enim ante, placerat eu finibus in, cursus vitae ante. Duis ac tortor augue. Nullam at convallis libero.
+          <div class="uk-text-meta uk-margin-small">
+            <div class="uk-flex uk-flex-between uk-flex-middle">
+              <div>
+                Tony Rogvall • 20d •
+                <span uk-icon="comment"></span> 189
+              </div>
+              <button onclick="Bespoke.pushMessageStack(5076); Bespoke.gotoPage(event)" data-destination="add_reply.html" class="uk-icon-button" uk-icon="reply"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Reply message -->
+      <div onclick="Bespoke.pushMessageStack(4719); Bespoke.gotoPage(event)" data-destination="message.html" class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-reply">
+        <div>
+          Nulla et diam id nisi aliquam maximus. Donec enim ante, placerat eu finibus in, cursus vitae ante. Duis ac tortor augue. Nullam at convallis libero.
+          <div class="uk-text-meta uk-margin-small">
+            <div class="uk-flex uk-flex-between uk-flex-middle">
+              <div>
+                Bastard Grebenö • 1d •
+                <span uk-icon="comment"></span> 2
+              </div>
+              <button onclick="Bespoke.pushMessageStack(5076); Bespoke.gotoPage(event)" data-destination="add_reply.html" class="uk-icon-button" uk-icon="reply"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal dialog to delete a message -->
+    <div id="delete-message-modal" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Delete message</h2>
+        <p>Do you really want to delete "<span class="uk-text-bold" id="delete-message-title"></span>"?</p>
+        <p class="uk-text-right">
+          <button class="uk-button uk-button-default uk-modal-close" type="button">No</button>
+          <button class="uk-button uk-button-danger" onclick="Message.deleteMessage()">Yes</button>
+      </div>
+    </div>
+  </body>
+</html>

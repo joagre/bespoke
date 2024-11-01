@@ -25,65 +25,35 @@
           <div class="uk-flex-1 uk-flex uk-flex-center">
             <div class="uk-text-bold">Topics</div>
           </div>
-          <a href="#" onclick="Bespoke.navigateToPage(event)" class="uk-icon-button" uk-icon="plus" data-destination="add_topic.html"></a>
+          <button onclick="Bespoke.gotoPage(event)" data-destination="add_topic.html" class="uk-icon-button" uk-icon="plus"></button>
         </div>
       </div>
-
-      <!-- Topics -->
-      <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
-        <!-- Topic 0 -->
-        <div class="uk-flex uk-flex-between">
-          <div>
-            <span id="topic-title-0">Vad hette egentligen Slas?</span>
-            <div class="uk-text-meta">
-              Tony Rogvall • 30d •
-              <span uk-icon="comment"></span> 189
-            </div>
-          </div>
-          <button class="uk-button-icon" uk-icon="trash"
-                  data-topic-id="0" onclick="Topics.openDeleteModal(event, this)"></button>
+      <!-- Topic message -->
+      <div onclick="Bespoke.pushMessageStack(6767); Bespoke.gotoPage(event)" data-destination="message.html"
+           class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-topic">
+        Vad hette egentligen Slas?
+        <div class="uk-text-meta">
+          Tony Rogvall • 30d •
+          <span uk-icon="comment"></span> 189
         </div>
       </div>
-
-      <!-- Topic 1 -->
-      <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
-        <div class="uk-flex uk-flex-between">
-          <div>
-            <span id="topic-title-1">Vem är Ulf Kristersson?</span>
-            <div class="uk-text-meta">
-              Tony Rogvall • 1h •
-              <span uk-icon="comment"></span> 0
-            </div>
-          </div>
-          <button class="uk-button-icon" uk-icon="trash"
-                  data-topic-id="1" onclick="Topics.openDeleteModal(event, this)"></button>
+      <!-- Topic message -->
+      <div onclick="Bespoke.pushMessageStack(6766); Bespoke.gotoPage(event)" data-destination="message.html"
+           class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-topic">
+        Jesus rockar
+        <div class="uk-text-meta">
+          Tony Rogvall • 1d •
+          <span uk-icon="comment"></span> 118282
         </div>
       </div>
-
-      <!-- Topic 2 -->
-      <div class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom bespoke-topic" onclick="Bespoke.doNothing()">
-        <div class="uk-flex uk-flex-between">
-          <div>
-            <span id="topic-title-2">Björkarna på gården</span>
-            <div class="uk-text-meta">
-              Tony Rogvall • 2h •
-              <span uk-icon="comment"></span> 15
-            </div>
-          </div>
-          <button class="uk-button-icon" uk-icon="trash"
-                  data-topic-id="2" onclick="Topics.openDeleteModal(event, this)"></button>
+      <!-- Topic message -->
+      <div onclick="Bespoke.pushMessageStack(6767); Bespoke.gotoPage(event)" data-destination="message.html"
+           class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-topic">
+        Vi måste städa upp efter oss!
+        <div class="uk-text-meta">
+          Tony Rogvall • 15m •
+          <span uk-icon="comment"></span> 189
         </div>
-      </div>
-    </div>
-
-    <!-- Modal dialog to delete a topic -->
-    <div id="delete-modal" uk-modal>
-      <div class="uk-modal-dialog uk-modal-body">
-        <h2 class="uk-modal-title">Delete topic</h2>
-        <p>Do you really want to delete "<span class="uk-text-bold" id="modal-topic-title"></span>"?</p>
-        <p class="uk-text-right">
-          <button class="uk-button uk-button-default uk-modal-close" type="button">No</button>
-          <button class="uk-button uk-button-danger" onclick="Topics.deleteTopic()">Yes</button>
       </div>
     </div>
   </body>
