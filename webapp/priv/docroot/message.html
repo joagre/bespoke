@@ -21,7 +21,7 @@
       <!-- Header -->
       <div class="uk-card uk-card-default uk-padding-small uk-background-muted">
         <div class="uk-flex uk-flex-between uk-flex-middle">
-          <button onclick="Bespoke.popMessageStack(); Bespoke.gotoPage(event)" data-destination="message.html" class="uk-button-icon" uk-icon="arrow-left" ratio="1.5"></button>
+          <button onclick="Bespoke.popMessageStack(); Bespoke.gotoPage(event, 'message.html')" data-back-destination="message.html" class="uk-button-icon" uk-icon="arrow-left" ratio="1.5"></button>
           <div class="uk-flex-1 uk-flex uk-flex-center">
             <div>
               <span class="uk-text-bold">Vad hette egentligen Slas?</span>
@@ -29,8 +29,8 @@
             </div>
           </div>
           <div>
-            <button onclick="Message.openDeleteMessageModal(event, this)" data-message-id="4711" data-message-title="Vad hette egentligen Slas?" class="uk-button-icon" uk-icon="trash"></button>
-            <button onclick="Bespoke.gotoPage(event)" data-destination="add_reply.html" class="uk-icon-button" uk-icon="reply"></button>
+            <button onclick="Message.openDeleteMessageModal(event, this, 4711, 'Vad hette egentligen Slas?')" class="uk-button-icon" uk-icon="trash"></button>
+            <button onclick="Bespoke.gotoPage(event, 'add_reply.html')" class="uk-icon-button" uk-icon="reply"></button>
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@
         <span uk-icon="comment"></span> 191
       </div>
       <!-- Reply message -->
-      <div onclick="Bespoke.pushMessageStack(4716); Bespoke.gotoPage(event)" data-destination="message.html" class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-reply">
+      <div onclick="Bespoke.pushMessageStack(4716); Bespoke.gotoPage(event, 'message.html')" class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-reply">
         <div>
           Nulla et diam id nisi aliquam maximus. Donec enim ante, placerat eu finibus in, cursus vitae ante. Duis ac tortor augue. Nullam at convallis libero.
           <div class="uk-text-meta uk-margin-small">
@@ -52,13 +52,13 @@
                 Tony Rogvall • 20d •
                 <span uk-icon="comment"></span> 189
               </div>
-              <button onclick="Bespoke.pushMessageStack(5076); Bespoke.gotoPage(event)" data-destination="add_reply.html" class="uk-icon-button" uk-icon="reply"></button>
+              <button onclick="Bespoke.pushMessageStack(5076); Bespoke.gotoPage(event, 'add_reply.html')" class="uk-icon-button" uk-icon="reply"></button>
             </div>
           </div>
         </div>
       </div>
       <!-- Reply message -->
-      <div onclick="Bespoke.pushMessageStack(4719); Bespoke.gotoPage(event)" data-destination="message.html" class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-reply">
+      <div onclick="Bespoke.pushMessageStack(4719); Bespoke.gotoPage(event, 'message.html')" class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-reply">
         <div>
           Nulla et diam id nisi aliquam maximus. Donec enim ante, placerat eu finibus in, cursus vitae ante. Duis ac tortor augue. Nullam at convallis libero.
           <div class="uk-text-meta uk-margin-small">
@@ -67,7 +67,7 @@
                 Bastard Grebenö • 1d •
                 <span uk-icon="comment"></span> 2
               </div>
-              <button onclick="Bespoke.pushMessageStack(5076); Bespoke.gotoPage(event)" data-destination="add_reply.html" class="uk-icon-button" uk-icon="reply"></button>
+              <button onclick="Bespoke.pushMessageStack(5076); Bespoke.gotoPage(event, 'add_reply.html')" class="uk-icon-button" uk-icon="reply"></button>
             </div>
           </div>
         </div>

@@ -1,23 +1,22 @@
 const Message = (function() {
     let messageId = null;
 
-    function openDeleteMessageModal(event, button) {
+    function openDeleteMessageModal(event, button, messageId, messageTitle) {
         event.stopPropagation();
-        messageId = button.getAttribute("data-message-id");
-        const messageTitle = button.getAttribute("data-message-title");
+        this.messageId = messageId;
         document.getElementById("delete-message-title").textContent = messageTitle;
         UIkit.modal("#delete-message-modal").show();
     }
 
     function deleteMessage() {
-        if (messageId == null) {
+        if (this.messageId == null) {
             console.error("No message ID specified for deletion.");
             return;
         }
 
-        console.log("Deleting message with ID: " + messageId);
+        console.log("Deleting message with ID: " + this.messageId);
         UIkit.modal("#delete-message-modal").hide();
-        messageId = null;
+        this.messageId = null;
     }
 
     return {

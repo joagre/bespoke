@@ -17,7 +17,7 @@ const Bespoke = (function() {
         }
     }
 
-    function gotoPage(event) {
+    function gotoPage(event, destination) {
         if (event == null) {
             console.error("No event object provided");
             return;
@@ -31,13 +31,6 @@ const Bespoke = (function() {
 
         const selection = window.getSelection();
         if (selection && selection.toString().length > 0) {
-            return;
-        }
-
-        const destination = event.currentTarget.getAttribute("data-destination");
-
-        if (destination == null) {
-            console.error("No destination URL specified in data-destination attribute");
             return;
         }
 
@@ -98,7 +91,7 @@ const Bespoke = (function() {
         const verticalSwipe = Math.abs(touchEndY - touchStartY);
 
         if (horizontalSwipe > SWIPE_THRESHOLD && verticalSwipe < VERTICAL_THRESHOLD) {
-            const swipeTarget = document.querySelector("[data-destination]");
+            const swipeTarget = document.querySelector("[data-back-destination]");
 
             if (swipeTarget) {
                 navigateToPage({ currentTarget: swipeTarget });
