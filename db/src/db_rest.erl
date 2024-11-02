@@ -174,6 +174,7 @@ message_to_json_term(#message{id = Id,
                               body = Body,
                               author = Author,
                               created = Created,
+                              reply_count = ReplyCount,
                               replies = Replies}) ->
     [{<<"id">>, Id},
      {<<"title">>, title_to_json_term(Title)},
@@ -182,6 +183,7 @@ message_to_json_term(#message{id = Id,
      {<<"body">>, ?l2b(Body)},
      {<<"author">>, ?l2b(Author)},
      {<<"created">>, Created},
+     {<<"reply-count">>, ReplyCount},
      {<<"replies">>, Replies}].
 
 title_to_json_term(not_set) ->

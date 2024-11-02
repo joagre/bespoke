@@ -13,6 +13,7 @@
          body :: db_serv:body(),
          author :: db_serv:author(),
          created = not_set :: db_serv:seconds_from_epoch() | not_set,
+         reply_count = 0 :: integer(),
          replies = [] :: [db_serv:message_id()]
         }).
 

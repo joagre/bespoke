@@ -160,6 +160,7 @@ add_message(NextMessageId, Message) ->
                         ReplyMessage#message{
                           replies = Replies ++ [NextMessageId]},
                     ok = dets:insert(messages, UpdatedReplyMessage),
+                    ok = update_reply_count(ReplyMessage#message.id),
                     {ok, NextMessageId + 1, NewMessage}
             end;
         false ->
@@ -192,6 +193,15 @@ is_valid_message(#message{id = not_set,
     end;
 is_valid_message(_) ->
     false.
+
+update_reply_count(not_set) ->
+    ok;
+update_reply_count(MessageId) ->
+    [Message] = dets:lookup(messages, MessageId),
+    ok = dets:insert(messages,
+                     Message#message{
+                       reply_count = Message#message.reply_count + 1}),
+    update_reply_count(Message#message.reply_message_id).
 
 %%
 %% Utilities

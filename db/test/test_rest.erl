@@ -21,6 +21,7 @@ start() ->
             <<"body">> := <<"body1">>,
             <<"author">> := <<"author1">>,
             <<"created">> := Created,
+            <<"reply-count">> := 0,
             <<"replies">> := []}]} =
         http_post("http://localhost:8080/lookup_messages", [0]),
     true = is_integer(Created),
@@ -48,6 +49,13 @@ start() ->
     {ok, [#{<<"replies">> := [ReplyMessageId2]}]} =
         http_post("http://localhost:8080/lookup_messages", [ReplyMessageId1]),
     {ok, [#{<<"replies">> := []}]} =
+        http_post("http://localhost:8080/lookup_messages", [ReplyMessageId2]),
+    %% Verify reply counts
+    {ok, [#{<<"reply-count">> := 2}]} =
+        http_post("http://localhost:8080/lookup_messages", [RootMessageId1]),
+    {ok, [#{<<"reply-count">> := 1}]} =
+        http_post("http://localhost:8080/lookup_messages", [ReplyMessageId1]),
+    {ok, [#{<<"reply-count">> := 0}]} =
         http_post("http://localhost:8080/lookup_messages", [ReplyMessageId2]).
 
 %%

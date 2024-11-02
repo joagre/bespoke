@@ -20,6 +20,7 @@ start() ->
               body = "body1",
               author = "author1",
               created = Created,
+              reply_count = 0,
               replies = []}] =
         db_serv:lookup_messages([InsertedRootMessage1#message.id]),
     true = is_integer(Created),
@@ -46,4 +47,11 @@ start() ->
     [#message{replies = [ReplyMessageId2]}] =
         db_serv:lookup_messages([InsertedReplyMessage1#message.id]),
     [#message{replies = []}] =
+        db_serv:lookup_messages([InsertedReplyMessage2#message.id]),
+    %% Verify reply counts
+    [#message{reply_count = 2}] =
+        db_serv:lookup_messages([InsertedRootMessage1#message.id]),
+    [#message{reply_count = 1}] =
+        db_serv:lookup_messages([InsertedReplyMessage1#message.id]),
+    [#message{reply_count = 0}] =
         db_serv:lookup_messages([InsertedReplyMessage2#message.id]).
