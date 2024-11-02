@@ -38,7 +38,7 @@ start() ->
         http_post("http://localhost:8080/insert_message",
                   #{<<"reply-message-id">> => maps:get(<<"id">>, ReplyMessage1),
                     <<"root-message-id">> => RootMessageId1,
-                    <<"body">> => <<"reply2">>,
+                    <<"body">> => unicode:characters_to_binary("öööreply2"),
                     <<"author">> => <<"author3">>}),
     %% Verify root message
     ReplyMessageId1 = maps:get(<<"id">>, ReplyMessage1),

@@ -12,7 +12,7 @@
          root_message_id = not_set :: db_serv:message_id() | not_set,
          body :: db_serv:body(),
          author :: db_serv:author(),
-         created = not_set :: db_serv:seconds_from_epoch() | not_set,
+         created = not_set :: db_serv:seconds_since_epoch() | not_set,
          reply_count = 0 :: integer(),
          replies = [] :: [db_serv:message_id()]
         }).

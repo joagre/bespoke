@@ -5,7 +5,7 @@
 -export([sync/0]).
 -export([message_handler/1]).
 
--export_type([message_id/0, title/0, body/0, author/0, seconds_from_epoch/0]).
+-export_type([message_id/0, title/0, body/0, author/0, seconds_since_epoch/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -16,7 +16,7 @@
 -type title() :: string().
 -type body() :: string().
 -type author() :: string().
--type seconds_from_epoch() :: integer().
+-type seconds_since_epoch() :: integer().
 
 -record(state, {
                 parent :: pid(),
@@ -150,7 +150,7 @@ add_message(NextMessageId, Message) ->
     case is_valid_message(Message) of
         {true, ReplyMessage, _RootMessage}  ->
             NewMessage = Message#message{id = NextMessageId,
-                                         created = seconds_from_epoch()},
+                                         created = seconds_since_epoch()},
             ok = dets:insert(messages, NewMessage),
             case ReplyMessage of
                 not_set ->
@@ -207,5 +207,5 @@ update_reply_count(MessageId) ->
 %% Utilities
 %%
 
-seconds_from_epoch() ->
-    calendar:datetime_to_gregorian_seconds(calendar:local_time()).
+seconds_since_epoch() ->
+    os:system_time(second).

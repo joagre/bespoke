@@ -86,6 +86,27 @@ const Bespoke = (function() {
         document.cookie = name + "=" + encodeURIComponent(cookieValue) + expires + "; path=/; SameSite=Strict";
     }
 
+    function formatSecondsSinceEpoch(secondsSinceEpoch) {
+        const now = Math.floor(Date.now() / 1000);
+        const ageInSeconds = now - secondsSinceEpoch;
+
+        if (ageInSeconds < 60) {
+            return `${ageInSeconds}s`;
+        } else if (ageInSeconds < 3600) {
+            const minutes = Math.floor(ageInSeconds / 60);
+            return `${minutes}m`;
+        } else if (ageInSeconds < 86400) {
+            const hours = Math.floor(ageInSeconds / 3600);
+            return `${hours}h`;
+        } else if (ageInSeconds < 31536000) {
+            const days = Math.floor(ageInSeconds / 86400);
+            return `${days}d`;
+        } else {
+            const years = Math.floor(ageInSeconds / 31536000);
+            return `${years}y`;
+        }
+    }
+
     function handleSwipeGesture() {
         const horizontalSwipe = touchEndX - touchStartX;
         const verticalSwipe = Math.abs(touchEndY - touchStartY);
@@ -116,6 +137,7 @@ const Bespoke = (function() {
         gotoPage: gotoPage,
         clearMessageStack: clearMessageStack,
         pushMessageStack: pushMessageStack,
-        popMessageStack: popMessageStack
+        popMessageStack: popMessageStack,
+        formatSecondsSinceEpoch: formatSecondsSinceEpoch
     };
 })();

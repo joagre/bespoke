@@ -13,8 +13,9 @@
     <link rel="manifest" href="/favicon/site.webmanifest" />
     <script src="js/uikit.min.js"></script>
     <script src="js/uikit-icons.min.js"></script>
+    <script src="js/uhtml.min.js"></script>
     <script src="js/bespoke.js"></script>
-    <script src="js/topics.js"></script>
+    <script type="module" src="js/topics.js"></script>
   </head>
   <body>
     <div class="uk-container uk-container-xsmall">
@@ -27,33 +28,7 @@
           <button onclick="Bespoke.gotoPage(event, 'add_topic.html')" class="uk-icon-button" uk-icon="plus"></button>
         </div>
       </div>
-      <!-- Topic message -->
-      <div onclick="Bespoke.pushMessageStack(6767); Bespoke.gotoPage(event, 'message.html')"
-           class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-topic">
-        Vad hette egentligen Slas?
-        <div class="uk-text-meta">
-          Tony Rogvall • 30d •
-          <span uk-icon="comment"></span> 189
-        </div>
-      </div>
-      <!-- Topic message -->
-      <div onclick="Bespoke.pushMessageStack(6766); Bespoke.gotoPage(event, 'message.html')"
-           class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-topic">
-        Jesus rockar
-        <div class="uk-text-meta">
-          Tony Rogvall • 1d •
-          <span uk-icon="comment"></span> 118282
-        </div>
-      </div>
-      <!-- Topic message -->
-      <div onclick="Bespoke.pushMessageStack(6767); Bespoke.gotoPage(event, 'message.html')"
-           class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-topic">
-        Vi måste städa upp efter oss!
-        <div class="uk-text-meta">
-          Tony Rogvall • 15m •
-          <span uk-icon="comment"></span> 189
-        </div>
-      </div>
+      <div id="topics"></div>
     </div>
   </body>
 </html>
