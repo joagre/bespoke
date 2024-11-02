@@ -71,7 +71,7 @@ http_get(Url) ->
         {ok, {{"HTTP/1.1", 200, "OK"}, Headers, Body}} ->
             case lists:keyfind("content-type", 1, Headers) of
                 {_, "application/json"} ->
-                    {ok, jsone:decode(iolist_to_binary(Body))};
+                    {ok, json:decode(iolist_to_binary(Body))};
                 _ ->
                     {ok, Body}
             end;
@@ -90,7 +90,7 @@ http_post(Url, Data) ->
         {ok, {{"HTTP/1.1", 200, "OK"}, Headers, Body}} ->
             case lists:keyfind("content-type", 1, Headers) of
                 {_, "application/json"} ->
-                    {ok, jsone:decode(iolist_to_binary(Body))};
+                    {ok, json:decode(iolist_to_binary(Body))};
                 _ ->
                     {ok, Body}
             end;
