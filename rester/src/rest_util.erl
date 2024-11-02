@@ -66,14 +66,14 @@ parse_data(Request, Body, Options) ->
 	    {error, "Unknown content type"}
     end.
 
-parse_json_string(Data, Options) ->
-    case lists:keysearch(jsone_options, 1, Options) of
-        {value, {_, JsoneOptions}} ->
-            ok;
-        false ->
-            JsoneOptions = []
-    end,
-    try jsone:decode(iolist_to_binary(Data), JsoneOptions) of
+parse_json_string(Data, _Options) ->
+%    case lists:keysearch(jsone_options, 1, Options) of
+%        {value, {_, JsoneOptions}} ->
+%            ok;
+%        false ->
+%            JsoneOptions = []
+%    end,
+    try json:decode(iolist_to_binary(Data)) of
 	Term ->
             {ok, Term}
     catch
@@ -368,12 +368,7 @@ format_reply(Data,Request) ->
 -spec format_reply_json(Term::term()) -> binary().
 
 format_reply_json(Term) ->
-    jsone:encode(Term, [{float_format, [{decimals, 4}, compact]},
-                        {indent, 2},
-                        {object_key_type, value},
-                        {space, 1},
-                        native_forward_slash,
-                        undefined_as_null]).
+    json:encode(Term).
 
 -spec format_reply_text(Term::term()) ->
 	  TextReply::string().

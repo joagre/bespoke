@@ -53,9 +53,9 @@ http_get(Socket, Request, Body, Options) ->
     Url = Request#http_request.uri,
     case string:tokens(Url#url.path, "/") of
 	["versions"] ->
-	    Object = jsone:encode([v1]),
+	    Object = json:encode([<<"v1">>]),
 	    rester_http_server:response_r(Socket, Request, 200, "OK", Object,
-                                          [{content_type,"application/json"}]);
+                                          [{content_type, "application/json"}]);
 	["v1"|Tokens] ->
 	    http_get(Socket, Request, Options, Url, Tokens, Body, v1);
 	Tokens ->
@@ -176,15 +176,15 @@ message_to_json_term(#message{id = Id,
                               created = Created,
                               reply_count = ReplyCount,
                               replies = Replies}) ->
-    [{<<"id">>, Id},
-     {<<"title">>, title_to_json_term(Title)},
-     {<<"reply-message-id">>, id_to_json_term(ReplyMessageId)},
-     {<<"root-message-id">>, id_to_json_term(RootMessageId)},
-     {<<"body">>, ?l2b(Body)},
-     {<<"author">>, ?l2b(Author)},
-     {<<"created">>, Created},
-     {<<"reply-count">>, ReplyCount},
-     {<<"replies">>, Replies}].
+    #{<<"id">> => Id,
+      <<"title">> => title_to_json_term(Title),
+      <<"reply-message-id">> => id_to_json_term(ReplyMessageId),
+      <<"root-message-id">> => id_to_json_term(RootMessageId),
+      <<"body">> => ?l2b(Body),
+      <<"author">> => ?l2b(Author),
+      <<"created">> => Created,
+      <<"reply-count">> => ReplyCount,
+      <<"replies">> => Replies}.
 
 title_to_json_term(not_set) ->
     "";

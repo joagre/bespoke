@@ -1,4 +1,4 @@
-LIBS=apptools db jsone main rester
+LIBS=apptools db main rester
 TESTS=db
 
 all:

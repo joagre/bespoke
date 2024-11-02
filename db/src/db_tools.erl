@@ -6,7 +6,7 @@
 
 create_dummy_db() ->
     %% Add two root messages
-    RootMessage1 = #message{title = "Var har sillen tagit vägen?",
+    RootMessage1 = #message{title = "Var har sillen tagit vagen?",
                             body = "body",
                             author = "ginko4711"},
     {ok, InsertedRootMessage1} = db_serv:insert_message(RootMessage1),
@@ -38,6 +38,6 @@ create_dummy_db() ->
         #message{reply_message_id = InsertedReplyMessage1#message.id,
                  root_message_id = InsertedRootMessage1#message.id,
                  body = "reply2",
-                 author = "hönan"},
+                 author = "honan"},
     {ok, _InsertedReplyMessage12} = db_serv:insert_message(ReplyMessage12),
     ok = db_serv:sync().
