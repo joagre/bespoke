@@ -4,9 +4,7 @@ document.addEventListener("DOMContentLoaded", function() {
     Bespoke.init();
     Bespoke.clearMessageStack();
 
-    // Populate page with topics
     function populatePage(rootMessages) {
-        console.log(rootMessages);
         /*
           Topic message example:
 
@@ -46,6 +44,11 @@ document.addEventListener("DOMContentLoaded", function() {
           }
           return response.json();
       })
-      .then(data => populatePage(data))
+      .then(data => {
+          populatePage(data);
+          setInterval(() => {
+              populatePage(data);
+          }, 60000);
+      })
       .catch(error => console.error("Error:", error));
 });
