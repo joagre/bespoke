@@ -195,25 +195,26 @@ message_to_json_term(#message{id = Id,
                               created = Created,
                               reply_count = ReplyCount,
                               replies = Replies}) ->
-    #{<<"id">> => Id,
-      <<"title">> => title_to_json_term(Title),
-      <<"reply-message-id">> => id_to_json_term(ReplyMessageId),
-      <<"root-message-id">> => id_to_json_term(RootMessageId),
-      <<"body">> => ?l2b(Body),
-      <<"author">> => ?l2b(Author),
-      <<"created">> => Created,
-      <<"reply-count">> => ReplyCount,
-      <<"replies">> => Replies}.
+    JsonTerm = #{<<"id">> => Id,
+                 <<"body">> => unicode:characters_to_binary(Body),
+                 <<"author">> => unicode:characters_to_binary(Author),
+                 <<"created">> => Created,
+                 <<"reply-count">> => ReplyCount,
+                 <<"replies">> => Replies},
+    add_optional_members([{<<"title">>, Title},
+                          {<<"reply-message-id">>, ReplyMessageId},
+                          {<<"root-message-id">>, RootMessageId}], JsonTerm).
 
-title_to_json_term(not_set) ->
-    "";
-title_to_json_term(Title) ->
-    ?l2b(Title).
-
-id_to_json_term(not_set) ->
-    -1;
-id_to_json_term(Id) ->
-    Id.
+add_optional_members([], JsonTerm) ->
+    JsonTerm;
+add_optional_members([{_Key, not_set}|Rest], JsonTerm) ->
+    add_optional_members(Rest, JsonTerm);
+add_optional_members([{<<"title">>, Title}|Rest], JsonTerm) ->
+    add_optional_members(
+      Rest, maps:put(<<"title">>,
+                     unicode:characters_to_binary(Title), JsonTerm));
+add_optional_members([{Key, Value}|Rest], JsonTerm) ->
+    add_optional_members(Rest, maps:put(Key, Value, JsonTerm)).
 
 json_term_to_message(#{<<"title">> := Title,
                        <<"body">> := Body,

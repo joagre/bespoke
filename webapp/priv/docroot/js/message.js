@@ -48,12 +48,16 @@ export default message;
 document.addEventListener("DOMContentLoaded", function() {
   bespoke.init();
 
-  function populatePage(parentMessage, replyMessages) {
+  function populatePage(parentMessage, rootMessageTitle, replyMessages) {
+    // Populate page title
+    document.getElementById("page-title").textContent =
+      bespoke.escapeHTML(rootMessageTitle);
+
     // Populate header
     document.getElementById("message-title").textContent =
-      bespoke.escapeHTML(parentMessage["title"]);
+      document.getElementById("page-title").textContent;
     document.getElementById("reply-depth").textContent =
-      `(${bespoke.messageStackSize() - 1})`;
+      `[${bespoke.messageStackSize()}]`;
 
     // Populate parent message
     document.getElementById("message-body").textContent =
@@ -135,6 +139,25 @@ document.addEventListener("DOMContentLoaded", function() {
       bespoke.assert(data.length === 1, "Expected exactly one message");
       const parentMessage = data[0];
 
+      // REST: Get root message title (maybe)
+      let rootMessageTitle = parentMessage["title"];
+      if (rootMessageTitle == null) {
+        response = await fetch("/lookup_messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify([parentMessage["root-message-id"]])
+        });
+        if (!response.ok) {
+          console.error(`Server error: ${response.status}`);
+          return;
+        }
+        const rootMessage = await response.json();
+        bespoke.assert(rootMessage.length === 1, "Expected exactly one message");
+        rootMessageTitle = rootMessage[0]["title"];
+      }
+
       // REST: Get reply messages
       response = await fetch("/lookup_messages", {
         method: "POST",
@@ -150,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function() {
       const replyMessages = await response.json();
 
       // Populate page
-      populatePage(parentMessage, replyMessages);
+      populatePage(parentMessage, rootMessageTitle, replyMessages);
     } catch (error) {
       console.error("Fetching failed:", error);
     }
