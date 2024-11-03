@@ -158,6 +158,25 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                               {error, bad_request, "Invalid message"})
                     end
             end;
+        ["delete_message"] ->
+            case rest_util:parse_body(Request, Body) of
+                {error, _Reason} ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"});
+                [MessageId] when is_integer(MessageId) ->
+                    case db_serv:delete_message(MessageId) of
+                        ok ->
+                            rest_util:response(Socket, Request, ok_204);
+                        {error, not_found} ->
+                            rest_util:response(Socket, Request,
+                                               {error, not_found})
+                    end;
+                _ ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "message-id must be an integer"})
+            end;
 	_ ->
 	    ?log_error("~p not found", [Tokens]),
 	    rest_util:response(Socket, Request, {error, not_found})

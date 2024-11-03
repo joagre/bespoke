@@ -1,7 +1,8 @@
 -module(db_serv).
 
 -export([start_link/0, stop/0]).
--export([list_root_messages/0, lookup_messages/1, insert_message/1]).
+-export([list_root_messages/0, lookup_messages/1, insert_message/1,
+         delete_message/1]).
 -export([sync/0]).
 -export([message_handler/1]).
 
@@ -68,6 +69,15 @@ lookup_messages(MessageIds) ->
 
 insert_message(Message) ->
     serv:call(?MODULE, {insert_message, Message}).
+
+%%
+%% delete_message
+%%
+
+-spec delete_message(message_id()) -> ok | {error, not_found}.
+
+delete_message(MessageId) ->
+    serv:call(?MODULE, {delete_message, MessageId}).
 
 %%
 %% Exported: sync
@@ -140,6 +150,15 @@ message_handler(S) ->
                      S#state{next_message_id = NextUpcomingMessageId}};
                 {error, Reason} ->
                     {reply, From, {error, Reason}}
+            end;
+        {call, From, {delete_message, MessageId} = Call} ->
+            ?log_debug(#{call => Call}),
+            case dets:lookup(messages, MessageId) of
+                [_Message] ->
+                    ok = dets:delete(messages, MessageId),
+                    {reply, From, ok};
+                [] ->
+                    {reply, From, {error, not_found}}
             end;
         {call, From, sync = Call} ->
             ?log_debug(#{call => Call}),
