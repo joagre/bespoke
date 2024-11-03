@@ -16,7 +16,9 @@ const bespoke = {
   },
 
   gotoPage(event, destination, messageId) {
-    if (messageId != null) {
+    if (messageId === -1) {
+      bespoke.popMessageStack();
+    } else if (typeof messageId === "number") {
       bespoke.pushMessageStack(messageId);
     }
 
@@ -49,6 +51,14 @@ const bespoke = {
     }
   },
 
+  peekMessageStack() {
+    return bespoke._cookieState.messageStack.slice(-1)[0];
+  },
+
+  messageStackSize() {
+    return bespoke._cookieState.messageStack.length;
+  },
+
   formatSecondsSinceEpoch(secondsSinceEpoch) {
     const now = Math.floor(Date.now() / 1000);
     const ageInSeconds = now - secondsSinceEpoch;
@@ -67,6 +77,12 @@ const bespoke = {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  },
+
+  assert(condition, message) {
+    if (!condition) {
+      throw new Error(message || "Assertion failed");
+    }
   },
 
   _initializeCookieState() {

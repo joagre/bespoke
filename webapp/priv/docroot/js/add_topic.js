@@ -19,8 +19,10 @@ const addTopic = {
       author: document.getElementById('form-author').value,
       body: document.getElementById('form-body').value
     };
-    const updateServer = async () => {
+
+    async function updateServer() {
       try {
+        // REST: Get root messages
         const response = await fetch("/insert_message", {
           method: "POST",
           headers: {
