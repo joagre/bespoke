@@ -128,7 +128,8 @@ document.addEventListener("DOMContentLoaded", function() {
         body: JSON.stringify([bespoke.peekMessageStack()])
       });
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        console.error(`Server error: ${response.status}`);
+        return;
       }
       const data = await response.json();
       bespoke.assert(data.length === 1, "Expected exactly one message");
@@ -143,7 +144,8 @@ document.addEventListener("DOMContentLoaded", function() {
         body: JSON.stringify(parentMessage["replies"])
       });
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        console.error(`Server error: ${response.status}`);
+        return;
       }
       const replyMessages = await response.json();
 

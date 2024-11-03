@@ -31,13 +31,15 @@ const addTopic = {
           body: JSON.stringify(message)
         });
         if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
+          console.error(`Server error: ${response.status}`);
+          return;
         }
         window.location.href = "topics.html";
       } catch (error) {
         console.error("Fetching failed:", error);
       }
     };
+
     updateServer();
   },
 

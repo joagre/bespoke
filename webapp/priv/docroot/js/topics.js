@@ -47,7 +47,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // REST: Get root messages
       const response = await fetch("/list_root_messages");
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        console.error(`Server error: ${response.status}`);
+        return;
       }
       const rootMessages = await response.json();
 
