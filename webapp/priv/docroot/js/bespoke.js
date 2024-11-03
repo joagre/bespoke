@@ -25,13 +25,13 @@ const bespoke = {
     bespoke._handleButtonEvent(event);
 
     if (bespoke._isTextSelected()) {
-      return; // Do not navigate if text is selected
+      return;
     }
 
     if (destination === "message.html" && bespoke._isMessageStackEmpty()) {
-      bespoke._navigateTo("topics.html");
+      bespoke.navigateTo("topics.html");
     } else {
-      bespoke._navigateTo(destination);
+      bespoke.navigateTo(destination);
     }
   },
 
@@ -85,6 +85,10 @@ const bespoke = {
     }
   },
 
+  navigateTo(destination) {
+    window.location.href = destination;
+  },
+
   _initializeCookieState() {
     bespoke._cookieState = bespoke._getCookie("bespoke");
 
@@ -108,10 +112,6 @@ const bespoke = {
 
   _isMessageStackEmpty() {
     return bespoke._cookieState.messageStack.length === 0;
-  },
-
-  _navigateTo(destination) {
-    window.location.href = destination;
   },
 
   _updateCookieState() {
@@ -175,7 +175,7 @@ const bespoke = {
   _triggerSwipeNavigation() {
     const swipeTarget = document.querySelector("[data-back-destination]");
     if (swipeTarget) {
-      bespoke._navigateTo(swipeTarget.getAttribute("data-back-destination"));
+      bespoke.navigateTo(swipeTarget.getAttribute("data-back-destination"));
     }
   },
 };

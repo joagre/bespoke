@@ -34,7 +34,7 @@ const addTopic = {
           console.error(`Server error: ${response.status}`);
           return;
         }
-        window.location.href = "topics.html";
+        bespoke.navigateTo("topics.html");
       } catch (error) {
         console.error("Fetching failed:", error);
       }

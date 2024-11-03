@@ -35,7 +35,7 @@ const message = {
           return;
         }
         bespoke.popMessageStack();
-        window.location.href = "message.html";
+        bespoke.navigateTo("topics.html");
       } catch (error) {
         console.error("Fetching failed:", error);
       }

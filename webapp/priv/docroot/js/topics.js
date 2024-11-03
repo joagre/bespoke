@@ -54,6 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Populate page
       populatePage(rootMessages);
+
+      // Update page every minute
       setInterval(() => populatePage(rootMessages), 60000);
     } catch (error) {
       console.error("Fetching failed:", error);
