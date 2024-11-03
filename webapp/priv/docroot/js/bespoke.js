@@ -11,8 +11,8 @@ const bespoke = {
   },
 
   init() {
-    this._initializeSwipeListeners();
-    this._initializeCookieState();
+    bespoke._initializeSwipeListeners();
+    bespoke._initializeCookieState();
   },
 
   gotoPage(event, destination) {
@@ -21,32 +21,32 @@ const bespoke = {
       return;
     }
 
-    this._handleButtonEvent(event);
+    bespoke._handleButtonEvent(event);
 
-    if (this._isTextSelected()) {
+    if (bespoke._isTextSelected()) {
       return; // Do not navigate if text is selected
     }
 
-    if (destination === "message.html" && this._isMessageStackEmpty()) {
-      this._navigateTo("topics.html");
+    if (destination === "message.html" && bespoke._isMessageStackEmpty()) {
+      bespoke._navigateTo("topics.html");
     } else {
-      this._navigateTo(destination);
+      bespoke._navigateTo(destination);
     }
   },
 
   clearMessageStack() {
-    this._cookieState.messageStack = [];
-    this._updateCookieState();
+    bespoke._cookieState.messageStack = [];
+    bespoke._updateCookieState();
   },
 
   pushMessageStack(messageId) {
-    this._cookieState.messageStack.push(messageId);
-    this._updateCookieState();
+    bespoke._cookieState.messageStack.push(messageId);
+    bespoke._updateCookieState();
   },
 
   popMessageStack() {
-    if (this._cookieState.messageStack.pop() != null) {
-      this._updateCookieState();
+    if (bespoke._cookieState.messageStack.pop() != null) {
+      bespoke._updateCookieState();
     }
   },
 
@@ -71,11 +71,11 @@ const bespoke = {
   },
 
   _initializeCookieState() {
-    this._cookieState = this._getCookie("bespoke");
+    bespoke._cookieState = bespoke._getCookie("bespoke");
 
-    if (!this._cookieState) {
+    if (!bespoke._cookieState) {
       console.warn("No Bespoke cookie found; initializing new state");
-      this._cookieState = { messageStack: [] };
+      bespoke._cookieState = { messageStack: [] };
     }
   },
 
@@ -92,7 +92,7 @@ const bespoke = {
   },
 
   _isMessageStackEmpty() {
-    return this._cookieState.messageStack.length === 0;
+    return bespoke._cookieState.messageStack.length === 0;
   },
 
   _navigateTo(destination) {
@@ -100,7 +100,7 @@ const bespoke = {
   },
 
   _updateCookieState() {
-    this._setCookie("bespoke", this._cookieState, 7); // 7 days expiry by default
+    bespoke._setCookie("bespoke", bespoke._cookieState, 7);
   },
 
   _getCookie(name) {
@@ -123,39 +123,44 @@ const bespoke = {
       date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
       expires = `; expires=${date.toUTCString()}`;
     }
-    const cookieValue = typeof value === "object" ? JSON.stringify(value) : value;
-    document.cookie = `${name}=${encodeURIComponent(cookieValue)}${expires}; path=/; SameSite=Strict`;
+    const cookieValue =
+          typeof value === "object" ? JSON.stringify(value) : value;
+    document.cookie =
+      `${name}=${encodeURIComponent(cookieValue)}${expires}; path=/; SameSite=Strict`;
   },
 
   _initializeSwipeListeners() {
-    document.addEventListener("touchstart", (event) => this._onTouchStart(event));
-    document.addEventListener("touchend", (event) => this._onTouchEnd(event));
+    document.addEventListener("touchstart",
+                              (event) => bespoke._onTouchStart(event));
+    document.addEventListener("touchend",
+                              (event) => bespoke._onTouchEnd(event));
   },
 
   _onTouchStart(event) {
-    this._touch.startX = event.changedTouches[0].screenX;
-    this._touch.startY = event.changedTouches[0].screenY;
+    bespoke._touch.startX = event.changedTouches[0].screenX;
+    bespoke._touch.startY = event.changedTouches[0].screenY;
   },
 
   _onTouchEnd(event) {
-    this._touch.endX = event.changedTouches[0].screenX;
-    this._touch.endY = event.changedTouches[0].screenY;
-    this._handleSwipeGesture();
+    bespoke._touch.endX = event.changedTouches[0].screenX;
+    bespoke._touch.endY = event.changedTouches[0].screenY;
+    bespoke._handleSwipeGesture();
   },
 
   _handleSwipeGesture() {
-    const horizontalSwipe = this._touch.endX - this._touch.startX;
-    const verticalSwipe = Math.abs(this._touch.endY - this._touch.startY);
+    const horizontalSwipe = bespoke._touch.endX - bespoke._touch.startX;
+    const verticalSwipe = Math.abs(bespoke._touch.endY - bespoke._touch.startY);
 
-    if (horizontalSwipe > SWIPE_THRESHOLD && verticalSwipe < VERTICAL_THRESHOLD) {
-      this._triggerSwipeNavigation();
+    if (horizontalSwipe > SWIPE_THRESHOLD &&
+        verticalSwipe < VERTICAL_THRESHOLD) {
+      bespoke._triggerSwipeNavigation();
     }
   },
 
   _triggerSwipeNavigation() {
     const swipeTarget = document.querySelector("[data-back-destination]");
     if (swipeTarget) {
-      this._navigateTo(swipeTarget.getAttribute("data-back-destination"));
+      bespoke._navigateTo(swipeTarget.getAttribute("data-back-destination"));
     }
   },
 };

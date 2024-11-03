@@ -25,10 +25,14 @@
           <div class="uk-flex-1 uk-flex uk-flex-center">
             <div class="uk-text-bold">Topics</div>
           </div>
-          <button onclick="Bespoke.gotoPage(event, 'add_topic.html')" class="uk-icon-button" uk-icon="plus"></button>
+          <button onclick="bespoke.gotoPage(event, 'add_topic.html')" class="uk-icon-button" uk-icon="plus"></button>
         </div>
       </div>
       <div id="topics"></div>
     </div>
+    <script type="module">
+      import bespoke from "/js/bespoke.js";
+      window.bespoke = bespoke;
+    </script>
   </body>
 </html>

@@ -1,41 +1,44 @@
-const AddTopic = (function() {
-    let _formFields = [];
-    let createButton = null;
+import bespoke from "/js/bespoke.js";
 
-    function init() {
-        _formFields = Array.from(document.querySelectorAll('#form-title, #form-author, #form-body'));
-        createButton = document.getElementById('create-button');
-    }
+const addTopic = {
+  _formFields: [],
+  _addButton: null,
 
-    function checkFormCompletion() {
-        const allFilled = _formFields.every(field => field.value.trim() !== '');
-        createButton.disabled = !allFilled;
-    }
+  init() {
+    addTopic._formFields =
+      Array.from(document.querySelectorAll(
+        '#form-title, #form-author, #form-body'));
+    addTopic._addButton = document.getElementById('add-button');
+    addTopic._attachEventListeners();
+  },
 
-    function addTopic(event) {
-        event.preventDefault();
-        const title = document.getElementById('form-title').value;
-        const author = document.getElementById('form-author').value;
-        const body = document.getElementById('form-body').value;
-        console.log("Adding topic with title: " + title);
-        console.log("Adding topic with author: " + author);
-        console.log("Adding topic with body: " +
-                    body.substring(0, 50) + (body.length > 50 ? "..." : ""));
-    }
+  addTopic(event) {
+    event.preventDefault();
+    const title = document.getElementById('form-title').value;
+    const author = document.getElementById('form-author').value;
+    const body = document.getElementById('form-body').value;
+    console.log("Adding topic with title: " + title);
+    console.log("Adding topic with author: " + author);
+    console.log("Adding topic with body: " + body.substring(0, 50) +
+                (body.length > 50 ? "..." : ""));
+  },
 
-    return {
-        formFields: function() {
-            return _formFields;
-        },
-        init: init,
-        checkFormCompletion: checkFormCompletion,
-        addTopic: addTopic
-    };
-})();
+  _attachEventListeners() {
+    addTopic._formFields.forEach(field => {
+      field.addEventListener('input', () => addTopic._checkFormCompletion());
+    });
+  },
 
-document.addEventListener("DOMContentLoaded", function() {
-    Bespoke.init();
-    AddTopic.init();
-    AddTopic.formFields().forEach(
-        field => field.addEventListener('input', AddTopic.checkFormCompletion));
+  _checkFormCompletion() {
+    const allFilled =
+          addTopic._formFields.every(field => field.value.trim() !== '');
+    addTopic._addButton.disabled = !allFilled;
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  bespoke.init();
+  addTopic.init();
 });
+
+export default addTopic;

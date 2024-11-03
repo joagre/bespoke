@@ -10,17 +10,18 @@
     <link rel="shortcut icon" href="/favicon/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
     <link rel="manifest" href="/favicon/site.webmanifest" />
-    <script src="js/uikit.min.js"></script>
-    <script src="js/uikit-icons.min.js"></script>
-    <script src="js/bespoke.js"></script>
-    <script src="js/add_topic.js"></script>
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
+    <script src="js/uhtml.min.js" defer></script>
+    <script type="module" src="js/bespoke.js" defer></script>
+    <script type="module" src="js/add_topic.js" defer></script>
   </head>
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
       <div class="uk-card uk-card-default uk-padding-small uk-background-muted">
         <div class="uk-flex uk-flex-between uk-flex-middle">
-          <button onclick="Bespoke.gotoPage(event, 'topics.html')" data-back-destination="topics.html" class="uk-button-icon" uk-icon="arrow-left" ratio="1.5"></button>
+          <button onclick="bespoke.gotoPage(event, 'topics.html')" data-back-destination="topics.html" class="uk-button-icon" uk-icon="arrow-left" ratio="1.5"></button>
           <div class="uk-flex-1 uk-flex uk-flex-center">
             <div class="uk-text-bold">Add Topic</div>
           </div>
@@ -47,12 +48,18 @@
               <textarea class="uk-textarea" placeholder="Body" id="form-body" rows="5" required></textarea>
             </div>
           </div>
-          <!-- Create button -->
+          <!-- Add button -->
           <div class="uk-margin uk-text-right">
-            <button onclick="AddTopic.createTopic(event)" type="submit" class="uk-button uk-button-primary" id="create-button" disabled>Create Topic</button>
+            <button onclick="addTopic.addTopic(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Topic</button>
           </div>
         </form>
       </div>
     </div>
+    <script type="module">
+      import bespoke from "/js/bespoke.js";
+      import addTopic from "/js/add_topic.js";
+      window.bespoke = bespoke;
+      window.addTopic = addTopic;
+    </script>
   </body>
 </html>
