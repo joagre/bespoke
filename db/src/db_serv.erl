@@ -84,11 +84,24 @@ sync() ->
 
 init(Parent) ->
     {ok, messages} =
-        dets:open_file(messages,
-                       [{file, filename:join(code:priv_dir(db), "messages.db")},
-                        {keypos, #message.id}]),
+        dets:open_file(
+          messages,
+          [{file, filename:join(code:priv_dir(db), "messages.db")},
+           {keypos, #message.id}]),
     ?log_info("Database server has been started"),
-    {ok, #state{parent = Parent}}.
+    {ok, #state{parent = Parent, next_message_id = next_message_id()}}.
+
+next_message_id() ->
+    case dets:foldl(fun(#message{id = Id}, MaxId) when Id > MaxId ->
+                            Id;
+                       (_, MaxId) ->
+                            MaxId
+                    end, 0, messages) of
+        0 ->
+            0;
+        MaxId ->
+            MaxId + 1
+    end.
 
 message_handler(S) ->
     receive

@@ -18,8 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     /*
       Topic message example:
 
-      <div onclick="Bespoke.pushMessageStack(6767); Bespoke.gotoPage(event, 'message.html')"
-           class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-topic">
+      <div onclick="Bespoke.gotoPage(event, 'message.html', 6767)" class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-topic">
         Vad hette egentligen Slas?
         <div class="uk-text-meta">
           Tony Rogvall • 30d •
@@ -30,8 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const age = bespoke.formatSecondsSinceEpoch(message.created);
     return html`
       <div onclick=${() => {
-           bespoke.pushMessageStack(message["id"]);
-           bespoke.gotoPage(event, "message.html");
+           bespoke.gotoPage(event, "message.html", message["id"]);
         }} class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-topic">
                 ${bespoke.escapeHTML(message["body"])}
                 <div class="uk-text-meta">
@@ -42,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
   };
 
-  const fetchRootMessages = async () => {
+  const updatePage = async () => {
     try {
       const response = await fetch("/list_root_messages");
       if (!response.ok) {
@@ -52,9 +50,9 @@ document.addEventListener("DOMContentLoaded", () => {
       populatePage(data);
       setInterval(() => populatePage(data), 60000);
     } catch (error) {
-      console.error("Error fetching root messages:", error);
+      console.error("Fetching failed:", error);
     }
   };
 
-  fetchRootMessages();
+  updatePage();
 });

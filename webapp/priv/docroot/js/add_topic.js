@@ -14,13 +14,29 @@ const addTopic = {
 
   addTopic(event) {
     event.preventDefault();
-    const title = document.getElementById('form-title').value;
-    const author = document.getElementById('form-author').value;
-    const body = document.getElementById('form-body').value;
-    console.log("Adding topic with title: " + title);
-    console.log("Adding topic with author: " + author);
-    console.log("Adding topic with body: " + body.substring(0, 50) +
-                (body.length > 50 ? "..." : ""));
+    const message = {
+      title: document.getElementById('form-title').value,
+      author: document.getElementById('form-author').value,
+      body: document.getElementById('form-body').value
+    };
+    const updateServer = async () => {
+      try {
+        const response = await fetch("/insert_message", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(message)
+        });
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+        window.location.href = "topics.html";
+      } catch (error) {
+        console.error("Fetching failed:", error);
+      }
+    };
+    updateServer();
   },
 
   _attachEventListeners() {

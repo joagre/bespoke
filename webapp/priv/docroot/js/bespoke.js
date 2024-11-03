@@ -15,10 +15,9 @@ const bespoke = {
     bespoke._initializeCookieState();
   },
 
-  gotoPage(event, destination) {
-    if (!event) {
-      console.error("No event object provided");
-      return;
+  gotoPage(event, destination, messageId) {
+    if (messageId != null) {
+      bespoke.pushMessageStack(messageId);
     }
 
     bespoke._handleButtonEvent(event);
