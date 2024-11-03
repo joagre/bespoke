@@ -117,7 +117,7 @@ message_handler(S) ->
             SortedRootMessages =
                 lists:sort(
                   fun(MessageA, MessageB) ->
-                          MessageA#message.created =< MessageB#message.created
+                          MessageA#message.created >= MessageB#message.created
                   end, RootMessages),
             {reply, From, SortedRootMessages};
         {call, From, {lookup_messages, MessageIds} = Call} ->

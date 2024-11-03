@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <div onclick=${() => {
            bespoke.gotoPage(event, "message.html", message["id"]);
         }} class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-topic">
-                ${bespoke.escapeHTML(message["body"])}
+                ${bespoke.escapeHTML(message["title"])}
                 <div class="uk-text-meta">
                   ${bespoke.escapeHTML(message["author"])} • ${age} •
                   <span uk-icon="comment"></span> ${message["reply-count"]}
