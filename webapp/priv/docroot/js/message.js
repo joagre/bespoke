@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   async function updatePage() {
     try {
-      // REST: Get parent messages
+      // REST: Get parent message
       let response = await fetch("/lookup_messages", {
         method: "POST",
         headers: {

@@ -7,7 +7,7 @@ const addTopic = {
   init() {
     addTopic._formFields =
       Array.from(document.querySelectorAll(
-        '#form-title, #form-author, #form-body'));
+        "#form-title, #form-author, #form-body"));
     addTopic._addButton = document.getElementById('add-button');
     addTopic._attachEventListeners();
   },
@@ -22,7 +22,7 @@ const addTopic = {
 
     async function updateServer() {
       try {
-        // REST: Get root messages
+        // REST: Add root message
         const response = await fetch("/insert_message", {
           method: "POST",
           headers: {
