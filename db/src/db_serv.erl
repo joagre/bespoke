@@ -1,11 +1,9 @@
 -module(db_serv).
-
 -export([start_link/0, stop/0]).
 -export([list_root_messages/0, lookup_messages/1, insert_message/1,
          delete_message/1]).
 -export([sync/0]).
 -export([message_handler/1]).
-
 -export_type([message_id/0, title/0, body/0, author/0, seconds_since_epoch/0]).
 
 -include_lib("apptools/include/log.hrl").
@@ -127,13 +125,13 @@ message_handler(S) ->
             SortedRootMessages =
                 lists:sort(
                   fun(MessageA, MessageB) ->
-                          MessageA#message.created >= MessageB#message.created
+                          MessageA#message.created =< MessageB#message.created
                   end, RootMessages),
             {reply, From, SortedRootMessages};
         {call, From, {lookup_messages, MessageIds} = Call} ->
             ?log_debug(#{call => Call}),
             Messages =
-                lists:foldl(fun(MessageId, Acc) ->
+                lists:foldr(fun(MessageId, Acc) ->
                                     case dets:lookup(messages, MessageId) of
                                         [Message] ->
                                             [Message|Acc];
@@ -144,7 +142,7 @@ message_handler(S) ->
             {reply, From, Messages};
         {call, From, {insert_message, Message} = Call} ->
             ?log_debug(#{call => Call}),
-            case add_message(S#state.next_message_id, Message) of
+            case do_insert_message(S#state.next_message_id, Message) of
                 {ok, NextUpcomingMessageId, AddedMessage} ->
                     {reply, From, {ok, AddedMessage},
                      S#state{next_message_id = NextUpcomingMessageId}};
@@ -154,8 +152,19 @@ message_handler(S) ->
         {call, From, {delete_message, MessageId} = Call} ->
             ?log_debug(#{call => Call}),
             case dets:lookup(messages, MessageId) of
-                [_Message] ->
-                    ok = dets:delete(messages, MessageId),
+                [#message{parent_message_id = ParentMessageId}]
+                  when ParentMessageId /= not_set ->
+                    [ParentMessage] = dets:lookup(messages, ParentMessageId),
+                    ok = dets:insert(
+                           messages,
+                           ParentMessage#message{
+                             replies = lists:delete(
+                                         MessageId,
+                                         ParentMessage#message.replies)}),
+                    ok = delete_all(MessageId),
+                    {reply, From, ok};
+                [_RootMessage] ->
+                    ok = delete_all(MessageId),
                     {reply, From, ok};
                 [] ->
                     {reply, From, {error, not_found}}
@@ -178,21 +187,21 @@ message_handler(S) ->
 %% Insert message
 %%
 
-add_message(NextMessageId, Message) ->
+do_insert_message(NextMessageId, Message) ->
     case is_valid_message(Message) of
-        {true, ReplyMessage, _RootMessage}  ->
+        {true, ParentMessage, _RootMessage}  ->
             NewMessage = Message#message{id = NextMessageId,
                                          created = seconds_since_epoch()},
             ok = dets:insert(messages, NewMessage),
-            case ReplyMessage of
+            case ParentMessage of
                 not_set ->
                     {ok, NextMessageId + 1, NewMessage};
                 #message{replies = Replies} ->
-                    UpdatedReplyMessage =
-                        ReplyMessage#message{
+                    UpdatedParentMessage =
+                        ParentMessage#message{
                           replies = Replies ++ [NextMessageId]},
-                    ok = dets:insert(messages, UpdatedReplyMessage),
-                    ok = update_reply_count(ReplyMessage#message.id),
+                    ok = dets:insert(messages, UpdatedParentMessage),
+                    ok = update_reply_count(ParentMessage#message.id),
                     {ok, NextMessageId + 1, NewMessage}
             end;
         false ->
@@ -201,22 +210,22 @@ add_message(NextMessageId, Message) ->
 
 is_valid_message(#message{id = not_set,
                           title = Title,
-                          reply_message_id = not_set,
+                          parent_message_id = not_set,
                           root_message_id = not_set,
                           created = not_set}) when Title /= not_set ->
     {true, not_set, not_set};
 is_valid_message(#message{id = not_set,
                           title = not_set,
-                          reply_message_id = ReplyMessageId,
+                          parent_message_id = ParentMessageId,
                           root_message_id = RootMessageId,
                           created = not_set})
-  when ReplyMessageId /= not_set andalso
+  when ParentMessageId /= not_set andalso
        RootMessageId /= not_set ->
-    case dets:lookup(messages, ReplyMessageId) of
-        [ReplyMessage] ->
+    case dets:lookup(messages, ParentMessageId) of
+        [ParentMessage] ->
             case dets:lookup(messages, RootMessageId) of
                 [RootMessage] ->
-                    {true, ReplyMessage, RootMessage};
+                    {true, ParentMessage, RootMessage};
                 [] ->
                     false
             end;
@@ -233,7 +242,22 @@ update_reply_count(MessageId) ->
     ok = dets:insert(messages,
                      Message#message{
                        reply_count = Message#message.reply_count + 1}),
-    update_reply_count(Message#message.reply_message_id).
+    update_reply_count(Message#message.parent_message_id).
+
+%%
+%% Delete all messages (recursively)
+%%
+
+delete_all(MessageId) ->
+    case dets:lookup(messages, MessageId) of
+        [Message] ->
+            lists:foreach(fun(ReplyId) ->
+                                  delete_all(ReplyId) end,
+                          Message#message.replies),
+            ok = dets:delete(messages, MessageId);
+        [] ->
+            ok
+    end.
 
 %%
 %% Utilities

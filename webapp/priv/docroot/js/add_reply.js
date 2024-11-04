@@ -1,7 +1,7 @@
 import bespoke from "/js/bespoke.js";
 
 const addReply = {
-  replyMessage: null,
+  parentMessage: null,
   rootMessageTitle: null,
   _formFields: [],
   _addButton: null,
@@ -22,11 +22,11 @@ const addReply = {
         author: document.getElementById('form-author').value,
         body: document.getElementById('form-body').value
       };
-      message["reply-message-id"] = addReply.replyMessage["id"];
-      if (addReply.replyMessage["root-message-id"] == null) {
-        message["root-message-id"] = addReply.replyMessage["id"];
+      message["parent-message-id"] = addReply.parentMessage["id"];
+      if (addReply.parentMessage["root-message-id"] == null) {
+        message["root-message-id"] = addReply.parentMessage["id"];
       } else {
-        message["root-message-id"] = addReply.replyMessage["root-message-id"];
+        message["root-message-id"] = addReply.parentMessage["root-message-id"];
       }
 
       try {
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function() {
   bespoke.init();
   addReply.init();
 
-  function populatePage(replyMessage, rootMessageTitle) {
+  function populatePage(parentMessage, rootMessageTitle) {
     // Populate page title
     document.getElementById("page-title").textContent =
       bespoke.escapeHTML(rootMessageTitle);
@@ -81,20 +81,20 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("reply-depth").textContent =
       `[${bespoke.messageStackSize()}]`;
 
-    // Populate reply message
+    // Populate parent message
     document.getElementById("message-body").textContent =
-      bespoke.escapeHTML(replyMessage["body"]);
+      bespoke.escapeHTML(parentMessage["body"]);
     document.getElementById("message-author").textContent =
-      bespoke.escapeHTML(replyMessage["author"]);
+      bespoke.escapeHTML(parentMessage["author"]);
     document.getElementById("message-created").textContent =
-      bespoke.formatSecondsSinceEpoch(replyMessage["created"]);
+      bespoke.formatSecondsSinceEpoch(parentMessage["created"]);
     document.getElementById("message-reply-count").textContent =
-      replyMessage["reply-count"];
+      parentMessage["reply-count"];
   };
 
   async function updatePage() {
     try {
-      // REST: Get reply message
+      // REST: Get parent message
       let response = await fetch("/lookup_messages", {
         method: "POST",
         headers: {
@@ -106,19 +106,19 @@ document.addEventListener("DOMContentLoaded", function() {
         console.error(`Server error: ${response.status}`);
         return;
       }
-      const data = await response.json();
+      let data = await response.json();
       bespoke.assert(data.length === 1, "Expected exactly one message");
-      addReply.replyMessage = data[0];
+      addReply.parentMessage = data[0];
 
       // REST: Get root message title (maybe)
-      addReply.rootMessageTitle = addReply.replyMessage["title"];
+      addReply.rootMessageTitle = addReply.parentMessage["title"];
       if (addReply.rootMessageTitle == null) {
         response = await fetch("/lookup_messages", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify([addReply.replyMessage["root-message-id"]])
+          body: JSON.stringify([addReply.parentMessage["root-message-id"]])
         });
         if (!response.ok) {
           console.error(`Server error: ${response.status}`);
@@ -127,11 +127,11 @@ document.addEventListener("DOMContentLoaded", function() {
         data = await response.json();
         bespoke.assert(data.length === 1, "Expected exactly one message");
         const rootMessage = data[0];
-        addReply.rootMessageTitle = addReply.replyMessage["title"];
+        addReply.rootMessageTitle = rootMessage["title"];
       }
 
       // Populate page
-      populatePage(addReply.replyMessage, addReply.rootMessageTitle);
+      populatePage(addReply.parentMessage, addReply.rootMessageTitle);
     } catch (error) {
       console.error("Fetching failed:", error);
     }

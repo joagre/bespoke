@@ -11,33 +11,33 @@ create_dummy_db() ->
                             author = "ginko4711"},
     {ok, InsertedRootMessage1} = db_serv:insert_message(RootMessage1),
     RootMessage2 = #message{title = "Republik nu!",
-                            body = "body1",
+                            body = "body",
                             author = "zappeU"},
     {ok, _InsertedRootMessage2} = db_serv:insert_message(RootMessage2),
     %% Add two replies
     ReplyMessage1 =
-        #message{reply_message_id = InsertedRootMessage1#message.id,
+        #message{parent_message_id = InsertedRootMessage1#message.id,
                  root_message_id = InsertedRootMessage1#message.id,
                  body = "reply1",
-                 author = "harald"},
+                 author = "snuvan"},
     {ok, InsertedReplyMessage1} = db_serv:insert_message(ReplyMessage1),
     ReplyMessage2 =
-        #message{reply_message_id = InsertedRootMessage1#message.id,
+        #message{parent_message_id = InsertedRootMessage1#message.id,
                  root_message_id = InsertedRootMessage1#message.id,
-                 body = "reply1",
+                 body = "reply2",
                  author = "harald"},
     {ok, _InsertedReplyMessage2} = db_serv:insert_message(ReplyMessage2),
     %% Add two replies to the first reply
     ReplyMessage11 =
-        #message{reply_message_id = InsertedReplyMessage1#message.id,
+        #message{parent_message_id = InsertedReplyMessage1#message.id,
                  root_message_id = InsertedRootMessage1#message.id,
-                 body = "reply2",
+                 body = "reply11",
                  author = "sminkor"},
     {ok, _InsertedReplyMessage11} = db_serv:insert_message(ReplyMessage11),
     ReplyMessage12 =
-        #message{reply_message_id = InsertedReplyMessage1#message.id,
+        #message{parent_message_id = InsertedReplyMessage1#message.id,
                  root_message_id = InsertedRootMessage1#message.id,
-                 body = "reply2",
+                 body = "reply12",
                  author = "honan"},
     {ok, _InsertedReplyMessage12} = db_serv:insert_message(ReplyMessage12),
     ok = db_serv:sync().

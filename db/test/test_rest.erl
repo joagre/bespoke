@@ -29,14 +29,14 @@ start() ->
     RootMessageId1 = maps:get(<<"id">>, RootMessage1),
     {ok, ReplyMessage1} =
         http_post("http://localhost:8080/insert_message",
-                  #{<<"reply-message-id">> => RootMessageId1,
+                  #{<<"parent-message-id">> => RootMessageId1,
                     <<"root-message-id">> => RootMessageId1,
                     <<"body">> => <<"reply1">>,
                     <<"author">> => <<"author2">>}),
     %% Add repply message to reply message
     {ok, ReplyMessage2} =
         http_post("http://localhost:8080/insert_message",
-                  #{<<"reply-message-id">> => maps:get(<<"id">>, ReplyMessage1),
+                  #{<<"parent-message-id">> => maps:get(<<"id">>, ReplyMessage1),
                     <<"root-message-id">> => RootMessageId1,
                     <<"body">> => unicode:characters_to_binary("öööreply2"),
                     <<"author">> => <<"author3">>}),

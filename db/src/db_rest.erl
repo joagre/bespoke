@@ -164,7 +164,7 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
-                [MessageId] when is_integer(MessageId) ->
+                MessageId when is_integer(MessageId) ->
                     case db_serv:delete_message(MessageId) of
                         ok ->
                             rest_util:response(Socket, Request, ok_204);
@@ -188,7 +188,7 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
 
 message_to_json_term(#message{id = Id,
                               title = Title,
-                              reply_message_id = ReplyMessageId,
+                              parent_message_id = ParentMessageId,
                               root_message_id = RootMessageId,
                               body = Body,
                               author = Author,
@@ -202,7 +202,7 @@ message_to_json_term(#message{id = Id,
                  <<"reply-count">> => ReplyCount,
                  <<"replies">> => Replies},
     add_optional_members([{<<"title">>, Title},
-                          {<<"reply-message-id">>, ReplyMessageId},
+                          {<<"parent-message-id">>, ParentMessageId},
                           {<<"root-message-id">>, RootMessageId}], JsonTerm).
 
 add_optional_members([], JsonTerm) ->
@@ -228,16 +228,16 @@ json_term_to_message(#{<<"title">> := Title,
         false ->
             {error, invalid}
     end;
-json_term_to_message(#{<<"reply-message-id">> := ReplyMessageId,
+json_term_to_message(#{<<"parent-message-id">> := ParentMessageId,
                        <<"root-message-id">> := RootMessageId,
                        <<"body">> := Body,
                        <<"author">> := Author} = MessageJsonTerm) ->
-    case no_more_keys([<<"reply-message-id">>,
+    case no_more_keys([<<"parent-message-id">>,
                        <<"root-message-id">>,
                        <<"body">>,
                        <<"author">>], MessageJsonTerm) of
         true ->
-            {ok, #message{reply_message_id = ReplyMessageId,
+            {ok, #message{parent_message_id = ParentMessageId,
                           root_message_id = RootMessageId,
                           body = ?b2l(Body),
                           author = ?b2l(Author)}};

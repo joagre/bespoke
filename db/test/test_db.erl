@@ -15,7 +15,7 @@ start() ->
     %% Verify message
     [#message{id = 0,
               title = "title1",
-              reply_message_id = not_set,
+              parent_message_id = not_set,
               root_message_id = not_set,
               body = "body1",
               author = "author1",
@@ -26,14 +26,14 @@ start() ->
     true = is_integer(Created),
     %% Add reply message to root message
     ReplyMessage1 =
-        #message{reply_message_id = InsertedRootMessage1#message.id,
+        #message{parent_message_id = InsertedRootMessage1#message.id,
                  root_message_id = InsertedRootMessage1#message.id,
                  body = "reply1",
                  author = "author2"},
     {ok, InsertedReplyMessage1} = db_serv:insert_message(ReplyMessage1),
     %% Add reply message to reply message
     ReplyMessage2 =
-        #message{reply_message_id = InsertedReplyMessage1#message.id,
+        #message{parent_message_id = InsertedReplyMessage1#message.id,
                  root_message_id = InsertedRootMessage1#message.id,
                  body = "reply2",
                  author = "author3"},

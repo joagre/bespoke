@@ -7,7 +7,7 @@
          %% Note: Mandatory for root messages and disallowed for other messages
          title = not_set :: db_serv:title() | not_set,
          %% Note: Disallowed for root messages and mandatory for other messages
-         reply_message_id = not_set :: db_serv:message_id() | not_set,
+         parent_message_id = not_set :: db_serv:message_id() | not_set,
          %% Note: Disallowed for root messages and mandatory for other messages
          root_message_id = not_set :: db_serv:message_id() | not_set,
          body :: db_serv:body(),

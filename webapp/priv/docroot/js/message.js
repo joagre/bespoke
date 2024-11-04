@@ -14,7 +14,7 @@ const message = {
     UIkit.modal("#delete-message-modal").show();
   },
 
-  deleteMessage() {
+  deleteMessage(event) {
     if (message._messageId == null) {
       console.error("No message ID to delete");
       return;
@@ -34,12 +34,13 @@ const message = {
           console.error(`Server error: ${response.status}`);
           return;
         }
-        bespoke.popMessageStack();
-        bespoke.navigateTo("topics.html");
+        bespoke.gotoPage(event, "message.html", -1);
       } catch (error) {
         console.error("Fetching failed:", error);
       }
     };
+
+    updateServer();
   }
 };
 
@@ -172,7 +173,6 @@ document.addEventListener("DOMContentLoaded", function() {
       }
       const replyMessages = await response.json();
 
-      // Populate page
       populatePage(parentMessage, rootMessageTitle, replyMessages);
     } catch (error) {
       console.error("Fetching failed:", error);
