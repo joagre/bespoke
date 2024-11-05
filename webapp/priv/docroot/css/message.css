@@ -1,3 +1,7 @@
+#message-title {
+    cursor: pointer;
+}
+
 .message-reply {
     cursor: pointer;
     padding-top: 0.5rem !important;

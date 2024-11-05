@@ -59,6 +59,12 @@ const bespoke = {
     return bespoke._cookieState.messageStack.length;
   },
 
+  truncateMessageStack(length) {
+    bespoke._cookieState.messageStack =
+      bespoke._cookieState.messageStack.slice(0, length);
+    bespoke._updateCookieState();
+  },
+
   formatSecondsSinceEpoch(secondsSinceEpoch) {
     const now = Math.floor(Date.now() / 1000);
     const ageInSeconds = now - secondsSinceEpoch;
@@ -93,7 +99,6 @@ const bespoke = {
     bespoke._cookieState = bespoke._getCookie("bespoke");
 
     if (!bespoke._cookieState) {
-      console.warn("No Bespoke cookie found; initializing new state");
       bespoke._cookieState = { messageStack: [] };
     }
   },
@@ -146,9 +151,11 @@ const bespoke = {
 
   _initializeSwipeListeners() {
     document.addEventListener("touchstart",
-                              (event) => bespoke._onTouchStart(event));
+                              (event) => bespoke._onTouchStart(event),
+                              {passive: false});
     document.addEventListener("touchend",
-                              (event) => bespoke._onTouchEnd(event));
+                              (event) => bespoke._onTouchEnd(event),
+                              {passive: false});
   },
 
   _onTouchStart(event) {
@@ -165,7 +172,6 @@ const bespoke = {
   _handleSwipeGesture() {
     const horizontalSwipe = bespoke._touch.endX - bespoke._touch.startX;
     const verticalSwipe = Math.abs(bespoke._touch.endY - bespoke._touch.startY);
-
     if (horizontalSwipe > SWIPE_THRESHOLD &&
         verticalSwipe < VERTICAL_THRESHOLD) {
       bespoke._triggerSwipeNavigation();
@@ -175,7 +181,12 @@ const bespoke = {
   _triggerSwipeNavigation() {
     const swipeTarget = document.querySelector("[data-back-destination]");
     if (swipeTarget) {
-      bespoke.navigateTo(swipeTarget.getAttribute("data-back-destination"));
+      const destination = swipeTarget.getAttribute("data-back-destination");
+      if (destination === "message.html") {
+        bespoke.gotoPage(event, destination, -1);
+      } else {
+        bespoke.gotoPage(event, destination);
+      }
     }
   },
 };

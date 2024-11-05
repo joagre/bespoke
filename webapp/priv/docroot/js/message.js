@@ -41,6 +41,11 @@ const message = {
     };
 
     updateServer();
+  },
+
+  gotoRootMessage() {
+    bespoke.truncateMessageStack(1);
+    bespoke.gotoPage(event, "message.html");
   }
 };
 
