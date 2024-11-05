@@ -112,7 +112,7 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
                 MessageIds when is_list(MessageIds) ->
-                    case lists:all(fun(MessageId) when is_integer(MessageId) ->
+                    case lists:all(fun(MessageId) when is_binary(MessageId) ->
                                            true;
                                       (_) ->
                                            false
@@ -129,7 +129,7 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                             rest_util:response(
                               Socket, Request,
                               {error, bad_request,
-                               "message-ids must be integers"})
+                               "message-ids must be strings"})
                     end;
                 _ ->
                     rest_util:response(
@@ -164,7 +164,7 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
-                MessageId when is_integer(MessageId) ->
+                MessageId when is_list(MessageId) ->
                     case db_serv:delete_message(MessageId) of
                         ok ->
                             rest_util:response(Socket, Request, ok_204);
@@ -175,7 +175,7 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                 _ ->
                     rest_util:response(
                       Socket, Request,
-                      {error, bad_request, "message-id must be an integer"})
+                      {error, bad_request, "message-id must be a string"})
             end;
 	_ ->
 	    ?log_error("~p not found", [Tokens]),
@@ -196,8 +196,8 @@ message_to_json_term(#message{id = Id,
                               reply_count = ReplyCount,
                               replies = Replies}) ->
     JsonTerm = #{<<"id">> => Id,
-                 <<"body">> => unicode:characters_to_binary(Body),
-                 <<"author">> => unicode:characters_to_binary(Author),
+                 <<"body">> => Body,
+                 <<"author">> => Author,
                  <<"created">> => Created,
                  <<"reply-count">> => ReplyCount,
                  <<"replies">> => Replies},
@@ -209,10 +209,6 @@ add_optional_members([], JsonTerm) ->
     JsonTerm;
 add_optional_members([{_Key, not_set}|Rest], JsonTerm) ->
     add_optional_members(Rest, JsonTerm);
-add_optional_members([{<<"title">>, Title}|Rest], JsonTerm) ->
-    add_optional_members(
-      Rest, maps:put(<<"title">>,
-                     unicode:characters_to_binary(Title), JsonTerm));
 add_optional_members([{Key, Value}|Rest], JsonTerm) ->
     add_optional_members(Rest, maps:put(Key, Value, JsonTerm)).
 
@@ -222,9 +218,9 @@ json_term_to_message(#{<<"title">> := Title,
     case no_more_keys([<<"title">>, <<"body">>, <<"author">>],
                       MessageJsonTerm) of
         true ->
-            {ok, #message{title = ?b2l(Title),
-                          body = ?b2l(Body),
-                          author = ?b2l(Author)}};
+            {ok, #message{title = Title,
+                          body = Body,
+                          author = Author}};
         false ->
             {error, invalid}
     end;
@@ -239,8 +235,8 @@ json_term_to_message(#{<<"parent-message-id">> := ParentMessageId,
         true ->
             {ok, #message{parent_message_id = ParentMessageId,
                           root_message_id = RootMessageId,
-                          body = ?b2l(Body),
-                          author = ?b2l(Author)}};
+                          body = Body,
+                          author = Author}};
         false ->
             {error, invalid}
     end;

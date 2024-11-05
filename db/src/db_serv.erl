@@ -11,10 +11,10 @@
 -include_lib("apptools/include/serv.hrl").
 -include("db.hrl").
 
--type message_id() :: integer().
--type title() :: string().
--type body() :: string().
--type author() :: string().
+-type message_id() :: binary().
+-type title() :: binary().
+-type body() :: binary().
+-type author() :: binary().
 -type seconds_since_epoch() :: integer().
 
 -record(state, {
@@ -96,20 +96,21 @@ init(Parent) ->
           messages,
           [{file, filename:join(code:priv_dir(db), "messages.db")},
            {keypos, #message.id}]),
+    {ok, meta} =
+        dets:open_file(
+          meta,
+          [{file, filename:join(code:priv_dir(db), "meta.db")},
+           {keypos, #meta.type}]),
+    case dets:lookup(meta, basic) of
+        [] ->
+            ok = dets:insert(meta, #meta{type = basic,
+                                         next_message_id = 0}),
+            NextMessageId = 0;
+        [#meta{next_message_id = NextMessageId}] ->
+            ok
+    end,
     ?log_info("Database server has been started"),
-    {ok, #state{parent = Parent, next_message_id = next_message_id()}}.
-
-next_message_id() ->
-    case dets:foldl(fun(#message{id = Id}, MaxId) when Id > MaxId ->
-                            Id;
-                       (_, MaxId) ->
-                            MaxId
-                    end, 0, messages) of
-        0 ->
-            0;
-        MaxId ->
-            MaxId + 1
-    end.
+    {ok, #state{parent = Parent, next_message_id = NextMessageId}}.
 
 message_handler(S) ->
     receive
@@ -143,8 +144,8 @@ message_handler(S) ->
         {call, From, {insert_message, Message} = Call} ->
             ?log_debug(#{call => Call}),
             case do_insert_message(S#state.next_message_id, Message) of
-                {ok, NextUpcomingMessageId, AddedMessage} ->
-                    {reply, From, {ok, AddedMessage},
+                {ok, NextUpcomingMessageId, InsertedMessage} ->
+                    {reply, From, {ok, InsertedMessage},
                      S#state{next_message_id = NextUpcomingMessageId}};
                 {error, Reason} ->
                     {reply, From, {error, Reason}}
@@ -188,39 +189,58 @@ message_handler(S) ->
 %%
 
 do_insert_message(NextMessageId, Message) ->
-    case is_valid_message(Message) of
+    case is_valid_insert_message(Message) of
         {true, ParentMessage, _RootMessage}  ->
-            NewMessage = Message#message{id = NextMessageId,
-                                         created = seconds_since_epoch()},
-            ok = dets:insert(messages, NewMessage),
+            case Message#message.id of
+                not_set ->
+                    NextUpcomingMessageId = NextMessageId + 1,
+                    UpdatedMeta =
+                        #meta{type = basic,
+                              next_message_id = NextUpcomingMessageId},
+                    ok = dets:insert(meta, UpdatedMeta),
+                    NewMessageId = ?i2b(NextMessageId);
+                MessageId ->
+                    NewMessageId = MessageId,
+                    NextUpcomingMessageId = NextMessageId
+            end,
+            UpdatedMessage = Message#message{id = NewMessageId,
+                                             created = seconds_since_epoch()},
+            ok = dets:insert(messages, UpdatedMessage),
             case ParentMessage of
                 not_set ->
-                    {ok, NextMessageId + 1, NewMessage};
+                    {ok, NextUpcomingMessageId, UpdatedMessage};
                 #message{replies = Replies} ->
                     UpdatedParentMessage =
                         ParentMessage#message{
-                          replies = Replies ++ [NextMessageId]},
+                          replies = Replies ++ [NewMessageId]},
                     ok = dets:insert(messages, UpdatedParentMessage),
                     ok = update_reply_count(ParentMessage#message.id),
-                    {ok, NextMessageId + 1, NewMessage}
+                    {ok, NextUpcomingMessageId, UpdatedMessage}
             end;
         false ->
             {error, invalid_message}
     end.
 
-is_valid_message(#message{id = not_set,
-                          title = Title,
-                          parent_message_id = not_set,
-                          root_message_id = not_set,
-                          created = not_set}) when Title /= not_set ->
+is_valid_insert_message(#message{id = not_set} = Message) ->
+    check_insert_message(Message);
+is_valid_insert_message(Message) ->
+    case dets:lookup(messages, Message#message.id) of
+        [] ->
+            check_insert_message(Message);
+        _ ->
+            false
+    end.
+
+check_insert_message(#message{title = Title,
+                              parent_message_id = not_set,
+                              root_message_id = not_set,
+                              created = not_set}) when Title /= not_set ->
     {true, not_set, not_set};
-is_valid_message(#message{id = not_set,
-                          title = not_set,
-                          parent_message_id = ParentMessageId,
-                          root_message_id = RootMessageId,
-                          created = not_set})
-  when ParentMessageId /= not_set andalso
-       RootMessageId /= not_set ->
+check_insert_message(#message{title = not_set,
+                              parent_message_id = ParentMessageId,
+                              root_message_id = RootMessageId,
+                              created = not_set})
+  when ParentMessageId /= not_set andalso RootMessageId /= not_set ->
     case dets:lookup(messages, ParentMessageId) of
         [ParentMessage] ->
             case dets:lookup(messages, RootMessageId) of
@@ -232,7 +252,7 @@ is_valid_message(#message{id = not_set,
         [] ->
             false
     end;
-is_valid_message(_) ->
+check_insert_message(_) ->
     false.
 
 update_reply_count(not_set) ->

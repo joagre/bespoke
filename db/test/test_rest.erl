@@ -16,14 +16,14 @@ start() ->
                     <<"body">> => <<"body1">>,
                     <<"author">> => <<"author1">>}),
     %% Verify message
-    {ok, [#{<<"id">> := 0,
+    {ok, [#{<<"id">> := <<"0">>,
             <<"title">> := <<"title1">>,
             <<"body">> := <<"body1">>,
             <<"author">> := <<"author1">>,
             <<"created">> := Created,
             <<"reply-count">> := 0,
             <<"replies">> := []}]} =
-        http_post("http://localhost:8080/lookup_messages", [0]),
+        http_post("http://localhost:8080/lookup_messages", [<<"0">>]),
     true = is_integer(Created),
     %% Add reply message to root message
     RootMessageId1 = maps:get(<<"id">>, RootMessage1),

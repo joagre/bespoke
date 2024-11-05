@@ -17,4 +17,10 @@
          replies = [] :: [db_serv:message_id()]
         }).
 
+-record(meta,
+        {
+         type = basic :: basic,
+         next_message_id = 0 :: db_serv:message_id()
+        }).
+
 -endif.

@@ -13,7 +13,7 @@ start() ->
                             author = "author1"},
     {ok, InsertedRootMessage1} = db_serv:insert_message(RootMessage1),
     %% Verify message
-    [#message{id = 0,
+    [#message{id = <<"0">>,
               title = "title1",
               parent_message_id = not_set,
               root_message_id = not_set,
