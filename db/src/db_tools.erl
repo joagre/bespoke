@@ -1,5 +1,5 @@
 -module(db_tools).
--export([dump_subreddit/0, dump_subreddit/3, create_dummy_db/0]).
+-export([create_reddit_db/0, create_dummy_db/0]).
 
 -include("db.hrl").
 -include("../../apptools/include/log.hrl").
@@ -8,44 +8,98 @@
 %% Exported: dump_subreddit
 %%
 
-dump_subreddit() ->
-    dump_subreddit("/media/jocke/EXTERNSL/reddit/subreddits23/sweden_submissions",
-                   "/media/jocke/EXTERNSL/reddit/subreddits23/sweden_comments",
-                   10).
+create_reddit_db() ->
+    create_reddit_db(
+      "/media/jocke/EXTERNSL/reddit/subreddits23/sweden_submissions",
+      "/media/jocke/EXTERNSL/reddit/subreddits23/sweden_comments",
+      10).
 
-dump_subreddit(SubmissionsFile, CommentsFile, Limit) ->
+create_reddit_db(SubmissionsFile, CommentsFile, Limit) ->
+    %% Parse submissions
     {ok, Submissions} = file:open(SubmissionsFile, [read, binary]),
-    {ok, Comments} = file:open(CommentsFile, [read, binary]),
-    ParsedSubmissions = parse_subreddit(Submissions, Comments, Limit),
+    {SubmissionsParsed, ParsedSubmissions} =
+        parse_submissions(Submissions, Limit),
     file:close(Submissions),
+    {ok, Comments} = file:open(CommentsFile, [read, binary]),
+    %% Parse comments
+    {CommentsParsed, ParsedComments} =
+        parse_comments(Comments, ParsedSubmissions),
     file:close(Comments),
-    ParsedSubmissions.
+    {SubmissionsParsed, CommentsParsed, ParsedSubmissions, ParsedComments}.
 
-parse_subreddit(Submissions, Comments, Limit) ->
-    parse_subreddit(Submissions, Comments, Limit, 0, []).
+parse_submissions(Submissions, Limit) ->
+    parse_submissions(Submissions, Limit, 0, #{}).
 
-parse_subreddit(_Submissions, _Comments, 0, LinesParsed, Acc) ->
+parse_submissions(_Submissions, 0, LinesParsed, Acc) ->
     {LinesParsed, Acc};
-parse_subreddit(Submissions, Comments, Limit, LinesParsed, Acc) ->
+parse_submissions(Submissions, Limit, LinesParsed, Acc) ->
     case file:read_line(Submissions) of
-        {ok, SubmissionLine} ->
-            case parse_submission(SubmissionLine) of
+        {ok, Line} ->
+            case parse_submission(Line, 15) of
                 skipped ->
-                    parse_subreddit(Submissions, Comments, Limit,
-                                    LinesParsed + 1, Acc);
+                    parse_submissions(Submissions, Limit, LinesParsed + 1, Acc);
                 Message ->
-                    parse_subreddit(Submissions, Comments, Limit - 1,
-                                    LinesParsed + 1, [Message|Acc])
+                    parse_submissions(Submissions, Limit - 1, LinesParsed + 1,
+                                      maps:put(Message#message.id, Message, Acc))
             end;
         eof ->
             {LinesParsed, Acc}
     end.
 
-parse_submission(Line) ->
+parse_submission(Line, MinComments) ->
     case json:decode(Line) of
-        #{<<"is_self">> := true, <<"selftext">> := Selftext}
-          when Selftext /= <<"[deleted]">> andalso Selftext /= <<"[removed]">> ->
-            #message{body = binary_to_list(Selftext)};
+        #{<<"author">> := Author,
+          <<"created_utc">> := Created,
+          <<"id">> := Id,
+          <<"is_self">> := true,
+          <<"num_comments">> := NumComments,
+          <<"selftext">> := Selftext,
+          <<"title">> := Title} = JsonTerm
+          when (Selftext /= <<"[deleted]">> andalso
+                Selftext /= <<"[removed]">>) andalso
+               NumComments > MinComments ->
+            false = maps:get(<<"replies">>, JsonTerm, false),
+            false = maps:get(<<"more">>, JsonTerm, false),
+            %%io:format("++++++++++++++++++\n"),
+            %%io:format("Line: ~p~n", [Line]),
+            #message{id = Id,
+                     title = Title,
+                     body = Selftext,
+                     author = Author,
+                     created = Created,
+                     reply_count = NumComments};
+        _ ->
+            skipped
+    end.
+
+parse_comments(Comments, ParsedSubmissions) ->
+    parse_comments(Comments, ParsedSubmissions, 0, #{}).
+
+parse_comments(Comments, ParsedSubmissions, LinesParsed, Acc) ->
+    case file:read_line(Comments) of
+        {ok, Line} ->
+            case parse_comment(Line, ParsedSubmissions) of
+                skipped ->
+                    parse_comments(Comments, ParsedSubmissions, LinesParsed + 1,
+                                   Acc);
+                {comment, Id} ->
+                    parse_comments(Comments, ParsedSubmissions, LinesParsed + 1,
+                                   maps:put(Id, comment, Acc))
+            end;
+        eof ->
+            {LinesParsed, Acc}
+    end.
+
+parse_comment(Line, ParsedSubmissions) ->
+    case json:decode(Line) of
+        #{<<"id">> := Id,
+          <<"link_id">> := <<"t3_", LinkId/binary>>} ->
+            case maps:is_key(LinkId, ParsedSubmissions) of
+                false ->
+                    skipped;
+                true ->
+                    {comment, Id}
+            end;
         _ ->
             skipped
     end.

@@ -73,6 +73,8 @@ const bespoke = {
     if (ageInSeconds < 3600) return `${Math.floor(ageInSeconds / 60)}m`;
     if (ageInSeconds < 86400) return `${Math.floor(ageInSeconds / 3600)}h`;
     if (ageInSeconds < 31536000) return `${Math.floor(ageInSeconds / 86400)}d`;
+    if (ageInSeconds < 31536000 * 2) return `${Math.floor(ageInSeconds / 604800)}w`;
+    if (ageInSeconds < 31536000 * 12) return `${Math.floor(ageInSeconds / 2592000)}mo`;
     return `${Math.floor(ageInSeconds / 31536000)}y`;
   },
 
