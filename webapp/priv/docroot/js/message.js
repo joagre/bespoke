@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function() {
     /*
       Reply message example:
 
-      <div onclick="bespoke.gotoPage(event, 'message.html', 4716)" class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-reply">
+      <div onclick="bespoke.gotoPage(event, 'message.html', '4716')" class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-reply">
         <div>
           Nulla et diam id nisi aliquam maximus. Donec enim ante, placerat eu finibus in, cursus vitae ante. Duis ac tortor augue. Nullam at convallis libero.
           <div class="uk-text-meta uk-margin-small">

@@ -18,7 +18,7 @@ const bespoke = {
   gotoPage(event, destination, messageId) {
     if (messageId === -1) {
       bespoke.popMessageStack();
-    } else if (typeof messageId === "number") {
+    } else if (typeof messageId === "string") {
       bespoke.pushMessageStack(messageId);
     }
 

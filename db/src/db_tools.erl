@@ -167,8 +167,7 @@ populate_comment_db(SubmissionDb, CommentDb, CommentsFd, ParsedLines) ->
                 skipped ->
                     populate_comment_db(SubmissionDb, CommentDb, CommentsFd,
                                         ParsedLines + 1);
-                #{<<"parent_id">> :=
-                      <<_:3/binary, ParentId/binary>>} = Comment ->
+                #{<<"parent_id">> := ParentId} = Comment ->
                     ok = dets:insert(CommentDb, {ParentId, Comment}),
                     populate_comment_db(SubmissionDb, CommentDb, CommentsFd,
                                         ParsedLines + 1)
@@ -183,7 +182,7 @@ populate_comment_db(SubmissionDb, CommentDb, CommentsFd, ParsedLines) ->
 
 parse_comment(Line, SubmissionDb) ->
     case json:decode(Line) of
-        #{<<"link_id">> := <<"t3_", LinkId/binary>>} = Comment ->
+        #{<<"link_id">> := LinkId} = Comment ->
             case dets:member(SubmissionDb, LinkId) of
                 true ->
                     Comment;
@@ -196,25 +195,45 @@ parse_comment(Line, SubmissionDb) ->
 
 insert_subreddit(SubmissionDb, CommentDb) ->
     dets:traverse(
-      SubmissionDb, fun({MessageId, #{<<"author">> := Author,
-                                      <<"created_utc">> := Created,
-                                      <<"id">> := MessageId,
-                                      <<"num_comments">> := ReplyCount,
-                                      <<"selftext">> := Body,
-                                      <<"title">> := Title}}) ->
-                            io:format("** Inserting submission ~p~n", [MessageId]),
-                            _Message = #message{id = MessageId,
-                                                title = Title,
-                                                body = Body,
-                                                author = Author,
-                                                created = Created,
-                                                reply_count = ReplyCount},
-                            ok = insert_comments(CommentDb, MessageId),
+      SubmissionDb, fun({Id, #{<<"author">> := Author,
+                               <<"created_utc">> := Created,
+                               <<"id">> := Id,
+                               <<"num_comments">> := ReplyCount,
+                               <<"selftext">> := Body,
+                               <<"title">> := Title}}) ->
+                            io:format("** Inserting submission ~p~n", [Id]),
+                            Message = #message{id = Id,
+                                               title = Title,
+                                               body = Body,
+                                               author = Author,
+                                               created = Created,
+                                               reply_count = ReplyCount},
+                            {ok, _} = db_serv:insert_message(Message),
+                            ok = insert_comments(submission, CommentDb, Id),
                             continue
-                       end).
+                    end).
 
-insert_comments(_CommentDb, _MessageId) ->
-    ok.
+insert_comments(Type, CommentDb, ParentId) ->
+    CanonicalParentId = case Type of
+                            submission -> <<"t3_", ParentId/binary>>;
+                            comment -> <<"t1_", ParentId/binary>>
+                        end,
+    Comments = dets:lookup(CommentDb, ParentId),
+    lists:foreach(fun({_, #{<<"author">> := Author,
+                            <<"body">> := Body,
+                            <<"created_utc">> := Created,
+                            <<"id">> := Id,
+                            <<"link_id">> := <<_:3/binary, LinkId/binary>>}}) ->
+                          Message = #message{id = Id,
+                                             parent_message_id = ParentId,
+                                             root_message_id = LinkId,
+                                             body = Body,
+                                             author = Author,
+                                             created = Created},
+                          io:format("** Inserting comment ~p~n", [Message]),
+                          {ok, _} = db_serv:insert_message(Message),
+                          insert_comments(comment, CommentDb, Id)
+                  end, Comments).
 
 %%
 %% Exported: dump_subreddit_db
