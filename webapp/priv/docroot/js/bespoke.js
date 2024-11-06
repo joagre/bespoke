@@ -1,3 +1,8 @@
+import { marked } from '/js/marked.esm.js';
+
+// uhtml.min.js must be imported in the HTML file before this script
+const { html, render } = uhtml;
+
 const SWIPE_THRESHOLD = 30;
 const VERTICAL_THRESHOLD = 75;
 
@@ -78,13 +83,14 @@ const bespoke = {
     return `${Math.floor(ageInSeconds / 31536000)}y`;
   },
 
-  escapeHTML(unsafeString) {
-    return unsafeString
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+  uhtmlFormatMarkdown(content) {
+    // FIXME: Sanitize HTML
+    return uhtml.html`${uhtml.html([marked.parse(content)])}`;
+  },
+
+  formatMarkdown(content) {
+    // FIXME: Sanitize HTML
+    return marked.parse(content);
   },
 
   assert(condition, message) {

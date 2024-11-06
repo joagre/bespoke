@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function() {
   function populatePage(parentMessage, rootMessageTitle) {
     // Populate page title
     document.getElementById("page-title").textContent =
-      bespoke.escapeHTML(rootMessageTitle);
+      rootMessageTitle;
 
     // Populate header
     document.getElementById("message-title").textContent =
@@ -82,10 +82,10 @@ document.addEventListener("DOMContentLoaded", function() {
       `[${bespoke.messageStackSize()}]`;
 
     // Populate parent message
-    document.getElementById("message-body").textContent =
-      bespoke.escapeHTML(parentMessage["body"]);
+    document.getElementById("message-body").innerHTML =
+      bespoke.formatMarkdown(parentMessage["body"]);
     document.getElementById("message-author").textContent =
-      bespoke.escapeHTML(parentMessage["author"]);
+      parentMessage["author"];
     document.getElementById("message-created").textContent =
       bespoke.formatSecondsSinceEpoch(parentMessage["created"]);
     document.getElementById("message-reply-count").textContent =

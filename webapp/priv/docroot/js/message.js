@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function() {
   function populatePage(parentMessage, rootMessageTitle, replyMessages) {
     // Populate page title
     document.getElementById("page-title").textContent =
-      bespoke.escapeHTML(rootMessageTitle);
+      rootMessageTitle;
 
     // Populate header
     document.getElementById("message-title").textContent =
@@ -66,10 +66,10 @@ document.addEventListener("DOMContentLoaded", function() {
       `[${bespoke.messageStackSize()}]`;
 
     // Populate parent message
-    document.getElementById("message-body").textContent =
-      bespoke.escapeHTML(parentMessage["body"]);
+    document.getElementById("message-body").innerHTML =
+      bespoke.formatMarkdown(parentMessage["body"]);
     document.getElementById("message-author").textContent =
-      bespoke.escapeHTML(parentMessage["author"]);
+      parentMessage["author"];
     document.getElementById("message-created").textContent =
       bespoke.formatSecondsSinceEpoch(parentMessage["created"]);
     document.getElementById("message-reply-count").textContent =
@@ -96,23 +96,24 @@ document.addEventListener("DOMContentLoaded", function() {
                 <span uk-icon="comment"></span>
                 189
               </div>
-              <button onclick="bespoke.gotoPage(event, 'add_reply.html', 5076)" class="uk-icon-button" uk-icon="reply"></button>
+              <button onclick="bespoke.gotoPage(event, 'add_reply.html', '5076')" class="uk-icon-button" uk-icon="reply"></button>
             </div>
           </div>
         </div>
       </div>
     */
+
     const age = bespoke.formatSecondsSinceEpoch(message["created"]);
     return html`
       <div onclick=${() => {
             bespoke.gotoPage(event, "message.html", message["id"]);
           }} class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-reply">
         <div>
-          ${bespoke.escapeHTML(message["body"])}
+          ${bespoke.uhtmlFormatMarkdown(message["body"])}
           <div class="uk-text-meta uk-margin-small">
             <div class="uk-flex uk-flex-between uk-flex-middle">
               <div>
-                ${bespoke.escapeHTML(message["author"])} •
+                ${message["author"]} •
                 ${age} •
                 <span uk-icon="comment"></span>
                 ${message["reply-count"]}
