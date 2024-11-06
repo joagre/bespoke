@@ -22,16 +22,17 @@
       <!-- Header -->
       <div class="uk-card uk-card-default uk-padding-small uk-background-muted">
         <div class="uk-flex uk-flex-between uk-flex-middle">
-          <button onclick="bespoke.gotoPage(event, 'message.html', -1)" data-back-destination="message.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+          <button onclick="bespoke.gotoPage(event, 'message.html')" data-back-destination="message.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
           <div class="uk-flex-1 uk-flex uk-flex-center">
             <div>
-              <span id="message-title" class="uk-text-bold"></span>
+              Add Reply
               <span id="reply-depth" class="uk-text-meta"></span>
             </div>
           </div>
         </div>
       </div>
       <!-- Parent message -->
+      <div id="message-title" class="uk-text-bold uk-margin-top"></div>
       <div id="message-body" class="uk-container uk-margin-top"></div>
       <div class="uk-text-meta uk-margin-small">
         <span id="message-author"></span> •

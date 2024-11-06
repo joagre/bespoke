@@ -25,7 +25,7 @@
           <button onclick="bespoke.gotoPage(event, 'message.html', -1)" data-back-destination="message.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
           <div class="uk-flex-1 uk-flex uk-flex-center">
             <div>
-              <span onclick="message.gotoRootMessage()" class="uk-text-bold" id="message-title"></span>
+              Message
               <span id="reply-depth" class="uk-text-meta"></span>
             </div>
           </div>
@@ -36,6 +36,7 @@
         </div>
       </div>
       <!-- Parent message -->
+      <div onclick="message.gotoRootMessage()" class="uk-text-bold uk-margin-top" id="message-title"></div>
       <div id="message-body" class="uk-container uk-margin-top"></div>
       <div class="uk-text-meta uk-margin-small">
         <span id="message-author"></span> •
