@@ -1,8 +1,10 @@
 -module(db_tools).
--export([create_subreddit_db/0, purge_subreddit_db/0, create_dummy_db/0]).
+-export([create_subreddit_db/0, purge_subreddit_db/0, dump_subreddit_db/0,
+         create_dummy_db/0]).
 
 -include("db.hrl").
 -include("../../apptools/include/log.hrl").
+-include("../../apptools/include/shorthand.hrl").
 
 %%
 %% Exported: dump_subreddit
@@ -33,7 +35,8 @@ create_subreddit_db() ->
           "/media/jocke/EXTERNSL/reddit/subreddits23/sweden_comments",
           _NoSubmissions = 10,
           _MinNoComments = 25),
-    insert_subreddit(SubmissionDb, CommentDb).
+    [] = insert_subreddit(SubmissionDb, CommentDb),
+    close_dbs(SubmissionDb, CommentDb).
 
 get_cached_subreddit(SubmissionsFile, CommentsFile, NoSubmissions,
                      MinNoComments) ->
@@ -101,6 +104,10 @@ open_dbs(SubmissionsDbFile, CommentsDbFile) ->
     {ok, CommentDb} =
         dets:open_file(comments, [{file, CommentsDbFile}, {type, bag}]),
     {SubmissionDb, CommentDb}.
+
+close_dbs(SubmissionDb, CommentDb) ->
+    dets:close(SubmissionDb),
+    dets:close(CommentDb).
 
 populate_submission_db(SubmissionsFile, SubmissionDb, NoSubmissions,
                        MinNoComments) ->
@@ -187,135 +194,51 @@ parse_comment(Line, SubmissionDb) ->
             skipped
     end.
 
-insert_subreddit(_Submissions, _Comments) ->
+insert_subreddit(SubmissionDb, CommentDb) ->
+    dets:traverse(
+      SubmissionDb, fun({MessageId, #{<<"author">> := Author,
+                                      <<"created_utc">> := Created,
+                                      <<"id">> := MessageId,
+                                      <<"num_comments">> := ReplyCount,
+                                      <<"selftext">> := Body,
+                                      <<"title">> := Title}}) ->
+                            io:format("** Inserting submission ~p~n", [MessageId]),
+                            _Message = #message{id = MessageId,
+                                                title = Title,
+                                                body = Body,
+                                                author = Author,
+                                                created = Created,
+                                                reply_count = ReplyCount},
+                            ok = insert_comments(CommentDb, MessageId),
+                            continue
+                       end).
+
+insert_comments(_CommentDb, _MessageId) ->
     ok.
 
-%% save below awhile as inspiration
+%%
+%% Exported: dump_subreddit_db
+%%
 
-
-
-%% parse_submission(Line, MinNoComments) ->
-%%     case json:decode(Line) of
-%%         #{<<"author">> := Author,
-%%           <<"created_utc">> := Created,
-%%           <<"id">> := Id,
-%%           <<"is_self">> := true,
-%%           <<"num_comments">> := NumComments,
-%%           <<"selftext">> := Selftext,
-%%           <<"title">> := Title} = JsonTerm
-%%           when (Selftext /= <<"[deleted]">> andalso
-%%                 Selftext /= <<"[removed]">>) andalso
-%%                NumComments > MinComments ->
-%%             false = maps:get(<<"replies">>, JsonTerm, false),
-%%             false = maps:get(<<"more">>, JsonTerm, false),
-%%             %%io:format("++++++++++++++++++\n"),
-%%             %%io:format("Line: ~p~n", [Line]),
-%%             #message{id = Id,
-%%                      title = Title,
-%%                      body = Selftext,
-%%                      author = Author,
-%%                      created = Created,
-%%                      reply_count = NumComments};
-%%         _ ->
-%%             skipped
-%%     end.
-
-
-
-
-
-
-
-
-%% create_reddit_db(SubmissionsFile, CommentsFile, Limit) ->
-%%     %% Parse submissions
-%%     {ok, Submissions} = file:open(SubmissionsFile, [read, binary]),
-%%     {SubmissionsParsed, ParsedSubmissions} =
-%%         parse_submissions(Submissions, Limit),
-%%     file:close(Submissions),
-%%     {ok, Comments} = file:open(CommentsFile, [read, binary]),
-%%     %% Parse comments
-%%     {CommentsParsed, ParsedComments} =
-%%         parse_comments(Comments, ParsedSubmissions),
-%%     file:close(Comments),
-%%     {SubmissionsParsed, CommentsParsed, ParsedSubmissions, ParsedComments}.
-
-%% parse_submissions(Submissions, Limit) ->
-%%     parse_submissions(Submissions, Limit, 0, #{}).
-
-%% parse_submissions(_Submissions, 0, LinesParsed, Acc) ->
-%%     {LinesParsed, Acc};
-%% parse_submissions(Submissions, Limit, LinesParsed, Acc) ->
-%%     case file:read_line(Submissions) of
-%%         {ok, Line} ->
-%%             case parse_submission(Line, 15) of
-%%                 skipped ->
-%%                     parse_submissions(Submissions, Limit, LinesParsed + 1, Acc);
-%%                 Message ->
-%%                     parse_submissions(Submissions, Limit - 1, LinesParsed + 1,
-%%                                       maps:put(Message#message.id, Message, Acc))
-%%             end;
-%%         eof ->
-%%             {LinesParsed, Acc}
-%%     end.
-
-%% parse_submission(Line, MinComments) ->
-%%     case json:decode(Line) of
-%%         #{<<"author">> := Author,
-%%           <<"created_utc">> := Created,
-%%           <<"id">> := Id,
-%%           <<"is_self">> := true,
-%%           <<"num_comments">> := NumComments,
-%%           <<"selftext">> := Selftext,
-%%           <<"title">> := Title} = JsonTerm
-%%           when (Selftext /= <<"[deleted]">> andalso
-%%                 Selftext /= <<"[removed]">>) andalso
-%%                NumComments > MinComments ->
-%%             false = maps:get(<<"replies">>, JsonTerm, false),
-%%             false = maps:get(<<"more">>, JsonTerm, false),
-%%             %%io:format("++++++++++++++++++\n"),
-%%             %%io:format("Line: ~p~n", [Line]),
-%%             #message{id = Id,
-%%                      title = Title,
-%%                      body = Selftext,
-%%                      author = Author,
-%%                      created = Created,
-%%                      reply_count = NumComments};
-%%         _ ->
-%%             skipped
-%%     end.
-
-%% parse_comments(Comments, ParsedSubmissions) ->
-%%     parse_comments(Comments, ParsedSubmissions, 0, #{}).
-
-%% parse_comments(Comments, ParsedSubmissions, LinesParsed, Acc) ->
-%%     case file:read_line(Comments) of
-%%         {ok, Line} ->
-%%             case parse_comment(Line, ParsedSubmissions) of
-%%                 skipped ->
-%%                     parse_comments(Comments, ParsedSubmissions, LinesParsed + 1,
-%%                                    Acc);
-%%                 {comment, Id} ->
-%%                     parse_comments(Comments, ParsedSubmissions, LinesParsed + 1,
-%%                                    maps:put(Id, comment, Acc))
-%%             end;
-%%         eof ->
-%%             {LinesParsed, Acc}
-%%     end.
-
-%% parse_comment(Line, ParsedSubmissions) ->
-%%     case json:decode(Line) of
-%%         #{<<"id">> := Id,
-%%           <<"link_id">> := <<"t3_", LinkId/binary>>} ->
-%%             case maps:is_key(LinkId, ParsedSubmissions) of
-%%                 false ->
-%%                     skipped;
-%%                 true ->
-%%                     {comment, Id}
-%%             end;
-%%         _ ->
-%%             skipped
-%%     end.
+dump_subreddit_db() ->
+    SubmissionsDbFile = filename:join(code:priv_dir(webapp), "submissions.db"),
+    CommentsDbFile = filename:join(code:priv_dir(webapp), "comments.db"),
+    {SubmissionDb, CommentDb} = open_dbs(SubmissionsDbFile, CommentsDbFile),
+    SubmissionsDumpFile =
+        filename:join(code:priv_dir(webapp), "submissions.dump"),
+    SubmissionTid = ets:new(submission, []),
+    SubmissionTid = dets:to_ets(SubmissionDb, SubmissionTid),
+    ok = file:write_file(
+           SubmissionsDumpFile,
+           ?l2b(io_lib:format("~p", [ets:tab2list(SubmissionTid)]))),
+    true = ets:delete(SubmissionTid),
+    CommentsDumpFile = filename:join(code:priv_dir(webapp), "comments.dump"),
+    CommentTid = ets:new(comment, []),
+    CommentTid = dets:to_ets(CommentDb, CommentTid),
+    ok = file:write_file(CommentsDumpFile,
+                         ?l2b(io_lib:format("~p", [ets:tab2list(CommentTid)]))),
+    true = ets:delete(CommentTid),
+    close_dbs(SubmissionDb, CommentDb).
 
 %%
 %% Exported: purge_subreddit_db
