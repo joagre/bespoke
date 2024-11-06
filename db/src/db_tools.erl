@@ -8,6 +8,19 @@
 %% Exported: dump_subreddit
 %%
 
+%% Example usage:
+%%
+%% (bespoke@localhost)5> db_tools:purge_subreddit_db().
+%% ok
+%% (bespoke@localhost)6> db_tools:create_subreddit_db().
+%% ** Creating new submission database
+%% ** Total number of submissions = 10
+%% ** Parsed 310 submissions
+%% ** Creating new comment database
+%% ** Total number of parentd ids = 268
+%% ** Total number of comments = 440
+%% ** Parsed 9574215 comments
+
 create_subreddit_db() ->
     %% * SubsmissionDb is a dets set table with submission in JSON
     %%   object format keyed on id
@@ -57,7 +70,7 @@ get_cached_subreddit(SubmissionsFile, CommentsFile, NoSubmissions,
                     {NoParentsIds, NoComments, ParsedComments} =
                         populate_comment_db(
                           CommentsFile, SubmissionDb, CommentDb),
-                    io:format("** Total number of parentd ids = ~p~n",
+                    io:format("** Total number of parent ids = ~p~n",
                               [NoParentsIds]),
                     io:format("** Total number of comments = ~p~n",
                               [NoComments]),
@@ -76,7 +89,7 @@ get_cached_subreddit(SubmissionsFile, CommentsFile, NoSubmissions,
             io:format("** Creating new comment database~n"),
             {NoParentsIds, NoComments, ParsedComments} =
                 populate_comment_db(CommentsFile, SubmissionDb, CommentDb),
-            io:format("** Total number of parentd ids = ~p~n", [NoParentsIds]),
+            io:format("** Total number of parent ids = ~p~n", [NoParentsIds]),
             io:format("** Total number of comments = ~p~n", [NoComments]),
             io:format("** Parsed ~p comments~n", [ParsedComments]),
             {SubmissionDb, CommentDb}
