@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("message-title").textContent =
       document.getElementById("page-title").textContent;
     document.getElementById("reply-depth").textContent =
-      `[${bespoke.messageStackSize()}]`;
+      `[reply-level: ${bespoke.messageStackSize()}]`;
 
     // Populate parent message
     document.getElementById("message-body").innerHTML =

@@ -108,9 +108,9 @@ document.addEventListener("DOMContentLoaded", function() {
       <div onclick=${() => {
             bespoke.gotoPage(event, "message.html", message["id"]);
           }} class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-reply">
-        <div>
+        <div class="reply-wrapper">
           ${bespoke.uhtmlFormatMarkdown(message["body"])}
-          <div class="uk-text-meta uk-margin-small">
+          <div class="uk-text-meta uk-margin-small-bottom">
             <div class="uk-flex uk-flex-between uk-flex-middle">
               <div>
                 ${message["author"]} •
