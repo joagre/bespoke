@@ -281,7 +281,7 @@ do_lookup_messages(MessageIds, Mode) ->
           end, [], MessageIds),
     lists:sort(
       fun(MessageA, MessageB) ->
-              MessageA#message.created =< MessageB#message.created
+              MessageA#message.created >= MessageB#message.created
       end, Messages).
 
 %%

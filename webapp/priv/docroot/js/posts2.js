@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
            bespoke2.gotoPage(event, "message2.html", message["id"]);
         }} class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-post">
                 ${message["title"]}
-                <div class="uk-text-meta uk-margin-small-top">
+                <div class="uk-text-meta">
                   ${message["author"]} • ${age} •
                   <span uk-icon="comment"></span> ${message["reply-count"]}
                 </div>
