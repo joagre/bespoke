@@ -64,8 +64,6 @@ class AddReply2 {
   }
 
   goBack(event) {
-    alert(bespoke2.getCookieValue("reply-pop"));
-
     if (bespoke2.getCookieValue("reply-pop")) {
       bespoke2.popMessageStack();
       bespoke2.setCookieValue("reply-pop", false);
