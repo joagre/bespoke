@@ -1,0 +1,12 @@
+.quote {
+    cursor: pointer;
+}
+
+.custom-quote-padding {
+  padding: 0.5em !important;
+}
+
+#parent-title {
+  font-size: 110%;
+  font-weight: bold;
+}

@@ -198,7 +198,6 @@ insert_subreddit(SubmissionDb, CommentDb) ->
       SubmissionDb, fun({Id, #{<<"author">> := Author,
                                <<"created_utc">> := Created,
                                <<"id">> := Id,
-                               <<"num_comments">> := ReplyCount,
                                <<"selftext">> := Body,
                                <<"title">> := Title}}) ->
                             io:format("** Inserting submission ~p~n", [Id]),
@@ -206,18 +205,13 @@ insert_subreddit(SubmissionDb, CommentDb) ->
                                                title = Title,
                                                body = Body,
                                                author = Author,
-                                               created = Created,
-                                               reply_count = ReplyCount},
+                                               created = Created},
                             {ok, _} = db_serv:insert_message(Message),
-                            ok = insert_comments(submission, CommentDb, Id),
+                            ok = insert_comments(CommentDb, Id),
                             continue
                     end).
 
-insert_comments(Type, CommentDb, ParentId) ->
-    CanonicalParentId = case Type of
-                            submission -> <<"t3_", ParentId/binary>>;
-                            comment -> <<"t1_", ParentId/binary>>
-                        end,
+insert_comments(CommentDb, ParentId) ->
     Comments = dets:lookup(CommentDb, ParentId),
     lists:foreach(fun({_, #{<<"author">> := Author,
                             <<"body">> := Body,
@@ -230,9 +224,9 @@ insert_comments(Type, CommentDb, ParentId) ->
                                              body = Body,
                                              author = Author,
                                              created = Created},
-                          io:format("** Inserting comment ~p~n", [Message]),
+                          io:format("** Inserting comment ~p~n", [Id]),
                           {ok, _} = db_serv:insert_message(Message),
-                          insert_comments(comment, CommentDb, Id)
+                          insert_comments(CommentDb, Id)
                   end, Comments).
 
 %%
@@ -245,18 +239,19 @@ dump_subreddit_db() ->
     {SubmissionDb, CommentDb} = open_dbs(SubmissionsDbFile, CommentsDbFile),
     SubmissionsDumpFile =
         filename:join(code:priv_dir(webapp), "submissions.dump"),
-    SubmissionTid = ets:new(submission, []),
-    SubmissionTid = dets:to_ets(SubmissionDb, SubmissionTid),
-    ok = file:write_file(
-           SubmissionsDumpFile,
-           ?l2b(io_lib:format("~p", [ets:tab2list(SubmissionTid)]))),
-    true = ets:delete(SubmissionTid),
+    Submissions = dets:foldl(
+                    fun({_Id, JsonTerm}, Acc) ->
+                            [JsonTerm|Acc]
+                    end, [], SubmissionDb),
+    ok = file:write_file(SubmissionsDumpFile,
+                         ?l2b(io_lib:format("~p", [Submissions]))),
     CommentsDumpFile = filename:join(code:priv_dir(webapp), "comments.dump"),
-    CommentTid = ets:new(comment, []),
-    CommentTid = dets:to_ets(CommentDb, CommentTid),
+    Comments = dets:foldl(
+                 fun({_ParentId, JsonTerm}, Acc) ->
+                         [JsonTerm|Acc]
+                 end, [], CommentDb),
     ok = file:write_file(CommentsDumpFile,
-                         ?l2b(io_lib:format("~p", [ets:tab2list(CommentTid)]))),
-    true = ets:delete(CommentTid),
+                         ?l2b(io_lib:format("~p", [Comments]))),
     close_dbs(SubmissionDb, CommentDb).
 
 %%

@@ -1,6 +1,8 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
--export([list_root_messages/0, lookup_messages/1, insert_message/1,
+-export([list_root_messages/0,
+         lookup_messages/1, lookup_messages/2,
+         insert_message/1,
          delete_message/1]).
 -export([sync/0]).
 -export([message_handler/1]).
@@ -54,10 +56,13 @@ list_root_messages() ->
 %% Exported: lookup_messages
 %%
 
--spec lookup_messages([message_id()]) -> [#message{}].
+-spec lookup_messages([message_id()], flat | recursive) -> [#message{}].
 
 lookup_messages(MessageIds) ->
-    serv:call(?MODULE, {lookup_messages, MessageIds}).
+    lookup_messages(MessageIds, flat).
+
+lookup_messages(MessageIds, Mode) ->
+    serv:call(?MODULE, {lookup_messages, MessageIds, Mode}).
 
 %%
 %% Exported: insert_message
@@ -129,18 +134,9 @@ message_handler(S) ->
                           MessageA#message.created =< MessageB#message.created
                   end, RootMessages),
             {reply, From, SortedRootMessages};
-        {call, From, {lookup_messages, MessageIds} = Call} ->
+        {call, From, {lookup_messages, MessageIds, Mode} = Call} ->
             ?log_debug(#{call => Call}),
-            Messages =
-                lists:foldr(fun(MessageId, Acc) ->
-                                    case dets:lookup(messages, MessageId) of
-                                        [Message] ->
-                                            [Message|Acc];
-                                        [] ->
-                                            Acc
-                                    end
-                            end, [], MessageIds),
-            {reply, From, Messages};
+            {reply, From, do_lookup_messages(MessageIds, Mode)};
         {call, From, {insert_message, Message} = Call} ->
             ?log_debug(#{call => Call}),
             case do_insert_message(S#state.next_message_id, Message) of
@@ -162,10 +158,11 @@ message_handler(S) ->
                              replies = lists:delete(
                                          MessageId,
                                          ParentMessage#message.replies)}),
-                    ok = delete_all(MessageId),
+                    N = delete_all([MessageId]),
+                    ok = update_parent_count(ParentMessage#message.id, -N),
                     {reply, From, ok};
                 [_RootMessage] ->
-                    ok = delete_all(MessageId),
+                    _ = delete_all([MessageId]),
                     {reply, From, ok};
                 [] ->
                     {reply, From, {error, not_found}}
@@ -216,7 +213,7 @@ do_insert_message(NextMessageId, Message) ->
                         ParentMessage#message{
                           replies = Replies ++ [NewMessageId]},
                     ok = dets:insert(messages, UpdatedParentMessage),
-                    ok = update_reply_count(ParentMessage#message.id),
+                    ok = update_parent_count(ParentMessage#message.id, 1),
                     {ok, NextUpcomingMessageId, UpdatedMessage}
             end;
         false ->
@@ -256,29 +253,47 @@ check_insert_message(#message{title = not_set,
 check_insert_message(_) ->
     false.
 
-update_reply_count(not_set) ->
+update_parent_count(not_set, _N) ->
     ok;
-update_reply_count(MessageId) ->
+update_parent_count(MessageId, N) ->
     [Message] = dets:lookup(messages, MessageId),
     ok = dets:insert(messages,
                      Message#message{
-                       reply_count = Message#message.reply_count + 1}),
-    update_reply_count(Message#message.parent_message_id).
+                       reply_count = Message#message.reply_count + N}),
+    update_parent_count(Message#message.parent_message_id, N).
+
+%%
+%% Lookup messages
+%%
+
+do_lookup_messages(MessageIds, Mode) ->
+    Messages =
+        lists:foldr(
+          fun(MessageId, Acc) ->
+                  case dets:lookup(messages, MessageId) of
+                      [Message] when Mode == flat ->
+                          [Message|Acc];
+                      [Message] when Mode == recursive ->
+                          Replies =
+                              do_lookup_messages(Message#message.replies, Mode),
+                          [Message|Acc] ++ Replies
+                  end
+          end, [], MessageIds),
+    lists:sort(
+      fun(MessageA, MessageB) ->
+              MessageA#message.created =< MessageB#message.created
+      end, Messages).
 
 %%
 %% Delete all messages (recursively)
 %%
 
-delete_all(MessageId) ->
-    case dets:lookup(messages, MessageId) of
-        [Message] ->
-            lists:foreach(fun(ReplyId) ->
-                                  delete_all(ReplyId) end,
-                          Message#message.replies),
-            ok = dets:delete(messages, MessageId);
-        [] ->
-            ok
-    end.
+delete_all([]) ->
+    0;
+delete_all([MessageId|Rest]) ->
+    [Message] = dets:lookup(messages, MessageId),
+    ok = dets:delete(messages, MessageId),
+    delete_all(Message#message.replies) + delete_all(Rest) + 1.
 
 %%
 %% Utilities

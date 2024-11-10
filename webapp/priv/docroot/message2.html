@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title id="head-title">Reply [level: 1]</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke2.css" />
+    <link rel="stylesheet" href="css/message2.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
+    <script src="js/uhtml.min.js" defer></script>
+    <script type="module" src="js/bespoke2.js" defer></script>
+    <script type="module" src="js/message2.js" defer></script>
+  </head>
+  <body>
+    <div class="uk-container uk-container-xsmall">
+      <!-- Header -->
+      <div class="uk-card uk-card-default uk-background-muted uk-padding-small uk-padding-remove-horizontal">
+        <div class="uk-flex uk-flex-between uk-flex-middle">
+          <button onclick="bespoke2.gotoPage(event, 'message2.html', -1)" data-back-destination="message2.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+          <div class="uk-flex-1 uk-text-center">
+            <span id="header-title" class="uk-text-bold">Post/Reply</span>
+            <span id="header-reply-level" class="uk-text-meta">[level: 42]</span>
+          </div>
+        </div>
+      </div>
+      <!-- Parent message -->
+      <article class="uk-article uk-margin-small-top">
+        <!-- Parent header -->
+        <div id="parent-title">Title</div>
+        <!-- Parent body -->
+        <div id="parent-body" class="uk-margin-remove-first-child uk-margin-remove-last-child">parent-body</div>
+        <!-- Parent meta-data -->
+        <div class="uk-article-meta uk-margin-top-remove">
+          <div class="uk-flex uk-flex-between uk-flex-middle">
+            <div>
+              <span id="parent-author">John Doe</span> •
+              <span id="parent-age">2d</span> •
+              <span uk-icon="comments"></span>
+              <span id="parent-replies">42</span>
+            </div>
+            <div>
+              <button id="parent-delete" onclick="message2.openDeleteMessageModal(event)" data-message-id="0" class="uk-icon-button" uk-icon="trash"></button>
+              <button onclick="bespoke2.gotoPage(event, 'add_reply2.html')" class="uk-icon-button" uk-icon="reply"></button>
+            </div>
+          </div>
+        </div>
+      </article>
+      <hr class="uk-margin-small">
+      <!-- Replies -->
+      <div id="replies"></div>
+    </div>
+    <!-- Modal dialog to delete a message -->
+    <div id="delete-message-modal" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Delete Message</h2>
+        <p id="delete-message-body">Do you really want delete this post/reply?</p>
+        <p class="uk-text-right">
+          <button class="uk-button uk-button-default uk-modal-close" type="button">No</button>
+          <button class="uk-button uk-button-danger" onclick="message2.deleteMessage(event)">Yes</button>
+      </div>
+    </div>
+    <script type="module">
+      import bespoke2 from "/js/bespoke2.js";
+      import message2 from "/js/message2.js";
+      window.bespoke2 = bespoke2;
+      window.message2 = message2;
+    </script>
+  </body>
+</html>

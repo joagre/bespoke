@@ -136,6 +136,37 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"})
             end;
+        ["lookup_recursive_messages"] ->
+            case rest_util:parse_body(Request, Body) of
+                {error, _Reason} ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"});
+                MessageIds when is_list(MessageIds) ->
+                    case lists:all(fun(MessageId) when is_binary(MessageId) ->
+                                           true;
+                                      (_) ->
+                                           false
+                                   end, MessageIds) of
+                        true ->
+                            Messages = db_serv:lookup_messages(MessageIds, recursive),
+                            JsonTerm =
+                                lists:map(fun(Message) ->
+                                                  message_to_json_term(Message)
+                                          end, Messages),
+                            rest_util:response(
+                              Socket, Request, {ok, {format, JsonTerm}});
+                        false ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request,
+                               "message-ids must be strings"})
+                    end;
+                _ ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"})
+            end;
         ["insert_message"] ->
             case rest_util:parse_body(Request, Body) of
                 {error, _Reason} ->
@@ -164,7 +195,7 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
-                MessageId when is_list(MessageId) ->
+                MessageId when is_binary(MessageId) ->
                     case db_serv:delete_message(MessageId) of
                         ok ->
                             rest_util:response(Socket, Request, ok_204);
