@@ -47,6 +47,15 @@ class Bespoke2 {
     }
   }
 
+  setCookieValue(name, value) {
+    this._cookieState[name] = value;
+    this._updateCookieState();
+  }
+
+  getCookieValue(name) {
+    return this._cookieState[name];
+  }
+
   clearMessageStack() {
     this._cookieState.messageStack = [];
     this._updateCookieState();
@@ -72,7 +81,8 @@ class Bespoke2 {
   }
 
   truncateMessageStack(length) {
-    this._cookieState.messageStack = this._cookieState.messageStack.slice(0, length);
+    this._cookieState.messageStack =
+      this._cookieState.messageStack.slice(0, length);
     this._updateCookieState();
   }
 
@@ -85,7 +95,8 @@ class Bespoke2 {
     if (ageInSeconds < 86400) return `${Math.floor(ageInSeconds / 3600)}h`;
     if (ageInSeconds < 604800) return `${Math.floor(ageInSeconds / 86400)}d`;
     if (ageInSeconds < 2419200) return `${Math.floor(ageInSeconds / 604800)}w`;
-    if (ageInSeconds < 29030400) return `${Math.floor(ageInSeconds / 2592000)}mo`;
+    if (ageInSeconds < 29030400)
+      return `${Math.floor(ageInSeconds / 2592000)}mo`;
     return `${Math.floor(ageInSeconds / 31536000)}y`;
   }
 
@@ -158,8 +169,10 @@ class Bespoke2 {
       date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
       expires = `; expires=${date.toUTCString()}`;
     }
-    const cookieValue = typeof value === 'object' ? JSON.stringify(value) : value;
-    document.cookie = `${name}=${encodeURIComponent(cookieValue)}${expires}; path=/; SameSite=Strict`;
+    const cookieValue =
+          typeof value === 'object' ? JSON.stringify(value) : value;
+    document.cookie =
+      `${name}=${encodeURIComponent(cookieValue)}${expires}; path=/; SameSite=Strict`;
   }
 
   _initializeSwipeListeners() {

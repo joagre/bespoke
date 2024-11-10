@@ -1,8 +1,6 @@
 // Import dependencies
 import bespoke2 from "/js/bespoke2.js";
 
-// Ensure uhtml.min.js is imported in the HTML file before this script
-
 class AddPost2 {
   constructor() {
     this._formFields = [];
