@@ -174,14 +174,6 @@ document.addEventListener("DOMContentLoaded", function() {
             replyMessages.find(
               replyMessage => replyMessage["id"] ==
                 message["parent-message-id"])["author"];
-
-
-
-
-
-
-
-
       replyQuote = html`
         <!-- Reply quote -->
         <div class="uk-text-meta quote" onclick=${() =>

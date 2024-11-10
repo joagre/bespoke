@@ -52,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const rootMessages = await response.json();
 
-      // Populate page
       populatePage(rootMessages);
 
       // Update page every minute
