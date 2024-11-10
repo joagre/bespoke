@@ -206,10 +206,17 @@ insert_subreddit(SubmissionDb, CommentDb) ->
                                                body = Body,
                                                author = Author,
                                                created = Created},
-                            {ok, _} = db_serv:insert_message(Message),
+                            {ok, _} = db_serv:insert_message(
+                                        patch_message(Message)),
                             ok = insert_comments(CommentDb, Id),
                             continue
                     end).
+
+%% The reddit json api returns the created_utc field as a list!
+patch_message(#message{created = Created} = Message) when is_binary(Created) ->
+    Message#message{created = ?b2i(Created)};
+patch_message(Message) ->
+    Message.
 
 insert_comments(CommentDb, ParentId) ->
     Comments = dets:lookup(CommentDb, ParentId),
@@ -225,7 +232,8 @@ insert_comments(CommentDb, ParentId) ->
                                              author = Author,
                                              created = Created},
                           io:format("** Inserting comment ~p~n", [Id]),
-                          {ok, _} = db_serv:insert_message(Message),
+                          {ok, _} = db_serv:insert_message(
+                                      patch_message(Message)),
                           insert_comments(CommentDb, Id)
                   end, Comments).
 

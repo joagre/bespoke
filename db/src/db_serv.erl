@@ -232,13 +232,18 @@ is_valid_insert_message(Message) ->
 
 check_insert_message(#message{title = Title,
                               parent_message_id = not_set,
-                              root_message_id = not_set})
-  when Title /= not_set ->
+                              root_message_id = not_set,
+                              created = Created})
+  when Title /= not_set andalso
+       (Created == not_set orelse is_integer(Created)) ->
     {true, not_set, not_set};
 check_insert_message(#message{title = not_set,
                               parent_message_id = ParentMessageId,
-                              root_message_id = RootMessageId})
-  when ParentMessageId /= not_set andalso RootMessageId /= not_set ->
+                              root_message_id = RootMessageId,
+                              created = Created})
+  when ParentMessageId /= not_set andalso
+       RootMessageId /= not_set andalso
+       (Created == not_set orelse is_integer(Created)) ->
     case dets:lookup(messages, ParentMessageId) of
         [ParentMessage] ->
             case dets:lookup(messages, RootMessageId) of
@@ -281,7 +286,7 @@ do_lookup_messages(MessageIds, Mode) ->
           end, [], MessageIds),
     lists:sort(
       fun(MessageA, MessageB) ->
-              MessageA#message.created >= MessageB#message.created
+              MessageA#message.created =< MessageB#message.created
       end, Messages).
 
 %%
