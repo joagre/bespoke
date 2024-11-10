@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function() {
           message2.toggleQuote(event)
         }} data-message-id="${message["id"]}" data-parent-message-id="${message["parent-message-id"]}">
           <span id="${replyQuoteButtonAttr}" class="uk-icon-link" uk-icon="chevron-up"></span>
-          In reply to ${replyQuoteAuthor}
+          In reply to ${replyQuoteAuthor}...
           <div id="${replyQuoteAttr}" class="uk-card uk-card-body uk-card-default uk-card-small uk-text-meta uk-margin-small-bottom uk-margin-small-top custom-quote-padding" hidden>
             <div id="${replyQuoteBodyAttr}" class="uk-margin-remove-first-child uk-margin-remove-last-child">
               <p>
