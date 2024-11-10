@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title id="head-title">Post / Reply [level: 1]</title>
+    <title id="head-title"></title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css">
@@ -25,8 +25,8 @@
         <div class="uk-flex uk-flex-between uk-flex-middle">
           <button onclick="bespoke2.gotoPage(event, 'message2.html', -1)" data-back-destination="message2.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
           <div class="uk-flex-1 uk-text-center">
-            <span id="header-title" class="uk-text-bold">Post / Reply</span>
-            <span id="header-reply-level" class="uk-text-meta">[level: 42]</span>
+            <span id="header-title" class="uk-text-bold"></span>
+            <span id="header-reply-level" class="uk-text-meta"></span>
           </div>
         </div>
       </div>
@@ -40,10 +40,10 @@
         <div class="uk-article-meta uk-margin-top-remove">
           <div class="uk-flex uk-flex-between uk-flex-middle">
             <div>
-              <span id="parent-author">John Doe</span> •
-              <span id="parent-age">2d</span> •
+              <span id="parent-author"></span> •
+              <span id="parent-age"></span> •
               <span uk-icon="comments"></span>
-              <span id="parent-replies">42</span>
+              <span id="parent-replies"></span>
             </div>
             <div>
               <button id="parent-delete" onclick="message2.openDeleteMessageModal(event)" data-message-id="0" class="uk-icon-button" uk-icon="trash"></button>
@@ -60,7 +60,7 @@
     <div id="delete-message-modal" uk-modal>
       <div class="uk-modal-dialog uk-modal-body">
         <h2 class="uk-modal-title">Delete Message</h2>
-        <p id="delete-message-body">Do you really want delete this post/reply?</p>
+        <p id="delete-message-body"></p>
         <p class="uk-text-right">
           <button class="uk-button uk-button-default uk-modal-close" type="button">No</button>
           <button class="uk-button uk-button-danger" onclick="message2.deleteMessage(event)">Yes</button>

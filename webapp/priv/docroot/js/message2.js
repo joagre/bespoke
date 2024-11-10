@@ -125,7 +125,6 @@ document.addEventListener("DOMContentLoaded", function() {
             replyMessage => createReplyTemplate(
               parentMessage, replyMessage, replyMessages));
     render(repliesContainer, html`${replyTemplates}`);
-
   };
 
   function createReplyTemplate(parentMessage, message, replyMessages) {
@@ -136,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function() {
       <article class="uk-article uk-margin-remove-top">
         <!-- Reply quote -->
         <div class="uk-text-meta quote" onclick="message2.toggleQuote(event)" data-message-id="1" data-parent-message-id="0">
-          <span id="reply-quote-button-1" class="uk-icon-link" uk-icon="chevron-up"></span>
+          <span id="reply-quote-button-1" class="uk-icon-link" uk-icon="chevron-down"></span>
           In reply to author-0
           <div id="reply-quote-1" class="uk-card uk-card-body uk-card-default uk-card-small uk-text-meta uk-margin-small-bottom uk-margin-small-top custom-quote-padding" hidden>
             <div id="reply-quote-body-1" class="uk-margin-remove-first-child uk-margin-remove-last-child">reply-quote-body-1</div>
@@ -160,7 +159,7 @@ document.addEventListener("DOMContentLoaded", function() {
           </div>
         </div>
       </article>
-      <hr id="reply-divider-0" class="margin-divider uk-margin-small">
+      <hr id="reply-divider-0" class="uk-margin-small uk-divider-icon">
     */
 
     // A reply quote is only added if someone replies on a reply
@@ -179,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="uk-text-meta quote" onclick=${() =>
           message2.toggleQuote(event)
         }} data-message-id="${message["id"]}" data-parent-message-id="${message["parent-message-id"]}">
-          <span id="${replyQuoteButtonAttr}" class="uk-icon-link" uk-icon="chevron-up"></span>
+          <span id="${replyQuoteButtonAttr}" class="uk-icon-link" uk-icon="chevron-down"></span>
           In reply to ${replyQuoteAuthor}...
           <div id="${replyQuoteAttr}" class="uk-card uk-card-body uk-card-default uk-card-small uk-text-meta uk-margin-small-bottom uk-margin-small-top custom-quote-padding" hidden>
             <div id="${replyQuoteBodyAttr}" class="uk-margin-remove-first-child uk-margin-remove-last-child">
@@ -229,7 +228,7 @@ document.addEventListener("DOMContentLoaded", function() {
           </div>
         </div>
       </article>
-      <hr id="${replyDividerAttr}" class="margin-divider uk-margin-small">
+      <hr id="${replyDividerAttr}" class="uk-margin-small uk-divider-icon">
     `;
   };
 
