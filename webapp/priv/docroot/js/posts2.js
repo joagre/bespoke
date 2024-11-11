@@ -25,8 +25,6 @@ class Posts2 {
       const response = await fetch("/list_root_messages");
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
-        // Optional: Display an error message on the page
-        this.displayError("Failed to load messages. Please try again later.");
         return;
       }
       const rootMessages = await response.json();
@@ -34,8 +32,6 @@ class Posts2 {
       this.populatePage(rootMessages);
     } catch (error) {
       console.error("Fetching failed:", error);
-      // Optional: Display an error message on the page
-      this.displayError("An error occurred while fetching messages.");
     }
   }
 
@@ -67,11 +63,6 @@ class Posts2 {
         </div>
       </div>
     `;
-  }
-
-  displayError(message) {
-    const postsContainer = document.getElementById("posts");
-    postsContainer.innerHTML = `<p class="error-message">${message}</p>`;
   }
 }
 
