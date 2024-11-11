@@ -1,8 +1,6 @@
 // Import dependencies
 import bespoke2 from "/js/bespoke2.js";
 
-// Ensure uhtml.min.js is imported in the HTML file before this script
-
 class AddReply2 {
   constructor() {
     this.parentMessage = null;
@@ -28,8 +26,9 @@ class AddReply2 {
       author: document.getElementById("form-author").value,
       body: document.getElementById("form-body").value,
       "parent-message-id": this.parentMessage["id"],
-      "root-message-id":
-      this.parentMessage["root-message-id"] ?? this.parentMessage["id"],
+      "root-message-id": (this.parentMessage["root-message-id"] != null)
+        ? this.parentMessage["root-message-id"]
+        : this.parentMessage["id"];
     };
 
     const updateServer = async () => {
