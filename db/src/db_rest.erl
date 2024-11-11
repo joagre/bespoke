@@ -91,8 +91,13 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                       Socket, Request, 200, "OK", {file, AbsFilename},
                       [{content_type, {url, UriPath}}]);
                 false ->
-                    ?log_info("~p not found", [Tokens]),
-                    rest_util:response(Socket, Request, {error, not_found})
+                    IndexFilename =
+                        filename:join(
+                          [filename:absname(code:priv_dir(webapp)), "docroot",
+                           "posts2.html"]),
+                    rester_http_server:response_r(
+                      Socket, Request, 200, "OK", {file, IndexFilename},
+                      [{content_type, {url, UriPath}}])
             end
     end.
 
