@@ -1,5 +1,5 @@
 // Import dependencies
-import bespoke from "/js/bespoke.js";
+import bespoke2 from "/js/bespoke2.js";
 
 // Ensure uhtml.min.js is imported in the HTML file before this script
 
@@ -92,14 +92,14 @@ class AddReply2 {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify([bespoke.peekMessageStack()]),
+        body: JSON.stringify([bespoke2.peekMessageStack()]),
       });
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
         return;
       }
       let data = await response.json();
-      bespoke.assert(data.length === 1, "Expected exactly one message");
+      bespoke2.assert(data.length === 1, "Expected exactly one message");
       this.parentMessage = data[0];
 
       // REST: Get root message title (if necessary)
@@ -117,7 +117,7 @@ class AddReply2 {
           return;
         }
         data = await response.json();
-        bespoke.assert(data.length === 1, "Expected exactly one message");
+        bespoke2.assert(data.length === 1, "Expected exactly one message");
         const rootMessage = data[0];
         this.rootMessageTitle = rootMessage["title"];
       }
@@ -132,13 +132,13 @@ class AddReply2 {
   populatePage() {
     // Populate parent message
     document.getElementById("parent-title").innerHTML = this.rootMessageTitle;
-    document.getElementById("parent-body").innerHTML = bespoke.formatMarkdown(
+    document.getElementById("parent-body").innerHTML = bespoke2.formatMarkdown(
       this.parentMessage["body"]
     );
     document.getElementById("parent-author").textContent =
       this.parentMessage["author"];
     document.getElementById("parent-age").textContent =
-      bespoke.formatSecondsSinceEpoch(this.parentMessage["created"]);
+      bespoke2.formatSecondsSinceEpoch(this.parentMessage["created"]);
     document.getElementById("parent-replies").textContent =
       this.parentMessage["reply-count"];
   }
@@ -146,7 +146,7 @@ class AddReply2 {
 
 // Instantiate the class on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
-  bespoke.init();
+  bespoke2.init();
   addReply2.init();
 });
 
