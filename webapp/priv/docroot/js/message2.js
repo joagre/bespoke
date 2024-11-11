@@ -207,7 +207,7 @@ class Message2 {
                 uk-icon="trash"
               ></button>
               <button
-                onclick=${(event) => addReply2.gotoReply(event, message["id"])}
+                onclick=${(event) => addReply2.gotoAddReplyPage(event, message["id"], true)}
                 class="uk-icon-button"
                 uk-icon="reply"
               ></button>

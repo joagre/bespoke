@@ -47,8 +47,7 @@ class AddReply2 {
           // Optional: Display an error message to the user
           return;
         }
-        bespoke2.setCookieValue("reply-pop", false);
-        bespoke.gotoPage(event, "message2.html");
+        this.goBack(event, true);
       } catch (error) {
         console.error("Fetching failed:", error);
         // Optional: Display an error message to the user
@@ -58,17 +57,17 @@ class AddReply2 {
     updateServer();
   }
 
-  gotoReply(event, messageId) {
-    bespoke2.setCookieValue("reply-pop", true);
+  gotoAddReplyPage(event, messageId, popMessageStack) {
+    bespoke2.setCookieValue("pop-message-stack", popMessageStack);
     bespoke2.gotoPage(event, "add_reply2.html", messageId);
   }
 
-  goBack(event) {
-    if (bespoke2.getCookieValue("reply-pop")) {
+  goBack(event, ignorePopMessageStack) {
+    if (!ignorePopMessageStack &&
+        bespoke2.getCookieValue("pop-message-stack")) {
       bespoke2.popMessageStack();
-      bespoke2.setCookieValue("reply-pop", false);
     }
-
+    bespoke2.setCookieValue("pop-message-stack", false);
     bespoke2.gotoPage(event, 'message2.html')
   }
 
