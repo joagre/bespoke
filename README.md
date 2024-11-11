@@ -4,26 +4,34 @@
 
 - [Erlang](http://www.erlang.org/)
 
-## Building
+## Build
 
 ```
 $ make all setcap
 ```
 
-## Testing
+## Test
 
 ```
 $ make runtest
 ```
-
-## Starting server
+## Start server and populate database
 
 ```
 $ ./main/bin/bespoke
 ```
 
-## Testing with web client
+Optionally populate the database with datataken from r/sweden
 
 ```
-$ curl https://localhost/list_topics
+Erlang/OTP 27 [erts-15.1.2] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [jit:ns]
+
+(bespoke@localhost)1> db_tools:create_subreddit_db().
+...
+```
+
+## Test with curl (in another shell)
+
+```
+$ curl -k https://localhost/list_root_messages
 ```
