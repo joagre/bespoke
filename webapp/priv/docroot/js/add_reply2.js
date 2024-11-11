@@ -26,9 +26,7 @@ class AddReply2 {
       author: document.getElementById("form-author").value,
       body: document.getElementById("form-body").value,
       "parent-message-id": this.parentMessage["id"],
-      "root-message-id": (this.parentMessage["root-message-id"] != null)
-        ? this.parentMessage["root-message-id"]
-        : this.parentMessage["id"];
+      "root-message-id": (this.parentMessage["root-message-id"] != null) ? this.parentMessage["root-message-id"] : this.parentMessage["id"]
     };
 
     const updateServer = async () => {
