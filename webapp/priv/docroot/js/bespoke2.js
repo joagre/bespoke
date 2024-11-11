@@ -34,7 +34,9 @@ class Bespoke2 {
       this.pushMessageStack(messageId);
     }
 
-    this._handleButtonEvent(event);
+    if (event != null) {
+      this._handleButtonEvent(event);
+    }
 
     if (this._isTextSelected()) {
       return;
@@ -215,9 +217,9 @@ class Bespoke2 {
     if (swipeTarget) {
       const destination = swipeTarget.getAttribute('data-back-destination');
       if (destination === 'message2.html') {
-        this.gotoPage(event, destination, -1);
+        this.gotoPage(null, destination, -1);
       } else {
-        this.gotoPage(event, destination);
+        this.gotoPage(null, destination);
       }
     }
   }
