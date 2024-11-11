@@ -7,7 +7,7 @@
 ## Building
 
 ```
-$ make
+$ make all setcap
 ```
 
 ## Testing
@@ -25,5 +25,5 @@ $ ./main/bin/bespoke
 ## Testing with web client
 
 ```
-$ curl http://localhost:8080/list_topics
+$ curl https://localhost/list_topics
 ```

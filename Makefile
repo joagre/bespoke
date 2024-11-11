@@ -6,6 +6,9 @@ all:
 		(cd $$lib && env ERL_LIBS=. $(MAKE) all) || exit 1; \
 	done
 
+setcap:
+	(cd db; make setcap)
+
 clean:
 	for lib in $(LIBS) ; do \
 		(cd $$lib && env ERL_LIBS=. $(MAKE) clean) || exit 1; \

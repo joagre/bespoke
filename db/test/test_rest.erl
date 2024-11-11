@@ -8,10 +8,10 @@
 start() ->
     {ok, _Pid} = init_httpc(),
     %% No root messages inserted yet
-    {ok, []} = http_get("http://localhost:8080/list_root_messages"),
+    {ok, []} = http_get("https://localhost/list_root_messages"),
     %% Add root message
     {ok, RootMessage1} =
-        http_post("http://localhost:8080/insert_message",
+        http_post("https://localhost/insert_message",
                   #{<<"title">> => <<"title1">>,
                     <<"body">> => <<"body1">>,
                     <<"author">> => <<"author1">>}),
@@ -23,19 +23,19 @@ start() ->
             <<"created">> := Created,
             <<"reply-count">> := 0,
             <<"replies">> := []}]} =
-        http_post("http://localhost:8080/lookup_messages", [<<"0">>]),
+        http_post("https://localhost/lookup_messages", [<<"0">>]),
     true = is_integer(Created),
     %% Add reply message to root message
     RootMessageId1 = maps:get(<<"id">>, RootMessage1),
     {ok, ReplyMessage1} =
-        http_post("http://localhost:8080/insert_message",
+        http_post("https://localhost/insert_message",
                   #{<<"parent-message-id">> => RootMessageId1,
                     <<"root-message-id">> => RootMessageId1,
                     <<"body">> => <<"reply1">>,
                     <<"author">> => <<"author2">>}),
     %% Add repply message to reply message
     {ok, ReplyMessage2} =
-        http_post("http://localhost:8080/insert_message",
+        http_post("https://localhost/insert_message",
                   #{<<"parent-message-id">> => maps:get(<<"id">>, ReplyMessage1),
                     <<"root-message-id">> => RootMessageId1,
                     <<"body">> => unicode:characters_to_binary("öööreply2"),
@@ -43,20 +43,20 @@ start() ->
     %% Verify root message
     ReplyMessageId1 = maps:get(<<"id">>, ReplyMessage1),
     {ok, [#{<<"replies">> := [ReplyMessageId1]}]} =
-        http_post("http://localhost:8080/lookup_messages", [RootMessageId1]),
+        http_post("https://localhost/lookup_messages", [RootMessageId1]),
     %% Verify reply messages
     ReplyMessageId2 = maps:get(<<"id">>, ReplyMessage2),
     {ok, [#{<<"replies">> := [ReplyMessageId2]}]} =
-        http_post("http://localhost:8080/lookup_messages", [ReplyMessageId1]),
+        http_post("https://localhost/lookup_messages", [ReplyMessageId1]),
     {ok, [#{<<"replies">> := []}]} =
-        http_post("http://localhost:8080/lookup_messages", [ReplyMessageId2]),
+        http_post("https://localhost/lookup_messages", [ReplyMessageId2]),
     %% Verify reply counts
     {ok, [#{<<"reply-count">> := 2}]} =
-        http_post("http://localhost:8080/lookup_messages", [RootMessageId1]),
+        http_post("https://localhost/lookup_messages", [RootMessageId1]),
     {ok, [#{<<"reply-count">> := 1}]} =
-        http_post("http://localhost:8080/lookup_messages", [ReplyMessageId1]),
+        http_post("https://localhost/lookup_messages", [ReplyMessageId1]),
     {ok, [#{<<"reply-count">> := 0}]} =
-        http_post("http://localhost:8080/lookup_messages", [ReplyMessageId2]).
+        http_post("https://localhost/lookup_messages", [ReplyMessageId2]).
 
 %%
 %% Utilities
@@ -67,7 +67,8 @@ init_httpc() ->
     inets:start(httpc, [{profile, poop}]).
 
 http_get(Url) ->
-    case httpc:request(Url) of
+    case httpc:request(get, {Url, [{"connection", "close"}]},
+                       [{ssl, [{verify, verify_none}]}], []) of
         {ok, {{"HTTP/1.1", 200, "OK"}, Headers, Body}} ->
             case lists:keyfind("content-type", 1, Headers) of
                 {_, "application/json"} ->
@@ -86,7 +87,7 @@ http_post(Url, Data) ->
                               [{"connection", "close"}],
                               "application/json",
                               json:encode(Data)},
-                       [], []) of
+                       [{ssl, [{verify, verify_none}]}], []) of
         {ok, {{"HTTP/1.1", 200, "OK"}, Headers, Body}} ->
             case lists:keyfind("content-type", 1, Headers) of
                 {_, "application/json"} ->
