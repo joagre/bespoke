@@ -72,6 +72,8 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                                          message_to_json_term(Message)
                                  end, Messages),
             rest_util:response(Socket, Request, {ok, {format, JsonTerm}});
+        ["generate_204"] ->
+            rest_util:response(Socket, Request, ok_204);
         %% Try to act as a static web server
 	Tokens ->
             UriPath =

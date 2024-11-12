@@ -31,7 +31,7 @@ bin_dir=${0%/*}
 erl_libs=${bin_dir}/../..
 pa="-pa ${erl_libs}/*/test"
 perform="-eval main:start()"
-sname="-sname bespoke@localhost"
+sname=""
 
 while :; do
     case $1 in
