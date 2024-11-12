@@ -16,6 +16,7 @@ start_link() ->
     Options =
 	[{request_handler, {?MODULE, request_handler, []}},
 	 {verify, verify_none},
+         {cacerts, []},
 	 {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
