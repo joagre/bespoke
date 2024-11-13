@@ -81,13 +81,13 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
 %                      [{Tokens, Headers#http_chdr.host}]),
 %            serve_splash_page(Socket, Request);
         ["hotspot-detect.html" = Token] ->
-            io:format("Serving splash page for ~s~n", [Token]),
+            io:format("Detecting captive portal: ~s~n", [Token]),
             serve_splash_page(Socket, Request);
         ["generate_204" = Token] ->
-            io:format("Serving splash page for ~s~n", [Token]),
+            io:format("Detecting captive portal: ~s~n", [Token]),
             serve_splash_page(Socket, Request);
         ["gen_204" = Token] ->
-            io:format("Serving splash page for ~s~n", [Token]),
+            io:format("Detecting captive portal: ~s~n", [Token]),
             serve_splash_page(Socket, Request);
         ["list_root_messages"] ->
             Messages = db_serv:list_root_messages(),
@@ -130,7 +130,7 @@ serve_splash_page(Socket, Request) ->
               Socket, Request,
               {redirect, "http://192.168.4.1/splash.html"});
         [{IpAddress, Timestamp}] ->
-            case timestamp() - Timestamp > 60 of
+            case timestamp() - Timestamp > 60 * 10 of
                 true ->
                     io:format("Serving splash page for ~p again~n", [IpAddress]),
                     ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
