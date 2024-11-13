@@ -125,15 +125,15 @@ serve_splash_page(Socket, Request) ->
     case ets:lookup(captive_portal_cache, IpAddress) of
         [] ->
             io:format("Serving splash page for ~p~n", [IpAddress]),
-            ets:insert(captive_portal_cache, {IpAddress, os:timestamp()}),
+            ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
             rest_util:response(
               Socket, Request,
               {redirect, "http://192.168.4.1/splash.html"});
         [{IpAddress, Timestamp}] ->
-            case os:timestamp() - Timestamp > 60 * 1000000 of
+            case timestamp() - Timestamp > 60 * 1000000 of
                 true ->
                     io:format("Serving splash page for ~p again~n", [IpAddress]),
-                    ets:insert(captive_portal_cache, {IpAddress, os:timestamp()}),
+                    ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
                     rest_util:response(
                       Socket, Request,
                       {redirect, "http://192.168.4.1/splash.html"});
@@ -142,6 +142,9 @@ serve_splash_page(Socket, Request) ->
                     rest_util:response(Socket, Request, ok_204)
             end
     end.
+
+timestamp() ->
+    os:system_time(second).
 
 http_post(Socket, Request, Body, Options) ->
     Url = Request#http_request.uri,
