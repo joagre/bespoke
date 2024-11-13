@@ -5,12 +5,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <script>
-      // Silent request to confirm network access with a 204 response
-      fetch('http://192.168.4.1/generate_204', { method: 'GET', mode: 'no-cors' })
-        .then(response => console.log('Network confirmation sent'))
-        .catch(error => console.error('Error confirming network access:', error));
-    </script>
+<script>
+    // Silent request to a known external URL
+    fetch('http://connectivitycheck.gstatic.com/generate_204', { method: 'GET', mode: 'no-cors' })
+        .then(response => console.log('External network confirmation sent'))
+        .catch(error => console.error('Error confirming external network access:', error));
+</script>
 
     <link rel="stylesheet" href="css/uikit.min.css">
     <link rel="stylesheet" href="css/bespoke2.css">
