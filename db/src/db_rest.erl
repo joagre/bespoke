@@ -69,14 +69,15 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
     Uri = Request#http_request.uri,
     UrlHost = Uri#url.host,
     Headers = Request#http_request.headers,
+    io:format("Request = ~p\n, Url = ~p\n", [Request, Url]),
     case Tokens of
         _ when UrlHost == <<"connectivity-check.ubuntu.com">> orelse
                Headers#http_chdr.host == <<"connectivity-check.ubuntu.com">> ->
-            rest_util:response(Socket, Request, ok_204);
+            serve_splash_page(Socket, Request);
         ["generate_204"] ->
-            rest_util:response(Socket, Request, ok_204);
+            serve_splash_page(Socket, Request);
         ["gen_204"] ->
-            rest_util:response(Socket, Request, ok_204);
+            serve_splash_page(Socket, Request);
         ["list_root_messages"] ->
             Messages = db_serv:list_root_messages(),
             JsonTerm = lists:map(fun(Message) ->
@@ -111,6 +112,15 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                       [{content_type, {url, UriPath}}])
             end
     end.
+
+serve_splash_page(Socket, Request) ->
+    IndexFilename =
+        filename:join(
+          [filename:absname(code:priv_dir(webapp)), "docroot",
+           "splash.html"]),
+    rester_http_server:response_r(
+      Socket, Request, 200, "OK", {file, IndexFilename},
+      [{content_type, "text/html"}]).
 
 http_post(Socket, Request, Body, Options) ->
     Url = Request#http_request.uri,
