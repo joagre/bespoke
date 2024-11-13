@@ -114,8 +114,8 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
     end.
 
 serve_splash_page(Socket, Request) ->
-    rester_http_server:response(Socket, Request,
-                                {redirect, "http://192.168.4.1/splash.html"}).
+    rester_util:response(Socket, Request,
+                         {redirect, "http://192.168.4.1/splash.html"}).
 
 http_post(Socket, Request, Body, Options) ->
     Url = Request#http_request.uri,
