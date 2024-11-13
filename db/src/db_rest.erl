@@ -66,17 +66,22 @@ http_get(Socket, Request, Body, Options) ->
     end.
 
 http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
-    Uri = Request#http_request.uri,
-    UrlHost = Uri#url.host,
     Headers = Request#http_request.headers,
-    io:format("Request = ~p\n, Url = ~p\n", [Request, Url]),
     case Tokens of
-        _ when UrlHost == <<"connectivity-check.ubuntu.com">> orelse
-               Headers#http_chdr.host == <<"connectivity-check.ubuntu.com">> ->
+        _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
+               Headers#http_chdr.host == "connectivity-check.ubuntu.com" orelse
+               Headers#http_chdr.host == "detectportal.firefox.com" ->
+            io:format("Serving splash page for ~p~n",
+                      [{Tokens, Headers#http_chdr.host}]),
             serve_splash_page(Socket, Request);
-        ["generate_204"] ->
+        ["hotspot-detect.html" = Token] ->
+            io:format("Serving splash page for ~s~n", [Token]),
             serve_splash_page(Socket, Request);
-        ["gen_204"] ->
+        ["generate_204" = Token] ->
+            io:format("Serving splash page for ~s~n", [Token]),
+            serve_splash_page(Socket, Request);
+        ["gen_204" = Token] ->
+            io:format("Serving splash page for ~s~n", [Token]),
             serve_splash_page(Socket, Request);
         ["list_root_messages"] ->
             Messages = db_serv:list_root_messages(),
@@ -89,20 +94,23 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             UriPath =
                 case Tokens of
                     [] ->
-                        "/index.html";
+                        "/posts2.html";
                     _ ->
                         Url#url.path
                 end,
+            io:format("UriPath = ~s\n", [UriPath]),
             AbsFilename =
                 filename:join(
                   [filename:absname(code:priv_dir(webapp)), "docroot",
                    tl(UriPath)]),
+
             case filelib:is_regular(AbsFilename) of
                 true ->
                     rester_http_server:response_r(
                       Socket, Request, 200, "OK", {file, AbsFilename},
                       [{content_type, {url, UriPath}}]);
                 false ->
+                    io:format("NOT FOUND = ~p\n", [{UriPath, Headers}]),
                     IndexFilename =
                         filename:join(
                           [filename:absname(code:priv_dir(webapp)), "docroot",
