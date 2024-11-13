@@ -74,12 +74,12 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
 
 
     case Tokens of
-%        _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
-%               Headers#http_chdr.host == "connectivity-check.ubuntu.com" orelse
-%               Headers#http_chdr.host == "detectportal.firefox.com" ->
-%            io:format("Serving splash page for ~p~n",
-%                      [{Tokens, Headers#http_chdr.host}]),
-%            serve_splash_page(Socket, Request);
+        _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
+               Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
+            io:format("Detecting captive portal: ~s~n",
+                      ["Host: connectivity-check.ubuntu.com"]),
+            rester_http_server:response_r(Socket, Request, 200, "OK", "",
+                                          [{content_type, "text/plan"}]);
         %% Iphone
         ["hotspot-detect.html" = Token] ->
             io:format("Detecting captive portal: ~s~n", [Token]),
