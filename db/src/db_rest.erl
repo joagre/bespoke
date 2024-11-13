@@ -21,6 +21,7 @@ start_link() ->
 	 {nodelay, true},
 	 {reuseaddr, true}],
     ?log_info("Database REST API has been started"),
+    true = ets:new(captive_portal_cache, [public, named_table]),
     rester_http_server:start_link(80, Options).
 
 %%
@@ -67,6 +68,10 @@ http_get(Socket, Request, Body, Options) ->
 
 http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
     Headers = Request#http_request.headers,
+
+
+
+
     case Tokens of
 %        _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
 %               Headers#http_chdr.host == "connectivity-check.ubuntu.com" orelse
@@ -114,8 +119,28 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
     end.
 
 serve_splash_page(Socket, Request) ->
-    rest_util:response(Socket, Request,
-                       {redirect, "http://192.168.4.1/splash.html"}).
+    {ok, {IpAddress, _Port}} = inet:peername(Socket),
+    %% lookup in captive_portal_cache
+    case ets:lookup(captive_portal_cache, IpAddress) of
+        [] ->
+            io:format("Serving splash page for ~p~n", [IpAddress]),
+            ets:insert(captive_portal_cache, {IpAddress, os:timestamp()}),
+            rest_util:response(
+              Socket, Request,
+              {redirect, "http://192.168.4.1/splash.html"});
+        [{IpAddress, Timestamp}] ->
+            case os:timestamp() - Timestamp > 60 * 1000000 of
+                true ->
+                    io:format("Serving splash page for ~p again~n", [IpAddress]),
+                    ets:insert(captive_portal_cache, {IpAddress, os:timestamp()}),
+                    rest_util:response(
+                      Socket, Request,
+                      {redirect, "http://192.168.4.1/splash.html"});
+                false ->
+                    io:format("Returning 204 for ~p~n", [IpAddress]),
+                    rest_util:response(Socket, Request, ok_204)
+            end
+    end.
 
 http_post(Socket, Request, Body, Options) ->
     Url = Request#http_request.uri,
