@@ -100,7 +100,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             UriPath =
                 case Tokens of
                     [] ->
-                        "/index.html";
+                        "/posts2.html";
                     _ ->
                         Url#url.path
                 end,
