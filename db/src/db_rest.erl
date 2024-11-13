@@ -98,14 +98,13 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                     _ ->
                         Url#url.path
                 end,
-            io:format("UriPath = ~s\n", [UriPath]),
             AbsFilename =
                 filename:join(
                   [filename:absname(code:priv_dir(webapp)), "docroot",
                    tl(UriPath)]),
-
             case filelib:is_regular(AbsFilename) of
                 true ->
+                    io:format("**** = ~s\n", [UriPath]),
                     rester_http_server:response_r(
                       Socket, Request, 200, "OK", {file, AbsFilename},
                       [{content_type, {url, UriPath}}]);
