@@ -120,7 +120,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
     end.
 
 serve_splash_page(Socket, Request) ->
-    {ok, {IpAddress, _Port}} = inet:peername(Socket),
+    {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
     %% lookup in captive_portal_cache
     case ets:lookup(captive_portal_cache, IpAddress) of
         [] ->
