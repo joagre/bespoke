@@ -134,7 +134,7 @@ serve_splash_page(Socket, Request) ->
             ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
             rest_util:response(
               Socket, Request,
-              {redirect, "http://192.168.4.1/splash.html"});
+              {redirect, "http://192.168.4.1/posts2.html"});
         [{IpAddress, Timestamp}] ->
             case timestamp() - Timestamp > 60 * 10 of
                 true ->
