@@ -80,9 +80,16 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
 %            io:format("Serving splash page for ~p~n",
 %                      [{Tokens, Headers#http_chdr.host}]),
 %            serve_splash_page(Socket, Request);
+        %% Iphone
         ["hotspot-detect.html" = Token] ->
             io:format("Detecting captive portal: ~s~n", [Token]),
             serve_splash_page(Socket, Request);
+        %% Firefox
+        ["success.txt" = Token] ->
+            io:format("Detecting captive portal: ~s~n", [Token]),
+            rester_http_server:response_r(Socket, Request, 200, "OK", "",
+                                          [{content_type, "text/plan"}]);
+        %% Android
         ["generate_204" = Token] ->
             io:format("Detecting captive portal: ~s~n", [Token]),
             serve_splash_page(Socket, Request);
@@ -120,7 +127,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                            "posts2.html"]),
                     io:format("NOT_FOUND = ~p\n", [{UriPath, Headers}]),
                     rester_http_server:response_r(
-                      Socket, Request, 200, "OK", {file, AbsFilename},
+                      Socket, Request, 200, "OK", {file, IndexFilename},
                       [{content_type, {url, "/posts2.html"}}])
             end
     end.
