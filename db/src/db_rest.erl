@@ -130,7 +130,7 @@ serve_splash_page(Socket, Request) ->
               Socket, Request,
               {redirect, "http://192.168.4.1/splash.html"});
         [{IpAddress, Timestamp}] ->
-            case timestamp() - Timestamp > 60 * 1000000 of
+            case timestamp() - Timestamp > 60 of
                 true ->
                     io:format("Serving splash page for ~p again~n", [IpAddress]),
                     ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
