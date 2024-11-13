@@ -15,13 +15,13 @@
 start_link() ->
     Options =
 	[{request_handler, {?MODULE, request_handler, []}},
-	 {verify, verify_none},
-         {cacerts, []},
-	 {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
+%	 {verify, verify_none},
+%         {cacerts, []},
+%	 {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
     ?log_info("Database REST API has been started"),
-    rester_http_server:start_link(443, Options).
+    rester_http_server:start_link(80, Options).
 
 %%
 %% Exported: request_handler
