@@ -21,7 +21,8 @@ start_link() ->
 	 {nodelay, true},
 	 {reuseaddr, true}],
     ?log_info("Database REST API has been started"),
-    true = ets:new(captive_portal_cache, [public, named_table]),
+    captive_portal_cache =
+        ets:new(captive_portal_cache, [public, named_table]),
     rester_http_server:start_link(80, Options).
 
 %%
