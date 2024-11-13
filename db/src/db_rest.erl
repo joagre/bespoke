@@ -69,10 +69,6 @@ http_get(Socket, Request, Body, Options) ->
 
 http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
     Headers = Request#http_request.headers,
-
-
-
-
     case Tokens of
         _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
                Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
@@ -83,8 +79,12 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
         %% Iphone
         ["hotspot-detect.html" = Token] ->
             io:format("Detecting captive portal: ~s~n", [Token]),
-            serve_splash_page(Socket, Request);
+            serve_splash_page(Socket, Request, Token);
         %% Firefox
+        ["canonical.html" = Token]
+          when Headers#http_chdr.host == "detectportal.firefox.com" ->
+            io:format("Detecting captive portal: ~s~n", [Token]),
+            serve_splash_page(Socket, Request, Token);
         ["success.txt" = Token] ->
             io:format("Detecting captive portal: ~s~n", [Token]),
             rester_http_server:response_r(Socket, Request, 200, "OK", "",
@@ -92,10 +92,10 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
         %% Android
         ["generate_204" = Token] ->
             io:format("Detecting captive portal: ~s~n", [Token]),
-            serve_splash_page(Socket, Request);
+            serve_splash_page(Socket, Request, Token);
         ["gen_204" = Token] ->
             io:format("Detecting captive portal: ~s~n", [Token]),
-            serve_splash_page(Socket, Request);
+            serve_splash_page(Socket, Request, Token);
         ["list_root_messages"] ->
             Messages = db_serv:list_root_messages(),
             JsonTerm = lists:map(fun(Message) ->
@@ -132,7 +132,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             end
     end.
 
-serve_splash_page(Socket, Request) ->
+serve_splash_page(Socket, Request, Token) ->
     {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
     %% lookup in captive_portal_cache
     case ets:lookup(captive_portal_cache, IpAddress) of
@@ -151,8 +151,16 @@ serve_splash_page(Socket, Request) ->
                       Socket, Request,
                       {redirect, "http://192.168.4.1/posts2.html"});
                 false ->
-                    io:format("Returning 204 for ~p~n", [IpAddress]),
-                    rest_util:response(Socket, Request, ok_204)
+                    case Token of
+                        "canonical.html" ->
+                            io:format("Returning 200 (success) ~p~n", [IpAddress]),
+                            rester_http_server:response_r(
+                              Socket, Request, 200, "OK", "success",
+                              [{content_type, "text/plan"}]);
+                        _ ->
+                            io:format("Returning 204 for ~p~n", [IpAddress]),
+                            rest_util:response(Socket, Request, ok_204)
+                    end
             end
     end.
 
