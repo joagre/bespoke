@@ -246,6 +246,9 @@ response(Socket,Request,ok_204)  ->
 response(Socket,Request,{ok, String})
   when is_list(String) ->
     rester_http_server:response_r(Socket,Request,200,"OK",String,[]);
+%% 302 redirect
+response(Socket,Request,{redirect, URL}) ->
+    rester_http_server:response_r(Socket,Request,302,"Found","",[{location, URL}]);
 response(Socket,Request,{ok, Atom})
   when is_atom(Atom) ->
     rester_http_server:response_r(Socket,Request,200,"OK",

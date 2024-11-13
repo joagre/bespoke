@@ -68,12 +68,12 @@ http_get(Socket, Request, Body, Options) ->
 http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
     Headers = Request#http_request.headers,
     case Tokens of
-        _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
-               Headers#http_chdr.host == "connectivity-check.ubuntu.com" orelse
-               Headers#http_chdr.host == "detectportal.firefox.com" ->
-            io:format("Serving splash page for ~p~n",
-                      [{Tokens, Headers#http_chdr.host}]),
-            serve_splash_page(Socket, Request);
+%        _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
+%               Headers#http_chdr.host == "connectivity-check.ubuntu.com" orelse
+%               Headers#http_chdr.host == "detectportal.firefox.com" ->
+%            io:format("Serving splash page for ~p~n",
+%                      [{Tokens, Headers#http_chdr.host}]),
+%            serve_splash_page(Socket, Request);
         ["hotspot-detect.html" = Token] ->
             io:format("Serving splash page for ~s~n", [Token]),
             serve_splash_page(Socket, Request);
@@ -94,7 +94,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             UriPath =
                 case Tokens of
                     [] ->
-                        "/posts2.html";
+                        "/index.html";
                     _ ->
                         Url#url.path
                 end,
@@ -104,30 +104,18 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                    tl(UriPath)]),
             case filelib:is_regular(AbsFilename) of
                 true ->
-                    io:format("**** = ~s\n", [UriPath]),
                     rester_http_server:response_r(
                       Socket, Request, 200, "OK", {file, AbsFilename},
                       [{content_type, {url, UriPath}}]);
                 false ->
-                    io:format("NOT FOUND = ~p\n", [{UriPath, Headers}]),
-                    IndexFilename =
-                        filename:join(
-                          [filename:absname(code:priv_dir(webapp)), "docroot",
-                           "posts2.html"]),
-                    rester_http_server:response_r(
-                      Socket, Request, 200, "OK", {file, IndexFilename},
-                      [{content_type, {url, UriPath}}])
+                    io:format("NOT_FOUND = ~p\n", [{UriPath, Headers}]),
+                    rest_util:response(Socket, Request, {error, not_found})
             end
     end.
 
 serve_splash_page(Socket, Request) ->
-    IndexFilename =
-        filename:join(
-          [filename:absname(code:priv_dir(webapp)), "docroot",
-           "splash.html"]),
-    rester_http_server:response_r(
-      Socket, Request, 200, "OK", {file, IndexFilename},
-      [{content_type, "text/html"}]).
+    rester_http_server:response(Socket, Request,
+                                {redirect, "http://192.168.4.1/splash.html"}).
 
 http_post(Socket, Request, Body, Options) ->
     Url = Request#http_request.uri,
