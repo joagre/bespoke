@@ -4,14 +4,6 @@
     <title>All Posts</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script>
-    // Silent request to a known external URL
-    fetch('http://connectivitycheck.gstatic.com/generate_204', { method: 'GET', mode: 'no-cors' })
-        .then(response => console.log('External network confirmation sent'))
-        .catch(error => console.error('Error confirming external network access:', error));
-</script>
-
     <link rel="stylesheet" href="css/uikit.min.css">
     <link rel="stylesheet" href="css/bespoke2.css">
     <link rel="stylesheet" href="css/posts2.css">
@@ -20,6 +12,12 @@
     <link rel="shortcut icon" href="/favicon/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/favicon/site.webmanifest">
+    <script>
+      // Silent request to a known external URL
+      fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
+          .then(response => console.log('External network confirmation sent'))
+          .catch(error => console.error('Error confirming external network access:', error));
+    </script>
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
