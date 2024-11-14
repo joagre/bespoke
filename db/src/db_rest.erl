@@ -141,7 +141,6 @@ redirect_or_ack(Socket, Request, Page) ->
     case ets:lookup(captive_portal_cache, IpAddress) of
         [] ->
             io:format("Captive portal redirect...\n"),
-            true = ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
             rest_util:response(
               Socket, Request, {redirect, "http://bespoke/posts2.html"});
         [{IpAddress, Timestamp}] ->
