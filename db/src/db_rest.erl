@@ -108,7 +108,8 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                                  end, Messages),
             rest_util:response(Socket, Request, {ok, {format, JsonTerm}});
         %% Act as static web server
-	Tokens when Headers#http_chdr.host == "bespoke" ->
+	Tokens when Headers#http_chdr.host == "bespoke.local" orelse
+                    Headers#http_chdr.host == "bespoke" ->
             UriPath =
                 case Tokens of
                     [] ->
