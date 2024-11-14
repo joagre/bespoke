@@ -21,8 +21,8 @@ start_link() ->
 	 {nodelay, true},
 	 {reuseaddr, true}],
     ?log_info("Database REST API has been started"),
-    captive_portal_cache =
-        ets:new(captive_portal_cache, [public, named_table]),
+%%    captive_portal_cache =
+%%        ets:new(captive_portal_cache, [public, named_table]),
     rester_http_server:start_link(80, Options).
 
 %%
@@ -70,40 +70,51 @@ http_get(Socket, Request, Body, Options) ->
 http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
     Headers = Request#http_request.headers,
     case Tokens of
+        %% On Ubuntu Core, the network manager will check for connectivity
+        %% https://ubuntu.com/core/docs/networkmanager/snap-configuration/connectivity-check
         _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
                Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
-            io:format("Detecting captive portal: ~s~n",
-                      ["Host: connectivity-check.ubuntu.com"]),
-            rester_http_server:response_r(Socket, Request, 200, "OK", "",
-                                          [{content_type, "text/plan"}]);
-        %% Iphone
-        ["hotspot-detect.html" = Token] ->
-            io:format("Detecting captive portal: ~s~n", [Token]),
-            serve_splash_page(Socket, Request, Token);
-        %% Firefox
-        ["canonical.html" = Token]
+            io:format("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
+            io:format("Returning 204 No Content\n"),
+            rest_util:response(Socket, Request, ok_204);
+        %% In Firefox, the browser will check for a captive portal
+        %% https://support.mozilla.org/en-US/kb/captive-portal
+        ["canonical.html"]
           when Headers#http_chdr.host == "detectportal.firefox.com" ->
-            io:format("Detecting captive portal: ~s~n", [Token]),
-            serve_splash_page(Socket, Request, Token);
-        ["success.txt" = Token] ->
-            io:format("Detecting captive portal: ~s~n", [Token]),
+            io:format("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
+            io:format("Returning 200 OK\n"),
             rester_http_server:response_r(Socket, Request, 200, "OK", "",
                                           [{content_type, "text/plan"}]);
-        %% Android
-        ["generate_204" = Token] ->
-            io:format("Detecting captive portal: ~s~n", [Token]),
-            serve_splash_page(Socket, Request, Token);
-        ["gen_204" = Token] ->
-            io:format("Detecting captive portal: ~s~n", [Token]),
-            serve_splash_page(Socket, Request, Token);
+        %% Apple devices will check for a captive portal
+        ["hotspot-detect.html"] ->
+            io:format("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
+            io:format("Returning 200 OK with a Success body\n"),
+            rester_http_server:response_r(Socket, Request, 200, "OK",
+                                          "<HTML><BODY>Success</BODY></HTML>",
+                                          [{content_type, "text/html"}]);
+        %% Android devices will check for a captive portal
+        ["success.txt"] ->
+            io:format("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
+            io:format("Returning 200\n"),
+            rester_http_server:response_r(Socket, Request, 200, "OK", "",
+                                          [{content_type, "text/plain"}]);
+        ["generate_204"] ->
+            io:format("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
+            io:format("Returning 204 No Content\n"),
+            rest_util:response(Socket, Request, ok_204);
+        ["gen_204"] ->
+            io:format("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
+            io:format("Returning 204 No Content\n"),
+            rest_util:response(Socket, Request, ok_204);
+        %% Bespoke API
         ["list_root_messages"] ->
             Messages = db_serv:list_root_messages(),
             JsonTerm = lists:map(fun(Message) ->
                                          message_to_json_term(Message)
                                  end, Messages),
             rest_util:response(Socket, Request, {ok, {format, JsonTerm}});
-        %% Try to act as a static web server
-	Tokens ->
+        %% Act as static web server
+	Tokens when Headers#http_chdr.host == "bespoke" ->
             UriPath =
                 case Tokens of
                     [] ->
@@ -121,51 +132,75 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                       Socket, Request, 200, "OK", {file, AbsFilename},
                       [{content_type, {url, UriPath}}]);
                 false ->
-                    IndexFilename =
-                        filename:join(
-                          [filename:absname(code:priv_dir(webapp)), "docroot",
-                           "posts2.html"]),
-                    io:format("NOT_FOUND = ~p\n", [{UriPath, Headers}]),
-                    rester_http_server:response_r(
-                      Socket, Request, 200, "OK", {file, IndexFilename},
-                      [{content_type, {url, "/posts2.html"}}])
-            end
-    end.
-
-serve_splash_page(Socket, Request, Token) ->
-    {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
-    %% lookup in captive_portal_cache
-    case ets:lookup(captive_portal_cache, IpAddress) of
-        [] ->
-            io:format("Serving splash page for ~p~n", [IpAddress]),
-            ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
+                    rest_util:response(Socket, Request, {error, not_found})
+            end;
+        _ ->
+            io:format("Request for ~s~s\n",
+                      [Headers#http_chdr.host, Url#url.path]),
+            io:format("Redirecting to http://bespoke/posts2.html\n"),
             rest_util:response(
-              Socket, Request,
-              {redirect, "http://192.168.4.1/posts2.html"});
-        [{IpAddress, Timestamp}] ->
-            case timestamp() - Timestamp > 60 * 10 of
-                true ->
-                    io:format("Serving splash page for ~p again~n", [IpAddress]),
-                    ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
-                    rest_util:response(
-                      Socket, Request,
-                      {redirect, "http://192.168.4.1/posts2.html"});
-                false ->
-                    case Token of
-                        "canonical.html" ->
-                            io:format("Returning 200 (success) ~p~n", [IpAddress]),
-                            rester_http_server:response_r(
-                              Socket, Request, 200, "OK", "success",
-                              [{content_type, "text/plan"}]);
-                        _ ->
-                            io:format("Returning 204 for ~p~n", [IpAddress]),
-                            rest_util:response(Socket, Request, ok_204)
-                    end
-            end
+              Socket, Request, {redirect, "http://bespoke/posts2.html"})
     end.
 
-timestamp() ->
-    os:system_time(second).
+%% redirect_to_captive_portal(Socket, Request) ->
+
+
+
+
+            %%     ->
+
+
+            %%         io:format("NOT_FOUND = ~p\n", [{UriPath, Headers}]),
+            %%         rester_http_server:response_r(
+            %%           Socket, Request, 200, "OK", {file, IndexFilename},
+            %%           [{content_type, {url, "/posts2.html"}}])
+            %% end;
+
+
+
+            %%     false ->
+            %%         IndexFilename =
+            %%             filename:join(
+            %%               [filename:absname(code:priv_dir(webapp)), "docroot",
+            %%                "posts2.html"]),
+
+
+
+
+%% serve_splash_page(Socket, Request, Token) ->
+%%     {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
+%%     %% lookup in captive_portal_cache
+%%     case ets:lookup(captive_portal_cache, IpAddress) of
+%%         [] ->
+%%             io:format("Serving splash page for ~p~n", [IpAddress]),
+%%             ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
+%%             rest_util:response(
+%%               Socket, Request,
+%%               {redirect, "http://192.168.4.1/posts2.html"});
+%%         [{IpAddress, Timestamp}] ->
+%%             case timestamp() - Timestamp > 60 * 10 of
+%%                 true ->
+%%                     io:format("Serving splash page for ~p again~n", [IpAddress]),
+%%                     ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
+%%                     rest_util:response(
+%%                       Socket, Request,
+%%                       {redirect, "http://192.168.4.1/posts2.html"});
+%%                 false ->
+%%                     case Token of
+%%                         "canonical.html" ->
+%%                             io:format("Returning 200 (success) ~p~n", [IpAddress]),
+%%                             rester_http_server:response_r(
+%%                               Socket, Request, 200, "OK", "success",
+%%                               [{content_type, "text/plan"}]);
+%%                         _ ->
+%%                             io:format("Returning 204 for ~p~n", [IpAddress]),
+%%                             rest_util:response(Socket, Request, ok_204)
+%%                     end
+%%             end
+%%     end.
+
+%% timestamp() ->
+%%     os:system_time(second).
 
 http_post(Socket, Request, Body, Options) ->
     Url = Request#http_request.uri,
