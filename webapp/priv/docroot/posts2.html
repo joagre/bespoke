@@ -13,10 +13,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/favicon/site.webmanifest">
     <script>
-      // Silent request to a known external URL
-      fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
-          .then(response => console.log('External network confirmation sent'))
-          .catch(error => console.error('Error confirming external network access:', error));
+fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
+    .then(response => console.log('External network confirmation sent'))
+    .catch(error => console.error('Error confirming external network access:', error));
     </script>
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>

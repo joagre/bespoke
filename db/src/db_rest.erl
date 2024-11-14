@@ -131,9 +131,9 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
         _ ->
             io:format("Request for ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
-            io:format("Redirecting to http://bespoke/posts2.html\n"),
+            io:format("Redirecting to http://bespoke.local/posts2.html\n"),
             rest_util:response(
-              Socket, Request, {redirect, "http://bespoke/posts2.html"})
+              Socket, Request, {redirect, "http://bespoke.local/posts2.html"})
     end.
 
 redirect_or_ack(Socket, Request, Page) ->
@@ -142,7 +142,7 @@ redirect_or_ack(Socket, Request, Page) ->
         [] ->
             io:format("Captive portal redirect...\n"),
             rest_util:response(
-              Socket, Request, {redirect, "http://bespoke/posts2.html"});
+              Socket, Request, {redirect, "http://bespoke.local/posts2.html"});
         [{IpAddress, Timestamp}] ->
             %% 2 hours timeout (sync with leasetime in /etc/dhcpcd.conf)
             case timestamp() - Timestamp > 7200 of
@@ -150,7 +150,7 @@ redirect_or_ack(Socket, Request, Page) ->
                     io:format("Captive portal redirect (timeout)\n"),
                     true = ets:delete(captive_portal_cache, IpAddress),
                     rest_util:response(
-                      Socket, Request, {redirect, "http://bespoke/posts2.html"});
+                      Socket, Request, {redirect, "http://bespoke.local/posts2.html"});
                 false ->
                     case Page of
                         "hotspot-detect.html" ->
