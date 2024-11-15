@@ -86,14 +86,14 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                       [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, Page);
         %% Apple devices will check for a captive portal
-        ["hotspot-detect.html" = _Page] ->
+        ["hotspot-detect.html" = Page] ->
             io:format("Request to ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
-            rester_http_server:response_r(
-              Socket, Request, 200, "OK",
-              "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
-              [{content_type, "text/html"}]);
-%            redirect_or_ack(Socket, Request, Page);
+%            rester_http_server:response_r(
+%              Socket, Request, 200, "OK",
+%              "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
+%              [{content_type, "text/html"}]);
+            redirect_or_ack(Socket, Request, Page);
         %% Android devices will check for a captive portal
         ["generate_204" = Page] ->
             io:format("Request to ~s~s\n",
@@ -167,7 +167,8 @@ redirect_or_ack(Socket, Request, Page) ->
         [] ->
             io:format("Captive portal redirect...\n"),
             rest_util:response(
-              Socket, Request, {redirect, "http://bespoke.local/posts2.html"});
+              Socket, Request, {redirect, "http://bespoke.local/splash.html"});
+%              Socket, Request, {redirect, "http://bespoke.local/posts2.html"});
         [{IpAddress, Timestamp}] ->
             %% 2 hours timeout (sync with leasetime in /etc/dhcpcd.conf)
             case timestamp() - Timestamp > ?LEASETIME of
@@ -175,8 +176,10 @@ redirect_or_ack(Socket, Request, Page) ->
                     io:format("Captive portal redirect (timeout)\n"),
                     ok = delete_all_stale_timestamps(),
                     rest_util:response(
-                      Socket, Request,
-                      {redirect, "http://bespoke.local/posts2.html"});
+                      Socket, Request, {redirect, "http://bespoke.local/splash.html"});
+%                      Socket, Request,
+
+ %                     {redirect, "http://bespoke.local/posts2.html"});
                 false ->
                     case Page of
                         "hotspot-detect.html" ->
