@@ -109,7 +109,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
 %                    io:format("Captive portal ack (not found)\n"),
 %                    rest_util:response(Socket, Request, {error, not_found});
 %                [{IpAddress, _Timestamp}] ->
-                    io:format("Captive portal ack (found)\n"),
+                    io:format("Captive portal ack\n"),
                     ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
                     rest_util:response(Socket, Request, ok_204);
 %            end;
