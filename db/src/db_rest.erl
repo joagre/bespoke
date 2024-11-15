@@ -103,10 +103,16 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
         ["captive_portal_ack"] ->
             io:format("Request to ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
-            io:format("Returning 204 No Content\n"),
             {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
-            ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
-            rest_util:response(Socket, Request, ok);
+            case ets:lookup(captive_portal_cache, IpAddress) of
+                [] ->
+                    io:format("Captive portal ack (not found)\n"),
+                    rest_util:response(Socket, Request, {error, not_found});
+                [{IpAddress, _Timestamp}] ->
+                    io:format("Captive portal ack (found)\n"),
+                    ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
+                    rest_util:response(Socket, Request, ok_204)
+            end;
         %% Bespoke API
         ["list_root_messages"] ->
             Messages = db_serv:list_root_messages(),
