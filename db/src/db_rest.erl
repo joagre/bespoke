@@ -130,6 +130,12 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                     _ ->
                         Url#url.path
                 end,
+            case UriPath of
+                "/posts2.html" ->
+                    io:format("Returning /posts2.html\n");
+                _ ->
+                    silent
+            end,
             AbsFilename =
                 filename:join(
                   [filename:absname(code:priv_dir(webapp)), "docroot",
