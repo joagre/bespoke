@@ -104,15 +104,15 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             io:format("Request to ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
             {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
-            case ets:lookup(captive_portal_cache, IpAddress) of
-                [] ->
-                    io:format("Captive portal ack (not found)\n"),
-                    rest_util:response(Socket, Request, {error, not_found});
-                [{IpAddress, _Timestamp}] ->
+%            case ets:lookup(captive_portal_cache, IpAddress) of
+%                [] ->
+%                    io:format("Captive portal ack (not found)\n"),
+%                    rest_util:response(Socket, Request, {error, not_found});
+%                [{IpAddress, _Timestamp}] ->
                     io:format("Captive portal ack (found)\n"),
                     ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
-                    rest_util:response(Socket, Request, ok_204)
-            end;
+                    rest_util:response(Socket, Request, ok_204);
+%            end;
         %% Bespoke API
         ["list_root_messages"] ->
             Messages = db_serv:list_root_messages(),
