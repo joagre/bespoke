@@ -9,7 +9,6 @@
     <script>
 fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
   .then(response => {
-    document.href = "http://bespoke.local/posts2.html";
     console.log('External network confirmation sent'))
         }
     .catch(error => console.error('Error confirming external network access:', error));
@@ -26,6 +25,8 @@ fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
 <!--    <p>You will be redirected in 60 seconds...</p>
     <p>If you are not redirected, <a href="http://192.168.4.1:80/posts2.html">click here</a>.</p>
 -->
+
+<a href="javascript:void(0)" onclick="window.location.href = 'http://bespoke.local/posts2.html';">Click here to continue</a>
 
     <script>
 fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
