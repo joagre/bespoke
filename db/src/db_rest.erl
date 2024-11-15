@@ -107,6 +107,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             case ets:lookup(captive_portal_cache, IpAddress) of
                 [] ->
                     io:format("Captive portal ack (not found)\n"),
+                    ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
                     rest_util:response(Socket, Request, {error, not_found});
                 [{IpAddress, _Timestamp}] ->
                     io:format("Captive portal ack (found)\n"),
