@@ -86,10 +86,14 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                       [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, Page);
         %% Apple devices will check for a captive portal
-        ["hotspot-detect.html" = Page] ->
+        ["hotspot-detect.html" = _Page] ->
             io:format("Request to ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
-            redirect_or_ack(Socket, Request, Page);
+            rester_http_server:response_r(
+              Socket, Request, 200, "OK",
+              "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
+              [{content_type, "text/html"}]);
+%            redirect_or_ack(Socket, Request, Page);
         %% Android devices will check for a captive portal
         ["generate_204" = Page] ->
             io:format("Request to ~s~s\n",
