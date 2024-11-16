@@ -150,7 +150,11 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                 false ->
                     rest_util:response(Socket, Request, {error, not_found})
             end;
-        _ ->
+        _WW ->
+            io:format("BAJS: ~p\n", [{Request, Url, Tokens}]),
+
+
+
             io:format("Request for ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
             io:format("Redirecting to http://bespoke.local/posts2.html\n"),
