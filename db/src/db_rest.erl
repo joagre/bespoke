@@ -1,6 +1,7 @@
 -module(db_rest).
 -export([start_link/0]).
 -export([request_handler/4]).
+-compile(export_all).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -433,8 +434,9 @@ get_mac_address(Socket) ->
     {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
     get_mac_for_ip_address(IpAddress).
 
-get_mac_for_ip_address(IPAddress) ->
-    Result = os:cmd("ip neigh show | awk '/" ++ IPAddress ++ "/ {print $5}'"),
+get_mac_for_ip_address(IpAddress) ->
+    Result = os:cmd("ip neigh show | awk '/" ++
+                        inet:ntoa(IpAddress) ++ "/ {print $5}'"),
     case string:trim(Result) of
         "" ->
             {error, not_found};
