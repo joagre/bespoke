@@ -3,7 +3,7 @@
 
 # Example usage:
 #
-# $ dnsmasq-tool /etc/dnsmasq.conf --post 01:11:22:33:44:55 --clear 02:11:22:33:44:55 --in-place --restart-dnsmasq
+# $ dnsmasq-tool /etc/dnsmasq.conf --post 01:11:22:33:44:55 --clear 02:11:22:33:44:55 --stdout --restart-dnsmasq
 
 # Note: This script must be run as root or with sudo. To allow a user
 # to run this script as root without a password, add a line such as
@@ -17,7 +17,7 @@ usage () {
     >&2 echo "dnsmasq-tool <DNSMASQ-CONF>"
     >&2 echo "             [--post <MAC-ADDRESS>]"
     >&2 echo "             [--clear <MAC-ADDRESS>]"
-    >&2 echo "             [--in-place] [--restart-dnsmasq]"
+    >&2 echo "             [--stdout] [--restart-dnsmasq]"
     >&2 echo "    Add post-login dhcp-host entries or clear them from DNSMASQ-CONF and"
     >2 echo "     optionally restart dnsmasq"
     >&2 echo "dnsmasq-tool <DNSMASQ-CONF> -- clear-all"
@@ -65,7 +65,7 @@ shift
 tmpfile=$(mktemp)
 cp $dnsmasq_conf $tmpfile
 
-in_place=false
+stdout=false
 restart_dnsmasq=false
 full_command="$0 $@"
 
@@ -100,8 +100,8 @@ while :; do
             # Remove *all* post-login dhcp-host entries
             sed -i '/set:postlogin/d' $tmpfile
             ;;
-        --in-place)
-            in_place=true
+        --stdout)
+            stdout=true
             ;;
         --restart-dnsmasq)
             restart_dnsmasq=true
@@ -119,10 +119,10 @@ while :; do
     command shift
 done
 
-if [ $in_place = true ]; then
-    cp $tmpfile $dnsmasq_conf
-else
+if [ $stdout = true ]; then
     cat $tmpfile
+else
+    cp $tmpfile $dnsmasq_conf
 fi
 
 rm $tmpfile

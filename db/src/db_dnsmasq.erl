@@ -40,7 +40,7 @@ dnsmasq_tool(Parameters) ->
         filename:absname(
           filename:join([code:lib_dir(main), "bin", "dnsmasq-tool"])),
     Command = ["sudo ", ScriptPath, " /etc/dnsmasq.conf",
-               " --in-place --restart-dnsmasq", Parameters, " 2>&1; echo $?"],
+               " --restart-dnsmasq", Parameters, " 2>&1; echo $?"],
     io:format("Calling: ~s\n", [Command]),
     ok.
 %    case string:strip(os:cmd(Command)) of
