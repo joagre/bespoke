@@ -36,7 +36,9 @@ clear_all_mac_addresses() ->
 %%
 
 dnsmasq_tool(Parameters) ->
-    ScriptPath = filename:join([code:priv_dir(main), "bin", "dnsmasq-tool"]),
+    ScriptPath =
+        filename:absname(
+          filename:join([code:lib_dir(main), "bin", "dnsmasq-tool"])),
     Command = ["sudo ", ScriptPath, " /etc/dnsmasq.conf",
                " --in-place --restart-dnsmasq", Parameters, " 2>&1; echo $?"],
     io:format("Calling: ~s\n", [Command]),
