@@ -85,7 +85,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             io:format("Request to ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, Page);
-        ["success.html" = Page]
+        ["success.txt" = Page]
           when Headers#http_chdr.host == "detectportal.firefox.com" ->
             io:format("Request to ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
@@ -202,15 +202,15 @@ redirect_or_ack(Socket, Request, Page) ->
                               Socket, Request, 200, "OK",
                               "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
                               [{content_type, "text/html"}, no_cache_headers()]);
-                        "success.html" ->
-                            io:format("Returning 200 OK (/success.html)\n"),
+                        "success.txt" ->
+                            io:format("Returning 200 OK (/success.txt)\n"),
                             ets:insert(captive_portal_cache,
                                        {IpAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK", "success",
                               [{content_type, "text/plain"}, no_cache_headers()]);
                         _ ->
-                            io:format("Returning 204 No Content (generic mode)\n"),
+                            io:format("Returning 204 No Content (generic)\n"),
                             ets:insert(captive_portal_cache,
                                        {IpAddress, timestamp()}),
                             rester_http_server:response_r(
