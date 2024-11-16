@@ -38,7 +38,6 @@ cleanfluff:
 
 DIALYZER_APPS=apptools db main rester webapp
 
-# FIXME: *_nif.beam files confuse dialyzer so I just delete them :-)
 dialyzer: .dialyzer.plt all
 	dialyzer --verbose --no_check_plt --plt .dialyzer.plt -r $(DIALYZER_APPS:%=$(LPATH)/bespoke/%/ebin)
 
