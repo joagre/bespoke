@@ -130,10 +130,6 @@ rm $tmpfile
 log $full_command
 
 if [ $restart_dnsmasq = true ]; then
-    systemctl restart dnsmasq
-fi
-
-if [ $restart_dnsmasq = true ]; then
     log "dnsmasq restarting..."
     sudo systemctl restart dnsmasq
 fi
