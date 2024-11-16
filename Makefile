@@ -23,7 +23,6 @@ runtest:
 		(cd $$lib/test && env ERL_LIBS=. $(MAKE) runtest) || exit 1; \
 	done
 
-
 mrproper: clean cleanfluff
 	rm -f .dialyzer_init.plt
 
