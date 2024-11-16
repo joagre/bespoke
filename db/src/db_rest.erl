@@ -110,7 +110,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             io:format("Request to ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
             {ok, MacAddress} = get_mac_address(Socket),
-            ok = db_dnsmaq:set_post_login_mac_address(MacAddress),
+            ok = db_dnsmasq:set_post_login_mac_address(MacAddress),
             case ets:lookup(captive_portal_cache, MacAddress) of
                 [] ->
                     io:format("Captive portal ack (not found)\n"),
@@ -224,10 +224,11 @@ redirect_or_ack(Socket, Request, Page) ->
 delete_all_stale_timestamps() ->
     Threshold = timestamp() - ?LEASETIME,
     StaleMacAddresses =
-        ets:fold(fun({MacAddress, Timestamp}, Acc) when Timestamp < Threshold ->
-                         [MacAddress|Acc];
-                    (_, Acc) ->
-                         Acc
+        ets:foldr(fun({MacAddress, Timestamp}, Acc)
+                        when Timestamp < Threshold ->
+                          [MacAddress|Acc];
+                     (_, Acc) ->
+                          Acc
                  end, [], captive_portal_cache),
     ok = db_dnsmasq:clear_mac_addresses(StaleMacAddresses),
     lists:foreach(fun(MacAddress) ->

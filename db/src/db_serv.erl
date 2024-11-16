@@ -21,7 +21,7 @@
 
 -record(state, {
                 parent :: pid(),
-                next_message_id = 0 :: message_id()
+                next_message_id = 0 :: integer()
                }).
 
 %%
