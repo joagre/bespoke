@@ -203,20 +203,23 @@ redirect_or_ack(Socket, Request, Page) ->
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK",
                               "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
-                              [{content_type, "text/html"}, no_cache_headers()]);
+                              [{content_type, "text/html"},
+                               no_cache_headers()]);
                         "success.txt" ->
                             io:format("Returning 200 OK (/success.txt)\n"),
                             ets:insert(captive_portal_cache,
                                        {MacAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK", "success",
-                              [{content_type, "text/plain"}, no_cache_headers()]);
+                              [{content_type, "text/plain"},
+                               no_cache_headers()]);
                         _ ->
                             io:format("Returning 204 No Content (generic)\n"),
                             ets:insert(captive_portal_cache,
                                        {MacAddress, timestamp()}),
                             rester_http_server:response_r(
-                              Socket, Request, 204, "OK", "", no_cache_headers())
+                              Socket, Request, 204, "OK", "",
+                              no_cache_headers())
                     end
             end
     end.
@@ -290,7 +293,8 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                                            false
                                    end, MessageIds) of
                         true ->
-                            Messages = db_serv:lookup_messages(MessageIds, recursive),
+                            Messages =
+                                db_serv:lookup_messages(MessageIds, recursive),
                             JsonTerm =
                                 lists:map(fun(Message) ->
                                                   message_to_json_term(Message)
