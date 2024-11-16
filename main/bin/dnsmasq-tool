@@ -3,7 +3,7 @@
 
 # Example usage:
 #
-# $ dnsmasq-tool --post 01:11:22:33:44:55 --clear 02:11:22:33:44:55 --in-place --restart-dnsmasq /etc/dnsmasq.conf
+# $ dnsmasq-tool /etc/dnsmasq.conf --post 01:11:22:33:44:55 --clear 02:11:22:33:44:55 --in-place --restart-dnsmasq
 
 # Note: This script must be run as root or with sudo. To allow a user
 # to run this script as root without a password, add a line such as
