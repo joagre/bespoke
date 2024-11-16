@@ -3,7 +3,7 @@
 
 # Example usage:
 #
-# $ dnsmasq-tool --pre 00:11:22:33:44:55 --post 01:11:22:33:44:55 --clear 02:11:22:33:44:55 --in-place --restart-dnsmasq /etc/dnsmasq.conf
+# $ dnsmasq-tool --post 01:11:22:33:44:55 --clear 02:11:22:33:44:55 --in-place --restart-dnsmasq /etc/dnsmasq.conf
 
 # Note: This script must be run as root or with sudo. To allow a user
 # to run this script as root without a password, add a line such as
@@ -15,19 +15,19 @@ usage () {
     >&2 echo "dnsmasq-tool --help | -h"
     >&2 echo "    Display available options"
     >&2 echo "dnsmasq-tool <DNSMASQ-CONF>"
-    >&2 echo "             [--pre <MAC-ADDRESS>]"
     >&2 echo "             [--post <MAC-ADDRESS>]"
     >&2 echo "             [--clear <MAC-ADDRESS>]"
     >&2 echo "             [--in-place] [--restart-dnsmasq]"
-    >&2 echo "    Add MAC-ADDRESS to pre-login, post-login dhcp-host entries or clear it from"
-    >&2 echo "    DNSMASQ-CONF and optionally restart dnsmasq"
+    >&2 echo "    Add post-login dhcp-host entries or clear them from DNSMASQ-CONF and"
+    >2 echo "     optionally restart dnsmasq"
+    >&2 echo "dnsmasq-tool <DNSMASQ-CONF> -- clear-all"
+    >&2 echo "    Clear *all* post-login dhcp-host entries"
     exit 1
 }
 
 isparam () {
     case $1 in
         --*)
-            echo "BAJS1"
             usage;
             ;;
         *)
@@ -47,7 +47,6 @@ log () {
 }
 
 if [ $# -lt 1 ]; then
-    echo "BAJS2"
     usage
 fi
 
@@ -73,25 +72,10 @@ full_command="$0 $@"
 while :; do
     case $1 in
         --help | -h)
-            echo "BAJS3"
             usage
-            ;;
-	--pre)
-            if [ $# -lt 2 ]; then
-                echo "BAJS4"
-                usage
-            fi
-            isparam $2
-            is-mac-address $2
-            # Remove any existing dhcp-host entry for this MAC address
-            sed -i "/dhcp-host=$2/d" $tmpfile
-            # Add pre-login entry
-            echo "dhcp-host=$2,set:prelogin" >> $tmpfile
-            shift
             ;;
 	--post)
             if [ $# -lt 2 ]; then
-                echo "BAJS5"
                 usage
             fi
             isparam $2
@@ -104,7 +88,6 @@ while :; do
             ;;
 	--clear)
             if [ $# -lt 2 ]; then
-                echo "BAJS6"
                 usage
             fi
             isparam $2
@@ -112,6 +95,10 @@ while :; do
             # Remove any existing dhcp-host entry for this MAC address
             sed -i "/dhcp-host=$2/d" $tmpfile
             shift
+            ;;
+        --clear-all)
+            # Remove *all* post-login dhcp-host entries
+            sed -i '/set:postlogin/d' $tmpfile
             ;;
         --in-place)
             in_place=true
@@ -127,7 +114,6 @@ while :; do
             break
             ;;
         *)
-            echo "BAJS77: $1"
             usage
     esac
     command shift
