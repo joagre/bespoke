@@ -168,7 +168,6 @@ redirect_or_ack(Socket, Request, Page) ->
     case ets:lookup(captive_portal_cache, IpAddress) of
         [] ->
             io:format("Captive portal redirect...\n"),
-            true = ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
             rester_http_server:response_r(
               Socket, Request, 302, "Found", "",
               [{location, "http://bespoke.local/splash.html"}|
@@ -201,7 +200,7 @@ redirect_or_ack(Socket, Request, Page) ->
                               Socket, Request, 200, "OK", "",
                               [{content_type, "text/plain"}, no_cache_headers()]);
                         _ ->
-                            io:format("Returning 204 No Content\n"),
+                            io:format("Returning 204 No Content (generic mode)\n"),
                             ets:insert(captive_portal_cache,
                                        {IpAddress, timestamp()}),
                             rester_http_server:response_r(
