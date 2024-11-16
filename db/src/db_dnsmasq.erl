@@ -10,7 +10,7 @@
 %%
 
 set_post_login_mac_address(MacAddress) ->
-    Parameters = [" --post ", MacAddress],
+    Parameters = " --post " ++ MacAddress,
     dnsmasq_tool(Parameters).
 
 %%
@@ -21,7 +21,7 @@ clear_mac_addresses(MacAddresses) ->
     Parameters =
         lists:foldr(fun(MacAddress, Acc) ->
                             [" --clear ", MacAddress|Acc]
-                    end, "", MacAddresses),
+                    end, [], MacAddresses),
     dnsmasq_tool(Parameters).
 
 %%
