@@ -89,10 +89,6 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
         ["hotspot-detect.html" = Page] ->
             io:format("Request to ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
-%            rester_http_server:response_r(
-%              Socket, Request, 200, "OK",
-%              "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
-%              [{content_type, "text/html"}]);
             redirect_or_ack(Socket, Request, Page);
         %% Android devices will check for a captive portal
         ["generate_204" = Page] ->
@@ -110,13 +106,14 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
             case ets:lookup(captive_portal_cache, IpAddress) of
                 [] ->
-                    io:format("Captive portal ack (not found)\n"),
+                    io:format("Captive portal ack (not found!!!)\n"),
                     ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
                     rest_util:response(Socket, Request, {error, not_found});
                 [{IpAddress, _Timestamp}] ->
                     io:format("Captive portal ack (found)\n"),
                     ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
-                    rest_util:response(Socket, Request, ok_204)
+                    rester_http_server:response_r(
+                      Socket, Request, 204, "OK", "", no_cache_headers())
             end;
         %% Bespoke API
         ["list_root_messages"] ->
@@ -161,25 +158,31 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
               Socket, Request, {redirect, "http://bespoke.local/posts2.html"})
     end.
 
+no_cache_headers() ->
+    [{"Cache-Control", "no-cache, no-store, must-revalidate"},
+     {"Pragma", "no-cache"},
+     {"Expires", 0}].
+
 redirect_or_ack(Socket, Request, Page) ->
     {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
     case ets:lookup(captive_portal_cache, IpAddress) of
         [] ->
             io:format("Captive portal redirect...\n"),
-            rest_util:response(
-              Socket, Request, {redirect, "http://bespoke.local/splash.html"});
-%              Socket, Request, {redirect, "http://bespoke.local/posts2.html"});
+            true = ets:insert(captive_portal_cache, {IpAddress, timestamp()}),
+            rester_http_server:response_r(
+              Socket, Request, 302, "Found", "",
+              [{location, "http://bespoke.local/splash.html"}|
+               no_cache_headers()]);
         [{IpAddress, Timestamp}] ->
             %% 2 hours timeout (sync with leasetime in /etc/dhcpcd.conf)
             case timestamp() - Timestamp > ?LEASETIME of
                 true ->
                     io:format("Captive portal redirect (timeout)\n"),
                     ok = delete_all_stale_timestamps(),
-                    rest_util:response(
-                      Socket, Request, {redirect, "http://bespoke.local/splash.html"});
-%                      Socket, Request,
-
- %                     {redirect, "http://bespoke.local/posts2.html"});
+                    rester_http_server:response_r(
+                      Socket, Request, 302, "Found", "",
+                      [{location, "http://bespoke.local/splash.html"}|
+                       no_cache_headers()]);
                 false ->
                     case Page of
                         "hotspot-detect.html" ->
@@ -189,19 +192,20 @@ redirect_or_ack(Socket, Request, Page) ->
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK",
                               "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
-                              [{content_type, "text/html"}]);
+                              [{content_type, "text/html"}|no_cache_headers()]);
                         "canonical.html" ->
                             io:format("Returning 200 OK (Ubuntu mode)\n"),
                             ets:insert(captive_portal_cache,
                                        {IpAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK", "",
-                              [{content_type, "text/plain"}]);
+                              [{content_type, "text/plain"}, no_cache_headers()]);
                         _ ->
                             io:format("Returning 204 No Content\n"),
                             ets:insert(captive_portal_cache,
                                        {IpAddress, timestamp()}),
-                            rest_util:response(Socket, Request, ok_204)
+                            rester_http_server:response_r(
+                              Socket, Request, 204, "OK", "", no_cache_headers())
                     end
             end
     end.

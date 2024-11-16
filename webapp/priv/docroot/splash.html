@@ -1,40 +1,21 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Welcome</title>
-    <!-- Redirect to /posts2.html after 5 seconds -->
-<!--    <meta http-equiv="refresh" content="60; url=http://192.168.4.1:80/posts2.html"> -->
-</head>
-
     <script>
-fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
-  .then(response => {
-    console.log('External network confirmation sent'))
-        }
-    .catch(error => console.error('Error confirming external network access:', error));
+    function proceed() {
+        // Signal the server to prepare for portal resolution
+        fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
+            .then(() => {
+                console.log('Acknowledgment sent to server');
+                // Redirect to the next page
+                window.location.href = 'http://bespoke.local/posts2.html';
+            })
+            .catch(err => console.error('Error:', err));
+    }
     </script>
-
-
-
-
-<body>
-  <!--
-    <h1>Welcome to our network!</h1>
-  <p>Please read the terms of service before proceeding.</p>
-  -->
-<!--    <p>You will be redirected in 60 seconds...</p>
-    <p>If you are not redirected, <a href="http://192.168.4.1:80/posts2.html">click here</a>.</p>
--->
-
-<a href="javascript:void(0)" onclick="window.location.href = 'http://bespoke.local/posts2.html';">Click here to continue</a>
-
-    <script>
-fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
-  .then(response => {
-    document.href = "http://bespoke.local/posts2.html";
-    console.log('External network confirmation sent'))
-        }
-    .catch(error => console.error('Error confirming external network access:', error));
-    </script>
-</body>
+  </head>
+  <body>
+    <a href="javascript:void(0)" onclick="proceed()">Click here to continue</a>
+  </body>
 </html>
