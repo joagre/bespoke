@@ -50,7 +50,7 @@ if [ $# -lt 1 ]; then
     usage
 fi
 
-log_file="/var/log/dnsmasq-tool.log"
+log_file="/tmp/dnsmasq-tool.log"
 if [ ! -f $log_file ]; then
     touch $log_file 2>/dev/null
 fi
