@@ -18,4 +18,4 @@
 
 * Add a HTTP GET back channel for asynchronous updates done by other users, i.e. a websocket is overkill for now (maybe forever).
 
-* Maybe ask Kim to improve the layout. Just a little bit for now: Margins, padding, fonts and coloring. Low hanging fruits. More can be done at a later point in time.
+* Maybe ask Kim to improve the layout. Just a little bit for now: Margins, paddings, fonts and coloring. Just very low hanging fruits. More can be done at a later point in time.
