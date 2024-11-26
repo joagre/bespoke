@@ -6,7 +6,7 @@
 
 ## Web app
 
-* When a user accesses a Bespoke BBS the first time (and enters the the login web page) the MAC address is stored and associated with an auto-generated letter based username of the MAC address. The next time he/she is automatically associated with that auto-generated username on login.
+* When a user accesses a Bespoke BBS the first time (and enters the login web page) the MAC address is stored and associated with an auto-generated letter based username of the MAC address. The next time he/she is automatically associated with that auto-generated username on login.
 
 * Make it possible for a user to create a password protected custom username instead of the auto-generated ditto.
 
