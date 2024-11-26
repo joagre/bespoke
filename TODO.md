@@ -10,7 +10,7 @@
 
 * Make it possible for a user to create a password protected custom username instead of the auto-generated ditto.
 
-* When a user sifts through *posts*, *comments* are automatically marked as read (as the web page scrolls by). The next time the user visits the Bespoke BBS, *posts* that he/she has been accessing will be marked as unread (if there are new *comments* added to them). If a user clicks on such a *post* he/she is automatically taken to the *comments* and scrolled down to the unread *comments*. Rinse and repeat.
+* When a user sifts through *posts* their *comments* are automatically marked as read (as the web page scrolls by). The next time a user visits the Bespoke BBS, *posts* that he/she has been accessing will be marked as unread (if there are new *comments* added to them). If a user clicks on such a *post* he/she is automatically taken to the *comments*, but is scrolled down to the unread *comments*. Rinse and repeat.
 
 * Direct *messages* between users are just special cases of *posts*. We keep them in a separate tab and call them "Messages". "Messages" are private to a user but has the same usability semantics as *posts*.
 
