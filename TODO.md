@@ -2,7 +2,7 @@
 
 ## Captive portal mechanics
 
-* Make the captive portal mechanics work flawlessly. Study how existing captive portal answers to `http/https`, `dns` lookups and `icmp/pings` before and after the user login phase. Work has already been been started to solve the `http/https` and `dns` lookups in [db_rest.erl](db/src/db_rest.erl). `db_rest.erl` uses the [dnsmasq-tool](main/bin/dnsmasq-tool) to switch between different dns lookup beahviours before and after user login.
+* Make the captive portal mechanics work flawlessly. Study how existing captive portal answers to `http/https`, `dns` lookups and `icmp/pings` before and after the user login phase. Work has already been been started to solve the `http/https` and `dns` lookups in [db_rest.erl](db/src/db_rest.erl). `db_rest.erl` uses the [dnsmasq-tool](main/bin/dnsmasq-tool) to switch between different dns lookup behaviours before and after user login.
 
 ## Web app
 
