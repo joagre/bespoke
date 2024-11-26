@@ -14,6 +14,6 @@
 
 * Direct *messages* between users are just special cases of *posts*. We keep them in a separate tab and call them "Messages". "Messages" are private to a user but has the same usability semantics as *posts*.
 
-* Add closed *posts*. Members of a closed *posts* just share a password for now. To add a new user to a closed *post*, members propagates that password offline (or whatever).
+* Add closed *posts*. Members of a closed *posts* just share a password for now. To add a new user to a closed *post*, members propagates the password offline (or whatever).
 
 * Add a HTTP GET back channel for asynchronous updates done by other users, i.e. a websocket is overkill for now (maybe forever).
