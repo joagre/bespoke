@@ -139,10 +139,6 @@ message_handler(S) ->
             noreply
     end.
 
-%%
-%% Aliases
-%%
-
 generate_name(WordList) ->
     Name = string:concat(random_word(WordList), random_word(WordList)),
     case dets:lookup(?ALIAS_DB, Name) of
