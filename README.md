@@ -21,7 +21,7 @@ $ make runtest
 $ ./main/bin/bespoke
 ```
 
-Optionally populate the database with datataken from r/sweden
+Optionally populate the database with data taken from r/sweden
 
 ```
 Erlang/OTP 27 [erts-15.1.2] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [jit:ns]
