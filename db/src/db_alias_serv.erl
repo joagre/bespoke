@@ -186,11 +186,8 @@ is_valid_word(Word) ->
                 "'s" ->
                     false;
                 _ ->
-                    %% Capitalize the first letter
-                    CapitalizedWord = string:concat(
-                                        string:to_upper(string:substr(StrippedWord, 1, 1)),
-                                        string:substr(StrippedWord, 2)),
-                    {true, ?l2b(CapitalizedWord)}
+                    %% We know that there are only ASCII words in the dictionary
+                    {true, ?l2b([string:to_upper(hd(StrippedWord))|tl(StrippedWord)])}
             end;
         _ ->
             false
