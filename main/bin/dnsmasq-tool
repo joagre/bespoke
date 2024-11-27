@@ -25,7 +25,7 @@ usage () {
     exit 1
 }
 
-isparam () {
+is-param () {
     case $1 in
         --*)
             usage;
@@ -78,7 +78,7 @@ while :; do
             if [ $# -lt 2 ]; then
                 usage
             fi
-            isparam $2
+            is-param $2
             is-mac-address $2
             # Remove any existing dhcp-host entry for this MAC address
             sed -i "/dhcp-host=$2/d" $tmpfile
@@ -90,7 +90,7 @@ while :; do
             if [ $# -lt 2 ]; then
                 usage
             fi
-            isparam $2
+            is-param $2
             is-mac-address $2
             # Remove any existing dhcp-host entry for this MAC address
             sed -i "/dhcp-host=$2/d" $tmpfile
