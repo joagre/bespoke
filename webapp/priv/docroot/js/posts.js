@@ -1,18 +1,18 @@
 // Import dependencies
-import bespoke2 from "/js/bespoke.js";
+import bespoke from "/js/bespoke.js";
 
 // Ensure uhtml.min.js is imported in the HTML file before this script
 const { html, render } = uhtml;
 
-class Posts2 {
+class Posts {
   constructor() {
     this.init();
   }
 
   init() {
     document.addEventListener("DOMContentLoaded", () => {
-      bespoke2.init();
-      bespoke2.clearMessageStack();
+      bespoke.init();
+      bespoke.clearMessageStack();
       this.updatePage();
       // Update page every minute
       setInterval(() => this.updatePage(), 60000);
@@ -48,11 +48,11 @@ class Posts2 {
   }
 
   createMessageTemplate(message) {
-    const age = bespoke2.formatSecondsSinceEpoch(message["created"]);
+    const age = bespoke.formatSecondsSinceEpoch(message["created"]);
     return html`
       <div
         onclick=${(event) => {
-          bespoke2.gotoPage(event, "message2.html", message["id"]);
+          bespoke.gotoPage(event, "message.html", message["id"]);
         }}
         class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom message-post"
       >
@@ -67,5 +67,5 @@ class Posts2 {
 }
 
 // Export the class instance
-const posts2 = new Posts2();
-export default posts2;
+const posts = new Posts();
+export default posts;

@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css">
-    <link rel="stylesheet" href="css/bespoke2.css">
-    <link rel="stylesheet" href="css/message2.css">
+    <link rel="stylesheet" href="css/bespoke.css">
+    <link rel="stylesheet" href="css/message.css">
     <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
     <link rel="shortcut icon" href="/favicon/favicon.ico">
@@ -15,15 +15,15 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/bespoke2.js"></script>
-    <script type="module" src="js/message2.js" defer></script>
+    <script type="module" src="js/bespoke.js"></script>
+    <script type="module" src="js/message.js" defer></script>
   </head>
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
       <div class="uk-card uk-card-default uk-background-muted uk-padding-small uk-padding-remove-horizontal">
         <div class="uk-flex uk-flex-between uk-flex-middle">
-          <button onclick="bespoke2.gotoPage(event, 'message2.html', -1)" data-back-destination="message2.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+          <button onclick="bespoke.gotoPage(event, 'message.html', -1)" data-back-destination="message.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
           <div class="uk-flex-1 uk-text-center">
             <span id="header-title" class="uk-text-bold"></span>
             <span id="header-reply-level" class="uk-text-meta"></span>
@@ -46,8 +46,8 @@
               <span id="parent-replies"></span>
             </div>
             <div>
-              <button id="parent-delete" onclick="message2.openDeleteMessageModal(event)" data-message-id="0" class="uk-icon-button" uk-icon="trash"></button>
-              <button onclick="bespoke2.gotoPage(event, 'add_reply2.html')" class="uk-icon-button" uk-icon="reply"></button>
+              <button id="parent-delete" onclick="message.openDeleteMessageModal(event)" data-message-id="0" class="uk-icon-button" uk-icon="trash"></button>
+              <button onclick="bespoke.gotoPage(event, 'add_reply.html')" class="uk-icon-button" uk-icon="reply"></button>
             </div>
           </div>
         </div>
@@ -63,16 +63,16 @@
         <p id="delete-message-body"></p>
         <p class="uk-text-right">
           <button class="uk-button uk-button-default uk-modal-close" type="button">No</button>
-          <button class="uk-button uk-button-danger" onclick="message2.deleteMessage(event)">Yes</button>
+          <button class="uk-button uk-button-danger" onclick="message.deleteMessage(event)">Yes</button>
       </div>
     </div>
     <script type="module">
-      import bespoke2 from "/js/bespoke2.js";
-      import message2 from "/js/message2.js";
-      import addReply2 from "/js/add_reply2.js";
-      window.bespoke2 = bespoke2;
-      window.message2 = message2;
-      window.addReply2 = addReply2;
+      import bespoke from "/js/bespoke.js";
+      import message from "/js/message.js";
+      import addReply from "/js/add_reply.js";
+      window.bespoke = bespoke;
+      window.message = message;
+      window.addReply = addReply;
     </script>
   </body>
 </html>

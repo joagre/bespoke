@@ -1,7 +1,7 @@
 // Import dependencies
-import bespoke2 from "/js/bespoke2.js";
+import bespoke from "/js/bespoke.js";
 
-class AddReply2 {
+class AddReply {
   constructor() {
     this.parentMessage = null;
     this.rootMessageTitle = null;
@@ -10,7 +10,7 @@ class AddReply2 {
   }
 
   init() {
-    bespoke2.initializeCookieState();
+    bespoke.initializeCookieState();
     this._formFields = Array.from(
       document.querySelectorAll("#form-author, #form-body")
     );
@@ -55,17 +55,17 @@ class AddReply2 {
   }
 
   gotoAddReplyPage(event, messageId, popMessageStack) {
-    bespoke2.setCookieValue("pop-message-stack", popMessageStack);
-    bespoke2.gotoPage(event, "add_reply2.html", messageId);
+    bespoke.setCookieValue("pop-message-stack", popMessageStack);
+    bespoke.gotoPage(event, "add_reply.html", messageId);
   }
 
   goBack(event, ignorePopMessageStack) {
     if (!ignorePopMessageStack &&
-        bespoke2.getCookieValue("pop-message-stack")) {
-      bespoke2.popMessageStack();
+        bespoke.getCookieValue("pop-message-stack")) {
+      bespoke.popMessageStack();
     }
-    bespoke2.setCookieValue("pop-message-stack", false);
-    bespoke2.gotoPage(event, 'message2.html')
+    bespoke.setCookieValue("pop-message-stack", false);
+    bespoke.gotoPage(event, 'message.html')
   }
 
   _attachEventListeners() {
@@ -89,14 +89,14 @@ class AddReply2 {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify([bespoke2.peekMessageStack()]),
+        body: JSON.stringify([bespoke.peekMessageStack()]),
       });
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
         return;
       }
       let data = await response.json();
-      bespoke2.assert(data.length === 1, "Expected exactly one message");
+      bespoke.assert(data.length === 1, "Expected exactly one message");
       this.parentMessage = data[0];
 
       // REST: Get root message title (if necessary)
@@ -114,7 +114,7 @@ class AddReply2 {
           return;
         }
         data = await response.json();
-        bespoke2.assert(data.length === 1, "Expected exactly one message");
+        bespoke.assert(data.length === 1, "Expected exactly one message");
         const rootMessage = data[0];
         this.rootMessageTitle = rootMessage["title"];
       }
@@ -129,13 +129,13 @@ class AddReply2 {
   populatePage() {
     // Populate parent message
     document.getElementById("parent-title").innerHTML = this.rootMessageTitle;
-    document.getElementById("parent-body").innerHTML = bespoke2.formatMarkdown(
+    document.getElementById("parent-body").innerHTML = bespoke.formatMarkdown(
       this.parentMessage["body"]
     );
     document.getElementById("parent-author").textContent =
       this.parentMessage["author"];
     document.getElementById("parent-age").textContent =
-      bespoke2.formatSecondsSinceEpoch(this.parentMessage["created"]);
+      bespoke.formatSecondsSinceEpoch(this.parentMessage["created"]);
     document.getElementById("parent-replies").textContent =
       this.parentMessage["reply-count"];
   }
@@ -143,10 +143,10 @@ class AddReply2 {
 
 // Instantiate the class on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
-  bespoke2.init();
-  addReply2.init();
+  bespoke.init();
+  addReply.init();
 });
 
 // Export the class instance
-const addReply2 = new AddReply2();
-export default addReply2
+const addReply = new AddReply();
+export default addReply

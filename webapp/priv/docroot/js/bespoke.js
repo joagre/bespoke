@@ -4,7 +4,7 @@ import { marked } from '/js/marked.esm.js';
 // Ensure uhtml.min.js is imported in the HTML file before this script
 const { html, render } = uhtml;
 
-class Bespoke2 {
+class Bespoke {
   constructor() {
     this._cookieState = null;
     this._touch = {
@@ -42,8 +42,8 @@ class Bespoke2 {
       return;
     }
 
-    if (destination === 'message2.html' && this._isMessageStackEmpty()) {
-      this.navigateTo('posts2.html');
+    if (destination === 'message.html' && this._isMessageStackEmpty()) {
+      this.navigateTo('posts.html');
     } else {
       this.navigateTo(destination);
     }
@@ -216,7 +216,7 @@ class Bespoke2 {
     const swipeTarget = document.querySelector('[data-back-destination]');
     if (swipeTarget) {
       const destination = swipeTarget.getAttribute('data-back-destination');
-      if (destination === 'message2.html') {
+      if (destination === 'message.html') {
         this.gotoPage(null, destination, -1);
       } else {
         this.gotoPage(null, destination);
@@ -226,5 +226,5 @@ class Bespoke2 {
 }
 
 // Export the class instance
-const bespoke2 = new Bespoke2();
-export default bespoke2;
+const bespoke = new Bespoke();
+export default bespoke;

@@ -1,14 +1,14 @@
 // Import dependencies
-import bespoke2 from "/js/bespoke2.js";
+import bespoke from "/js/bespoke.js";
 
-class AddPost2 {
+class AddPost {
   constructor() {
     this._formFields = [];
     this._addButton = null;
   }
 
   init() {
-    bespoke2.initializeCookieState();
+    bespoke.initializeCookieState();
     this._formFields = Array.from(
       document.querySelectorAll("#form-title, #form-author, #form-body")
     );
@@ -39,7 +39,7 @@ class AddPost2 {
           // Optional: Display an error message to the user
           return;
         }
-        bespoke2.navigateTo("posts2.html");
+        bespoke.navigateTo("posts.html");
       } catch (error) {
         console.error("Fetching failed:", error);
         // Optional: Display an error message to the user
@@ -65,10 +65,10 @@ class AddPost2 {
 
 // Initialize the class on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
-  bespoke2.init();
-  addPost2.init();
+  bespoke.init();
+  addPost.init();
 });
 
 // Export the class instance
-const addPost2 = new AddPost2();
-export default addPost2
+const addPost = new AddPost();
+export default addPost

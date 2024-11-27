@@ -1,10 +1,10 @@
 // Import dependencies
-import bespoke2 from "/js/bespoke2.js";
+import bespoke from "/js/bespoke.js";
 
 // uhtml.min.js must be imported in the HTML file before this script
 const { html, render } = uhtml;
 
-class Message2 {
+class Message {
   constructor() {
     this._dataLoaded = false;
     this._domReady = false;
@@ -18,9 +18,9 @@ class Message2 {
   }
 
   init() {
-    bespoke2.initializeCookieState();
+    bespoke.initializeCookieState();
     document.addEventListener("DOMContentLoaded", () => {
-      bespoke2.init();
+      bespoke.init();
       this._domReady = true;
       if (this._dataLoaded) {
         this._populatePage();
@@ -43,14 +43,14 @@ class Message2 {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify([bespoke2.peekMessageStack()])
+        body: JSON.stringify([bespoke.peekMessageStack()])
       });
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
         return;
       }
       const data = await response.json();
-      bespoke2.assert(data.length === 1, "Expected exactly one message");
+      bespoke.assert(data.length === 1, "Expected exactly one message");
       this._parentMessage = data[0];
 
       // REST: Get root message title (maybe)
@@ -68,7 +68,7 @@ class Message2 {
           return;
         }
         const rootMessage = await response.json();
-        bespoke2.assert(rootMessage.length === 1,
+        bespoke.assert(rootMessage.length === 1,
                         "Expected exactly one message");
         this._rootMessageTitle = rootMessage[0]["title"];
       }
@@ -97,7 +97,7 @@ class Message2 {
   }
 
   _populatePage() {
-    const messageStackSize = bespoke2.messageStackSize();
+    const messageStackSize = bespoke.messageStackSize();
 
     // Populate head title
     const headTitle = messageStackSize > 1 ? "Reply" : "Post";
@@ -117,11 +117,11 @@ class Message2 {
     // Populate parent message
     document.getElementById("parent-title").innerHTML = this._rootMessageTitle;
     document.getElementById("parent-body").innerHTML =
-      bespoke2.formatMarkdown(this._parentMessage["body"]);
+      bespoke.formatMarkdown(this._parentMessage["body"]);
     document.getElementById("parent-author").textContent =
       this._parentMessage["author"];
     document.getElementById("parent-age").textContent =
-      bespoke2.formatSecondsSinceEpoch(this._parentMessage["created"]);
+      bespoke.formatSecondsSinceEpoch(this._parentMessage["created"]);
     document.getElementById("parent-replies").textContent =
       this._parentMessage["reply-count"];
     document.getElementById("parent-delete")
@@ -171,7 +171,7 @@ class Message2 {
       `;
     }
 
-    const age = bespoke2.formatSecondsSinceEpoch(message["created"]);
+    const age = bespoke.formatSecondsSinceEpoch(message["created"]);
     const replyBodyAttr = `reply-body-${message["id"]}`;
     const replyDividerAttr = `reply-divider-${message["id"]}`;
 
@@ -179,7 +179,7 @@ class Message2 {
     if (message["reply-count"] > 0) {
       replies = html`•
         <button
-          onclick=${(event) => bespoke2.gotoPage(event, "message2.html", message["id"])}
+          onclick=${(event) => bespoke.gotoPage(event, "message.html", message["id"])}
           class="uk-icon-button"
           uk-icon="comments"
         ></button>
@@ -191,7 +191,7 @@ class Message2 {
         ${replyQuote}
         <!-- Reply body -->
         <div id="${replyBodyAttr}" class="uk-margin-remove-first-child uk-margin-remove-last-child">
-          ${bespoke2.uhtmlFormatMarkdown(message["body"])}
+          ${bespoke.uhtmlFormatMarkdown(message["body"])}
         </div>
         <!-- Reply meta-data -->
         <div class="uk-article-meta uk-margin-top-remove">
@@ -207,7 +207,7 @@ class Message2 {
                 uk-icon="trash"
               ></button>
               <button
-                onclick=${(event) => addReply2.gotoAddReplyPage(event, message["id"], true)}
+                onclick=${(event) => addReply.gotoAddReplyPage(event, message["id"], true)}
                 class="uk-icon-button"
                 uk-icon="reply"
               ></button>
@@ -236,7 +236,7 @@ class Message2 {
 
   deleteMessage(event) {
     const messageId =
-          this._messageIdToDelete === bespoke2.peekMessageStack() ? -1 : null;
+          this._messageIdToDelete === bespoke.peekMessageStack() ? -1 : null;
 
     const updateServer = async () => {
       try {
@@ -252,7 +252,7 @@ class Message2 {
           console.error(`Server error: ${response.status}`);
           return;
         }
-        bespoke2.gotoPage(event, "message2.html", messageId);
+        bespoke.gotoPage(event, "message.html", messageId);
         this._messageIdToDelete = null;
       } catch (error) {
         console.error("Fetching failed:", error);
@@ -288,5 +288,5 @@ class Message2 {
 }
 
 // Export the class instance
-const message2 = new Message2();
-export default message2;
+const message = new Message();
+export default message;

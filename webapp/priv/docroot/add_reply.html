@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Add Post</title>
+    <title>Add Reply</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/bespoke2.css">
     <link rel="stylesheet" href="css/uikit.min.css">
+    <link rel="stylesheet" href="css/bespoke.css">
+    <link rel="stylesheet" href="css/add_reply.css">
     <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
     <link rel="shortcut icon" href="/favicon/favicon.ico">
@@ -14,29 +15,44 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/bespoke2.js" defer></script>
-    <script type="module" src="js/add_post2.js" defer></script>
+    <script type="module" src="js/bespoke.js" defer></script>
+    <script type="module" src="js/add_reply.js" defer></script>
   </head>
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
       <div class="uk-card uk-card-default uk-background-muted uk-padding-small uk-padding-remove-horizontal">
         <div class="uk-flex uk-flex-between uk-flex-middle">
-          <button onclick="bespoke2.gotoPage(event, 'posts2.html')" data-back-destination="posts2.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+          <button onclick="addReply.goBack(event, false)" data-back-destination="message.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
           <div class="uk-flex-1 uk-flex uk-flex-center">
-            <div class="uk-text-bold">Add Post</div>
+            <div>
+              Add Reply
+              <span id="reply-depth" class="uk-text-meta"></span>
+            </div>
           </div>
         </div>
       </div>
+      <!-- Parent message -->
+      <article class="uk-article">
+        <!-- Parent header -->
+        <div id="parent-title"></div>
+        <!-- Parent body -->
+        <div id="parent-body" class="uk-margin-remove-first-child uk-margin-remove-last-child">parent-body</div>
+        <!-- Parent meta-data -->
+        <div class="uk-article-meta uk-margin-small-top">
+          <div class="uk-flex uk-flex-between uk-flex-middle">
+            <div>
+              <span id="parent-author"></span> •
+              <span id="parent-age"></span> •
+              <span uk-icon="comments"></span>
+              <span id="parent-replies"></span>
+            </div>
+          </div>
+        </div>
+      </article>
       <!-- Form -->
       <div class="uk-container uk-margin-top">
         <form class="uk-form-stacked">
-          <!-- Title text field -->
-          <div class="uk-margin">
-            <div class="uk-form-controls">
-              <input class="uk-input" placeholder="Title" id="form-title" type="text" required>
-            </div>
-          </div>
           <!-- Author text field -->
           <div class="uk-margin">
             <div class="uk-form-controls">
@@ -51,16 +67,16 @@
           </div>
           <!-- Add button -->
           <div class="uk-margin uk-text-right">
-            <button onclick="addPost2.addPost(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Post</button>
+            <button onclick="addReply.addReply(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Reply</button>
           </div>
         </form>
       </div>
     </div>
     <script type="module">
-      import bespoke2 from "/js/bespoke2.js";
-      import addPost2 from "/js/add_post2.js";
-      window.bespoke2 = bespoke2;
-      window.addPost2 = addPost2;
+      import bespoke from "/js/bespoke.js";
+      import addReply from "/js/add_reply.js";
+      window.bespoke = bespoke;
+      window.addReply = addReply;
     </script>
   </body>
 </html>
