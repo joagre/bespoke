@@ -167,10 +167,9 @@ init_word_list() ->
 init_word_list(File) ->
     case file:read_line(File) of
         {ok, Word} ->
-            StrippedWord = string:strip(Word, right, $\n),
-            case is_valid_word(StrippedWord) of
-                true ->
-                    [normalize_word(StrippedWord)|init_word_list(File)];
+            case is_valid_word(Word) of
+                {true, ValidWord} ->
+                    [ValidWord|init_word_list(File)];
                 false ->
                     init_word_list(File)
             end;
@@ -180,21 +179,19 @@ init_word_list(File) ->
     end.
 
 is_valid_word(Word) ->
-    case string:len(Word) of
+    StrippedWord = string:strip(Word, right, $\n),
+    case string:len(StrippedWord) of
         N when N > 1 ->
-            case string:substr(Word, length(Word) - 1, 2) of
+            case string:substr(StrippedWord, string:len(StrippedWord) - 1, 2) of
                 "'s" ->
                     false;
                 _ ->
-                    true
+                    %% Capitalize the first letter
+                    CapitalizedWord = string:concat(
+                                        string:to_upper(string:substr(StrippedWord, 1, 1)),
+                                        string:substr(StrippedWord, 2)),
+                    {true, ?l2b(CapitalizedWord)}
             end;
         _ ->
             false
     end.
-
-normalize_word(Word) ->
-    %% Capitalize the first letter
-    CapitalizedWord = string:concat(
-                        string:to_upper(string:substr(Word, 1, 1)),
-                        string:substr(Word, 2)),
-    ?l2b(CapitalizedWord).
