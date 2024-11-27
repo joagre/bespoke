@@ -24,4 +24,5 @@ start_link() ->
 init([]) ->
     DbServSpec = #{id => db_serv, start => {db_serv, start_link, []}},
     DbRestSpec = #{id => db_rest, start => {db_rest, start_link, []}},
-    {ok, {#{strategy => one_for_all}, [DbServSpec, DbRestSpec]}}.
+    DbAliasServSpec = #{id => db_alias_serv, start => {db_alias_serv, start_link, []}},
+    {ok, {#{strategy => one_for_all}, [DbServSpec, DbRestSpec, DbAliasServSpec]}}.

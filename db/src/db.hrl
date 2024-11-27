@@ -23,4 +23,10 @@
          next_message_id = 0 :: integer()
         }).
 
+-record(alias,
+        {
+         name :: binary() | '_',
+         mac_address :: db_dnsmasq:mac_address()
+        }).
+
 -endif.

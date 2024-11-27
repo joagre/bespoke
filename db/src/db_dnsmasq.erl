@@ -2,31 +2,41 @@
 -export([set_post_login_mac_address/1,
          clear_mac_addresses/1,
          clear_all_mac_addresses/0]).
+-export_type([mac_address/0]).
 
 -include_lib("apptools/include/log.hrl").
+-include_lib("apptools/include/shorthand.hrl").
+
+-type mac_address() :: binary().
 
 %%
 %% set_post_login_mac_address
 %%
 
+-spec set_post_login_mac_address(mac_address()) -> ok | {error, string()}.
+
 set_post_login_mac_address(MacAddress) ->
-    Parameters = " --post " ++ MacAddress,
+    Parameters = " --post " ++ ?b2l(MacAddress),
     dnsmasq_tool(Parameters).
 
 %%
 %% clear_mac_addresses
 %%
 
+-spec clear_mac_addresses([mac_address()]) -> ok | {error, string()}.
+
 clear_mac_addresses(MacAddresses) ->
     Parameters =
         lists:foldr(fun(MacAddress, Acc) ->
-                            [" --clear ", MacAddress|Acc]
+                            [" --clear ", ?b2l(MacAddress)|Acc]
                     end, [], MacAddresses),
     dnsmasq_tool(Parameters).
 
 %%
 %% Exported: clear_all_mac_addresses
 %%
+
+-spec clear_all_mac_addresses() -> ok | {error, string()}.
 
 clear_all_mac_addresses() ->
     dnsmasq_tool(" --clear-all").

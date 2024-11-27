@@ -1,7 +1,6 @@
 -module(db_rest).
 -export([start_link/0]).
 -export([request_handler/4]).
--compile(export_all).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -9,6 +8,7 @@
 -include_lib("rester/include/rester_http.hrl").
 -include("db.hrl").
 
+-define(CAPTIVE_PORTAL_CACHE, captive_portal_cache).
 -define(LEASETIME, 7200).
 
 %%
@@ -25,8 +25,8 @@ start_link() ->
 	 {nodelay, true},
 	 {reuseaddr, true}],
     ?log_info("Database REST API has been started"),
-    captive_portal_cache =
-        ets:new(captive_portal_cache, [public, named_table]),
+    ?CAPTIVE_PORTAL_CACHE =
+        ets:new(?CAPTIVE_PORTAL_CACHE, [public, named_table]),
     rester_http_server:start_link(80, Options).
 
 %%
@@ -112,14 +112,14 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                       [Headers#http_chdr.host, Url#url.path]),
             {ok, MacAddress} = get_mac_address(Socket),
             ok = db_dnsmasq:set_post_login_mac_address(MacAddress),
-            case ets:lookup(captive_portal_cache, MacAddress) of
+            case ets:lookup(?CAPTIVE_PORTAL_CACHE, MacAddress) of
                 [] ->
                     io:format("Captive portal ack (not found)\n"),
-                    ets:insert(captive_portal_cache, {MacAddress, timestamp()}),
+                    ets:insert(?CAPTIVE_PORTAL_CACHE, {MacAddress, timestamp()}),
                     rest_util:response(Socket, Request, {error, not_found});
                 [{MacAddress, _Timestamp}] ->
                     io:format("Captive portal ack (found)\n"),
-                    ets:insert(captive_portal_cache, {MacAddress, timestamp()}),
+                    ets:insert(?CAPTIVE_PORTAL_CACHE, {MacAddress, timestamp()}),
                     rester_http_server:response_r(
                       Socket, Request, 204, "OK", "", no_cache_headers())
             end;
@@ -171,7 +171,7 @@ no_cache_headers() ->
 
 redirect_or_ack(Socket, Request, Page) ->
     {ok, MacAddress} = get_mac_address(Socket),
-    case ets:lookup(captive_portal_cache, MacAddress) of
+    case ets:lookup(?CAPTIVE_PORTAL_CACHE, MacAddress) of
         [] ->
             io:format("Captive portal redirect...\n"),
             rester_http_server:response_r(
@@ -192,7 +192,7 @@ redirect_or_ack(Socket, Request, Page) ->
                     case Page of
                         "hotspot-detect.html" ->
                             io:format("Returning 200 OK (Apple mode)\n"),
-                            true = ets:insert(captive_portal_cache,
+                            true = ets:insert(?CAPTIVE_PORTAL_CACHE,
                                               {MacAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK",
@@ -200,7 +200,7 @@ redirect_or_ack(Socket, Request, Page) ->
                               [{content_type, "text/html"}|no_cache_headers()]);
                         "canonical.html" ->
                             io:format("Returning 200 OK (/canonical.html)\n"),
-                            ets:insert(captive_portal_cache,
+                            ets:insert(?CAPTIVE_PORTAL_CACHE,
                                        {MacAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK",
@@ -209,7 +209,7 @@ redirect_or_ack(Socket, Request, Page) ->
                                no_cache_headers()]);
                         "success.txt" ->
                             io:format("Returning 200 OK (/success.txt)\n"),
-                            ets:insert(captive_portal_cache,
+                            ets:insert(?CAPTIVE_PORTAL_CACHE,
                                        {MacAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK", "success",
@@ -217,7 +217,7 @@ redirect_or_ack(Socket, Request, Page) ->
                                no_cache_headers()]);
                         _ ->
                             io:format("Returning 204 No Content (generic)\n"),
-                            ets:insert(captive_portal_cache,
+                            ets:insert(?CAPTIVE_PORTAL_CACHE,
                                        {MacAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 204, "OK", "",
@@ -234,10 +234,10 @@ delete_all_stale_timestamps() ->
                           [MacAddress|Acc];
                      (_, Acc) ->
                           Acc
-                 end, [], captive_portal_cache),
+                 end, [], ?CAPTIVE_PORTAL_CACHE),
     ok = db_dnsmasq:clear_mac_addresses(StaleMacAddresses),
     lists:foreach(fun(MacAddress) ->
-                          ets:delete(captive_portal_cache, MacAddress)
+                          ets:delete(?CAPTIVE_PORTAL_CACHE, MacAddress)
                   end, StaleMacAddresses).
 
 http_post(Socket, Request, Body, Options) ->
@@ -433,14 +433,14 @@ timestamp() ->
 
 get_mac_address(Socket) ->
     {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
-    get_mac_for_ip_address(IpAddress).
+    get_mac_address_for_ip_address(IpAddress).
 
-get_mac_for_ip_address(IpAddress) ->
+get_mac_address_for_ip_address(IpAddress) ->
     Result = os:cmd("ip neigh show | awk '/" ++
                         inet:ntoa(IpAddress) ++ "/ {print $5}'"),
     case string:trim(Result) of
         "" ->
             {error, not_found};
         MacAddress ->
-            {ok, MacAddress}
+            {ok, ?l2b(MacAddress)}
     end.

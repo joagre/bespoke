@@ -13,6 +13,11 @@
 -include_lib("apptools/include/serv.hrl").
 -include("db.hrl").
 
+-define(MESSAGE_DB_FILENAME, "messages.db").
+-define(MESSAGE_DB, messages).
+-define(META_DB_FILENAME, "meta.db").
+-define(META_DB, meta).
+
 -type message_id() :: binary().
 -type title() :: binary().
 -type body() :: binary().
@@ -96,20 +101,20 @@ sync() ->
 %%
 
 init(Parent) ->
-    {ok, messages} =
+    {ok, ?MESSAGE_DB} =
         dets:open_file(
-          messages,
-          [{file, filename:join(code:priv_dir(db), "messages.db")},
+          ?MESSAGE_DB,
+          [{file, filename:join(code:priv_dir(db), ?MESSAGE_DB_FILENAME)},
            {keypos, #message.id}]),
-    {ok, meta} =
+    {ok, ?META_DB} =
         dets:open_file(
-          meta,
-          [{file, filename:join(code:priv_dir(db), "meta.db")},
+          ?META_DB,
+          [{file, filename:join(code:priv_dir(db), ?META_DB_FILENAME)},
            {keypos, #meta.type}]),
-    case dets:lookup(meta, basic) of
+    case dets:lookup(?META_DB, basic) of
         [] ->
-            ok = dets:insert(meta, #meta{type = basic,
-                                         next_message_id = 0}),
+            ok = dets:insert(?META_DB, #meta{type = basic,
+                                             next_message_id = 0}),
             NextMessageId = 0;
         [#meta{next_message_id = NextMessageId}] ->
             ok
@@ -121,13 +126,14 @@ message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            ok = dets:close(messages),
+            ok = dets:close(?META_DB),
+            ok = dets:close(?MESSAGE_DB),
             {reply, From, ok};
         {call, From, list_root_messages = Call} ->
             ?log_debug("Call: ~p", [Call]),
             RootMessages =
                 dets:match_object(
-                  messages, #message{root_message_id = not_set, _ = '_'}),
+                  ?MESSAGE_DB, #message{root_message_id = not_set, _ = '_'}),
             SortedRootMessages =
                 lists:sort(
                   fun(MessageA, MessageB) ->
@@ -148,12 +154,12 @@ message_handler(S) ->
             end;
         {call, From, {delete_message, MessageId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            case dets:lookup(messages, MessageId) of
+            case dets:lookup(?MESSAGE_DB, MessageId) of
                 [#message{parent_message_id = ParentMessageId}]
                   when ParentMessageId /= not_set ->
-                    [ParentMessage] = dets:lookup(messages, ParentMessageId),
+                    [ParentMessage] = dets:lookup(?MESSAGE_DB, ParentMessageId),
                     ok = dets:insert(
-                           messages,
+                           ?MESSAGE_DB,
                            ParentMessage#message{
                              replies = lists:delete(
                                          MessageId,
@@ -169,7 +175,7 @@ message_handler(S) ->
             end;
         {call, From, sync = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            ok = dets:sync(messages),
+            ok = dets:sync(?MESSAGE_DB),
             {reply, From, ok};
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             exit(Reason);
@@ -194,7 +200,7 @@ do_insert_message(NextMessageId, Message) ->
                     UpdatedMeta =
                         #meta{type = basic,
                               next_message_id = NextUpcomingMessageId},
-                    ok = dets:insert(meta, UpdatedMeta),
+                    ok = dets:insert(?META_DB, UpdatedMeta),
                     NewMessageId = ?i2b(NextMessageId);
                 MessageId ->
                     NewMessageId = MessageId,
@@ -204,7 +210,7 @@ do_insert_message(NextMessageId, Message) ->
                 Message#message{
                   id = NewMessageId,
                   created = seconds_since_epoch(Message#message.created)},
-            ok = dets:insert(messages, UpdatedMessage),
+            ok = dets:insert(?MESSAGE_DB, UpdatedMessage),
             case ParentMessage of
                 not_set ->
                     {ok, NextUpcomingMessageId, UpdatedMessage};
@@ -212,7 +218,7 @@ do_insert_message(NextMessageId, Message) ->
                     UpdatedParentMessage =
                         ParentMessage#message{
                           replies = Replies ++ [NewMessageId]},
-                    ok = dets:insert(messages, UpdatedParentMessage),
+                    ok = dets:insert(?MESSAGE_DB, UpdatedParentMessage),
                     ok = update_parent_count(ParentMessage#message.id, 1),
                     {ok, NextUpcomingMessageId, UpdatedMessage}
             end;
@@ -223,7 +229,7 @@ do_insert_message(NextMessageId, Message) ->
 is_valid_insert_message(#message{id = not_set} = Message) ->
     check_insert_message(Message);
 is_valid_insert_message(Message) ->
-    case dets:lookup(messages, Message#message.id) of
+    case dets:lookup(?MESSAGE_DB, Message#message.id) of
         [] ->
             check_insert_message(Message);
         _ ->
@@ -244,9 +250,9 @@ check_insert_message(#message{title = not_set,
   when ParentMessageId /= not_set andalso
        RootMessageId /= not_set andalso
        (Created == not_set orelse is_integer(Created)) ->
-    case dets:lookup(messages, ParentMessageId) of
+    case dets:lookup(?MESSAGE_DB, ParentMessageId) of
         [ParentMessage] ->
-            case dets:lookup(messages, RootMessageId) of
+            case dets:lookup(?MESSAGE_DB, RootMessageId) of
                 [RootMessage] ->
                     {true, ParentMessage, RootMessage};
                 [] ->
@@ -261,8 +267,8 @@ check_insert_message(_) ->
 update_parent_count(not_set, _N) ->
     ok;
 update_parent_count(MessageId, N) ->
-    [Message] = dets:lookup(messages, MessageId),
-    ok = dets:insert(messages,
+    [Message] = dets:lookup(?MESSAGE_DB, MessageId),
+    ok = dets:insert(?MESSAGE_DB,
                      Message#message{
                        reply_count = Message#message.reply_count + N}),
     update_parent_count(Message#message.parent_message_id, N).
@@ -275,7 +281,7 @@ do_lookup_messages(MessageIds, Mode) ->
     Messages =
         lists:foldr(
           fun(MessageId, Acc) ->
-                  case dets:lookup(messages, MessageId) of
+                  case dets:lookup(?MESSAGE_DB, MessageId) of
                       [Message] when Mode == flat ->
                           [Message|Acc];
                       [Message] when Mode == recursive ->
@@ -296,8 +302,8 @@ do_lookup_messages(MessageIds, Mode) ->
 delete_all([]) ->
     0;
 delete_all([MessageId|Rest]) ->
-    [Message] = dets:lookup(messages, MessageId),
-    ok = dets:delete(messages, MessageId),
+    [Message] = dets:lookup(?MESSAGE_DB, MessageId),
+    ok = dets:delete(?MESSAGE_DB, MessageId),
     delete_all(Message#message.replies) + delete_all(Rest) + 1.
 
 %%
