@@ -120,11 +120,11 @@ init(Parent) ->
 message_handler(S) ->
     receive
         {call, From, stop = Call} ->
-            ?log_debug(#{call => Call}),
+            ?log_debug("Call: ~p", [Call]),
             ok = dets:close(messages),
             {reply, From, ok};
         {call, From, list_root_messages = Call} ->
-            ?log_debug(#{call => Call}),
+            ?log_debug("Call: ~p", [Call]),
             RootMessages =
                 dets:match_object(
                   messages, #message{root_message_id = not_set, _ = '_'}),
@@ -135,10 +135,10 @@ message_handler(S) ->
                   end, RootMessages),
             {reply, From, SortedRootMessages};
         {call, From, {lookup_messages, MessageIds, Mode} = Call} ->
-            ?log_debug(#{call => Call}),
+            ?log_debug("Call: ~p", [Call]),
             {reply, From, do_lookup_messages(MessageIds, Mode)};
         {call, From, {insert_message, Message} = Call} ->
-            ?log_debug(#{call => Call}),
+            ?log_debug("Call: ~p", [Call]),
             case do_insert_message(S#state.next_message_id, Message) of
                 {ok, NextUpcomingMessageId, InsertedMessage} ->
                     {reply, From, {ok, InsertedMessage},
@@ -147,7 +147,7 @@ message_handler(S) ->
                     {reply, From, {error, Reason}}
             end;
         {call, From, {delete_message, MessageId} = Call} ->
-            ?log_debug(#{call => Call}),
+            ?log_debug("Call: ~p", [Call]),
             case dets:lookup(messages, MessageId) of
                 [#message{parent_message_id = ParentMessageId}]
                   when ParentMessageId /= not_set ->
@@ -168,16 +168,16 @@ message_handler(S) ->
                     {reply, From, {error, not_found}}
             end;
         {call, From, sync = Call} ->
-            ?log_debug(#{call => Call}),
+            ?log_debug("Call: ~p", [Call]),
             ok = dets:sync(messages),
             {reply, From, ok};
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             exit(Reason);
         {system, From, Request} ->
-            ?log_debug(#{system => {From, Request}}),
+            ?log_debug("System: ~p", [Request]),
             {system, From, Request};
         UnknownMessage ->
-            ?log_error(#{unknown_message => UnknownMessage}),
+            ?log_error("Unknown message: ~p", [UnknownMessage]),
             noreply
     end.
 

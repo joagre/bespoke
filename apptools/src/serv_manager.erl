@@ -66,19 +66,19 @@ init(Parent) ->
 message_handler(#{parent := Parent, processes := Processes} = State) ->
     receive
         {call, From, stop = Call} ->
-            ?log_debug(#{call => Call}),
+            ?log_debug("Call: ~p", [Call]),
             {stop, From, ok};
         {cast, {add_process, Pid} = Cast} ->
-            ?log_debug(#{cast => Cast}),
+            ?log_debug("Cast: ~p", [Cast]),
             MonitorRef = monitor(process, Pid),
             {noreply, State#{processes =>
                                  maps:put(Pid, MonitorRef, Processes)}};
         {cast, {reload_processes, _ModuleName} = Cast} ->
-            ?log_debug(#{cast => Cast}),
+            ?log_debug("Cast: ~p", [Cast]),
             ok = calm_down(),
             ok = maps:fold(
                    fun(Pid, _MonitorRef, ok) ->
-                           ?log_debug(#{reload => Pid}),
+                           ?log_debug("Reload: ~w", [Pid]),
                            catch begin
                                      Pid ! {system, undefined, code_switch}
                                  end,
@@ -86,15 +86,15 @@ message_handler(#{parent := Parent, processes := Processes} = State) ->
                    end, ok, Processes),
             noreply;
         {'DOWN', _Ref, process, Pid, Info} ->
-            ?log_debug(#{'DOWN' => Info}),
+            ?log_debug("DOWN: ~p", [Info]),
             {noreply, State#{processes => maps:remove(Pid, Processes)}};
         {system, From, Request} ->
-            ?log_debug(#{system => Request}),
+            ?log_debug("System: ~p", [Request]),
             {system, From, Request};
         {'EXIT', Parent, Reason} ->
             exit(Reason);
         UnknownMessage ->
-            ?log_error(#{unknown_message => UnknownMessage}),
+            ?log_error("Unknown message: ~p", [UnknownMessage]),
             noreply
     end.
 

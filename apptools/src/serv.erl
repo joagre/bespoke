@@ -136,7 +136,8 @@ cast(To, Request) when is_pid(To) ->
 cast(To, Request) ->
     case whereis(To) of
         undefined ->
-            ?log_error(#{bad => {To, Request}}),
+            ?log_error("No such registered process name: ~w (~p)",
+                       [To, Request]),
             throw(badarg);
         Pid ->
             Pid ! {cast, Request},
