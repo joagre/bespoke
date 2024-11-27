@@ -33,5 +33,5 @@ Erlang/OTP 27 [erts-15.1.2] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threa
 ## Test with curl (in another shell)
 
 ```
-$ curl -k https://localhost/list_root_messages
+$ curl -k http://localhost/list_root_messages
 ```
