@@ -1,7 +1,6 @@
 -module(db_alias_serv).
 -export([start_link/0, stop/0]).
--export([new_name/0, add_alias/2, mac_address_to_name/1,
-         name_to_mac_address/1]).
+-export([get_name/1, authenticate/3, mac_address_to_name/1, name_to_mac_address/1]).
 -export([message_handler/1]).
 
 -include_lib("apptools/include/log.hrl").
@@ -12,8 +11,11 @@
 -define(ALIAS_DB_FILENAME, "aliases.db").
 -define(ALIAS_DB, aliases).
 -define(WORD_LIST_PATH, "/usr/share/dict/words").
+-define(SESSION_ID_SIZE, 16).
 
 -type name() :: binary().
+-type password() :: binary().
+-type session_id() :: binary().
 
 -record(state, {
                 parent :: pid(),
@@ -40,23 +42,23 @@ stop() ->
     serv:call(?MODULE, stop).
 
 %%
-%% Exported: new_name
+%% Exported: get_alias
 %%
 
--spec new_name() -> name().
+-spec get_name(db_dnsmasq:mac_address()) -> name().
 
-new_name() ->
-    serv:call(?MODULE, new_name).
+get_name(MacAddress) ->
+    serv:call(?MODULE, {get_name, MacAddress}).
 
 %%
-%% Exported: add_alias
+%% Exported: authenticate
 %%
 
--spec add_alias(name(), db_dnsmasq:mac_address()) ->
-          ok | {error, already_taken}.
+-spec authenticate(name(), password(), db_dnsmasq:mac_address()) ->
+          {ok, session_id()} | {error, failure}.
 
-add_alias(Name, MacAddress) ->
-    serv:call(?MODULE, {add_alias, Name, MacAddress}).
+authenticate(Name, Password, MacAddress) ->
+    serv:call(?MODULE, {authenticate, Name, Password, MacAddress}).
 
 %%
 %% Exported: mac_address_to_name
@@ -98,19 +100,29 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             ok = dets:close(?ALIAS_DB),
             {reply, From, ok};
-        {call, From, new_name} ->
-            ?log_debug("Call: ~p", [new_name]),
-            {reply, From, generate_name(S#state.word_list)};
-        {call, From, {add_alias, Name, MacAddress}} ->
-            ?log_debug("Call: ~p", [{add_alias, Name, MacAddress}]),
-            case dets:lookup(?ALIAS_DB, Name) of
+        {call, From, {get_name, MacAddress}} ->
+            ?log_debug("Call: ~p", [{get_name, MacAddress}]),
+            case dets:match_object(?ALIAS_DB,
+                                   #alias{mac_address = MacAddress, _ = '_'}) of
+                [Alias|_] ->
+                    {reply, From, Alias#alias.name};
                 [] ->
-                    ok = dets:insert(
-                           ?ALIAS_DB,
-                           #alias{name = Name, mac_address = MacAddress}),
-                    {reply, From, ok};
-                _ ->
-                    {reply, From, {error, already_taken}}
+                    {reply, From, generate_name(S#state.word_list)}
+            end;
+        {call, From, {authenticate, Name, Password, MacAddress}} ->
+            ?log_debug("Call: ~p", [{authenticate, Name, Password, MacAddress}]),
+            case dets:lookup(?ALIAS_DB, Name) of
+                [Alias] ->
+                    ok;
+                [] ->
+                    Alias = #alias{name = Name, mac_address = MacAddress},
+                    ok = dets:insert(?ALIAS_DB, Alias)
+            end,
+            case do_authenticate(Alias, Password) of
+                {ok, SessionId} ->
+                    {reply, From, {ok, SessionId}};
+                {error, Reason} ->
+                    {reply, From, {error, Reason}}
             end;
         {call, From, {mac_address_to_name, MacAddress}} ->
             ?log_debug("Call: ~p", [{mac_address_to_name, MacAddress}]),
@@ -139,8 +151,12 @@ message_handler(S) ->
             noreply
     end.
 
+%%
+%% Call: get_name
+%%
+
 generate_name(WordList) ->
-    Name = string:concat(random_word(WordList), random_word(WordList)),
+    Name = ?l2b([random_word(WordList), random_word(WordList)]),
     case dets:lookup(?ALIAS_DB, Name) of
         [] ->
             Name;
@@ -149,8 +165,38 @@ generate_name(WordList) ->
     end.
 
 random_word(Words) ->
-    Index = rand:uniform(length(Words)),
+    Index = enacl:randombytes_uniform(length(Words) + 1),
     lists:nth(Index, Words).
+
+%%
+%% Call: authenticate
+%%
+
+%% Proceed without password
+do_authenticate(#alias{pwhash = not_set} = Alias, <<>>) ->
+    SessionId = session_id(),
+    ok = dets:insert(?ALIAS_DB, Alias#alias{session_id = SessionId}),
+    {ok, SessionId};
+%% Set a password
+do_authenticate(#alias{pwhash = not_set} = Alias, Password) ->
+    Pwhash = enacl:pwhash_str(Password, interactive, interactive),
+    SessionId = session_id(),
+    ok = dets:insert(?ALIAS_DB, Alias#alias{pwhash = Pwhash,
+                                            session_id = SessionId}),
+    {ok, SessionId};
+%% Verify password
+do_authenticate(#alias{pwhash = Pwhash} = Alias, Password) ->
+    case enacl:pwhash_str_verify(Pwhash, Password) of
+        true ->
+            SessionId = session_id(),
+            ok = dets:insert(?ALIAS_DB, Alias#alias{session_id = SessionId}),
+            {ok, SessionId};
+        false ->
+            {error, failure}
+    end.
+
+session_id() ->
+    ?l2b(base64:encode_to_string(enacl:randombytes(?SESSION_ID_SIZE))).
 
 %%
 %% Word list

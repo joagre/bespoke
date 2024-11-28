@@ -26,6 +26,8 @@
 -record(alias,
         {
          name :: binary() | '_',
+         pwhash = not_set :: binary() | not_set | '_',
+         session_id = not_set :: binary() | not_set | '_',
          mac_address :: db_dnsmasq:mac_address()
         }).
 

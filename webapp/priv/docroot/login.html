@@ -37,7 +37,7 @@
       </p>
       <p>
         If you want to remain anonymous (with the generated
-        alias <em id="generated-alias">BOJUL43</em>) just click on the login button. If you
+        alias <em id="auto-alias"></em>) just click on the login button. If you
         want a password protected alias just add a password. If you
         want a custom alias pick one. Simple.
       </p>
@@ -47,7 +47,7 @@
           <!-- Alias -->
           <div class="uk-margin">
             <div class="uk-form-controls">
-              <input class="uk-input" placeholder="Alias" id="form-alias" type="text" value="BOJUL43" required>
+              <input class="uk-input" placeholder="Alias" id="form-alias" type="text" required>
             </div>
             <span id="form-alias-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
           </div>
@@ -59,7 +59,7 @@
           </div>
           <!-- Login button -->
           <div class="uk-margin uk-text-right">
-            <button onclick="login.now(event)" type="submit" class="uk-button uk-button-primary" id="login-button">Login</button>
+            <button onclick="login.authenticate(event)" type="submit" class="uk-button uk-button-primary" id="login-button">Login</button>
           </div>
         </form>
       </div>

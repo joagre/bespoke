@@ -131,6 +131,10 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                                          message_to_json_term(Message)
                                  end, Messages),
             rest_util:response(Socket, Request, {ok, {format, JsonTerm}});
+        ["get_auto_alias"] ->
+            {ok, MacAddress} = get_mac_address(Socket),
+            Name = db_alias_serv:get_name(MacAddress),
+            rest_util:response(Socket, Request, {ok, {format, Name}});
         %% Act as static web server
 	Tokens when Headers#http_chdr.host == "localhost" orelse
                     Headers#http_chdr.host == "bespoke.local" orelse
@@ -177,7 +181,7 @@ redirect_or_ack(Socket, Request, Page) ->
             io:format("Captive portal redirect...\n"),
             rester_http_server:response_r(
               Socket, Request, 302, "Found", "",
-              [{location, "http://bespoke.local/splash.html"}|
+              [{location, "http://bespoke.local/login.html"}|
                no_cache_headers()]);
         [{MacAddress, Timestamp}] ->
             %% 2 hours timeout (sync with leasetime in /etc/dhcpcd.conf)
@@ -187,7 +191,7 @@ redirect_or_ack(Socket, Request, Page) ->
                     ok = delete_all_stale_timestamps(),
                     rester_http_server:response_r(
                       Socket, Request, 302, "Found", "",
-                      [{location, "http://bespoke.local/splash.html"}|
+                      [{location, "http://bespoke.local/login.html"}|
                        no_cache_headers()]);
                 false ->
                     case Page of
@@ -252,6 +256,32 @@ http_post(Socket, Request, Body, Options) ->
 
 http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
     case Tokens of
+        ["authenticate"] ->
+            case rest_util:parse_body(Request, Body) of
+                {error, _Reason} ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"});
+                AuthenticateJsonTerm ->
+                    case json_term_to_authenticate(AuthenticateJsonTerm) of
+                        {ok, Name, Password} ->
+                            {ok, MacAddress} = get_mac_address(Socket),
+                            case db_alias_serv:authenticate(
+                                   Name, Password, MacAddress) of
+                                {ok, SessionId} ->
+                                    rester_http_server:response_r(
+                                      Socket, Request, 204, "No Content", "",
+                                      [{"bespoke-session-id", SessionId}]);
+                                {error, failure} ->
+                                    rest_util:response(Socket, Request,
+                                                       {error, no_access})
+                            end;
+                        {error, invalid} ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request, "Invalid JSON format"})
+                    end
+            end;
         ["lookup_messages"] ->
             case rest_util:parse_body(Request, Body) of
                 {error, _Reason} ->
@@ -422,8 +452,19 @@ json_term_to_message(#{<<"parent-message-id">> := ParentMessageId,
 json_term_to_message(_) ->
     {error, invalid}.
 
+
 no_more_keys(RequiredKeys, Map) ->
     lists:sort(maps:keys(Map)) =:= lists:sort(RequiredKeys).
+
+json_term_to_authenticate(
+  #{<<"name">> := Name,
+    <<"password">> := Password} = AuthenticateJsonTerm) ->
+    case no_more_keys([<<"name">>, <<"password">>], AuthenticateJsonTerm) of
+        true ->
+            {ok, Name, Password};
+        false ->
+            {error, invalid}
+    end.
 
 %%
 %% Utilities
@@ -433,13 +474,18 @@ timestamp() ->
     os:system_time(second).
 
 get_mac_address(Socket) ->
-    {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
-    get_mac_address_for_ip_address(IpAddress).
+    case rester_socket:peername(Socket) of
+        {ok, {{127, 0, 0, 1}, _Port}} ->
+            {ok, <<"00:00:00:00:00:00">>};
+        {ok, {IpAddress, _Port}} ->
+            get_mac_address_for_ip_address(IpAddress)
+    end.
 
 get_mac_address_for_ip_address(IpAddress) ->
-    Result = os:cmd("ip neigh show | awk '/" ++
-                        inet:ntoa(IpAddress) ++ "/ {print $5}'"),
-    case string:trim(Result) of
+    Command = "ip neigh show | awk '/" ++
+        inet:ntoa(IpAddress) ++ "/ {print $5}'",
+    io:format("*********COMMAND ~p\n",[Command]),
+    case string:trim(os:cmd(Command)) of
         "" ->
             {error, not_found};
         MacAddress ->

@@ -2,82 +2,76 @@
 import bespoke from "/js/bespoke.js";
 
 class Login {
-  constructor() {
-    this._aliasInput = null;
-    this._passwordInput = null;
-    this._loginButton = null;
-  }
-
   init() {
-    this._aliasInput = document.getElementById("form-alias");
-    this._aliasInput.addEventListener("input", () => this._checkFormCompletion());
-    this._passwordInput = document.getElementById("form-password");
+    this._autoAlias = document.getElementById("auto-alias");
+    this._formAlias = document.getElementById("form-alias");
+    this._formAlias.addEventListener("input", () => this._checkFormCompletion());
+    this._formAliasError = document.getElementById("form-alias-error");
+    this._formPassword = document.getElementById("form-password");
     this._loginButton = document.getElementById("login-button");
     this._updatePage();
   }
 
+  _checkFormCompletion() {
+    this._loginButton.disabled = this._formAlias.value.trim() === "";
+  }
+
   async _updatePage() {
     try {
-      // REST: Get parent message
-      let response = await fetch("/get_generated_alias", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify([bespoke.peekMessageStack()]),
-      });
+      let response = await fetch("/get_auto_alias");
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
         return;
       }
-      let data = await response.json();
-      bespoke.assert(data.length === 1, "Expected exactly one message");
-      this.parentMessage = data[0];
-
-      // REST: Get root message title (if necessary)
-      this.rootMessageTitle = this.parentMessage["title"];
-      if (this.rootMessageTitle == null) {
-        response = await fetch("/lookup_messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify([this.parentMessage["root-message-id"]]),
-        });
-        if (!response.ok) {
-          console.error(`Server error: ${response.status}`);
-          return;
-        }
-        data = await response.json();
-        bespoke.assert(data.length === 1, "Expected exactly one message");
-        const rootMessage = data[0];
-        this.rootMessageTitle = rootMessage["title"];
-      }
-
-      // Populate the page
-      this.populatePage();
+      let alias = await response.json();
+      this._autoAlias.innerText = alias;
+      this._formAlias.value = alias;
     } catch (error) {
       console.error("Fetching failed:", error);
     }
   }
 
+  authenticate(event) {
+    event.preventDefault();
 
+    // Hide error under form-alias input
+    this._formAliasError.style.display = "none";
 
-/*
+    const authenticate = {
+      name: this._formAlias.value,
+      password: this._formPassword.value,
+    };
 
-  proceed() {
-    // Signal the server to prepare for portal resolution
-    fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
-      .then(() => {
-        console.log('Acknowledgment sent to server');
-        window.location.href = 'http://bespoke.local/posts.html';
-      })
-      .catch(err => console.error('Error:', err));
+    const updateServer = async () => {
+      try {
+        // REST: Authenticate
+        const response = await fetch("/authenticate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(authenticate),
+        });
+        if (!response.ok) {
+          console.warn(`Server error: ${response.status}`);
+          // Show error under form-alias input
+          this._formAliasError.innerText = "Invalid alias or password";
+          this._formAliasError.style.display = "block";
+          return;
+        }
+        // REST: Acknowledge captive portal
+        fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
+          .then(() => {
+            console.log('Acknowledgment sent to server');
+            window.location.href = "/posts.html";
+          })
+          .catch(err => console.error('Error:', err));
+      } catch (error) {
+        console.error("Fetching failed:", error);
       }
-      */
+    };
 
-  _checkFormCompletion() {
-    this._loginButton.disabled = this._aliasInput.value.trim() === "";
+    updateServer();
   }
 }
 
@@ -90,9 +84,3 @@ document.addEventListener("DOMContentLoaded", () => {
 // Export the class instance
 const login = new Login();
 export default login
-
-
-//    <!--
-
-//    <a href="javascript:void(0)" target="_blank" --
-//      --onclick="proceed()">Click here to continue</a> -->

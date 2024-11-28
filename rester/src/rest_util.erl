@@ -242,7 +242,7 @@ if_modified_since(IfModifiedSince, Lmt) ->
 response(Socket,Request,ok)  ->
     rester_http_server:response_r(Socket,Request,200,"OK","",[]);
 response(Socket,Request,ok_204)  ->
-    rester_http_server:response_r(Socket,Request,204,"OK","",[]);
+    rester_http_server:response_r(Socket,Request,204,"No Content","",[]);
 response(Socket,Request,{ok, String})
   when is_list(String) ->
     rester_http_server:response_r(Socket,Request,200,"OK",String,[]);
