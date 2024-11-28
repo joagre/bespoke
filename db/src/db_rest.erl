@@ -19,6 +19,7 @@ start_link() ->
     ok = db_dnsmasq:clear_all_mac_addresses(),
     Options =
 	[{request_handler, {?MODULE, request_handler, []}},
+% FIXME!!! Enable SSL or else passwords will be sent in the clear
 %	 {verify, verify_none},
 %         {cacerts, []},
 %	 {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
