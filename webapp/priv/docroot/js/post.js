@@ -1,4 +1,3 @@
-// Import dependencies
 import bespoke from "/js/bespoke.js";
 
 // uhtml.min.js must be imported in the HTML file before this script
@@ -13,7 +12,6 @@ class Post {
     this._replyPosts = [];
     this._postIdToDelete = null;
 
-    // Initialize the class
     this.init();
   }
 
@@ -181,8 +179,7 @@ class Post {
         <button
           onclick=${(event) => bespoke.gotoPage(event, "post.html", post["id"])}
           class="uk-icon-button"
-          uk-icon="comments"
-        ></button>
+          uk-icon="comments"></button>
         ${post["reply-count"]}`;
     }
 
@@ -240,7 +237,7 @@ class Post {
 
     const updateServer = async () => {
       try {
-        // REST API: /delete_post
+        // REST API: Delete post
         const response = await fetch("/delete_post", {
           method: "POST",
           headers: {
@@ -287,6 +284,5 @@ class Post {
   }
 }
 
-// Export the class instance
 const post = new Post();
 export default post;

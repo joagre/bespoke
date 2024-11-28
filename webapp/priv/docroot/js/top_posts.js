@@ -1,4 +1,3 @@
-// Import dependencies
 import bespoke from "/js/bespoke.js";
 
 // Ensure uhtml.min.js is imported in the HTML file before this script
@@ -66,6 +65,5 @@ class TopPosts {
   }
 }
 
-// Export the class instance
 const topPosts = new TopPosts();
 export default topPosts;

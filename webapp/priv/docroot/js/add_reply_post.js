@@ -1,4 +1,3 @@
-// Import dependencies
 import bespoke from "/js/bespoke.js";
 
 class AddReplyPost {
@@ -26,7 +25,8 @@ class AddReplyPost {
       author: document.getElementById("form-author").value,
       body: document.getElementById("form-body").value,
       "parent-post-id": this.parentPost["id"],
-      "top-post-id": (this.parentPost["top-post-id"] != null) ? this.parentPost["top-post-id"] : this.parentPost["id"]
+      "top-post-id": (this.parentPost["top-post-id"] != null) ?
+        this.parentPost["top-post-id"] : this.parentPost["id"]
     };
 
     const updateServer = async () => {
@@ -41,13 +41,11 @@ class AddReplyPost {
         });
         if (!response.ok) {
           console.error(`Server error: ${response.status}`);
-          // Optional: Display an error message to the user
           return;
         }
         this.goBack(event, true);
       } catch (error) {
         console.error("Fetching failed:", error);
-        // Optional: Display an error message to the user
       }
     };
 
@@ -119,7 +117,6 @@ class AddReplyPost {
         this.topPostTitle = topPost["title"];
       }
 
-      // Populate the page
       this.populatePage();
     } catch (error) {
       console.error("Fetching failed:", error);
@@ -127,7 +124,6 @@ class AddReplyPost {
   }
 
   populatePage() {
-    // Populate parent post
     document.getElementById("parent-title").innerHTML = this.topPostTitle;
     document.getElementById("parent-body").innerHTML = bespoke.formatMarkdown(
       this.parentPost["body"]
@@ -141,12 +137,10 @@ class AddReplyPost {
   }
 }
 
-// Instantiate the class on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
   bespoke.init();
   addReplyPost.init();
 });
 
-// Export the class instance
 const addReplyPost = new AddReplyPost();
 export default addReplyPost

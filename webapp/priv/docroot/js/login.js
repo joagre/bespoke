@@ -1,4 +1,3 @@
-// Import dependencies
 import bespoke from "/js/bespoke.js";
 
 class Login {
@@ -34,7 +33,7 @@ class Login {
   authenticate(event) {
     event.preventDefault();
 
-    // Hide error under form-alias input
+    // Hide error span under form-alias input
     this._formAliasError.style.display = "none";
 
     const authenticate = {
@@ -54,7 +53,7 @@ class Login {
         });
         if (!response.ok) {
           console.warn(`Server error: ${response.status}`);
-          // Show error under form-alias input
+          // Show error span under form-alias input
           this._formAliasError.innerText = "Invalid alias or password";
           this._formAliasError.style.display = "block";
           return;
@@ -62,7 +61,7 @@ class Login {
         // REST: Acknowledge captive portal
         fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
           .then(() => {
-            console.log('Acknowledgment sent to server');
+            console.log("Captive portal acknowledgment sent to server");
             window.location.href = "/top_posts.html";
           })
           .catch(err => console.error('Error:', err));
@@ -75,12 +74,10 @@ class Login {
   }
 }
 
-// Instantiate the class on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
   bespoke.init();
   login.init();
 });
 
-// Export the class instance
 const login = new Login();
 export default login

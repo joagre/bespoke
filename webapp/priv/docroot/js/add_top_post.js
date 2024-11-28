@@ -1,4 +1,3 @@
-// Import dependencies
 import bespoke from "/js/bespoke.js";
 
 class AddTopPost {
@@ -36,13 +35,11 @@ class AddTopPost {
         });
         if (!response.ok) {
           console.error(`Server error: ${response.status}`);
-          // Optional: Display an error message to the user
           return;
         }
         bespoke.navigateTo("top_posts.html");
       } catch (error) {
         console.error("Fetching failed:", error);
-        // Optional: Display an error message to the user
       }
     };
 
@@ -63,12 +60,10 @@ class AddTopPost {
   }
 }
 
-// Initialize the class on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
   bespoke.init();
   addTopPost.init();
 });
 
-// Export the class instance
 const addTopPost = new AddTopPost();
 export default addTopPost

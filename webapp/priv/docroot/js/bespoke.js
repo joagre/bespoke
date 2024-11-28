@@ -1,4 +1,3 @@
-// Import dependencies
 import { marked } from '/js/marked.esm.js';
 
 // Ensure uhtml.min.js is imported in the HTML file before this script
@@ -14,11 +13,9 @@ class Bespoke {
       endY: 0,
     };
 
-    // Constants
     this.SWIPE_THRESHOLD = 30;
     this.VERTICAL_THRESHOLD = 75;
 
-    // Initialize the class
     this.init();
   }
 
@@ -225,6 +222,5 @@ class Bespoke {
   }
 }
 
-// Export the class instance
 const bespoke = new Bespoke();
 export default bespoke;
