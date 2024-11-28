@@ -10,6 +10,8 @@
 
 * **DONE**: Make it possible for a user to create a password protected custom username instead of the auto-generated ditto.
 
+* Make sure the session-id is used for all operations performed in the app, i.e. creating and deleting posts and comments etc.
+
 * Add a HTTP GET back channel for asynchronous updates done by other users, i.e. a websocket is overkill for now (maybe forever).
 
 * When a user sifts through *posts* and their *comments* they are automatically marked as read (as the web page scrolls by). The next time a user logins, *posts* that he/she has been accessing will be marked as unread (if there are new *comments* added to them). If a user clicks on such a *post* he/she is automatically taken to the *comments*, but is scrolled down to the unread *comments*. Rinse and repeat.
