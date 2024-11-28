@@ -6,9 +6,9 @@
 
 ## Web app
 
-DONE: When a user login the first time (and enters the login web page) the MAC address is stored and associated with an auto-generated letter based username of the MAC address. The next time he/she logins he/she is automatically associated with the previously auto-generated username.
+* *DONE*: When a user login the first time (and enters the login web page) the MAC address is stored and associated with an auto-generated letter based username of the MAC address. The next time he/she logins he/she is automatically associated with the previously auto-generated username.
 
-DONE: Make it possible for a user to create a password protected custom username instead of the auto-generated ditto.
+* *DONE*: Make it possible for a user to create a password protected custom username instead of the auto-generated ditto.
 
 * Add a HTTP GET back channel for asynchronous updates done by other users, i.e. a websocket is overkill for now (maybe forever).
 
