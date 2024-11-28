@@ -1,7 +1,7 @@
 ERL=$(shell which erl)
 ERL_TOP=$(ERL:%/bin/erl=%)
 LPATH=$(abspath $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..)
-LIBS=apptools db main rester
+LIBS=apptools db enacl main rester
 TESTS=db
 
 all:
