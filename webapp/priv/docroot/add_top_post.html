@@ -15,14 +15,14 @@
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
     <script type="module" src="js/bespoke.js" defer></script>
-    <script type="module" src="js/add_post.js" defer></script>
+    <script type="module" src="js/add_top_post.js" defer></script>
   </head>
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
       <div class="uk-card uk-card-default uk-background-muted uk-padding-small uk-padding-remove-horizontal">
         <div class="uk-flex uk-flex-between uk-flex-middle">
-          <button onclick="bespoke.gotoPage(event, 'posts.html')" data-back-destination="posts.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+          <button onclick="bespoke.gotoPage(event, 'top_posts.html')" data-back-destination="top_posts.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
           <div class="uk-flex-1 uk-flex uk-flex-center">
             <div class="uk-text-bold">Add Post</div>
           </div>
@@ -51,16 +51,16 @@
           </div>
           <!-- Add button -->
           <div class="uk-margin uk-text-right">
-            <button onclick="addPost.addPost(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Post</button>
+            <button onclick="addTopPost.addTopPost(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Post</button>
           </div>
         </form>
       </div>
     </div>
     <script type="module">
       import bespoke from "/js/bespoke.js";
-      import addPost from "/js/add_post.js";
+      import addTopPost from "/js/add_top_post.js";
       window.bespoke = bespoke;
-      window.addPost = addPost;
+      window.addTopPost = addTopPost;
     </script>
   </body>
 </html>

@@ -1,10 +1,10 @@
 // Import dependencies
 import bespoke from "/js/bespoke.js";
 
-class AddReply {
+class AddReplyPost {
   constructor() {
-    this.parentMessage = null;
-    this.rootMessageTitle = null;
+    this.parentPost = null;
+    this.topPostTitle = null;
     this._formFields = [];
     this._addButton = null;
   }
@@ -19,25 +19,25 @@ class AddReply {
     this.updatePage();
   }
 
-  addReply(event) {
+  addReplyPost(event) {
     event.preventDefault();
 
-    const message = {
+    const post = {
       author: document.getElementById("form-author").value,
       body: document.getElementById("form-body").value,
-      "parent-message-id": this.parentMessage["id"],
-      "root-message-id": (this.parentMessage["root-message-id"] != null) ? this.parentMessage["root-message-id"] : this.parentMessage["id"]
+      "parent-post-id": this.parentPost["id"],
+      "top-post-id": (this.parentPost["top-post-id"] != null) ? this.parentPost["top-post-id"] : this.parentPost["id"]
     };
 
     const updateServer = async () => {
       try {
-        // REST: Add reply message
-        const response = await fetch("/insert_message", {
+        // REST: Add reply post
+        const response = await fetch("/insert_post", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(message),
+          body: JSON.stringify(post),
         });
         if (!response.ok) {
           console.error(`Server error: ${response.status}`);
@@ -54,18 +54,18 @@ class AddReply {
     updateServer();
   }
 
-  gotoAddReplyPage(event, messageId, popMessageStack) {
-    bespoke.setCookieValue("pop-message-stack", popMessageStack);
-    bespoke.gotoPage(event, "add_reply.html", messageId);
+  gotoAddReplyPostPage(event, postId, popPostStack) {
+    bespoke.setCookieValue("pop-post-stack", popPostStack);
+    bespoke.gotoPage(event, "add_reply_post.html", postId);
   }
 
-  goBack(event, ignorePopMessageStack) {
-    if (!ignorePopMessageStack &&
-        bespoke.getCookieValue("pop-message-stack")) {
-      bespoke.popMessageStack();
+  goBack(event, ignorePopPostStack) {
+    if (!ignorePopPostStack &&
+        bespoke.getCookieValue("pop-post-stack")) {
+      bespoke.popPostStack();
     }
-    bespoke.setCookieValue("pop-message-stack", false);
-    bespoke.gotoPage(event, 'message.html')
+    bespoke.setCookieValue("pop-post-stack", false);
+    bespoke.gotoPage(event, 'post.html')
   }
 
   _attachEventListeners() {
@@ -83,40 +83,40 @@ class AddReply {
 
   async updatePage() {
     try {
-      // REST: Get parent message
-      let response = await fetch("/lookup_messages", {
+      // REST: Get parent post
+      let response = await fetch("/lookup_posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify([bespoke.peekMessageStack()]),
+        body: JSON.stringify([bespoke.peekPostStack()]),
       });
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
         return;
       }
       let data = await response.json();
-      bespoke.assert(data.length === 1, "Expected exactly one message");
-      this.parentMessage = data[0];
+      bespoke.assert(data.length === 1, "Expected exactly one post");
+      this.parentPost = data[0];
 
-      // REST: Get root message title (if necessary)
-      this.rootMessageTitle = this.parentMessage["title"];
-      if (this.rootMessageTitle == null) {
-        response = await fetch("/lookup_messages", {
+      // REST: Get top post title (if necessary)
+      this.topPostTitle = this.parentPost["title"];
+      if (this.topPostTitle == null) {
+        response = await fetch("/lookup_posts", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify([this.parentMessage["root-message-id"]]),
+          body: JSON.stringify([this.parentPost["top-post-id"]]),
         });
         if (!response.ok) {
           console.error(`Server error: ${response.status}`);
           return;
         }
         data = await response.json();
-        bespoke.assert(data.length === 1, "Expected exactly one message");
-        const rootMessage = data[0];
-        this.rootMessageTitle = rootMessage["title"];
+        bespoke.assert(data.length === 1, "Expected exactly one post");
+        const topPost = data[0];
+        this.topPostTitle = topPost["title"];
       }
 
       // Populate the page
@@ -127,26 +127,26 @@ class AddReply {
   }
 
   populatePage() {
-    // Populate parent message
-    document.getElementById("parent-title").innerHTML = this.rootMessageTitle;
+    // Populate parent post
+    document.getElementById("parent-title").innerHTML = this.topPostTitle;
     document.getElementById("parent-body").innerHTML = bespoke.formatMarkdown(
-      this.parentMessage["body"]
+      this.parentPost["body"]
     );
     document.getElementById("parent-author").textContent =
-      this.parentMessage["author"];
+      this.parentPost["author"];
     document.getElementById("parent-age").textContent =
-      bespoke.formatSecondsSinceEpoch(this.parentMessage["created"]);
+      bespoke.formatSecondsSinceEpoch(this.parentPost["created"]);
     document.getElementById("parent-replies").textContent =
-      this.parentMessage["reply-count"];
+      this.parentPost["reply-count"];
   }
 }
 
 // Instantiate the class on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
   bespoke.init();
-  addReply.init();
+  addReplyPost.init();
 });
 
 // Export the class instance
-const addReply = new AddReply();
-export default addReply
+const addReplyPost = new AddReplyPost();
+export default addReplyPost

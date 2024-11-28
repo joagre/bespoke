@@ -1,7 +1,7 @@
 // Import dependencies
 import bespoke from "/js/bespoke.js";
 
-class AddPost {
+class AddTopPost {
   constructor() {
     this._formFields = [];
     this._addButton = null;
@@ -16,9 +16,9 @@ class AddPost {
     this._attachEventListeners();
   }
 
-  addPost(event) {
+  addTopPost(event) {
     event.preventDefault();
-    const message = {
+    const post = {
       title: document.getElementById("form-title").value,
       author: document.getElementById("form-author").value,
       body: document.getElementById("form-body").value,
@@ -26,20 +26,20 @@ class AddPost {
 
     const updateServer = async () => {
       try {
-        // REST: Add root message
-        const response = await fetch("/insert_message", {
+        // REST: Add top post
+        const response = await fetch("/insert_post", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(message),
+          body: JSON.stringify(post),
         });
         if (!response.ok) {
           console.error(`Server error: ${response.status}`);
           // Optional: Display an error message to the user
           return;
         }
-        bespoke.navigateTo("posts.html");
+        bespoke.navigateTo("top_posts.html");
       } catch (error) {
         console.error("Fetching failed:", error);
         // Optional: Display an error message to the user
@@ -66,9 +66,9 @@ class AddPost {
 // Initialize the class on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
   bespoke.init();
-  addPost.init();
+  addTopPost.init();
 });
 
 // Export the class instance
-const addPost = new AddPost();
-export default addPost
+const addTopPost = new AddTopPost();
+export default addTopPost

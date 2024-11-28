@@ -4,14 +4,14 @@ import bespoke from "/js/bespoke.js";
 // uhtml.min.js must be imported in the HTML file before this script
 const { html, render } = uhtml;
 
-class Message {
+class Post {
   constructor() {
     this._dataLoaded = false;
     this._domReady = false;
-    this._parentMessage = null;
-    this._rootMessageTitle = null;
-    this._replyMessages = [];
-    this._messageIdToDelete = null;
+    this._parentPost = null;
+    this._topPostTitle = null;
+    this._replyPosts = [];
+    this._postIdToDelete = null;
 
     // Initialize the class
     this.init();
@@ -37,55 +37,55 @@ class Message {
     }
 
     try {
-      // REST: Get parent message
-      let response = await fetch("/lookup_messages", {
+      // REST: Get parent post
+      let response = await fetch("/lookup_posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify([bespoke.peekMessageStack()])
+        body: JSON.stringify([bespoke.peekPostStack()])
       });
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
         return;
       }
       const data = await response.json();
-      bespoke.assert(data.length === 1, "Expected exactly one message");
-      this._parentMessage = data[0];
+      bespoke.assert(data.length === 1, "Expected exactly one post");
+      this._parentPost = data[0];
 
-      // REST: Get root message title (maybe)
-      this._rootMessageTitle = this._parentMessage["title"];
-      if (this._rootMessageTitle == null) {
-        response = await fetch("/lookup_messages", {
+      // REST: Get top post title (maybe)
+      this._topPostTitle = this._parentPost["title"];
+      if (this._topPostTitle == null) {
+        response = await fetch("/lookup_posts", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify([this._parentMessage["root-message-id"]])
+          body: JSON.stringify([this._parentPost["top-post-id"]])
         });
         if (!response.ok) {
           console.error(`Server error: ${response.status}`);
           return;
         }
-        const rootMessage = await response.json();
-        bespoke.assert(rootMessage.length === 1,
-                        "Expected exactly one message");
-        this._rootMessageTitle = rootMessage[0]["title"];
+        const topPost = await response.json();
+        bespoke.assert(topPost.length === 1,
+                        "Expected exactly one post");
+        this._topPostTitle = topPost[0]["title"];
       }
 
-      // REST: Get reply messages
-      response = await fetch("/lookup_recursive_messages", {
+      // REST: Get reply posts
+      response = await fetch("/lookup_recursive_posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(this._parentMessage["replies"])
+        body: JSON.stringify(this._parentPost["replies"])
       });
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
         return;
       }
-      this._replyMessages = await response.json();
+      this._replyPosts = await response.json();
       this._dataLoaded = true;
 
       if (this._domReady) {
@@ -97,65 +97,65 @@ class Message {
   }
 
   _populatePage() {
-    const messageStackSize = bespoke.messageStackSize();
+    const postStackSize = bespoke.postStackSize();
 
     // Populate head title
-    const headTitle = messageStackSize > 1 ? "Reply" : "Post";
+    const headTitle = postStackSize > 1 ? "Reply" : "Post";
     document.getElementById("head-title").textContent = headTitle;
 
     // Populate header
-    const headerTitle = messageStackSize > 1 ? "Reply" : "Post";
+    const headerTitle = postStackSize > 1 ? "Reply" : "Post";
     document.getElementById("header-title").textContent = headerTitle;
 
-    if (messageStackSize > 1) {
+    if (postStackSize > 1) {
       document.getElementById(
-        "header-reply-level").textContent = `[level: ${messageStackSize - 1}]`;
+        "header-reply-level").textContent = `[level: ${postStackSize - 1}]`;
     } else {
       document.getElementById("header-reply-level").style.display = "none";
     }
 
-    // Populate parent message
-    document.getElementById("parent-title").innerHTML = this._rootMessageTitle;
+    // Populate parent post
+    document.getElementById("parent-title").innerHTML = this._topPostTitle;
     document.getElementById("parent-body").innerHTML =
-      bespoke.formatMarkdown(this._parentMessage["body"]);
+      bespoke.formatMarkdown(this._parentPost["body"]);
     document.getElementById("parent-author").textContent =
-      this._parentMessage["author"];
+      this._parentPost["author"];
     document.getElementById("parent-age").textContent =
-      bespoke.formatSecondsSinceEpoch(this._parentMessage["created"]);
+      bespoke.formatSecondsSinceEpoch(this._parentPost["created"]);
     document.getElementById("parent-replies").textContent =
-      this._parentMessage["reply-count"];
+      this._parentPost["reply-count"];
     document.getElementById("parent-delete")
-      .setAttribute("data-message-id", this._parentMessage["id"]);
+      .setAttribute("data-post-id", this._parentPost["id"]);
 
     // Populate replies
     const repliesContainer = document.getElementById("replies");
-    const replyTemplates = this._replyMessages.map((replyMessage) =>
-      this._createReplyTemplate(this._parentMessage, replyMessage,
-                                this._replyMessages)
+    const replyTemplates = this._replyPosts.map((replyPost) =>
+      this._createReplyTemplate(this._parentPost, replyPost,
+                                this._replyPosts)
     );
     render(repliesContainer, html`${replyTemplates}`);
   }
 
-  _createReplyTemplate(parentMessage, message, replyMessages) {
+  _createReplyTemplate(parentPost, post, replyPosts) {
     // A reply quote is only added if someone replies to a reply
     let replyQuote = "";
-    if (message["parent-message-id"] != null &&
-        message["parent-message-id"] != parentMessage["id"]) {
-      const replyQuoteButtonAttr = `reply-quote-button-${message["id"]}`;
-      const replyQuoteAttr = `reply-quote-${message["id"]}`;
-      const replyQuoteBodyAttr = `reply-quote-body-${message["id"]}`;
-      const parentReplyMessage = replyMessages.find(
-        (replyMessage) => replyMessage["id"] == message["parent-message-id"]
+    if (post["parent-post-id"] != null &&
+        post["parent-post-id"] != parentPost["id"]) {
+      const replyQuoteButtonAttr = `reply-quote-button-${post["id"]}`;
+      const replyQuoteAttr = `reply-quote-${post["id"]}`;
+      const replyQuoteBodyAttr = `reply-quote-body-${post["id"]}`;
+      const parentReplyPost = replyPosts.find(
+        (replyPost) => replyPost["id"] == post["parent-post-id"]
       );
       const replyQuoteAuthor =
-            parentReplyMessage ? parentReplyMessage["author"] : "Unknown";
+            parentReplyPost ? parentReplyPost["author"] : "Unknown";
       replyQuote = html`
         <!-- Reply quote -->
         <div
           class="uk-text-meta quote"
           onclick=${(event) => this.toggleQuote(event)}
-          data-message-id="${message["id"]}"
-          data-parent-message-id="${message["parent-message-id"]}">
+          data-post-id="${post["id"]}"
+          data-parent-post-id="${post["parent-post-id"]}">
           <span id="${replyQuoteButtonAttr}" class="uk-icon-link" uk-icon="chevron-down"></span>
           In reply to ${replyQuoteAuthor}...
           <div
@@ -171,19 +171,19 @@ class Message {
       `;
     }
 
-    const age = bespoke.formatSecondsSinceEpoch(message["created"]);
-    const replyBodyAttr = `reply-body-${message["id"]}`;
-    const replyDividerAttr = `reply-divider-${message["id"]}`;
+    const age = bespoke.formatSecondsSinceEpoch(post["created"]);
+    const replyBodyAttr = `reply-body-${post["id"]}`;
+    const replyDividerAttr = `reply-divider-${post["id"]}`;
 
     let replies = "";
-    if (message["reply-count"] > 0) {
+    if (post["reply-count"] > 0) {
       replies = html`•
         <button
-          onclick=${(event) => bespoke.gotoPage(event, "message.html", message["id"])}
+          onclick=${(event) => bespoke.gotoPage(event, "post.html", post["id"])}
           class="uk-icon-button"
           uk-icon="comments"
         ></button>
-        ${message["reply-count"]}`;
+        ${post["reply-count"]}`;
     }
 
     return html`
@@ -191,23 +191,23 @@ class Message {
         ${replyQuote}
         <!-- Reply body -->
         <div id="${replyBodyAttr}" class="uk-margin-remove-first-child uk-margin-remove-last-child">
-          ${bespoke.uhtmlFormatMarkdown(message["body"])}
+          ${bespoke.uhtmlFormatMarkdown(post["body"])}
         </div>
         <!-- Reply meta-data -->
         <div class="uk-article-meta uk-margin-top-remove">
           <div class="uk-flex uk-flex-between uk-flex-middle">
             <div>
-              ${message["author"]} • ${age} ${replies}
+              ${post["author"]} • ${age} ${replies}
             </div>
             <div>
               <button
-                onclick=${(event) => this.openDeleteMessageModal(event)}
-                data-message-id="${message["id"]}"
+                onclick=${(event) => this.openDeletePostModal(event)}
+                data-post-id="${post["id"]}"
                 class="uk-icon-button"
                 uk-icon="trash"
               ></button>
               <button
-                onclick=${(event) => addReply.gotoAddReplyPage(event, message["id"], true)}
+                onclick=${(event) => addReplyPost.gotoAddReplyPostPage(event, post["id"], true)}
                 class="uk-icon-button"
                 uk-icon="reply"
               ></button>
@@ -219,41 +219,41 @@ class Message {
     `;
   }
 
-  openDeleteMessageModal(event) {
+  openDeletePostModal(event) {
     event.stopPropagation();
-    // Extract message to delete
-    this._messageIdToDelete =
-      event.currentTarget.getAttribute("data-message-id");
-    // Update the message modal body
-    const replyMessage = this._replyMessages.find(
-      (replyMessage) => replyMessage["id"] === this._messageIdToDelete
+    // Extract post to delete
+    this._postIdToDelete =
+      event.currentTarget.getAttribute("data-post-id");
+    // Update the post modal body
+    const replyPost = this._replyPosts.find(
+      (replyPost) => replyPost["id"] === this._postIdToDelete
     );
-    const messageAuthor = replyMessage ? replyMessage["author"] : "this post";
-    document.getElementById("delete-message-body").innerHTML =
-      `Do you really want to delete this message written by ${messageAuthor}?`;
-    UIkit.modal("#delete-message-modal").show();
+    const postAuthor = replyPost ? replyPost["author"] : "this post";
+    document.getElementById("delete-post-body").innerHTML =
+      `Do you really want to delete this post written by ${postAuthor}?`;
+    UIkit.modal("#delete-post-modal").show();
   }
 
-  deleteMessage(event) {
-    const messageId =
-          this._messageIdToDelete === bespoke.peekMessageStack() ? -1 : null;
+  deletePost(event) {
+    const postId =
+          this._postIdToDelete === bespoke.peekPostStack() ? -1 : null;
 
     const updateServer = async () => {
       try {
-        // REST API: /delete_message
-        const response = await fetch("/delete_message", {
+        // REST API: /delete_post
+        const response = await fetch("/delete_post", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(this._messageIdToDelete)
+          body: JSON.stringify(this._postIdToDelete)
         });
         if (!response.ok) {
           console.error(`Server error: ${response.status}`);
           return;
         }
-        bespoke.gotoPage(event, "message.html", messageId);
-        this._messageIdToDelete = null;
+        bespoke.gotoPage(event, "post.html", postId);
+        this._postIdToDelete = null;
       } catch (error) {
         console.error("Fetching failed:", error);
       }
@@ -264,19 +264,19 @@ class Message {
 
   toggleQuote(event) {
     event.preventDefault();
-    const messageId = event.currentTarget.getAttribute("data-message-id");
-    const parentMessageId =
-          event.currentTarget.getAttribute("data-parent-message-id");
-    const replyQuote = document.getElementById(`reply-quote-${messageId}`);
+    const postId = event.currentTarget.getAttribute("data-post-id");
+    const parentPostId =
+          event.currentTarget.getAttribute("data-parent-post-id");
+    const replyQuote = document.getElementById(`reply-quote-${postId}`);
     const isHidden = replyQuote.hidden;
     const replyQuoteButton =
-          document.getElementById(`reply-quote-button-${messageId}`);
+          document.getElementById(`reply-quote-button-${postId}`);
 
     if (isHidden) {
       const replyQuoteBody =
-            document.getElementById(`reply-quote-body-${messageId}`);
+            document.getElementById(`reply-quote-body-${postId}`);
       const replyBody =
-            document.getElementById(`reply-body-${parentMessageId}`);
+            document.getElementById(`reply-body-${parentPostId}`);
       replyQuoteBody.innerHTML = replyBody.innerHTML;
       replyQuote.hidden = false;
       replyQuoteButton.setAttribute("uk-icon", "chevron-up");
@@ -288,5 +288,5 @@ class Message {
 }
 
 // Export the class instance
-const message = new Message();
-export default message;
+const post = new Post();
+export default post;

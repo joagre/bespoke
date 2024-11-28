@@ -1,26 +1,26 @@
 -ifndef(DB_HRL).
 -define(DB_HRL, true).
 
--record(message,
+-record(post,
         {
-         id = not_set :: db_serv:message_id() | not_set | '_',
-         %% Note: Mandatory for root messages and disallowed for other messages
+         id = not_set :: db_serv:post_id() | not_set | '_',
+         %% Note: Mandatory for top posts and disallowed for reply posts
          title = not_set :: db_serv:title() | not_set | '_',
-         %% Note: Disallowed for root messages and mandatory for other messages
-         parent_message_id = not_set :: db_serv:message_id() | not_set | '_',
-         %% Note: Disallowed for root messages and mandatory for other messages
-         root_message_id = not_set :: db_serv:message_id() | not_set,
+         %% Note: Disallowed for top posts and mandatory for replt posts
+         parent_post_id = not_set :: db_serv:post_id() | not_set | '_',
+         %% Note: Disallowed for top posts and mandatory for reply posts
+         top_post_id = not_set :: db_serv:post_id() | not_set,
          body :: db_serv:body() | '_',
          author :: db_serv:author() | '_',
          created = not_set :: db_serv:seconds_since_epoch() | not_set | '_',
          reply_count = 0 :: integer() | '_',
-         replies = [] :: [db_serv:message_id()] | '_'
+         replies = [] :: [db_serv:post_id()] | '_'
         }).
 
 -record(meta,
         {
          type = basic :: basic,
-         next_message_id = 0 :: integer()
+         next_post_id = 0 :: integer()
         }).
 
 -record(alias,

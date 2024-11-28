@@ -27,11 +27,11 @@ class Bespoke {
     this.initializeCookieState();
   }
 
-  gotoPage(event, destination, messageId) {
-    if (messageId === -1) {
-      this.popMessageStack();
-    } else if (typeof messageId === 'string') {
-      this.pushMessageStack(messageId);
+  gotoPage(event, destination, postId) {
+    if (postId === -1) {
+      this.popPostStack();
+    } else if (typeof postId === 'string') {
+      this.pushPostStack(postId);
     }
 
     if (event != null) {
@@ -42,8 +42,8 @@ class Bespoke {
       return;
     }
 
-    if (destination === 'message.html' && this._isMessageStackEmpty()) {
-      this.navigateTo('posts.html');
+    if (destination === 'post.html' && this._isPostStackEmpty()) {
+      this.navigateTo('top_posts.html');
     } else {
       this.navigateTo(destination);
     }
@@ -58,33 +58,33 @@ class Bespoke {
     return this._cookieState[name];
   }
 
-  clearMessageStack() {
-    this._cookieState.messageStack = [];
+  clearPostStack() {
+    this._cookieState.postStack = [];
     this._updateCookieState();
   }
 
-  pushMessageStack(messageId) {
-    this._cookieState.messageStack.push(messageId);
+  pushPostStack(postId) {
+    this._cookieState.postStack.push(postId);
     this._updateCookieState();
   }
 
-  popMessageStack() {
-    if (this._cookieState.messageStack.pop() != null) {
+  popPostStack() {
+    if (this._cookieState.postStack.pop() != null) {
       this._updateCookieState();
     }
   }
 
-  peekMessageStack() {
-    return this._cookieState.messageStack.slice(-1)[0];
+  peekPostStack() {
+    return this._cookieState.postStack.slice(-1)[0];
   }
 
-  messageStackSize() {
-    return this._cookieState.messageStack.length;
+  postStackSize() {
+    return this._cookieState.postStack.length;
   }
 
-  truncateMessageStack(length) {
-    this._cookieState.messageStack =
-      this._cookieState.messageStack.slice(0, length);
+  truncatePostStack(length) {
+    this._cookieState.postStack =
+      this._cookieState.postStack.slice(0, length);
     this._updateCookieState();
   }
 
@@ -112,9 +112,9 @@ class Bespoke {
     return marked.parse(content);
   }
 
-  assert(condition, message) {
+  assert(condition, post) {
     if (!condition) {
-      throw new Error(message || 'Assertion failed');
+      throw new Error(post || 'Assertion failed');
     }
   }
 
@@ -126,7 +126,7 @@ class Bespoke {
     this._cookieState = this._getCookie('bespoke');
 
     if (!this._cookieState) {
-      this._cookieState = { messageStack: [] };
+      this._cookieState = { postStack: [] };
       this._updateCookieState();
     }
   }
@@ -143,8 +143,8 @@ class Bespoke {
     return selection && selection.toString().length > 0;
   }
 
-  _isMessageStackEmpty() {
-    return this._cookieState.messageStack.length === 0;
+  _isPostStackEmpty() {
+    return this._cookieState.postStack.length === 0;
   }
 
   _updateCookieState() {
@@ -216,7 +216,7 @@ class Bespoke {
     const swipeTarget = document.querySelector('[data-back-destination]');
     if (swipeTarget) {
       const destination = swipeTarget.getAttribute('data-back-destination');
-      if (destination === 'message.html') {
+      if (destination === 'post.html') {
         this.gotoPage(null, destination, -1);
       } else {
         this.gotoPage(null, destination);

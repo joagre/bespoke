@@ -201,22 +201,22 @@ insert_subreddit(SubmissionDb, CommentDb) ->
                                <<"selftext">> := Body,
                                <<"title">> := Title}}) ->
                             io:format("** Inserting submission ~p~n", [Id]),
-                            Message = #message{id = Id,
-                                               title = Title,
-                                               body = Body,
-                                               author = Author,
-                                               created = Created},
-                            {ok, _} = db_serv:insert_message(
-                                        patch_message(Message)),
+                            Post = #post{id = Id,
+                                         title = Title,
+                                         body = Body,
+                                         author = Author,
+                                         created = Created},
+                            {ok, _} = db_serv:insert_post(
+                                        patch_post(Post)),
                             ok = insert_comments(CommentDb, Id),
                             continue
                     end).
 
 %% The reddit json api returns the created_utc field as a list!
-patch_message(#message{created = Created} = Message) when is_binary(Created) ->
-    Message#message{created = ?b2i(Created)};
-patch_message(Message) ->
-    Message.
+patch_post(#post{created = Created} = Post) when is_binary(Created) ->
+    Post#post{created = ?b2i(Created)};
+patch_post(Post) ->
+    Post.
 
 insert_comments(CommentDb, ParentId) ->
     Comments = dets:lookup(CommentDb, ParentId),
@@ -225,15 +225,15 @@ insert_comments(CommentDb, ParentId) ->
                             <<"created_utc">> := Created,
                             <<"id">> := Id,
                             <<"link_id">> := <<_:3/binary, LinkId/binary>>}}) ->
-                          Message = #message{id = Id,
-                                             parent_message_id = ParentId,
-                                             root_message_id = LinkId,
-                                             body = Body,
-                                             author = Author,
-                                             created = Created},
+                          Post = #post{id = Id,
+                                       parent_post_id = ParentId,
+                                       top_post_id = LinkId,
+                                       body = Body,
+                                       author = Author,
+                                       created = Created},
                           io:format("** Inserting comment ~p~n", [Id]),
-                          {ok, _} = db_serv:insert_message(
-                                      patch_message(Message)),
+                          {ok, _} = db_serv:insert_post(
+                                      patch_post(Post)),
                           insert_comments(CommentDb, Id)
                   end, Comments).
 
@@ -278,39 +278,39 @@ purge_subreddit_db() ->
 %%
 
 create_dummy_db() ->
-    %% Add two root messages
-    RootMessage1 = #message{title = <<"Var har sillen tagit vagen?">>,
-                            body = <<"body">>,
-                            author = <<"ginko4711">>},
-    {ok, InsertedRootMessage1} = db_serv:insert_message(RootMessage1),
-    RootMessage2 = #message{title = <<"Republik nu!">>,
-                            body = <<"body">>,
-                            author = <<"zappeU">>},
-    {ok, _InsertedRootMessage2} = db_serv:insert_message(RootMessage2),
+    %% Add two top posts
+    TopPost1 = #post{title = <<"Var har sillen tagit vagen?">>,
+                     body = <<"body">>,
+                     author = <<"ginko4711">>},
+    {ok, InsertedTopPost1} = db_serv:insert_post(TopPost1),
+    TopPost2 = #post{title = <<"Republik nu!">>,
+                     body = <<"body">>,
+                     author = <<"zappeU">>},
+    {ok, _InsertedTopPost2} = db_serv:insert_post(TopPost2),
     %% Add two replies
-    ReplyMessage1 =
-        #message{parent_message_id = InsertedRootMessage1#message.id,
-                 root_message_id = InsertedRootMessage1#message.id,
-                 body = <<"reply1">>,
-                 author = <<"snuvan">>},
-    {ok, InsertedReplyMessage1} = db_serv:insert_message(ReplyMessage1),
-    ReplyMessage2 =
-        #message{parent_message_id = InsertedRootMessage1#message.id,
-                 root_message_id = InsertedRootMessage1#message.id,
-                 body = <<"reply2">>,
-                 author = <<"harald">>},
-    {ok, _InsertedReplyMessage2} = db_serv:insert_message(ReplyMessage2),
+    ReplyPost1 =
+        #post{parent_post_id = InsertedTopPost1#post.id,
+              top_post_id = InsertedTopPost1#post.id,
+              body = <<"reply1">>,
+              author = <<"snuvan">>},
+    {ok, InsertedReplyPost1} = db_serv:insert_post(ReplyPost1),
+    ReplyPost2 =
+        #post{parent_post_id = InsertedTopPost1#post.id,
+              top_post_id = InsertedTopPost1#post.id,
+              body = <<"reply2">>,
+              author = <<"harald">>},
+    {ok, _InsertedReplyPost2} = db_serv:insert_post(ReplyPost2),
     %% Add two replies to the first reply
-    ReplyMessage11 =
-        #message{parent_message_id = InsertedReplyMessage1#message.id,
-                 root_message_id = InsertedRootMessage1#message.id,
-                 body = <<"reply11">>,
-                 author = <<"sminkor">>},
-    {ok, _InsertedReplyMessage11} = db_serv:insert_message(ReplyMessage11),
-    ReplyMessage12 =
-        #message{parent_message_id = InsertedReplyMessage1#message.id,
-                 root_message_id = InsertedRootMessage1#message.id,
-                 body = <<"reply12">>,
-                 author = <<"honan">>},
-    {ok, _InsertedReplyMessage12} = db_serv:insert_message(ReplyMessage12),
+    ReplyPost11 =
+        #post{parent_post_id = InsertedReplyPost1#post.id,
+              top_post_id = InsertedTopPost1#post.id,
+              body = <<"reply11">>,
+              author = <<"sminkor">>},
+    {ok, _InsertedReplyPost11} = db_serv:insert_post(ReplyPost11),
+    ReplyPost12 =
+        #post{parent_post_id = InsertedReplyPost1#post.id,
+              top_post_id = InsertedTopPost1#post.id,
+              body = <<"reply12">>,
+              author = <<"honan">>},
+    {ok, _InsertedReplyPost12} = db_serv:insert_post(ReplyPost12),
     ok = db_serv:sync().

@@ -63,7 +63,7 @@ class Login {
         fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
           .then(() => {
             console.log('Acknowledgment sent to server');
-            window.location.href = "/posts.html";
+            window.location.href = "/top_posts.html";
           })
           .catch(err => console.error('Error:', err));
       } catch (error) {

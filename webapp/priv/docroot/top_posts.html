@@ -6,22 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css">
     <link rel="stylesheet" href="css/bespoke.css">
-    <link rel="stylesheet" href="css/posts.css">
+    <link rel="stylesheet" href="css/top_posts.css">
     <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
     <link rel="shortcut icon" href="/favicon/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
     <link rel="manifest" href="/favicon/site.webmanifest">
-    <script>
-fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
-    .then(response => console.log('External network confirmation sent'))
-    .catch(error => console.error('Error confirming external network access:', error));
-    </script>
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
     <script type="module" src="js/bespoke.js" defer></script>
-    <script type="module" src="js/posts.js" defer></script>
+    <script type="module" src="js/top_posts.js" defer></script>
   </head>
   <body>
     <div class="uk-container uk-container-xsmall">
@@ -32,7 +27,7 @@ fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
           <div class="uk-flex-1 uk-flex uk-flex-center">
             <div class="uk-text-bold">All Posts</div>
           </div>
-          <button onclick="bespoke.gotoPage(event, 'add_post.html')" class="uk-icon-button" uk-icon="plus"></button>
+          <button onclick="bespoke.gotoPage(event, 'add_top_post.html')" class="uk-icon-button" uk-icon="plus"></button>
         </div>
       </div>
       <div id="posts"></div>

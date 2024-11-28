@@ -19,10 +19,10 @@ start_link() ->
     ok = db_dnsmasq:clear_all_mac_addresses(),
     Options =
 	[{request_handler, {?MODULE, request_handler, []}},
-% FIXME!!! Enable SSL or else passwords will be sent in the clear
-%	 {verify, verify_none},
-%         {cacerts, []},
-%	 {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
+         %% FIXME!!! Enable SSL or else passwords will be sent in the clear
+         %%	 {verify, verify_none},
+         %%         {cacerts, []},
+         %%	 {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
     ?log_info("Database REST API has been started"),
@@ -125,11 +125,11 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                       Socket, Request, 204, "OK", "", no_cache_headers())
             end;
         %% Bespoke API
-        ["list_root_messages"] ->
-            Messages = db_serv:list_root_messages(),
-            JsonTerm = lists:map(fun(Message) ->
-                                         message_to_json_term(Message)
-                                 end, Messages),
+        ["list_top_posts"] ->
+            Posts = db_serv:list_top_posts(),
+            JsonTerm = lists:map(fun(Post) ->
+                                         post_to_json_term(Post)
+                                 end, Posts),
             rest_util:response(Socket, Request, {ok, {format, JsonTerm}});
         ["get_auto_alias"] ->
             {ok, MacAddress} = get_mac_address(Socket),
@@ -239,7 +239,7 @@ delete_all_stale_timestamps() ->
                           [MacAddress|Acc];
                      (_, Acc) ->
                           Acc
-                 end, [], ?CAPTIVE_PORTAL_CACHE),
+                  end, [], ?CAPTIVE_PORTAL_CACHE),
     ok = db_dnsmasq:clear_mac_addresses(StaleMacAddresses),
     lists:foreach(fun(MacAddress) ->
                           ets:delete(?CAPTIVE_PORTAL_CACHE, MacAddress)
@@ -282,99 +282,99 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                               {error, bad_request, "Invalid JSON format"})
                     end
             end;
-        ["lookup_messages"] ->
+        ["lookup_posts"] ->
             case rest_util:parse_body(Request, Body) of
                 {error, _Reason} ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
-                MessageIds when is_list(MessageIds) ->
-                    case lists:all(fun(MessageId) when is_binary(MessageId) ->
+                PostIds when is_list(PostIds) ->
+                    case lists:all(fun(PostId) when is_binary(PostId) ->
                                            true;
                                       (_) ->
                                            false
-                                   end, MessageIds) of
+                                   end, PostIds) of
                         true ->
-                            Messages = db_serv:lookup_messages(MessageIds),
+                            Posts = db_serv:lookup_posts(PostIds),
                             JsonTerm =
-                                lists:map(fun(Message) ->
-                                                  message_to_json_term(Message)
-                                          end, Messages),
+                                lists:map(fun(Post) ->
+                                                  post_to_json_term(Post)
+                                          end, Posts),
                             rest_util:response(
                               Socket, Request, {ok, {format, JsonTerm}});
                         false ->
                             rest_util:response(
                               Socket, Request,
                               {error, bad_request,
-                               "message-ids must be strings"})
+                               "post-ids must be strings"})
                     end;
                 _ ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"})
             end;
-        ["lookup_recursive_messages"] ->
+        ["lookup_recursive_posts"] ->
             case rest_util:parse_body(Request, Body) of
                 {error, _Reason} ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
-                MessageIds when is_list(MessageIds) ->
-                    case lists:all(fun(MessageId) when is_binary(MessageId) ->
+                PostIds when is_list(PostIds) ->
+                    case lists:all(fun(PostId) when is_binary(PostId) ->
                                            true;
                                       (_) ->
                                            false
-                                   end, MessageIds) of
+                                   end, PostIds) of
                         true ->
-                            Messages =
-                                db_serv:lookup_messages(MessageIds, recursive),
+                            Posts =
+                                db_serv:lookup_posts(PostIds, recursive),
                             JsonTerm =
-                                lists:map(fun(Message) ->
-                                                  message_to_json_term(Message)
-                                          end, Messages),
+                                lists:map(fun(Post) ->
+                                                  post_to_json_term(Post)
+                                          end, Posts),
                             rest_util:response(
                               Socket, Request, {ok, {format, JsonTerm}});
                         false ->
                             rest_util:response(
                               Socket, Request,
                               {error, bad_request,
-                               "message-ids must be strings"})
+                               "post-ids must be strings"})
                     end;
                 _ ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"})
             end;
-        ["insert_message"] ->
+        ["insert_post"] ->
             case rest_util:parse_body(Request, Body) of
                 {error, _Reason} ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
-                MessageJsonTerm ->
-                    case json_term_to_message(MessageJsonTerm) of
-                        {ok, Message} ->
-                            {ok, InsertedMessage} =
-                                db_serv:insert_message(Message),
-                            InsertedMessageJsonTerm =
-                                message_to_json_term(InsertedMessage),
+                PostJsonTerm ->
+                    case json_term_to_post(PostJsonTerm) of
+                        {ok, Post} ->
+                            {ok, InsertedPost} =
+                                db_serv:insert_post(Post),
+                            InsertedPostJsonTerm =
+                                post_to_json_term(InsertedPost),
                             rest_util:response(
                               Socket, Request,
-                              {ok, {format, InsertedMessageJsonTerm}});
+                              {ok, {format, InsertedPostJsonTerm}});
                         {error, invalid} ->
                             rest_util:response(
                               Socket, Request,
-                              {error, bad_request, "Invalid message"})
+                              {error, bad_request, "Invalid post"})
                     end
             end;
-        ["delete_message"] ->
+        ["delete_post"] ->
             case rest_util:parse_body(Request, Body) of
                 {error, _Reason} ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
-                MessageId when is_binary(MessageId) ->
-                    case db_serv:delete_message(MessageId) of
+                PostId when is_binary(PostId) ->
+                    case db_serv:delete_post(PostId) of
                         ok ->
                             rest_util:response(Socket, Request, ok_204);
                         {error, not_found} ->
@@ -384,7 +384,7 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                 _ ->
                     rest_util:response(
                       Socket, Request,
-                      {error, bad_request, "message-id must be a string"})
+                      {error, bad_request, "post-id must be a string"})
             end;
 	_ ->
 	    ?log_error("~p not found", [Tokens]),
@@ -395,15 +395,15 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
 %% Marshalling
 %%
 
-message_to_json_term(#message{id = Id,
-                              title = Title,
-                              parent_message_id = ParentMessageId,
-                              root_message_id = RootMessageId,
-                              body = Body,
-                              author = Author,
-                              created = Created,
-                              reply_count = ReplyCount,
-                              replies = Replies}) ->
+post_to_json_term(#post{id = Id,
+                        title = Title,
+                        parent_post_id = ParentPostId,
+                        top_post_id = TopPostId,
+                        body = Body,
+                        author = Author,
+                        created = Created,
+                        reply_count = ReplyCount,
+                        replies = Replies}) ->
     JsonTerm = #{<<"id">> => Id,
                  <<"body">> => Body,
                  <<"author">> => Author,
@@ -411,8 +411,8 @@ message_to_json_term(#message{id = Id,
                  <<"reply-count">> => ReplyCount,
                  <<"replies">> => Replies},
     add_optional_members([{<<"title">>, Title},
-                          {<<"parent-message-id">>, ParentMessageId},
-                          {<<"root-message-id">>, RootMessageId}], JsonTerm).
+                          {<<"parent-post-id">>, ParentPostId},
+                          {<<"top-post-id">>, TopPostId}], JsonTerm).
 
 add_optional_members([], JsonTerm) ->
     JsonTerm;
@@ -421,35 +421,35 @@ add_optional_members([{_Key, not_set}|Rest], JsonTerm) ->
 add_optional_members([{Key, Value}|Rest], JsonTerm) ->
     add_optional_members(Rest, maps:put(Key, Value, JsonTerm)).
 
-json_term_to_message(#{<<"title">> := Title,
-                       <<"body">> := Body,
-                       <<"author">> := Author} = MessageJsonTerm) ->
+json_term_to_post(#{<<"title">> := Title,
+                    <<"body">> := Body,
+                    <<"author">> := Author} = PostJsonTerm) ->
     case no_more_keys([<<"title">>, <<"body">>, <<"author">>],
-                      MessageJsonTerm) of
+                      PostJsonTerm) of
         true ->
-            {ok, #message{title = Title,
-                          body = Body,
-                          author = Author}};
+            {ok, #post{title = Title,
+                       body = Body,
+                       author = Author}};
         false ->
             {error, invalid}
     end;
-json_term_to_message(#{<<"parent-message-id">> := ParentMessageId,
-                       <<"root-message-id">> := RootMessageId,
-                       <<"body">> := Body,
-                       <<"author">> := Author} = MessageJsonTerm) ->
-    case no_more_keys([<<"parent-message-id">>,
-                       <<"root-message-id">>,
+json_term_to_post(#{<<"parent-post-id">> := ParentPostId,
+                    <<"top-post-id">> := TopPostId,
+                    <<"body">> := Body,
+                    <<"author">> := Author} = PostJsonTerm) ->
+    case no_more_keys([<<"parent-post-id">>,
+                       <<"top-post-id">>,
                        <<"body">>,
-                       <<"author">>], MessageJsonTerm) of
+                       <<"author">>], PostJsonTerm) of
         true ->
-            {ok, #message{parent_message_id = ParentMessageId,
-                          root_message_id = RootMessageId,
-                          body = Body,
-                          author = Author}};
+            {ok, #post{parent_post_id = ParentPostId,
+                       top_post_id = TopPostId,
+                       body = Body,
+                       author = Author}};
         false ->
             {error, invalid}
     end;
-json_term_to_message(_) ->
+json_term_to_post(_) ->
     {error, invalid}.
 
 

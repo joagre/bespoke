@@ -7,15 +7,15 @@
 
 start() ->
     {ok, _Pid} = init_httpc(),
-    %% No root messages inserted yet
-    {ok, []} = http_get("https://localhost/list_root_messages"),
-    %% Add root message
-    {ok, RootMessage1} =
-        http_post("https://localhost/insert_message",
+    %% No top posts inserted yet
+    {ok, []} = http_get("http://localhost/list_top_posts"),
+    %% Add top post
+    {ok, TopPost1} =
+        http_post("http://localhost/insert_post",
                   #{<<"title">> => <<"title1">>,
                     <<"body">> => <<"body1">>,
                     <<"author">> => <<"author1">>}),
-    %% Verify message
+    %% Verify post
     {ok, [#{<<"id">> := <<"0">>,
             <<"title">> := <<"title1">>,
             <<"body">> := <<"body1">>,
@@ -23,40 +23,40 @@ start() ->
             <<"created">> := Created,
             <<"reply-count">> := 0,
             <<"replies">> := []}]} =
-        http_post("https://localhost/lookup_messages", [<<"0">>]),
+        http_post("http://localhost/lookup_posts", [<<"0">>]),
     true = is_integer(Created),
-    %% Add reply message to root message
-    RootMessageId1 = maps:get(<<"id">>, RootMessage1),
-    {ok, ReplyMessage1} =
-        http_post("https://localhost/insert_message",
-                  #{<<"parent-message-id">> => RootMessageId1,
-                    <<"root-message-id">> => RootMessageId1,
+    %% Add reply post to top post
+    TopPostId1 = maps:get(<<"id">>, TopPost1),
+    {ok, ReplyPost1} =
+        http_post("http://localhost/insert_post",
+                  #{<<"parent-post-id">> => TopPostId1,
+                    <<"top-post-id">> => TopPostId1,
                     <<"body">> => <<"reply1">>,
                     <<"author">> => <<"author2">>}),
-    %% Add repply message to reply message
-    {ok, ReplyMessage2} =
-        http_post("https://localhost/insert_message",
-                  #{<<"parent-message-id">> => maps:get(<<"id">>, ReplyMessage1),
-                    <<"root-message-id">> => RootMessageId1,
+    %% Add repply post to reply post
+    {ok, ReplyPost2} =
+        http_post("http://localhost/insert_post",
+                  #{<<"parent-post-id">> => maps:get(<<"id">>, ReplyPost1),
+                    <<"top-post-id">> => TopPostId1,
                     <<"body">> => unicode:characters_to_binary("öööreply2"),
                     <<"author">> => <<"author3">>}),
-    %% Verify root message
-    ReplyMessageId1 = maps:get(<<"id">>, ReplyMessage1),
-    {ok, [#{<<"replies">> := [ReplyMessageId1]}]} =
-        http_post("https://localhost/lookup_messages", [RootMessageId1]),
-    %% Verify reply messages
-    ReplyMessageId2 = maps:get(<<"id">>, ReplyMessage2),
-    {ok, [#{<<"replies">> := [ReplyMessageId2]}]} =
-        http_post("https://localhost/lookup_messages", [ReplyMessageId1]),
+    %% Verify top post
+    ReplyPostId1 = maps:get(<<"id">>, ReplyPost1),
+    {ok, [#{<<"replies">> := [ReplyPostId1]}]} =
+        http_post("http://localhost/lookup_posts", [TopPostId1]),
+    %% Verify reply posts
+    ReplyPostId2 = maps:get(<<"id">>, ReplyPost2),
+    {ok, [#{<<"replies">> := [ReplyPostId2]}]} =
+        http_post("http://localhost/lookup_posts", [ReplyPostId1]),
     {ok, [#{<<"replies">> := []}]} =
-        http_post("https://localhost/lookup_messages", [ReplyMessageId2]),
+        http_post("http://localhost/lookup_posts", [ReplyPostId2]),
     %% Verify reply counts
     {ok, [#{<<"reply-count">> := 2}]} =
-        http_post("https://localhost/lookup_messages", [RootMessageId1]),
+        http_post("http://localhost/lookup_posts", [TopPostId1]),
     {ok, [#{<<"reply-count">> := 1}]} =
-        http_post("https://localhost/lookup_messages", [ReplyMessageId1]),
+        http_post("http://localhost/lookup_posts", [ReplyPostId1]),
     {ok, [#{<<"reply-count">> := 0}]} =
-        http_post("https://localhost/lookup_messages", [ReplyMessageId2]).
+        http_post("http://localhost/lookup_posts", [ReplyPostId2]).
 
 %%
 %% Utilities

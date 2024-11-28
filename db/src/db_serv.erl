@@ -1,24 +1,24 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
--export([list_root_messages/0,
-         lookup_messages/1, lookup_messages/2,
-         insert_message/1,
-         delete_message/1]).
+-export([list_top_posts/0,
+         lookup_posts/1, lookup_posts/2,
+         insert_post/1,
+         delete_post/1]).
 -export([sync/0]).
 -export([message_handler/1]).
--export_type([message_id/0, title/0, body/0, author/0, seconds_since_epoch/0]).
+-export_type([post_id/0, title/0, body/0, author/0, seconds_since_epoch/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
 -include_lib("apptools/include/serv.hrl").
 -include("db.hrl").
 
--define(MESSAGE_DB_FILENAME, "messages.db").
--define(MESSAGE_DB, messages).
+-define(POST_DB_FILENAME, "posts.db").
+-define(POST_DB, posts).
 -define(META_DB_FILENAME, "meta.db").
 -define(META_DB, meta).
 
--type message_id() :: binary().
+-type post_id() :: binary().
 -type title() :: binary().
 -type body() :: binary().
 -type author() :: binary().
@@ -26,7 +26,7 @@
 
 -record(state, {
                 parent :: pid(),
-                next_message_id = 0 :: integer()
+                next_post_id = 0 :: integer()
                }).
 
 %%
@@ -49,43 +49,43 @@ stop() ->
     serv:call(?MODULE, stop).
 
 %%
-%% Exported: list_root_messages
+%% Exported: list_top_posts
 %%
 
--spec list_root_messages() -> [#message{}].
+-spec list_top_posts() -> [#post{}].
 
-list_root_messages() ->
-    serv:call(?MODULE, list_root_messages).
-
-%%
-%% Exported: lookup_messages
-%%
-
--spec lookup_messages([message_id()], flat | recursive) -> [#message{}].
-
-lookup_messages(MessageIds) ->
-    lookup_messages(MessageIds, flat).
-
-lookup_messages(MessageIds, Mode) ->
-    serv:call(?MODULE, {lookup_messages, MessageIds, Mode}).
+list_top_posts() ->
+    serv:call(?MODULE, list_top_posts).
 
 %%
-%% Exported: insert_message
+%% Exported: lookup_posts
 %%
 
--spec insert_message(#message{}) -> {ok, #message{}} | {error, invalid_message}.
+-spec lookup_posts([post_id()], flat | recursive) -> [#post{}].
 
-insert_message(Message) ->
-    serv:call(?MODULE, {insert_message, Message}).
+lookup_posts(PostIds) ->
+    lookup_posts(PostIds, flat).
+
+lookup_posts(PostIds, Mode) ->
+    serv:call(?MODULE, {lookup_posts, PostIds, Mode}).
 
 %%
-%% delete_message
+%% Exported: insert_post
 %%
 
--spec delete_message(message_id()) -> ok | {error, not_found}.
+-spec insert_post(#post{}) -> {ok, #post{}} | {error, invalid_post}.
 
-delete_message(MessageId) ->
-    serv:call(?MODULE, {delete_message, MessageId}).
+insert_post(Post) ->
+    serv:call(?MODULE, {insert_post, Post}).
+
+%%
+%% delete_post
+%%
+
+-spec delete_post(post_id()) -> ok | {error, not_found}.
+
+delete_post(PostId) ->
+    serv:call(?MODULE, {delete_post, PostId}).
 
 %%
 %% Exported: sync
@@ -101,11 +101,11 @@ sync() ->
 %%
 
 init(Parent) ->
-    {ok, ?MESSAGE_DB} =
+    {ok, ?POST_DB} =
         dets:open_file(
-          ?MESSAGE_DB,
-          [{file, filename:join(code:priv_dir(db), ?MESSAGE_DB_FILENAME)},
-           {keypos, #message.id}]),
+          ?POST_DB,
+          [{file, filename:join(code:priv_dir(db), ?POST_DB_FILENAME)},
+           {keypos, #post.id}]),
     {ok, ?META_DB} =
         dets:open_file(
           ?META_DB,
@@ -114,68 +114,68 @@ init(Parent) ->
     case dets:lookup(?META_DB, basic) of
         [] ->
             ok = dets:insert(?META_DB, #meta{type = basic,
-                                             next_message_id = 0}),
-            NextMessageId = 0;
-        [#meta{next_message_id = NextMessageId}] ->
+                                             next_post_id = 0}),
+            NextPostId = 0;
+        [#meta{next_post_id = NextPostId}] ->
             ok
     end,
     ?log_info("Database server has been started"),
-    {ok, #state{parent = Parent, next_message_id = NextMessageId}}.
+    {ok, #state{parent = Parent, next_post_id = NextPostId}}.
 
 message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug("Call: ~p", [Call]),
             ok = dets:close(?META_DB),
-            ok = dets:close(?MESSAGE_DB),
+            ok = dets:close(?POST_DB),
             {reply, From, ok};
-        {call, From, list_root_messages = Call} ->
+        {call, From, list_top_posts = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            RootMessages =
+            TopPosts =
                 dets:match_object(
-                  ?MESSAGE_DB, #message{root_message_id = not_set, _ = '_'}),
-            SortedRootMessages =
+                  ?POST_DB, #post{top_post_id = not_set, _ = '_'}),
+            SortedTopPosts =
                 lists:sort(
-                  fun(MessageA, MessageB) ->
-                          MessageA#message.created =< MessageB#message.created
-                  end, RootMessages),
-            {reply, From, SortedRootMessages};
-        {call, From, {lookup_messages, MessageIds, Mode} = Call} ->
+                  fun(PostA, PostB) ->
+                          PostA#post.created =< PostB#post.created
+                  end, TopPosts),
+            {reply, From, SortedTopPosts};
+        {call, From, {lookup_posts, PostIds, Mode} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            {reply, From, do_lookup_messages(MessageIds, Mode)};
-        {call, From, {insert_message, Message} = Call} ->
+            {reply, From, do_lookup_posts(PostIds, Mode)};
+        {call, From, {insert_post, Post} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            case do_insert_message(S#state.next_message_id, Message) of
-                {ok, NextUpcomingMessageId, InsertedMessage} ->
-                    {reply, From, {ok, InsertedMessage},
-                     S#state{next_message_id = NextUpcomingMessageId}};
+            case do_insert_post(S#state.next_post_id, Post) of
+                {ok, NextUpcomingPostId, InsertedPost} ->
+                    {reply, From, {ok, InsertedPost},
+                     S#state{next_post_id = NextUpcomingPostId}};
                 {error, Reason} ->
                     {reply, From, {error, Reason}}
             end;
-        {call, From, {delete_message, MessageId} = Call} ->
+        {call, From, {delete_post, PostId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            case dets:lookup(?MESSAGE_DB, MessageId) of
-                [#message{parent_message_id = ParentMessageId}]
-                  when ParentMessageId /= not_set ->
-                    [ParentMessage] = dets:lookup(?MESSAGE_DB, ParentMessageId),
+            case dets:lookup(?POST_DB, PostId) of
+                [#post{parent_post_id = ParentPostId}]
+                  when ParentPostId /= not_set ->
+                    [ParentPost] = dets:lookup(?POST_DB, ParentPostId),
                     ok = dets:insert(
-                           ?MESSAGE_DB,
-                           ParentMessage#message{
+                           ?POST_DB,
+                           ParentPost#post{
                              replies = lists:delete(
-                                         MessageId,
-                                         ParentMessage#message.replies)}),
-                    N = delete_all([MessageId]),
-                    ok = update_parent_count(ParentMessage#message.id, -N),
+                                         PostId,
+                                         ParentPost#post.replies)}),
+                    N = delete_all([PostId]),
+                    ok = update_parent_count(ParentPost#post.id, -N),
                     {reply, From, ok};
-                [_RootMessage] ->
-                    _ = delete_all([MessageId]),
+                [_TopPost] ->
+                    _ = delete_all([PostId]),
                     {reply, From, ok};
                 [] ->
                     {reply, From, {error, not_found}}
             end;
         {call, From, sync = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            ok = dets:sync(?MESSAGE_DB),
+            ok = dets:sync(?POST_DB),
             {reply, From, ok};
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             exit(Reason);
@@ -188,123 +188,123 @@ message_handler(S) ->
     end.
 
 %%
-%% Insert message
+%% Insert post
 %%
 
-do_insert_message(NextMessageId, Message) ->
-    case is_valid_insert_message(Message) of
-        {true, ParentMessage, _RootMessage}  ->
-            case Message#message.id of
+do_insert_post(NextPostId, Post) ->
+    case is_valid_insert_post(Post) of
+        {true, ParentPost, _TopPost}  ->
+            case Post#post.id of
                 not_set ->
-                    NextUpcomingMessageId = NextMessageId + 1,
+                    NextUpcomingPostId = NextPostId + 1,
                     UpdatedMeta =
                         #meta{type = basic,
-                              next_message_id = NextUpcomingMessageId},
+                              next_post_id = NextUpcomingPostId},
                     ok = dets:insert(?META_DB, UpdatedMeta),
-                    NewMessageId = ?i2b(NextMessageId);
-                MessageId ->
-                    NewMessageId = MessageId,
-                    NextUpcomingMessageId = NextMessageId
+                    NewPostId = ?i2b(NextPostId);
+                PostId ->
+                    NewPostId = PostId,
+                    NextUpcomingPostId = NextPostId
             end,
-            UpdatedMessage =
-                Message#message{
-                  id = NewMessageId,
-                  created = seconds_since_epoch(Message#message.created)},
-            ok = dets:insert(?MESSAGE_DB, UpdatedMessage),
-            case ParentMessage of
+            UpdatedPost =
+                Post#post{
+                  id = NewPostId,
+                  created = seconds_since_epoch(Post#post.created)},
+            ok = dets:insert(?POST_DB, UpdatedPost),
+            case ParentPost of
                 not_set ->
-                    {ok, NextUpcomingMessageId, UpdatedMessage};
-                #message{replies = Replies} ->
-                    UpdatedParentMessage =
-                        ParentMessage#message{
-                          replies = Replies ++ [NewMessageId]},
-                    ok = dets:insert(?MESSAGE_DB, UpdatedParentMessage),
-                    ok = update_parent_count(ParentMessage#message.id, 1),
-                    {ok, NextUpcomingMessageId, UpdatedMessage}
+                    {ok, NextUpcomingPostId, UpdatedPost};
+                #post{replies = Replies} ->
+                    UpdatedParentPost =
+                        ParentPost#post{
+                          replies = Replies ++ [NewPostId]},
+                    ok = dets:insert(?POST_DB, UpdatedParentPost),
+                    ok = update_parent_count(ParentPost#post.id, 1),
+                    {ok, NextUpcomingPostId, UpdatedPost}
             end;
         false ->
-            {error, invalid_message}
+            {error, invalid_post}
     end.
 
-is_valid_insert_message(#message{id = not_set} = Message) ->
-    check_insert_message(Message);
-is_valid_insert_message(Message) ->
-    case dets:lookup(?MESSAGE_DB, Message#message.id) of
+is_valid_insert_post(#post{id = not_set} = Post) ->
+    check_insert_post(Post);
+is_valid_insert_post(Post) ->
+    case dets:lookup(?POST_DB, Post#post.id) of
         [] ->
-            check_insert_message(Message);
+            check_insert_post(Post);
         _ ->
             false
     end.
 
-check_insert_message(#message{title = Title,
-                              parent_message_id = not_set,
-                              root_message_id = not_set,
-                              created = Created})
+check_insert_post(#post{title = Title,
+                        parent_post_id = not_set,
+                        top_post_id = not_set,
+                        created = Created})
   when Title /= not_set andalso
        (Created == not_set orelse is_integer(Created)) ->
     {true, not_set, not_set};
-check_insert_message(#message{title = not_set,
-                              parent_message_id = ParentMessageId,
-                              root_message_id = RootMessageId,
-                              created = Created})
-  when ParentMessageId /= not_set andalso
-       RootMessageId /= not_set andalso
+check_insert_post(#post{title = not_set,
+                        parent_post_id = ParentPostId,
+                        top_post_id = TopPostId,
+                        created = Created})
+  when ParentPostId /= not_set andalso
+       TopPostId /= not_set andalso
        (Created == not_set orelse is_integer(Created)) ->
-    case dets:lookup(?MESSAGE_DB, ParentMessageId) of
-        [ParentMessage] ->
-            case dets:lookup(?MESSAGE_DB, RootMessageId) of
-                [RootMessage] ->
-                    {true, ParentMessage, RootMessage};
+    case dets:lookup(?POST_DB, ParentPostId) of
+        [ParentPost] ->
+            case dets:lookup(?POST_DB, TopPostId) of
+                [TopPost] ->
+                    {true, ParentPost, TopPost};
                 [] ->
                     false
             end;
         [] ->
             false
     end;
-check_insert_message(_) ->
+check_insert_post(_) ->
     false.
 
 update_parent_count(not_set, _N) ->
     ok;
-update_parent_count(MessageId, N) ->
-    [Message] = dets:lookup(?MESSAGE_DB, MessageId),
-    ok = dets:insert(?MESSAGE_DB,
-                     Message#message{
-                       reply_count = Message#message.reply_count + N}),
-    update_parent_count(Message#message.parent_message_id, N).
+update_parent_count(PostId, N) ->
+    [Post] = dets:lookup(?POST_DB, PostId),
+    ok = dets:insert(?POST_DB,
+                     Post#post{
+                       reply_count = Post#post.reply_count + N}),
+    update_parent_count(Post#post.parent_post_id, N).
 
 %%
-%% Lookup messages
+%% Lookup posts
 %%
 
-do_lookup_messages(MessageIds, Mode) ->
-    Messages =
+do_lookup_posts(PostIds, Mode) ->
+    Posts =
         lists:foldr(
-          fun(MessageId, Acc) ->
-                  case dets:lookup(?MESSAGE_DB, MessageId) of
-                      [Message] when Mode == flat ->
-                          [Message|Acc];
-                      [Message] when Mode == recursive ->
+          fun(PostId, Acc) ->
+                  case dets:lookup(?POST_DB, PostId) of
+                      [Post] when Mode == flat ->
+                          [Post|Acc];
+                      [Post] when Mode == recursive ->
                           Replies =
-                              do_lookup_messages(Message#message.replies, Mode),
-                          [Message|Acc] ++ Replies
+                              do_lookup_posts(Post#post.replies, Mode),
+                          [Post|Acc] ++ Replies
                   end
-          end, [], MessageIds),
+          end, [], PostIds),
     lists:sort(
-      fun(MessageA, MessageB) ->
-              MessageA#message.created =< MessageB#message.created
-      end, Messages).
+      fun(PostA, PostB) ->
+              PostA#post.created =< PostB#post.created
+      end, Posts).
 
 %%
-%% Delete all messages (recursively)
+%% Delete all posts (recursively)
 %%
 
 delete_all([]) ->
     0;
-delete_all([MessageId|Rest]) ->
-    [Message] = dets:lookup(?MESSAGE_DB, MessageId),
-    ok = dets:delete(?MESSAGE_DB, MessageId),
-    delete_all(Message#message.replies) + delete_all(Rest) + 1.
+delete_all([PostId|Rest]) ->
+    [Post] = dets:lookup(?POST_DB, PostId),
+    ok = dets:delete(?POST_DB, PostId),
+    delete_all(Post#post.replies) + delete_all(Rest) + 1.
 
 %%
 %% Utilities
