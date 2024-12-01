@@ -24,12 +24,12 @@
          next_post_id = 0 :: integer()
         }).
 
--record(alias,
+-record(user,
         {
-         name :: db_alias_serv:name() | '_',
-         user_id :: db_alias_serv:user_id() | '_',
-         pwhash = not_set :: db_alias_serv:pwhash() | not_set | '_',
-         session_id = not_set :: db_alias_serv:session_id() | not_set | '_',
+         name :: db_user_serv:username() | '_',
+         id :: db_user_serv:user_id() | '_',
+         pwhash = not_set :: db_user_serv:pwhash() | not_set | '_',
+         session_id = not_set :: db_user_serv:session_id() | not_set | '_',
          mac_address :: db_dnsmasq:mac_address()
         }).
 

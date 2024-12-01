@@ -2,29 +2,29 @@ import bespoke from "/js/bespoke.js";
 
 class Login {
   init() {
-    this._autoAlias = document.getElementById("auto-alias");
-    this._formAlias = document.getElementById("form-alias");
-    this._formAlias.addEventListener("input", () => this._checkFormCompletion());
-    this._formAliasError = document.getElementById("form-alias-error");
+    this._autoUsername = document.getElementById("auto-username");
+    this._formUsername = document.getElementById("form-username");
+    this._formUsername.addEventListener("input", () => this._checkFormCompletion());
+    this._formUsernameError = document.getElementById("form-username-error");
     this._formPassword = document.getElementById("form-password");
     this._loginButton = document.getElementById("login-button");
     this._updatePage();
   }
 
   _checkFormCompletion() {
-    this._loginButton.disabled = this._formAlias.value.trim() === "";
+    this._loginButton.disabled = this._formUsername.value.trim() === "";
   }
 
   async _updatePage() {
     try {
-      let response = await fetch("/get_auto_alias");
+      let response = await fetch("/get_username");
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
         return;
       }
-      let alias = await response.json();
-      this._autoAlias.innerText = alias;
-      this._formAlias.value = alias;
+      let username = await response.json();
+      this._autoUsername.innerText = username;
+      this._formUsername.value = username;
     } catch (error) {
       console.error("Fetching failed:", error);
     }
@@ -33,11 +33,11 @@ class Login {
   authenticate(event) {
     event.preventDefault();
 
-    // Hide error span under form-alias input
-    this._formAliasError.style.display = "none";
+    // Hide error span under form-username input
+    this._formUsernameError.style.display = "none";
 
     const authenticate = {
-      name: this._formAlias.value,
+      username: this._formUsername.value,
       password: this._formPassword.value,
     };
 
@@ -53,9 +53,9 @@ class Login {
         });
         if (!response.ok) {
           console.warn(`Server error: ${response.status}`);
-          // Show error span under form-alias input
-          this._formAliasError.innerText = "Invalid alias or password";
-          this._formAliasError.style.display = "block";
+          // Show error span under form-username input
+          this._formUsernameError.innerText = "Invalid username or password";
+          this._formUsernameError.style.display = "block";
           return;
         }
         // REST: Acknowledge captive portal

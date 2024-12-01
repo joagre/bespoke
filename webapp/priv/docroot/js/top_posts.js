@@ -46,7 +46,7 @@ class TopPosts {
     return html`
       <div onclick=${(event) => {
              bespoke.gotoPage(event, "post.html", post["id"]);
-           }} class="uk-padding-small top-post">
+           }} class="top-post">
         ${post["title"]}
         <div class="uk-text-meta">
           ${post["author"]} • ${age} •

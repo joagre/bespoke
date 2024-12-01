@@ -1,20 +1,21 @@
--module(db_alias_serv).
+-module(db_user_serv).
 -export([start_link/0, stop/0]).
--export([get_name/1, authenticate/3, mac_address_to_name/1, name_to_mac_address/1]).
+-export([get_username/1, authenticate/3, mac_address_to_username/1,
+         username_to_mac_address/1]).
 -export([message_handler/1]).
--export_type([name/0, user_id/0, pwhash/0, session_id/0, password/0]).
+-export_type([username/0, user_id/0, pwhash/0, session_id/0, password/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/serv.hrl").
 -include_lib("apptools/include/shorthand.hrl").
 -include("db.hrl").
 
--define(ALIAS_DB_FILENAME, "aliases.db").
--define(ALIAS_DB, aliases).
+-define(USER_DB_FILENAME, "users.db").
+-define(USER_DB, users).
 -define(WORD_LIST_PATH, "/usr/share/dict/words").
 -define(SESSION_ID_SIZE, 16).
 
--type name() :: binary().
+-type username() :: binary().
 -type user_id() :: integer().
 -type pwhash() :: binary().
 -type session_id() :: binary().
@@ -45,55 +46,55 @@ stop() ->
     serv:call(?MODULE, stop).
 
 %%
-%% Exported: get_alias
+%% Exported: get_username
 %%
 
--spec get_name(db_dnsmasq:mac_address()) -> name().
+-spec get_username(db_dnsmasq:mac_address()) -> username().
 
-get_name(MacAddress) ->
-    serv:call(?MODULE, {get_name, MacAddress}).
+get_username(MacAddress) ->
+    serv:call(?MODULE, {get_username, MacAddress}).
 
 %%
 %% Exported: authenticate
 %%
 
--spec authenticate(name(), password(), db_dnsmasq:mac_address()) ->
+-spec authenticate(username(), password(), db_dnsmasq:mac_address()) ->
           {ok, session_id()} | {error, failure}.
 
-authenticate(Name, Password, MacAddress) ->
-    serv:call(?MODULE, {authenticate, Name, Password, MacAddress}).
+authenticate(Username, Password, MacAddress) ->
+    serv:call(?MODULE, {authenticate, Username, Password, MacAddress}).
 
 %%
-%% Exported: mac_address_to_name
+%% Exported: mac_address_to_username
 %%
 
--spec mac_address_to_name(db_dnsmasq:mac_address()) ->
-          {ok, name()} | {error, not_found}.
+-spec mac_address_to_username(db_dnsmasq:mac_address()) ->
+          {ok, username()} | {error, not_found}.
 
-mac_address_to_name(MacAddress) ->
-    serv:call(?MODULE, {mac_address_to_name, MacAddress}).
+mac_address_to_username(MacAddress) ->
+    serv:call(?MODULE, {mac_address_to_username, MacAddress}).
 
 %%
-%% Exported: name_to_mac_address
+%% Exported: username_to_mac_address
 %%
 
--spec name_to_mac_address(name()) ->
+-spec username_to_mac_address(username()) ->
           {ok, db_dnsmasq:mac_address()} | {error, not_found}.
 
-name_to_mac_address(Name) ->
-    serv:call(?MODULE, {name_to_mac_address, Name}).
+username_to_mac_address(Username) ->
+    serv:call(?MODULE, {username_to_mac_address, Username}).
 
 %%
 %% Server
 %%
 
 init(Parent) ->
-    {ok, ?ALIAS_DB} =
+    {ok, ?USER_DB} =
         dets:open_file(
-          ?ALIAS_DB,
-          [{file, filename:join(code:priv_dir(db), ?ALIAS_DB_FILENAME)},
-           {keypos, #alias.name}]),
-    ?log_info("Database alias server has been started"),
+          ?USER_DB,
+          [{file, filename:join(code:priv_dir(db), ?USER_DB_FILENAME)},
+           {keypos, #user.name}]),
+    ?log_info("Database user server has been started"),
     {ok, #state{parent = Parent,
                 word_list = init_word_list()}}.
 
@@ -101,47 +102,48 @@ message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            ok = dets:close(?ALIAS_DB),
+            ok = dets:close(?USER_DB),
             {reply, From, ok};
-        {call, From, {get_name, MacAddress}} ->
-            ?log_debug("Call: ~p", [{get_name, MacAddress}]),
-            case dets:match_object(?ALIAS_DB,
-                                   #alias{mac_address = MacAddress, _ = '_'}) of
-                [Alias|_] ->
-                    {reply, From, Alias#alias.name};
+        {call, From, {get_username, MacAddress}} ->
+            ?log_debug("Call: ~p", [{get_username, MacAddress}]),
+            case dets:match_object(?USER_DB,
+                                   #user{mac_address = MacAddress, _ = '_'}) of
+                [User|_] ->
+                    {reply, From, User#user.name};
                 [] ->
-                    {reply, From, generate_name(S#state.word_list)}
+                    {reply, From, generate_username(S#state.word_list)}
             end;
-        {call, From, {authenticate, Name, Password, MacAddress}} ->
-            ?log_debug("Call: ~p", [{authenticate, Name, Password, MacAddress}]),
-            case dets:lookup(?ALIAS_DB, Name) of
-                [Alias] ->
+        {call, From, {authenticate, Username, Password, MacAddress}} ->
+            ?log_debug("Call: ~p",
+                       [{authenticate, Username, Password, MacAddress}]),
+            case dets:lookup(?USER_DB, Username) of
+                [User] ->
                     ok;
                 [] ->
-                    Alias = #alias{name = Name,
-                                   user_id = db_serv:allocate_user_id(),
-                                   mac_address = MacAddress},
-                    ok = dets:insert(?ALIAS_DB, Alias)
+                    User = #user{name = Username,
+                                 id = db_serv:allocate_user_id(),
+                                 mac_address = MacAddress},
+                    ok = dets:insert(?USER_DB, User)
             end,
-            case do_authenticate(Alias, Password) of
+            case do_authenticate(User, Password) of
                 {ok, SessionId} ->
                     {reply, From, {ok, SessionId}};
                 {error, Reason} ->
                     {reply, From, {error, Reason}}
             end;
-        {call, From, {mac_address_to_name, MacAddress}} ->
-            ?log_debug("Call: ~p", [{mac_address_to_name, MacAddress}]),
-            case dets:match_object(?ALIAS_DB,
-                                   #alias{mac_address = MacAddress, _ = '_'}) of
-                [Alias] ->
-                    {reply, From, {ok, Alias#alias.name}};
+        {call, From, {mac_address_to_username, MacAddress}} ->
+            ?log_debug("Call: ~p", [{mac_address_to_username, MacAddress}]),
+            case dets:match_object(?USER_DB,
+                                   #user{mac_address = MacAddress, _ = '_'}) of
+                [User] ->
+                    {reply, From, {ok, User#user.name}};
                 [] ->
                     {reply, From, {error, not_found}}
             end;
-        {call, From, {name_to_mac_address, Name}} ->
-            ?log_debug("Call: ~p", [{name_to_mac_address, Name}]),
-            case dets:lookup(?ALIAS_DB, Name) of
-                [#alias{mac_address = MacAddress}] ->
+        {call, From, {username_to_mac_address, Username}} ->
+            ?log_debug("Call: ~p", [{username_to_mac_address, Username}]),
+            case dets:lookup(?USER_DB, Username) of
+                [#user{mac_address = MacAddress}] ->
                     {reply, From, {ok, MacAddress}};
                 [] ->
                     {reply, From, {error, not_found}}
@@ -157,16 +159,16 @@ message_handler(S) ->
     end.
 
 %%
-%% Call: get_name
+%% Call: get_username
 %%
 
-generate_name(WordList) ->
-    Name = ?l2b([random_word(WordList), random_word(WordList)]),
-    case dets:lookup(?ALIAS_DB, Name) of
+generate_username(WordList) ->
+    Username = ?l2b([random_word(WordList), random_word(WordList)]),
+    case dets:lookup(?USER_DB, Username) of
         [] ->
-            Name;
+            Username;
         _ ->
-            generate_name(WordList)
+            generate_username(WordList)
     end.
 
 random_word(Words) ->
@@ -178,23 +180,23 @@ random_word(Words) ->
 %%
 
 %% Proceed without password
-do_authenticate(#alias{pwhash = not_set} = Alias, <<>>) ->
+do_authenticate(#user{pwhash = not_set} = User, <<>>) ->
     SessionId = session_id(),
-    ok = dets:insert(?ALIAS_DB, Alias#alias{session_id = SessionId}),
+    ok = dets:insert(?USER_DB, User#user{session_id = SessionId}),
     {ok, SessionId};
 %% Set a password
-do_authenticate(#alias{pwhash = not_set} = Alias, Password) ->
+do_authenticate(#user{pwhash = not_set} = User, Password) ->
     Pwhash = enacl:pwhash_str(Password, interactive, interactive),
     SessionId = session_id(),
-    ok = dets:insert(?ALIAS_DB, Alias#alias{pwhash = Pwhash,
-                                            session_id = SessionId}),
+    ok = dets:insert(?USER_DB, User#user{pwhash = Pwhash,
+                                         session_id = SessionId}),
     {ok, SessionId};
 %% Verify password
-do_authenticate(#alias{pwhash = Pwhash} = Alias, Password) ->
+do_authenticate(#user{pwhash = Pwhash} = User, Password) ->
     case enacl:pwhash_str_verify(Pwhash, Password) of
         true ->
             SessionId = session_id(),
-            ok = dets:insert(?ALIAS_DB, Alias#alias{session_id = SessionId}),
+            ok = dets:insert(?USER_DB, User#user{session_id = SessionId}),
             {ok, SessionId};
         false ->
             {error, failure}

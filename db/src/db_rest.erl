@@ -131,10 +131,10 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                                          post_to_json_term(Post)
                                  end, Posts),
             rest_util:response(Socket, Request, {ok, {format, JsonTerm}});
-        ["get_auto_alias"] ->
+        ["get_username"] ->
             {ok, MacAddress} = get_mac_address(Socket),
-            Name = db_alias_serv:get_name(MacAddress),
-            rest_util:response(Socket, Request, {ok, {format, Name}});
+            Username = db_user_serv:get_username(MacAddress),
+            rest_util:response(Socket, Request, {ok, {format, Username}});
         %% Act as static web server
 	Tokens when Headers#http_chdr.host == "localhost" orelse
                     Headers#http_chdr.host == "bespoke.local" orelse
@@ -264,10 +264,10 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                       {error, bad_request, "Invalid JSON format"});
                 AuthenticateJsonTerm ->
                     case json_term_to_authenticate(AuthenticateJsonTerm) of
-                        {ok, Name, Password} ->
+                        {ok, Username, Password} ->
                             {ok, MacAddress} = get_mac_address(Socket),
-                            case db_alias_serv:authenticate(
-                                   Name, Password, MacAddress) of
+                            case db_user_serv:authenticate(
+                                   Username, Password, MacAddress) of
                                 {ok, SessionId} ->
                                     rester_http_server:response_r(
                                       Socket, Request, 204, "No Content", "",
@@ -457,11 +457,11 @@ no_more_keys(RequiredKeys, Map) ->
     lists:sort(maps:keys(Map)) =:= lists:sort(RequiredKeys).
 
 json_term_to_authenticate(
-  #{<<"name">> := Name,
+  #{<<"username">> := Username,
     <<"password">> := Password} = AuthenticateJsonTerm) ->
-    case no_more_keys([<<"name">>, <<"password">>], AuthenticateJsonTerm) of
+    case no_more_keys([<<"username">>, <<"password">>], AuthenticateJsonTerm) of
         true ->
-            {ok, Name, Password};
+            {ok, Username, Password};
         false ->
             {error, invalid}
     end.
