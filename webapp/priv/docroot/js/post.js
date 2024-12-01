@@ -159,8 +159,7 @@ class Post {
           <div
             id="${replyQuoteAttr}"
             class="uk-card uk-card-body uk-card-default uk-card-small uk-text-meta uk-margin-small-bottom uk-margin-small-top custom-quote-padding"
-            hidden
-          >
+            hidden>
             <div id="${replyQuoteBodyAttr}" class="uk-margin-remove-first-child uk-margin-remove-last-child">
               <p>Loading...</p>
             </div>
@@ -201,13 +200,11 @@ class Post {
                 onclick=${(event) => this.openDeletePostModal(event)}
                 data-post-id="${post["id"]}"
                 class="uk-icon-button"
-                uk-icon="trash"
-              ></button>
+                uk-icon="trash"></button>
               <button
                 onclick=${(event) => addReplyPost.gotoAddReplyPostPage(event, post["id"], true)}
                 class="uk-icon-button"
-                uk-icon="reply"
-              ></button>
+                uk-icon="reply"></button>
             </div>
           </div>
         </div>

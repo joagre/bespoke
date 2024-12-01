@@ -5,10 +5,6 @@ const { html, render } = uhtml;
 
 class TopPosts {
   constructor() {
-    this.init();
-  }
-
-  init() {
     document.addEventListener("DOMContentLoaded", () => {
       bespoke.init();
       bespoke.clearPostStack();
@@ -35,7 +31,6 @@ class TopPosts {
   }
 
   populatePage(topPosts) {
-    // Populate posts
     const postsContainer = document.getElementById("posts");
     if (topPosts.length === 0) {
       postsContainer.innerHTML = "<p>No posts available.</p>";
@@ -49,19 +44,16 @@ class TopPosts {
   createPostTemplate(post) {
     const age = bespoke.formatSecondsSinceEpoch(post["created"]);
     return html`
-      <div
-        onclick=${(event) => {
-          bespoke.gotoPage(event, "post.html", post["id"]);
-        }}
-        class="uk-card uk-card-default uk-card-small uk-card-body uk-padding-small uk-margin-small-bottom top-post"
-      >
+      <div onclick=${(event) => {
+             bespoke.gotoPage(event, "post.html", post["id"]);
+           }} class="uk-padding-small top-post">
         ${post["title"]}
         <div class="uk-text-meta">
           ${post["author"]} • ${age} •
           <span uk-icon="comment"></span> ${post["reply-count"]}
         </div>
       </div>
-    `;
+      <hr class="uk-margin-remove">`;
   }
 }
 

@@ -3,7 +3,8 @@
 -export([list_top_posts/0,
          lookup_posts/1, lookup_posts/2,
          insert_post/1,
-         delete_post/1]).
+         delete_post/1,
+         allocate_user_id/0]).
 -export([sync/0]).
 -export([message_handler/1]).
 -export_type([post_id/0, title/0, body/0, author/0, seconds_since_epoch/0]).
@@ -26,6 +27,7 @@
 
 -record(state, {
                 parent :: pid(),
+                next_user_id = 0 :: integer(),
                 next_post_id = 0 :: integer()
                }).
 
@@ -96,6 +98,16 @@ delete_post(PostId) ->
 sync() ->
     serv:call(?MODULE, sync).
 
+
+%%
+%% Exported: allocate_user_id
+%%
+
+-spec allocate_user_id() -> integer().
+
+allocate_user_id() ->
+    serv:call(?MODULE, allocate_user_id).
+
 %%
 %% Server
 %%
@@ -113,14 +125,15 @@ init(Parent) ->
            {keypos, #meta.type}]),
     case dets:lookup(?META_DB, basic) of
         [] ->
-            ok = dets:insert(?META_DB, #meta{type = basic,
-                                             next_post_id = 0}),
-            NextPostId = 0;
-        [#meta{next_post_id = NextPostId}] ->
+            Meta = #meta{},
+            ok = dets:insert(?META_DB, Meta);
+        [Meta] ->
             ok
     end,
     ?log_info("Database server has been started"),
-    {ok, #state{parent = Parent, next_post_id = NextPostId}}.
+    {ok, #state{parent = Parent,
+                next_user_id = Meta#meta.next_user_id,
+                next_post_id = Meta#meta.next_post_id}}.
 
 message_handler(S) ->
     receive
@@ -177,6 +190,13 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             ok = dets:sync(?POST_DB),
             {reply, From, ok};
+        {call, From, allocate_user_id = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            [Meta] = dets:lookup(?META_DB, basic),
+            UpcomingUserId = S#state.next_user_id + 1,
+            ok = dets:insert(?META_DB, Meta#meta{next_user_id = UpcomingUserId}),
+            {reply, From, S#state.next_user_id,
+             S#state{next_user_id = UpcomingUserId}};
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             exit(Reason);
         {system, From, Request} ->

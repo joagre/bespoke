@@ -2,6 +2,7 @@
 -export([start_link/0, stop/0]).
 -export([get_name/1, authenticate/3, mac_address_to_name/1, name_to_mac_address/1]).
 -export([message_handler/1]).
+-export_type([name/0, user_id/0, pwhash/0, session_id/0, password/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/serv.hrl").
@@ -14,8 +15,10 @@
 -define(SESSION_ID_SIZE, 16).
 
 -type name() :: binary().
--type password() :: binary().
+-type user_id() :: integer().
+-type pwhash() :: binary().
 -type session_id() :: binary().
+-type password() :: binary().
 
 -record(state, {
                 parent :: pid(),
@@ -115,7 +118,9 @@ message_handler(S) ->
                 [Alias] ->
                     ok;
                 [] ->
-                    Alias = #alias{name = Name, mac_address = MacAddress},
+                    Alias = #alias{name = Name,
+                                   user_id = db_serv:allocate_user_id(),
+                                   mac_address = MacAddress},
                     ok = dets:insert(?ALIAS_DB, Alias)
             end,
             case do_authenticate(Alias, Password) of

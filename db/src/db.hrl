@@ -20,14 +20,16 @@
 -record(meta,
         {
          type = basic :: basic,
+         next_user_id = 0 :: integer(),
          next_post_id = 0 :: integer()
         }).
 
 -record(alias,
         {
-         name :: binary() | '_',
-         pwhash = not_set :: binary() | not_set | '_',
-         session_id = not_set :: binary() | not_set | '_',
+         name :: db_alias_serv:name() | '_',
+         user_id :: db_alias_serv:user_id() | '_',
+         pwhash = not_set :: db_alias_serv:pwhash() | not_set | '_',
+         session_id = not_set :: db_alias_serv:session_id() | not_set | '_',
          mac_address :: db_dnsmasq:mac_address()
         }).
 

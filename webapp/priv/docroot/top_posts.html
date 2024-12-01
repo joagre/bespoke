@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>All Posts</title>
+    <title>Forum</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css">
@@ -21,17 +21,41 @@
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
-      <div class="uk-card uk-card-default uk-background-muted uk-padding-small uk-padding-remove-horizontal">
-        <div class="uk-flex uk-flex-between uk-flex-middle">
-          <button onclick="bespoke.gotoPage(event, 'login.html')" data-back-destination="login.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
-          <div class="uk-flex-1 uk-flex uk-flex-center">
-            <div class="uk-text-bold">All Posts</div>
-          </div>
-          <button onclick="bespoke.gotoPage(event, 'add_top_post.html')" class="uk-icon-button" uk-icon="plus"></button>
+      <div class="header uk-flex uk-flex-between uk-flex-middle uk-background-muted uk-padding-small" uk-sticky>
+        <!-- Title -->
+        <div class="uk-flex-1 uk-flex uk-flex-center">
+          <div class="uk-text-bold">Forum</div>
+        </div>
+        <!-- Dropdown menu -->
+        <div class="non-sticky">
+          <button class="uk-icon-button" uk-icon="icon: more-vertical"></button>
+          <div uk-dropdown="mode: click">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
         </div>
       </div>
+      <!-- Posts -->
       <div id="posts"></div>
+      <!-- Footer -->
+      <div class="sticky-bottom">
+        <div class="footer uk-flex uk-flex-between uk-flex-around uk-background-muted uk-padding-small">
+          <!-- Forum button -->
+          <div onclick="javacript:void(0)" class="uk-text-center footer-item">
+            <button class="uk-icon-button uk-active active-footer-button" uk-icon="icon: comments"></button>
+            <span class="uk-text-small">Forum</span>
+          </div>
+          <!-- Create button -->
+          <div onclick="bespoke.gotoPage(event, 'add_top_post.html')" class="uk-text-center footer-item">
+            <button class="uk-icon-button" uk-icon="icon: plus-circle"></button>
+            <span class="uk-text-small">Create</span>
+          </div>
+          <!-- Messages button -->
+          <div onclick="bespoke.gotoPage(event, '/messages.html')" class="uk-text-center footer-item">
+            <button class="uk-icon-button" uk-icon="icon: mail"></button>
+            <span class="uk-text-small">Messages</span>
+          </div>
+        </div>
+      </div>
     </div>
+    <!-- Make relevant ES6 modules available globally -->
     <script type="module">
       import bespoke from "/js/bespoke.js";
       window.bespoke = bespoke;
