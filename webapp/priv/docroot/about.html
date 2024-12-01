@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Forum</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/uikit.min.css">
+    <link rel="stylesheet" href="css/bespoke.css">
+    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
+    <link rel="shortcut icon" href="/favicon/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/favicon/site.webmanifest">
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
+    <script src="js/uhtml.min.js" defer></script>
+    <script type="module" src="js/bespoke.js" defer></script>
+  </head>
+  <body>
+    <div class="uk-container uk-container-xsmall">
+      <!-- Header -->
+      <div class="header uk-flex uk-flex-between uk-flex-middle uk-background-muted uk-padding-small" uk-sticky>
+        <!-- Go back -->
+        <button onclick="bespoke.gotoPage()" data-back-destination="" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+        <!-- Title -->
+        <div class="uk-flex-1 uk-flex uk-flex-center">
+          <div class="uk-text-bold">About</div>
+        </div>
+      </div>
+      <!-- Content -->
+      <p>
+        <h2>Bespoke BBS</h2>
+        Bespoke BBS is your <i>Your friendly location-based micro
+          community</i>. Here you can interact with friends
+        using <b>forums</b>, <b>direct messaging</b> and <b>file
+          sharing</b>. Bespoke BBS is never connected to the Internet
+        but instead exists only in your local vicinity. This is a
+        feature.
+      <p>Enjoy and be kind.</p>
+      <p>/The team ♥️</p>
+      </p>
+    </div>
+    <!-- Make relevant ES6 modules available globally -->
+    <script type="module">
+      import bespoke from "/js/bespoke.js";
+      window.bespoke = bespoke;
+    </script>
+  </body>
+</html>
