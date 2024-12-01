@@ -1,4 +1,4 @@
-import { marked } from '/js/marked.esm.js';
+import { marked } from "/js/marked.esm.js";
 
 // Ensure uhtml.min.js is imported in the HTML file before this script
 const { html, render } = uhtml;
@@ -27,7 +27,7 @@ class Bespoke {
   gotoPage(event, destination, postId) {
     if (postId === -1) {
       this.popPostStack();
-    } else if (typeof postId === 'string') {
+    } else if (typeof postId === "string") {
       this.pushPostStack(postId);
     }
 
@@ -39,8 +39,17 @@ class Bespoke {
       return;
     }
 
-    if (destination === 'post.html' && this._isPostStackEmpty()) {
-      this.navigateTo('top_posts.html');
+    if (destination == null) {
+      if (document.referrer) {
+        window.history.back();
+        return;
+      } else {
+        console.error("No referrer found");
+      }
+    }
+
+    if (destination === "post.html" && this._isPostStackEmpty()) {
+      this.navigateTo("top_posts.html");
     } else {
       this.navigateTo(destination);
     }
@@ -111,7 +120,7 @@ class Bespoke {
 
   assert(condition, post) {
     if (!condition) {
-      throw new Error(post || 'Assertion failed');
+      throw new Error(post || "Assertion failed");
     }
   }
 
@@ -120,7 +129,7 @@ class Bespoke {
   }
 
   initializeCookieState() {
-    this._cookieState = this._getCookie('bespoke');
+    this._cookieState = this._getCookie("bespoke");
 
     if (!this._cookieState) {
       this._cookieState = { postStack: [] };
@@ -129,7 +138,7 @@ class Bespoke {
   }
 
   _handleButtonEvent(event) {
-    if (event.target.tagName === 'BUTTON' || event.target.closest('button')) {
+    if (event.target.tagName === "BUTTON" || event.target.closest("button")) {
       event.stopPropagation();
     }
     event.preventDefault();
@@ -145,7 +154,7 @@ class Bespoke {
   }
 
   _updateCookieState() {
-    this._setCookie('bespoke', this._cookieState, 7);
+    this._setCookie("bespoke", this._cookieState, 7);
   }
 
   _getCookie(name) {
@@ -153,7 +162,7 @@ class Bespoke {
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) {
       try {
-        return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
+        return JSON.parse(decodeURIComponent(parts.pop().split(";").shift()));
       } catch (e) {
         console.error('Error parsing Bespoke cookie', e);
       }
@@ -213,7 +222,10 @@ class Bespoke {
     const swipeTarget = document.querySelector('[data-back-destination]');
     if (swipeTarget) {
       const destination = swipeTarget.getAttribute('data-back-destination');
-      if (destination === 'post.html') {
+
+      if (destination === "") {
+        window.history.back();
+      } else if (destination === "post.html") {
         this.gotoPage(null, destination, -1);
       } else {
         this.gotoPage(null, destination);

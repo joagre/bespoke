@@ -29,7 +29,12 @@
         <!-- Dropdown menu -->
         <div class="non-sticky">
           <button class="uk-icon-button" uk-icon="icon: more-vertical"></button>
-          <div uk-dropdown="mode: click">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
+          <div class="uk-padding-small" uk-dropdown="mode: click">
+            <ul class="uk-nav uk-dropdown-nav">
+              <li class="uk-active"><a href="/settings.html">Settings</a></li>
+              <li class="uk-active"><a href="/about.html">About</a></li>
+            </ul>
+          </div>
         </div>
       </div>
       <!-- Posts -->
@@ -48,7 +53,7 @@
             <span class="uk-text-small">Create</span>
           </div>
           <!-- Messages button -->
-          <div onclick="bespoke.gotoPage(event, '/messages.html')" class="uk-text-center footer-item">
+          <div onclick="bespoke.gotoPage(event, '/top_posts.html')" class="uk-text-center footer-item">
             <button class="uk-icon-button" uk-icon="icon: mail"></button>
             <span class="uk-text-small">Messages</span>
           </div>
