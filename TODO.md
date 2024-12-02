@@ -18,7 +18,7 @@ Caveat: It seems that Android does a http request to httpd://www.google.com and 
 
 * Clean out db_serv.erl and db_rest.erl (from stale auth code)
 
-* Make sure the session-id is used for all operations performed in the app, i.e. creating and deleting posts and comments etc.
+* Make sure the session-id is used for all operations performed in the app, i.e. creating and deleting posts and comments etc. Remember to add a trash action to top_posts.html.
 
 * Add a HTTP GET back channel for asynchronous updates done by other users, i.e. a websocket is overkill for now (maybe forever).
 
