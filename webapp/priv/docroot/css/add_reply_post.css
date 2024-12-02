@@ -2,3 +2,15 @@
     font-size: 110%;
     font-weight: bold;
 }
+
+#parent-body p {
+    /* Small top margin for all p tags */
+    margin-top: 0.25em;
+    /* Small bottom margin for all p tags */
+    margin-bottom: 0.25em;
+}
+
+/* Remove top margin for the first p */
+#parent-body p:first-child {
+    margin-top: 0;
+}
