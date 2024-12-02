@@ -3,14 +3,18 @@
     font-weight: bold;
 }
 
+/* Small margins for all p tags */
 #parent-body p {
-    /* Small top margin for all p tags */
     margin-top: 0.25em;
-    /* Small bottom margin for all p tags */
     margin-bottom: 0.25em;
 }
 
 /* Remove top margin for the first p */
 #parent-body p:first-child {
     margin-top: 0;
+}
+
+/* Remove bottom margin for the last p */
+#parent-body p:last-child {
+    margin-bottom: 0;
 }

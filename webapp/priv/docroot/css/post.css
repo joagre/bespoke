@@ -11,30 +11,23 @@
     font-weight: bold;
 }
 
-#parent-body p {
-    /* Small top margin for all p tags */
+/* Small margins for all p tags */
+#parent-body p,
+.quote-body p,
+.reply-body p {
     margin-top: 0.25em;
-    /* Small bottom margin for all p tags */
     margin-bottom: 0.25em;
 }
 
 /* Remove top margin for the first p */
-#parent-body p:first-child {
-    margin-top: 0;
-}
-
-/* Remove bottom margin for the last p */
-#parent-body p:last-child {
-    margin-bottom: 0;
-}
-
-/* Remove top margin for the first p */
+#parent-body p:first-child,
 .quote-body p:first-child,
-.reply-body p:first-child {
+.reply-body p:first-child,
     margin-top: 0;
 }
 
 /* Remove bottom margin for the last p */
+#parent-body p:last-child,
 .quote-body p:last-child,
 .reply-body p:last-child {
     margin-bottom: 0;

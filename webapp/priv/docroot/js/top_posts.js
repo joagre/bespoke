@@ -48,7 +48,7 @@ class TopPosts {
              bespoke.gotoPage(event, "post.html", post["id"]);
            }} class="top-post">
         ${post["title"]}
-        <div class="uk-text-meta">
+        <div class="uk-text-meta uk-margin-small-top">
           ${post["author"]} • ${age} •
           <span uk-icon="comment"></span> ${post["reply-count"]}
         </div>
