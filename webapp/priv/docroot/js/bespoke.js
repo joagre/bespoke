@@ -179,7 +179,12 @@ class Bespoke {
   }
 
   pushPostStack(postId) {
-    this._cookieState.postStack.push(postId);
+    if (this.postStackSize() > 0) {
+      this._cookieState.postStack.slice(-1)[0].scrollX = window.scrollX;
+      this._cookieState.postStack.slice(-1)[0].scrollY = window.scrollY;
+    }
+    const postData = {postId: postId, scrollX: 0, scrollY: 0};
+    this._cookieState.postStack.push(postData);
     this._updateCookieState();
   }
 

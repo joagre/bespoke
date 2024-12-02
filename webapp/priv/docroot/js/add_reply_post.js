@@ -26,7 +26,7 @@ class AddReplyPost {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify([bespoke.peekPostStack()]),
+        body: JSON.stringify([bespoke.peekPostStack().postId]),
       });
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
@@ -123,16 +123,16 @@ class AddReplyPost {
   }
 
   gotoAddReplyPage(event, postId, popPostStack) {
-    bespoke.setCookieValue("pop-post-stack", popPostStack);
+    bespoke.setCookieValue("popPostStack", popPostStack);
     bespoke.gotoPage(event, "add_reply_post.html", postId);
   }
 
   goBack(event, ignorePopPostStack) {
     if (!ignorePopPostStack &&
-        bespoke.getCookieValue("pop-post-stack")) {
+        bespoke.getCookieValue("popPostStack")) {
       bespoke.popPostStack();
     }
-    bespoke.setCookieValue("pop-post-stack", false);
+    bespoke.setCookieValue("popPostStack", false);
     bespoke.gotoPage(event, 'post.html')
   }
 }

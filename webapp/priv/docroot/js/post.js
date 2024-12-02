@@ -34,7 +34,7 @@ class Post {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify([bespoke.peekPostStack()])
+        body: JSON.stringify([bespoke.peekPostStack().postId])
       });
       if (!response.ok) {
         console.error(`Server error: ${response.status}`);
@@ -81,6 +81,9 @@ class Post {
 
       if (this._domReady) {
         this._populatePage();
+        // Scroll window to saved position
+        const postData = bespoke.peekPostStack();
+        window.scrollTo(postData.scrollX, postData.scrollY);
       }
     } catch (error) {
       console.error("Fetching failed:", error);
@@ -226,7 +229,7 @@ class Post {
 
   deletePost(event) {
     const postId =
-          this._postIdToDelete === bespoke.peekPostStack() ? -1 : null;
+          this._postIdToDelete === bespoke.peekPostStack().postId ? -1 : null;
 
     const updateServer = async () => {
       try {

@@ -6,7 +6,7 @@
 
 /* Prevent sticky footer from overlapping the end of the page */
 #posts {
-    padding-bottom: 50px;
+    padding-bottom: 4em;
 }
 
 .sticky-bottom {
