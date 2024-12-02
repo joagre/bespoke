@@ -21,38 +21,35 @@
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
-      <div class="uk-card uk-card-default uk-background-muted uk-padding-small uk-padding-remove-horizontal" uk-sticky>
-        <div class="uk-flex uk-flex-between uk-flex-middle">
-          <button onclick="bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
-          <div class="uk-flex-1 uk-text-center">
-            <span id="header-title" class="uk-text-bold"></span>
-            <span id="header-reply-level" class="uk-text-meta"></span>
-          </div>
+      <div class="header uk-flex uk-flex-between uk-flex-middle uk-background-muted uk-padding-small" uk-sticky>
+        <!-- Go back -->
+        <button onclick="bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+        <div class="uk-flex-1 uk-text-center">
+          <span id="header-title" class="uk-text-bold"></span>
+          <span id="header-reply-level" class="uk-text-meta"></span>
         </div>
       </div>
       <!-- Parent post -->
-      <article class="uk-article">
-        <!-- Parent header -->
-        <div id="parent-title">Title</div>
+      <div class="uk-margin-small-top">
+        <!-- Parent title -->
+        <div id="parent-title"></div>
         <!-- Parent body -->
-        <div id="parent-body" class="uk-margin-remove-first-child uk-margin-remove-last-child">parent-body</div>
-        <!-- Parent meta-data -->
-        <div class="uk-article-meta uk-margin-top-remove">
-          <div class="uk-flex uk-flex-between uk-flex-middle">
-            <div>
-              <span id="parent-author"></span> •
-              <span id="parent-age"></span> •
-              <span uk-icon="comments"></span>
-              <span id="parent-replies"></span>
-            </div>
-            <div>
-              <button id="parent-delete" onclick="post.openDeletePostModal(event)" data-post-id="0" class="uk-icon-button" uk-icon="trash"></button>
-              <button onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="uk-icon-button" uk-icon="reply"></button>
-            </div>
+        <div id="parent-body"></div>
+        <div class="uk-flex uk-flex-between uk-flex-middle">
+          <!-- Parent meta-data -->
+          <div class="uk-text-meta">
+            <span id="parent-author"></span> •
+            <span id="parent-age"></span> •
+            <span uk-icon="comments"></span> <span id="parent-replies"></span>
+          </div>
+          <!-- Parent actions -->
+          <div>
+            <button id="parent-delete" onclick="post.openDeletePostModal(event)" data-post-id="0" class="uk-icon-button" uk-icon="trash"></button>
+            <button onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="uk-icon-button" uk-icon="reply"></button>
           </div>
         </div>
-      </article>
-      <hr class="uk-margin-small">
+      </div>
+      <hr class="post-divider">
       <!-- Replies -->
       <div id="replies"></div>
     </div>
@@ -66,6 +63,7 @@
           <button class="uk-button uk-button-danger" onclick="post.deletePost(event)">Yes</button>
       </div>
     </div>
+    <!-- Make relevant ES6 modules available globally -->
     <script type="module">
       import bespoke from "/js/bespoke.js";
       import post from "/js/post.js";

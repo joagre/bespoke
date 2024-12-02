@@ -149,8 +149,7 @@ class Post {
             parentReplyPost ? parentReplyPost["author"] : "Unknown";
       replyQuote = html`
         <!-- Reply quote -->
-        <div
-          class="uk-text-meta quote"
+        <div class="uk-text-meta quote"
           onclick=${(event) => this.toggleQuote(event)}
           data-post-id="${post["id"]}"
           data-parent-post-id="${post["parent-post-id"]}">
@@ -160,12 +159,11 @@ class Post {
             id="${replyQuoteAttr}"
             class="uk-card uk-card-body uk-card-default uk-card-small uk-text-meta uk-margin-small-bottom uk-margin-small-top custom-quote-padding"
             hidden>
-            <div id="${replyQuoteBodyAttr}" class="uk-margin-remove-first-child uk-margin-remove-last-child">
+            <div id="${replyQuoteBodyAttr}" class="quote-body">
               <p>Loading...</p>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
     const age = bespoke.formatSecondsSinceEpoch(post["created"]);
@@ -183,34 +181,35 @@ class Post {
     }
 
     return html`
-      <article class="uk-article uk-margin-remove-top">
+      <div>
+        <!-- Quoted reply body -->
         ${replyQuote}
         <!-- Reply body -->
-        <div id="${replyBodyAttr}" class="uk-margin-remove-first-child uk-margin-remove-last-child">
+        <div id="${replyBodyAttr}" class="reply-body">
           ${bespoke.uhtmlFormatMarkdown(post["body"])}
         </div>
-        <!-- Reply meta-data -->
-        <div class="uk-article-meta uk-margin-top-remove">
-          <div class="uk-flex uk-flex-between uk-flex-middle">
-            <div>
-              ${post["author"]} • ${age} ${replies}
-            </div>
-            <div>
-              <button
-                onclick=${(event) => this.openDeletePostModal(event)}
-                data-post-id="${post["id"]}"
-                class="uk-icon-button"
-                uk-icon="trash"></button>
-              <button
-                onclick=${(event) => addReplyPost.gotoAddReplyPostPage(event, post["id"], true)}
-                class="uk-icon-button"
-                uk-icon="reply"></button>
-            </div>
+        <div class="uk-flex uk-flex-between uk-flex-middle">
+          <!-- Reply meta-data -->
+          <div class="uk-text-meta">
+            ${post["author"]} •
+            ${age}
+            ${replies}
+          </div>
+          <!-- Reply actions -->
+          <div>
+            <button
+              onclick=${(event) => this.openDeletePostModal(event)}
+              data-post-id="${post["id"]}"
+              class="uk-icon-button"
+              uk-icon="trash"></button>
+            <button
+              onclick=${(event) => addReplyPost.gotoAddReplyPostPage(event, post["id"], true)}
+              class="uk-icon-button"
+              uk-icon="reply"></button>
           </div>
         </div>
-      </article>
-      <hr id="${replyDividerAttr}" class="uk-margin-small uk-divider-icon">
-    `;
+      </div>
+      <hr id="${replyDividerAttr}" class="post-divider">`;
   }
 
   openDeletePostModal(event) {

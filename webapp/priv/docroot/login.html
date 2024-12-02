@@ -19,22 +19,14 @@
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
-      <div class="uk-card uk-card-default uk-background-muted uk-padding-small uk-padding-remove-horizontal">
-        <div class="uk-flex uk-flex-between uk-flex-middle">
-          <div class="uk-flex-1 uk-flex uk-flex-center">
-            <div class="uk-text-bold">Bespoke BBS</div>
-          </div>
+      <div class="header uk-flex uk-flex-between uk-flex-middle uk-background-muted uk-padding-small" uk-sticky>
+        <!-- Title -->
+        <div class="uk-flex-1 uk-flex uk-flex-center">
+          <div class="uk-text-bold">Bespoke BBS</div>
         </div>
       </div>
+      <!-- Content -->
       <h2>Login to Bespoke BBS</h2>
-      <p>
-        You are about to enter a Bespoke BBS - <i>Your friendly
-          location-based micro community</i>. Here you can interact with
-        friends using <b>forums</b>, <b>direct messaging</b> and <b>file
-        sharing</b>. Bespoke BBS is never connected to the Internet but
-        instead exists only in your local vicinity. If this isn't your
-        thing just leave now.
-      </p>
       <p>
         If you want to remain anonymous (with the generated
         username <em id="auto-username"></em>) just click on the login button. If you
@@ -64,6 +56,7 @@
         </form>
       </div>
     </div>
+    <!-- Make relevant ES6 modules available globally -->
     <script type="module">
       import login from "/js/login.js";
       window.login = login;

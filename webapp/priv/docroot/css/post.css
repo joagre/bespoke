@@ -3,11 +3,39 @@
 }
 
 .custom-quote-padding {
-  padding: 0.5em !important;
+    padding: 0.5em !important;
 }
 
 #parent-title {
-  margin-top: 1em;
-  font-size: 110%;
-  font-weight: bold;
+    font-size: 110%;
+    font-weight: bold;
+}
+
+#parent-body p {
+    /* Small top margin for all p tags */
+    margin-top: 0.25em;
+    /* Small bottom margin for all p tags */
+    margin-bottom: 0.25em;
+}
+
+/* Remove top margin for the first p */
+#parent-body p:first-child {
+    margin-top: 0;
+}
+
+/* Remove bottom margin for the last p */
+#parent-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* Remove top margin for the first p */
+.quote-body p:first-child,
+.reply-body p:first-child {
+    margin-top: 0;
+}
+
+/* Remove bottom margin for the last p */
+.quote-body p:last-child,
+.reply-body p:last-child {
+    margin-bottom: 0;
 }

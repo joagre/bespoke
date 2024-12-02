@@ -1,25 +1,7 @@
-.header {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-}
-
-.footer {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-}
-
 .top-post {
     cursor: pointer;
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
-}
-
-.active-footer-button {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-.footer-item {
-    cursor: pointer;
 }
 
 .sticky-bottom {
@@ -31,7 +13,7 @@
     z-index: 999;
 }
 
-/* Workaround for sticky behavior affecting the button */
+/* Prevent sticky behavior from affecting the button */
 .non-sticky {
-  position: relative; /* Prevent sticky behavior from affecting the button */
+    position: relative;
 }

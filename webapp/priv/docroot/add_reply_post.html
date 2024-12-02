@@ -21,35 +21,30 @@
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
-      <div class="uk-card uk-card-default uk-background-muted uk-padding-small uk-padding-remove-horizontal">
-        <div class="uk-flex uk-flex-between uk-flex-middle">
+      <div class="header uk-flex uk-flex-between uk-flex-middle uk-background-muted uk-padding-small" uk-sticky>
+        <!-- Go back -->
           <button onclick="addReplyPost.goBack(event, false)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
-          <div class="uk-flex-1 uk-flex uk-flex-center">
-            <div>
-              Add Reply
-              <span id="reply-depth" class="uk-text-meta"></span>
-            </div>
+        <!-- Title -->
+        <div class="uk-flex-1 uk-flex uk-flex-center">
+          <div>
+            <b>Add Reply</b>
+            <span id="reply-depth" class="uk-text-meta"></span>
           </div>
         </div>
       </div>
       <!-- Parent post -->
-      <article class="uk-article">
-        <!-- Parent header -->
+      <div class="uk-margin-small-top">
+        <!-- Parent title -->
         <div id="parent-title"></div>
         <!-- Parent body -->
-        <div id="parent-body" class="uk-margin-remove-first-child uk-margin-remove-last-child">parent-body</div>
+        <div id="parent-body"></div>
         <!-- Parent meta-data -->
-        <div class="uk-article-meta uk-margin-small-top">
-          <div class="uk-flex uk-flex-between uk-flex-middle">
-            <div>
-              <span id="parent-author"></span> •
-              <span id="parent-age"></span> •
-              <span uk-icon="comments"></span>
-              <span id="parent-replies"></span>
-            </div>
-          </div>
+        <div class="uk-text-meta">
+          <span id="parent-author"></span> •
+          <span id="parent-age"></span> •
+          <span uk-icon="comments"></span> <span id="parent-replies"></span>
         </div>
-      </article>
+      </div>
       <!-- Form -->
       <div class="uk-container uk-margin-top">
         <form class="uk-form-stacked">
@@ -72,6 +67,7 @@
         </form>
       </div>
     </div>
+    <!-- Make relevant ES6 modules available globally -->
     <script type="module">
       import bespoke from "/js/bespoke.js";
       import addReplyPost from "/js/add_reply_post.js";

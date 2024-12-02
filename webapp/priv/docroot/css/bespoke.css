@@ -1,3 +1,25 @@
 body {
     font-family: Arial, sans-serif;
 }
+
+.header {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+.footer {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+.active-footer-button {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.footer-item {
+    cursor: pointer;
+}
+
+.post-divider {
+    border-color: #afafaf;
+}
