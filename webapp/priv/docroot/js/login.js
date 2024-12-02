@@ -68,7 +68,7 @@ class Login {
             console.log("Captive portal acknowledgment sent to server");
             window.location.href = "/top_posts.html";
           })
-          .catch(err => console.error('Error:', err));
+          .catch(err => console.error("Error:", err));
       } catch (error) {
         console.error("Fetching failed:", error);
       }

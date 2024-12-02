@@ -19,16 +19,14 @@ class Bespoke {
   }
 
   _initializeSwipeListeners() {
-    document.addEventListener(
-      'touchstart',
-      (event) => this._onTouchStart(event),
-      { passive: false }
-    );
-    document.addEventListener(
-      'touchend',
-      (event) => this._onTouchEnd(event),
-      { passive: false }
-    );
+    document.addEventListener("touchstart",
+                              (event) => this._onTouchStart(event),
+                              { passive: false }
+                             );
+    document.addEventListener("touchend",
+                              (event) => this._onTouchEnd(event),
+                              { passive: false }
+                             );
   }
 
   _onTouchStart(event) {
@@ -54,9 +52,9 @@ class Bespoke {
   }
 
   _triggerSwipeNavigation() {
-    const swipeTarget = document.querySelector('[data-back-destination]');
+    const swipeTarget = document.querySelector("[data-back-destination]");
     if (swipeTarget) {
-      const destination = swipeTarget.getAttribute('data-back-destination');
+      const destination = swipeTarget.getAttribute("data-back-destination");
 
       if (destination === "") {
         window.history.back();
@@ -84,7 +82,7 @@ class Bespoke {
       try {
         return JSON.parse(decodeURIComponent(parts.pop().split(";").shift()));
       } catch (e) {
-        console.error('Error parsing Bespoke cookie', e);
+        console.error("Error parsing Bespoke cookie:", e);
       }
     }
     return null;
@@ -95,22 +93,22 @@ class Bespoke {
   }
 
   _setCookie(name, value, days = 7) {
-    let expires = '';
+    let expires = "";
     if (days) {
       const date = new Date();
       date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
       expires = `; expires=${date.toUTCString()}`;
     }
     const cookieValue =
-          typeof value === 'object' ? JSON.stringify(value) : value;
+          typeof value === "object" ? JSON.stringify(value) : value;
     document.cookie =
       `${name}=${encodeURIComponent(cookieValue)}${expires}; path=/; SameSite=Strict`;
   }
 
   onReady(relevantPage, callback) {
     if (window.location.pathname.endsWith(relevantPage)) {
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => callback());
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => callback());
       } else {
         callback();
       }

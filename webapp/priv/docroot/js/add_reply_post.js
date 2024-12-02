@@ -133,7 +133,7 @@ class AddReplyPost {
       bespoke.popPostStack();
     }
     bespoke.setCookieValue("popPostStack", false);
-    bespoke.gotoPage(event, 'post.html')
+    bespoke.gotoPage(event, "post.html")
   }
 }
 
