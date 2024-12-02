@@ -7,30 +7,23 @@ class Post {
   constructor() {
     this._dataLoaded = false;
     this._domReady = false;
-    this._parentPost = null;
-    this._topPostTitle = null;
-    this._replyPosts = [];
-    this._postIdToDelete = null;
-
-    this.init();
+    bespoke.onReady("/post.html", () => this._load());
   }
 
-  init() {
-    bespoke.initializeCookieState();
+  _load() {
     document.addEventListener("DOMContentLoaded", () => {
-      bespoke.init();
       this._domReady = true;
       if (this._dataLoaded) {
         this._populatePage();
       }
     });
-    this.loadData();
+    this._loadData();
   }
 
-  async loadData() {
+  async _loadData() {
     if (!document.cookie.includes("bespoke")) {
       console.log("Cookie not found, retrying in 1 second");
-      setTimeout(() => this.loadData(), 1000);
+      setTimeout(() => this._loadData(), 1000);
       return;
     }
 
@@ -104,6 +97,10 @@ class Post {
     // Populate header
     const headerTitle = postStackSize > 1 ? "Reply" : "Post";
     document.getElementById("header-title").textContent = headerTitle;
+
+    // Insert username into title
+    let username = bespoke.getCookieValue("username");
+    document.getElementById("title-username").textContent = username;
 
     if (postStackSize > 1) {
       document.getElementById(
@@ -203,7 +200,7 @@ class Post {
               class="uk-icon-button"
               uk-icon="trash"></button>
             <button
-              onclick=${(event) => addReplyPost.gotoAddReplyPostPage(event, post["id"], true)}
+              onclick=${(event) => addReplyPost.gotoAddReplyPage(event, post["id"], true)}
               class="uk-icon-button"
               uk-icon="reply"></button>
           </div>

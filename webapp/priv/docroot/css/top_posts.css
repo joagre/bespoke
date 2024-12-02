@@ -4,6 +4,11 @@
     padding-bottom: 0.5rem !important;
 }
 
+/* Prevent sticky footer from overlapping the end of the page */
+#posts {
+    padding-bottom: 50px;
+}
+
 .sticky-bottom {
     position: fixed;
     bottom: 0;
@@ -13,7 +18,8 @@
     z-index: 999;
 }
 
-/* Prevent sticky behavior from affecting the button */
+/* Prevent sticky behavior from affecting the button, i.e.
+   prevent the button to flicker while the page scrolls. */
 .non-sticky {
     position: relative;
 }

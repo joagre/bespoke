@@ -16,7 +16,7 @@
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
     <script type="module" src="js/bespoke.js"></script>
-    <script type="module" src="js/post.js" defer></script>
+    <script type="module" src="js/post.js"></script>
   </head>
   <body>
     <div class="uk-container uk-container-xsmall">
@@ -26,6 +26,7 @@
         <button onclick="bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
         <div class="uk-flex-1 uk-text-center">
           <span id="header-title" class="uk-text-bold"></span>
+          <span class="uk-text-meta">(<span id="title-username"></span>)</span>
           <span id="header-reply-level" class="uk-text-meta"></span>
         </div>
       </div>

@@ -1,6 +1,6 @@
 -module(db_user_serv).
 -export([start_link/0, stop/0]).
--export([get_username/1, authenticate/3, mac_address_to_username/1,
+-export([get_user/1, get_username/1, authenticate/3, mac_address_to_username/1,
          username_to_mac_address/1]).
 -export([message_handler/1]).
 -export_type([username/0, user_id/0, pwhash/0, session_id/0, password/0]).
@@ -44,6 +44,15 @@ start_link() ->
 
 stop() ->
     serv:call(?MODULE, stop).
+
+%%
+%% Exported: get_user
+%%
+
+-spec get_user(db_dnsmasq:mac_address()) -> #user{}.
+
+get_user(MacAddress) ->
+    serv:call(?MODULE, {get_user, MacAddress}).
 
 %%
 %% Exported: get_username
@@ -104,6 +113,24 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             ok = dets:close(?USER_DB),
             {reply, From, ok};
+        {call, From, {get_user, MacAddress}} ->
+            ?log_debug("Call: ~p", [{get_user, MacAddress}]),
+            case dets:match_object(?USER_DB,
+                                   #user{mac_address = MacAddress, _ = '_'}) of
+                [User] ->
+                    SessionId = session_id(),
+                    ok = dets:insert(?USER_DB, User#user{session_id = SessionId}),
+                    {reply, From, User};
+                [] ->
+                    Username = generate_username(S#state.word_list),
+                    UserId = db_serv:allocate_user_id(),
+                    SessionId = session_id(),
+                    User = #user{name = Username,
+                                 id = UserId,
+                                 session_id = SessionId,
+                                 mac_address = MacAddress},
+                    {reply, From, User}
+            end;
         {call, From, {get_username, MacAddress}} ->
             ?log_debug("Call: ~p", [{get_username, MacAddress}]),
             case dets:match_object(?USER_DB,

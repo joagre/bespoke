@@ -1,7 +1,11 @@
 import bespoke from "/js/bespoke.js";
 
 class Login {
-  init() {
+  constructor() {
+    bespoke.onReady("/login.html", () => this._load());
+  }
+
+  _load() {
     this._autoUsername = document.getElementById("auto-username");
     this._formUsername = document.getElementById("form-username");
     this._formUsername.addEventListener("input", () => this._checkFormCompletion());
@@ -26,7 +30,7 @@ class Login {
       this._autoUsername.innerText = username;
       this._formUsername.value = username;
     } catch (error) {
-      console.error("Fetching failed:", error);
+      console.error("Page update failed:", error);
     }
   }
 
@@ -73,11 +77,6 @@ class Login {
     updateServer();
   }
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  bespoke.init();
-  login.init();
-});
 
 const login = new Login();
 export default login

@@ -12,16 +12,109 @@ class Bespoke {
       startY: 0,
       endY: 0,
     };
-
     this.SWIPE_THRESHOLD = 30;
     this.VERTICAL_THRESHOLD = 75;
-
-    this.init();
+    this._initializeSwipeListeners();
+    this._initializeCookieState();
   }
 
-  init() {
-    this._initializeSwipeListeners();
-    this.initializeCookieState();
+  _initializeSwipeListeners() {
+    document.addEventListener(
+      'touchstart',
+      (event) => this._onTouchStart(event),
+      { passive: false }
+    );
+    document.addEventListener(
+      'touchend',
+      (event) => this._onTouchEnd(event),
+      { passive: false }
+    );
+  }
+
+  _onTouchStart(event) {
+    this._touch.startX = event.changedTouches[0].screenX;
+    this._touch.startY = event.changedTouches[0].screenY;
+  }
+
+  _onTouchEnd(event) {
+    this._touch.endX = event.changedTouches[0].screenX;
+    this._touch.endY = event.changedTouches[0].screenY;
+    this._handleSwipeGesture();
+  }
+
+  _handleSwipeGesture() {
+    const horizontalSwipe = this._touch.endX - this._touch.startX;
+    const verticalSwipe = Math.abs(this._touch.endY - this._touch.startY);
+    if (
+      horizontalSwipe > this.SWIPE_THRESHOLD &&
+      verticalSwipe < this.VERTICAL_THRESHOLD
+    ) {
+      this._triggerSwipeNavigation();
+    }
+  }
+
+  _triggerSwipeNavigation() {
+    const swipeTarget = document.querySelector('[data-back-destination]');
+    if (swipeTarget) {
+      const destination = swipeTarget.getAttribute('data-back-destination');
+
+      if (destination === "") {
+        window.history.back();
+      } else if (destination === "post.html") {
+        this.gotoPage(null, destination, -1);
+      } else {
+        this.gotoPage(null, destination);
+      }
+    }
+  }
+
+  _initializeCookieState() {
+    this._cookieState = this._getCookie("bespoke");
+
+    if (!this._cookieState) {
+      this._cookieState = { postStack: [] };
+      this._updateCookieState();
+    }
+  }
+
+  _getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      try {
+        return JSON.parse(decodeURIComponent(parts.pop().split(";").shift()));
+      } catch (e) {
+        console.error('Error parsing Bespoke cookie', e);
+      }
+    }
+    return null;
+  }
+
+  _updateCookieState() {
+    this._setCookie("bespoke", this._cookieState, 7);
+  }
+
+  _setCookie(name, value, days = 7) {
+    let expires = '';
+    if (days) {
+      const date = new Date();
+      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+      expires = `; expires=${date.toUTCString()}`;
+    }
+    const cookieValue =
+          typeof value === 'object' ? JSON.stringify(value) : value;
+    document.cookie =
+      `${name}=${encodeURIComponent(cookieValue)}${expires}; path=/; SameSite=Strict`;
+  }
+
+  onReady(relevantPage, callback) {
+    if (window.location.pathname.endsWith(relevantPage)) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => callback());
+      } else {
+        callback();
+      }
+    }
   }
 
   gotoPage(event, destination, postId) {
@@ -53,6 +146,22 @@ class Bespoke {
     } else {
       this.navigateTo(destination);
     }
+  }
+
+  _handleButtonEvent(event) {
+    if (event.target.tagName === "BUTTON" || event.target.closest("button")) {
+      event.stopPropagation();
+    }
+    event.preventDefault();
+  }
+
+  _isTextSelected() {
+    const selection = window.getSelection();
+    return selection && selection.toString().length > 0;
+  }
+
+  _isPostStackEmpty() {
+    return this._cookieState.postStack.length === 0;
   }
 
   setCookieValue(name, value) {
@@ -126,111 +235,6 @@ class Bespoke {
 
   navigateTo(destination) {
     window.location.href = destination;
-  }
-
-  initializeCookieState() {
-    this._cookieState = this._getCookie("bespoke");
-
-    if (!this._cookieState) {
-      this._cookieState = { postStack: [] };
-      this._updateCookieState();
-    }
-  }
-
-  _handleButtonEvent(event) {
-    if (event.target.tagName === "BUTTON" || event.target.closest("button")) {
-      event.stopPropagation();
-    }
-    event.preventDefault();
-  }
-
-  _isTextSelected() {
-    const selection = window.getSelection();
-    return selection && selection.toString().length > 0;
-  }
-
-  _isPostStackEmpty() {
-    return this._cookieState.postStack.length === 0;
-  }
-
-  _updateCookieState() {
-    this._setCookie("bespoke", this._cookieState, 7);
-  }
-
-  _getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-      try {
-        return JSON.parse(decodeURIComponent(parts.pop().split(";").shift()));
-      } catch (e) {
-        console.error('Error parsing Bespoke cookie', e);
-      }
-    }
-    return null;
-  }
-
-  _setCookie(name, value, days = 7) {
-    let expires = '';
-    if (days) {
-      const date = new Date();
-      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-      expires = `; expires=${date.toUTCString()}`;
-    }
-    const cookieValue =
-          typeof value === 'object' ? JSON.stringify(value) : value;
-    document.cookie =
-      `${name}=${encodeURIComponent(cookieValue)}${expires}; path=/; SameSite=Strict`;
-  }
-
-  _initializeSwipeListeners() {
-    document.addEventListener(
-      'touchstart',
-      (event) => this._onTouchStart(event),
-      { passive: false }
-    );
-    document.addEventListener(
-      'touchend',
-      (event) => this._onTouchEnd(event),
-      { passive: false }
-    );
-  }
-
-  _onTouchStart(event) {
-    this._touch.startX = event.changedTouches[0].screenX;
-    this._touch.startY = event.changedTouches[0].screenY;
-  }
-
-  _onTouchEnd(event) {
-    this._touch.endX = event.changedTouches[0].screenX;
-    this._touch.endY = event.changedTouches[0].screenY;
-    this._handleSwipeGesture();
-  }
-
-  _handleSwipeGesture() {
-    const horizontalSwipe = this._touch.endX - this._touch.startX;
-    const verticalSwipe = Math.abs(this._touch.endY - this._touch.startY);
-    if (
-      horizontalSwipe > this.SWIPE_THRESHOLD &&
-      verticalSwipe < this.VERTICAL_THRESHOLD
-    ) {
-      this._triggerSwipeNavigation();
-    }
-  }
-
-  _triggerSwipeNavigation() {
-    const swipeTarget = document.querySelector('[data-back-destination]');
-    if (swipeTarget) {
-      const destination = swipeTarget.getAttribute('data-back-destination');
-
-      if (destination === "") {
-        window.history.back();
-      } else if (destination === "post.html") {
-        this.gotoPage(null, destination, -1);
-      } else {
-        this.gotoPage(null, destination);
-      }
-    }
   }
 }
 

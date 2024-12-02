@@ -131,6 +131,24 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                                          post_to_json_term(Post)
                                  end, Posts),
             rest_util:response(Socket, Request, {ok, {format, JsonTerm}});
+        ["login"] ->
+            {ok, MacAddress} = get_mac_address(Socket),
+            User = db_user_serv:get_user(MacAddress),
+            UserJsonTerm =
+                #{<<"no-password">> => true,
+                  <<"username">> => User#user.name,
+                  <<"user-id">> => User#user.id,
+                  <<"session-id">> => User#user.session_id},
+            case User#user.pwhash of
+                not_set ->
+                    rest_util:response(Socket, Request,
+                                       {ok, {format, UserJsonTerm}});
+                _ ->
+                    UpdatedJsonTerm =
+                        maps:put(<<"no-password">>, false, UserJsonTerm),
+                    rest_util:response(Socket, Request,
+                                       {ok, {format, UpdatedJsonTerm}})
+            end;
         ["get_username"] ->
             {ok, MacAddress} = get_mac_address(Socket),
             Username = db_user_serv:get_username(MacAddress),

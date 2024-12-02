@@ -2,17 +2,35 @@ import bespoke from "/js/bespoke.js";
 
 class AddTopPost {
   constructor() {
-    this._formFields = [];
-    this._addButton = null;
+    bespoke.onReady("/add_top_post.html", () => this._load());
   }
 
-  init() {
-    bespoke.initializeCookieState();
+  _load() {
     this._formFields = Array.from(
       document.querySelectorAll("#form-title, #form-author, #form-body")
     );
     this._addButton = document.getElementById("add-button");
     this._attachEventListeners();
+    this._updatePage();
+  }
+
+  _attachEventListeners() {
+    this._formFields.forEach((field) => {
+      field.addEventListener("input", () => this._checkFormCompletion());
+    });
+  }
+
+  _checkFormCompletion() {
+    const allFilled = this._formFields.every(
+      (field) => field.value.trim() !== ""
+    );
+    this._addButton.disabled = !allFilled;
+  }
+
+  _updatePage() {
+    // Insert username into title
+    let username = bespoke.getCookieValue("username");
+    document.getElementById("title-username").textContent = username;
   }
 
   addTopPost(event) {
@@ -45,25 +63,7 @@ class AddTopPost {
 
     updateServer();
   }
-
-  _attachEventListeners() {
-    this._formFields.forEach((field) => {
-      field.addEventListener("input", () => this._checkFormCompletion());
-    });
-  }
-
-  _checkFormCompletion() {
-    const allFilled = this._formFields.every(
-      (field) => field.value.trim() !== ""
-    );
-    this._addButton.disabled = !allFilled;
-  }
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  bespoke.init();
-  addTopPost.init();
-});
 
 const addTopPost = new AddTopPost();
 export default addTopPost

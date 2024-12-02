@@ -15,20 +15,20 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/bespoke.js" defer></script>
-    <script type="module" src="js/add_reply_post.js" defer></script>
+    <script type="module" src="js/bespoke.js"></script>
+    <script type="module" src="js/add_reply_post.js"></script>
   </head>
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
       <div class="header uk-flex uk-flex-between uk-flex-middle uk-background-muted uk-padding-small" uk-sticky>
         <!-- Go back -->
-          <button onclick="addReplyPost.goBack(event, false)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+        <button onclick="addReplyPost.goBack(event, false)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
         <!-- Title -->
         <div class="uk-flex-1 uk-flex uk-flex-center">
           <div>
             <b>Add Reply</b>
-            <span id="reply-depth" class="uk-text-meta"></span>
+            <span class="uk-text-meta">(<span id="title-username"></span>)</span>
           </div>
         </div>
       </div>
@@ -62,7 +62,7 @@
           </div>
           <!-- Add button -->
           <div class="uk-margin uk-text-right">
-            <button onclick="addReplyPost.addReplyPost(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Reply</button>
+            <button onclick="addReplyPost.add(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Reply</button>
           </div>
         </form>
       </div>

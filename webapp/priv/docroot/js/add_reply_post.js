@@ -2,85 +2,24 @@ import bespoke from "/js/bespoke.js";
 
 class AddReplyPost {
   constructor() {
-    this.parentPost = null;
-    this.topPostTitle = null;
-    this._formFields = [];
-    this._addButton = null;
+    bespoke.onReady("/add_reply_post.html", () => this._load());
+
   }
 
-  init() {
-    bespoke.initializeCookieState();
+  _load() {
     this._formFields = Array.from(
       document.querySelectorAll("#form-author, #form-body")
     );
     this._addButton = document.getElementById("add-button");
     this._attachEventListeners();
-    this.updatePage();
+    this._updatePage();
   }
 
-  addReplyPost(event) {
-    event.preventDefault();
-
-    const post = {
-      author: document.getElementById("form-author").value,
-      body: document.getElementById("form-body").value,
-      "parent-post-id": this.parentPost["id"],
-      "top-post-id": (this.parentPost["top-post-id"] != null) ?
-        this.parentPost["top-post-id"] : this.parentPost["id"]
-    };
-
-    const updateServer = async () => {
-      try {
-        // REST: Add reply post
-        const response = await fetch("/insert_post", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(post),
-        });
-        if (!response.ok) {
-          console.error(`Server error: ${response.status}`);
-          return;
-        }
-        this.goBack(event, true);
-      } catch (error) {
-        console.error("Fetching failed:", error);
-      }
-    };
-
-    updateServer();
-  }
-
-  gotoAddReplyPostPage(event, postId, popPostStack) {
-    bespoke.setCookieValue("pop-post-stack", popPostStack);
-    bespoke.gotoPage(event, "add_reply_post.html", postId);
-  }
-
-  goBack(event, ignorePopPostStack) {
-    if (!ignorePopPostStack &&
-        bespoke.getCookieValue("pop-post-stack")) {
-      bespoke.popPostStack();
-    }
-    bespoke.setCookieValue("pop-post-stack", false);
-    bespoke.gotoPage(event, 'post.html')
-  }
-
-  _attachEventListeners() {
-    this._formFields.forEach((field) => {
-      field.addEventListener("input", () => this._checkFormCompletion());
-    });
-  }
-
-  _checkFormCompletion() {
-    const allFilled = this._formFields.every(
-      (field) => field.value.trim() !== ""
-    );
-    this._addButton.disabled = !allFilled;
-  }
-
-  async updatePage() {
+  async _updatePage() {
     try {
+      // Insert username into title
+      let username = bespoke.getCookieValue("username");
+      document.getElementById("title-username").textContent = username;
       // REST: Get parent post
       let response = await fetch("/lookup_posts", {
         method: "POST",
@@ -117,13 +56,13 @@ class AddReplyPost {
         this.topPostTitle = topPost["title"];
       }
 
-      this.populatePage();
+      this._populatePage();
     } catch (error) {
       console.error("Fetching failed:", error);
     }
   }
 
-  populatePage() {
+  _populatePage() {
     document.getElementById("parent-title").innerHTML = this.topPostTitle;
     document.getElementById("parent-body").innerHTML = bespoke.formatMarkdown(
       this.parentPost["body"]
@@ -135,12 +74,68 @@ class AddReplyPost {
     document.getElementById("parent-replies").textContent =
       this.parentPost["reply-count"];
   }
-}
 
-document.addEventListener("DOMContentLoaded", () => {
-  bespoke.init();
-  addReplyPost.init();
-});
+  _attachEventListeners() {
+    this._formFields.forEach((field) => {
+      field.addEventListener("input", () => this._checkFormCompletion());
+    });
+  }
+
+  _checkFormCompletion() {
+    const allFilled = this._formFields.every(
+      (field) => field.value.trim() !== ""
+    );
+    this._addButton.disabled = !allFilled;
+  }
+
+  add(event) {
+    event.preventDefault();
+
+    const post = {
+      author: document.getElementById("form-author").value,
+      body: document.getElementById("form-body").value,
+      "parent-post-id": this.parentPost["id"],
+      "top-post-id": (this.parentPost["top-post-id"] != null) ?
+        this.parentPost["top-post-id"] : this.parentPost["id"]
+    };
+
+    const updateServer = async () => {
+      try {
+        // REST: Add reply post
+        const response = await fetch("/insert_post", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(post),
+        });
+        if (!response.ok) {
+          console.error(`Server error: ${response.status}`);
+          return;
+        }
+        this.goBack(event, true);
+      } catch (error) {
+        console.error("Fetching failed:", error);
+      }
+    };
+
+    updateServer();
+  }
+
+  gotoAddReplyPage(event, postId, popPostStack) {
+    bespoke.setCookieValue("pop-post-stack", popPostStack);
+    bespoke.gotoPage(event, "add_reply_post.html", postId);
+  }
+
+  goBack(event, ignorePopPostStack) {
+    if (!ignorePopPostStack &&
+        bespoke.getCookieValue("pop-post-stack")) {
+      bespoke.popPostStack();
+    }
+    bespoke.setCookieValue("pop-post-stack", false);
+    bespoke.gotoPage(event, 'post.html')
+  }
+}
 
 const addReplyPost = new AddReplyPost();
 export default addReplyPost

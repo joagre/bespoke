@@ -5,16 +5,16 @@ const { html, render } = uhtml;
 
 class TopPosts {
   constructor() {
-    document.addEventListener("DOMContentLoaded", () => {
-      bespoke.init();
-      bespoke.clearPostStack();
-      this.updatePage();
-      // Update page every minute
-      setInterval(() => this.updatePage(), 60000);
-    });
+    bespoke.onReady("/top_posts.html", () => this._load());
   }
 
-  async updatePage() {
+  _load() {
+    bespoke.clearPostStack();
+    this._updatePage();
+    setInterval(() => this._updatePage(), 60000);
+  }
+
+  async _updatePage() {
     try {
       // REST: Get top posts
       const response = await fetch("/list_top_posts");
@@ -23,25 +23,28 @@ class TopPosts {
         return;
       }
       const topPosts = await response.json();
-
-      this.populatePage(topPosts);
+      this._populatePage(topPosts);
     } catch (error) {
-      console.error("Fetching failed:", error);
+      console.error("Page update failed:", error);
     }
   }
 
-  populatePage(topPosts) {
+  _populatePage(topPosts) {
+    // Insert username into title
+    let username = bespoke.getCookieValue("username");
+    document.getElementById("title-username").textContent = username;
+    // Insert top posts
     const postsContainer = document.getElementById("posts");
     if (topPosts.length === 0) {
       postsContainer.innerHTML = "<p>No posts available.</p>";
       return;
     }
     const postTemplates =
-          topPosts.map((post) => this.createPostTemplate(post));
+          topPosts.map((post) => this._createPostTemplate(post));
     render(postsContainer, html`${postTemplates}`);
   }
 
-  createPostTemplate(post) {
+  _createPostTemplate(post) {
     const age = bespoke.formatSecondsSinceEpoch(post["created"]);
     return html`
       <div onclick=${(event) => {
@@ -58,4 +61,4 @@ class TopPosts {
 }
 
 const topPosts = new TopPosts();
-export default topPosts;
+export default topPosts
