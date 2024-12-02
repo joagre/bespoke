@@ -209,7 +209,7 @@ class Post {
           </div>
         </div>
       </div>
-      <hr id="${replyDividerAttr}" class="post-divider">`;
+      <hr id="${replyDividerAttr}" class="uk-margin-small post-divider">`;
   }
 
   openDeletePostModal(event) {

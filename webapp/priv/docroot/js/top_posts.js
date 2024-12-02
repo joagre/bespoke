@@ -53,7 +53,7 @@ class TopPosts {
           <span uk-icon="comment"></span> ${post["reply-count"]}
         </div>
       </div>
-      <hr class="uk-margin-remove post-divider">`;
+      <hr class="uk-margin-small post-divider">`;
   }
 }
 
