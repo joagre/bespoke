@@ -8,7 +8,7 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 ## Web app
 
-* Check that captive portal worls for android and Ubunti/Chrome
+* Check that captive portal works for android and Ubunti/Chrome
 
 * Add /switch_user.html
 
