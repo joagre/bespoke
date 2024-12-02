@@ -4,11 +4,19 @@
 
 * Make the captive portal mechanics work flawlessly. Study how existing captive portal answers to `http/https` requests, `dns` lookups and `icmp` pings before and after the user login phase. Work has already been been started to solve the `http/https` requests and `dns` lookups in [db_rest.erl](db/src/db_rest.erl). `db_rest.erl` uses the [dnsmasq-tool](main/bin/dnsmasq-tool) to switch between different dns lookup behaviours before and after user login.
 
+Caveat: It seems that Android does a http request to httpd://www.google.com and verifies that the cerificate is ok. I will accept that Bespoke stays n the captive portal mini-browser. If this is too annoying, users we can write a natove app tat listsens on ssid connections and raises a notification + a Webview. We need such a app later on anuway.
+
 ## Web app
 
-* **DONE**: When a user login the first time (and enters the login web page) the MAC address is stored and associated with an auto-generated letter based username of the MAC address. The next time he/she logins he/she is automatically associated with the previously auto-generated username.
+* Check that captive portal worls for android and Ubunti/Chrome
 
-* **DONE**: Make it possible for a user to create a password protected custom username instead of the auto-generated ditto.
+* Add /switch_user.html
+
+* Add /change_password.html
+
+* Update and verify that /login.html works
+
+* Clean out db_serv.erl and db_rest.erl (from stale auth code)
 
 * Make sure the session-id is used for all operations performed in the app, i.e. creating and deleting posts and comments etc.
 
@@ -21,3 +29,5 @@
 * Add direct *messages* between users. They are just special cases of closed *posts*. We keep them in a separate tab and call them "Messages".
 
 * Maybe ask Kim to improve the layout. Just a little bit for now: Margins, paddings, fonts and coloring. Just very low hanging fruits. More can be done at a later point in time.
+
+* Native WebView wrapper app (for syncing etc)
