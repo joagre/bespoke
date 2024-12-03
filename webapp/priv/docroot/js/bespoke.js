@@ -70,9 +70,13 @@ class Bespoke {
     this._cookieState = this._getCookie("bespoke");
 
     if (!this._cookieState) {
-      this._cookieState = { postStack: [] };
-      this._updateCookieState();
+      this.resetCookieState();
     }
+  }
+
+  resetCookieState() {
+    this._cookieState = { postStack: [] };
+    this._updateCookieState();
   }
 
   _getCookie(name) {

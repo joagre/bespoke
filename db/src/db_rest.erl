@@ -382,13 +382,13 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                                       Socket, Request,
                                       {ok, {format, InsertedPostJsonTerm}});
                                 {error, invalid} ->
-                                    rest_util:response(Socket, Request,
-                                                       {error, no_access})
+                                    rest_util:response(
+                                      Socket, Request,
+                                      {error, bad_request, "Invalid post"})
                             end;
                         {error, not_found} ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request, "Invalid post"})
+                            rest_util:response(Socket, Request,
+                                               {error, no_access})
                     end
             end;
         ["delete_post"] ->

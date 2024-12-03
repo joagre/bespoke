@@ -24,6 +24,7 @@ class Loader {
         }
         const loginResult = await response.json();
         // Set cookies
+        bespoke.resetCookieState();
         bespoke.setCookieValue("username", loginResult["username"]);
         bespoke.setCookieValue("sessionId", loginResult["session-id"]);
         // Redirect

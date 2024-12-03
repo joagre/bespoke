@@ -1,7 +1,7 @@
 -module(db_user_serv).
 -export([start_link/0, stop/0]).
 -export([get_user/1, get_user_from_session_id/1, get_user_from_mac_address/1,
-         authenticate/2]).
+         authenticate/2, user_db_to_list/0]).
 -export([message_handler/1]).
 -export_type([username/0, pwhash/0, session_id/0, password/0]).
 
@@ -84,6 +84,15 @@ authenticate(Username, Password) ->
     serv:call(?MODULE, {authenticate, Username, Password}).
 
 %%
+%% Exported: user_db_to_list
+%%
+
+-spec user_db_to_list() -> [#user{}].
+
+user_db_to_list() ->
+    serv:call(?MODULE, user_db_to_list).
+
+%%
 %% Server
 %%
 
@@ -139,10 +148,10 @@ message_handler(S) ->
                           fun(User1, User2) ->
                                   User1#user.updated < User2#user.updated
                           end, Users),
-                    SessionId = session_id(),
-                    ok = dets:insert(?USER_DB,
-                                     LastUpdatedUser#user{session_id = SessionId}),
-                    {reply, From, LastUpdatedUser}
+                    RefreshedUser =
+                        LastUpdatedUser#user{session_id = session_id()},
+                    ok = dets:insert(?USER_DB, RefreshedUser),
+                    {reply, From, RefreshedUser}
             end;
         {call, From, {authenticate, Username, Password}} ->
             ?log_debug("Call: ~p", [{authenticate, Username, Password}]),
@@ -161,6 +170,10 @@ message_handler(S) ->
                 [] ->
                     {reply, From, {error, failure}}
             end;
+        {call, From, user_db_to_list = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            UserDb = dets:match_object(?USER_DB, #user{_ = '_'}),
+            {reply, From, UserDb};
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             exit(Reason);
         {system, From, Request} ->
