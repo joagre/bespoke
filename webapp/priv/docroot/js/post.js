@@ -63,7 +63,10 @@ class Post {
                         "Expected exactly one post");
         this._topPostTitle = topPost[0]["title"];
       }
-
+      // Possible remove delete button if not the author
+      if (this._parentPost["author"] !== bespoke.getCookieValue("username")) {
+        document.getElementById("parent-delete").style.display = "none";
+      }
       // REST: Get reply posts
       response = await fetch("/lookup_recursive_posts", {
         method: "POST",
@@ -173,11 +176,19 @@ class Post {
     let replies = "";
     if (post["reply-count"] > 0) {
       replies = html`•
-        <button
-          onclick=${(event) => bespoke.gotoPage(event, "post.html", post["id"])}
-          class="uk-icon-button"
-          uk-icon="comments"></button>
+        <button onclick=${(event) => bespoke.gotoPage(event, "post.html", post["id"])}
+                class="uk-icon-button"
+                uk-icon="comments"></button>
         ${post["reply-count"]}`;
+    }
+
+    let deleteButton = "";
+    if (post["author"] === bespoke.getCookieValue("username")) {
+      deleteButton = html`
+        <button onclick=${(event) => this.openDeletePostModal(event)}
+                data-post-id="${post["id"]}"
+                class="uk-icon-button"
+                uk-icon="trash"></button>`;
     }
 
     return html`
@@ -197,15 +208,10 @@ class Post {
           </div>
           <!-- Reply actions -->
           <div>
-            <button
-              onclick=${(event) => this.openDeletePostModal(event)}
-              data-post-id="${post["id"]}"
-              class="uk-icon-button"
-              uk-icon="trash"></button>
-            <button
-              onclick=${(event) => addReplyPost.gotoAddReplyPage(event, post["id"], true)}
-              class="uk-icon-button"
-              uk-icon="reply"></button>
+            ${deleteButton}
+            <button onclick=${(event) => addReplyPost.gotoAddReplyPage(event, post["id"], true)}
+                    class="uk-icon-button"
+                    uk-icon="reply"></button>
           </div>
         </div>
       </div>
