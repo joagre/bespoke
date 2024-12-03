@@ -27,10 +27,10 @@
 -record(user,
         {
          name :: db_user_serv:username() | '_',
-         id :: db_user_serv:user_id() | '_',
          pwhash = not_set :: db_user_serv:pwhash() | not_set | '_',
-         session_id = not_set :: db_user_serv:session_id() | not_set | '_',
-         mac_address :: db_dnsmasq:mac_address()
+         mac_address :: db_dnsmasq:mac_address() | '_',
+         updated :: db_serv:seconds_since_epoch() | '_',
+         session_id = not_set :: db_user_serv:session_id() | not_set | '_'
         }).
 
 -endif.

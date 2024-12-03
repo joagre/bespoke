@@ -228,11 +228,12 @@ class Post {
   }
 
   deletePost(event) {
-    const postId =
-          this._postIdToDelete === bespoke.peekPostStack().postId ? -1 : null;
-
     const updateServer = async () => {
       try {
+        const postId =
+              this._postIdToDelete === bespoke.peekPostStack().postId ? -1 :
+              null;
+
         // REST API: Delete post
         const response = await fetch("/delete_post", {
           method: "POST",
@@ -244,6 +245,9 @@ class Post {
         if (!response.ok) {
           console.error(`Server error: ${response.status}`);
           return;
+        }
+        if (postId != -1) {
+          bespoke.updatePostStackTopPosition();
         }
         bespoke.gotoPage(event, "post.html", postId);
         this._postIdToDelete = null;

@@ -186,6 +186,12 @@ class Bespoke {
     this._updateCookieState();
   }
 
+  updatePostStackTopPosition() {
+    this._cookieState.postStack.slice(-1)[0].scrollX = window.scrollX;
+    this._cookieState.postStack.slice(-1)[0].scrollY = window.scrollY;
+    this._updateCookieState();
+  }
+
   popPostStack() {
     if (this._cookieState.postStack.pop() != null) {
       this._updateCookieState();

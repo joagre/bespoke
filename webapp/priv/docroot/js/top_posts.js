@@ -52,7 +52,8 @@ class TopPosts {
            }} class="top-post">
         ${post["title"]}
         <div class="uk-text-meta uk-margin-small-top">
-          ${post["author"]} • ${age} •
+          ${post["author"]} •
+          ${age} •
           <span uk-icon="comment"></span> ${post["reply-count"]}
         </div>
       </div>

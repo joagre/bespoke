@@ -62,15 +62,19 @@ class Login {
           this._formUsernameError.style.display = "block";
           return;
         }
+        const authenticateResult = await response.json();
+        // Set cookies
+        bespoke.setCookieValue("username", authenticateResult["username"]);
+        bespoke.setCookieValue("sessionId", authenticateResult["session-id"]);
         // REST: Acknowledge captive portal
         fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
           .then(() => {
             console.log("Captive portal acknowledgment sent to server");
-            window.location.href = "/top_posts.html";
+            bespoke.navigateTo("/top_posts.html");
           })
           .catch(err => console.error("Error:", err));
       } catch (error) {
-        console.error("Fetching failed:", error);
+        console.error("Acknowledge to captive portal failed", error);
       }
     };
 

@@ -25,7 +25,6 @@ class Loader {
         const loginResult = await response.json();
         // Set cookies
         bespoke.setCookieValue("username", loginResult["username"]);
-        bespoke.setCookieValue("userId", loginResult["user-id"]);
         bespoke.setCookieValue("sessionId", loginResult["session-id"]);
         // Redirect
         if (loginResult["no-password"]) {

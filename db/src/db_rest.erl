@@ -133,11 +133,10 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             rest_util:response(Socket, Request, {ok, {format, JsonTerm}});
         ["login"] ->
             {ok, MacAddress} = get_mac_address(Socket),
-            User = db_user_serv:get_user(MacAddress),
+            {ok, User} = db_user_serv:get_user(MacAddress),
             UserJsonTerm =
                 #{<<"no-password">> => true,
                   <<"username">> => User#user.name,
-                  <<"user-id">> => User#user.id,
                   <<"session-id">> => User#user.session_id},
             case User#user.pwhash of
                 not_set ->
@@ -151,8 +150,8 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             end;
         ["get_username"] ->
             {ok, MacAddress} = get_mac_address(Socket),
-            Username = db_user_serv:get_username(MacAddress),
-            rest_util:response(Socket, Request, {ok, {format, Username}});
+            User = db_user_serv:get_user_from_mac_address(MacAddress),
+            rest_util:response(Socket, Request, {ok, {format, User#user.name}});
         %% Act as static web server
 	Tokens when Headers#http_chdr.host == "localhost" orelse
                     Headers#http_chdr.host == "bespoke.local" orelse
@@ -283,13 +282,11 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                 AuthenticateJsonTerm ->
                     case json_term_to_authenticate(AuthenticateJsonTerm) of
                         {ok, Username, Password} ->
-                            {ok, MacAddress} = get_mac_address(Socket),
-                            case db_user_serv:authenticate(
-                                   Username, Password, MacAddress) of
-                                {ok, SessionId} ->
-                                    rester_http_server:response_r(
-                                      Socket, Request, 204, "No Content", "",
-                                      [{"bespoke-session-id", SessionId}]);
+                            case db_user_serv:authenticate(Username, Password) of
+                                {ok, User} ->
+                                    rest_util:response(
+                                      Socket, Request,
+                                      {ok, {format, User#user.session_id}});
                                 {error, failure} ->
                                     rest_util:response(Socket, Request,
                                                        {error, no_access})
@@ -392,12 +389,20 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
                 PostId when is_binary(PostId) ->
-                    case db_serv:delete_post(PostId) of
-                        ok ->
-                            rest_util:response(Socket, Request, ok_204);
+                    {ok, #{<<"sessionId">> := SessionId}} =
+                        get_bespoke_cookie(Request),
+                    case db_user_serv:get_user_from_session_id(SessionId) of
+                        {ok, _User} ->
+                            case db_serv:delete_post(PostId) of
+                                ok ->
+                                    rest_util:response(Socket, Request, ok_204);
+                                {error, not_found} ->
+                                    rest_util:response(Socket, Request,
+                                                       {error, not_found})
+                            end;
                         {error, not_found} ->
                             rest_util:response(Socket, Request,
-                                               {error, not_found})
+                                               {error, no_access})
                     end;
                 _ ->
                     rest_util:response(
@@ -508,4 +513,17 @@ get_mac_address_for_ip_address(IpAddress) ->
             {error, not_found};
         MacAddress ->
             {ok, ?l2b(MacAddress)}
+    end.
+
+get_bespoke_cookie(Request) ->
+    get_cookie("bespoke", (Request#http_request.headers)#http_chdr.cookie).
+
+get_cookie(_Name, []) ->
+    {error, not_found};
+get_cookie(Name, [Cookie|Rest]) ->
+    case string:tokens(Cookie, "=") of
+        [Name, Value] ->
+            {ok, json:decode(?l2b(uri_string:percent_decode(Value)))};
+        _ ->
+            get_cookie(Name, Rest)
     end.
