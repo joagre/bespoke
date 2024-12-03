@@ -124,7 +124,7 @@ class AddReplyPost {
 
   gotoAddReplyPage(event, postId, popPostStack) {
     bespoke.setCookieValue("popPostStack", popPostStack);
-    bespoke.gotoPage(event, "add_reply_post.html", postId);
+    bespoke.gotoPage(event, "/add_reply_post.html", postId);
   }
 
   goBack(event, ignorePopPostStack) {
@@ -133,7 +133,7 @@ class AddReplyPost {
       bespoke.popPostStack();
     }
     bespoke.setCookieValue("popPostStack", false);
-    bespoke.gotoPage(event, "post.html")
+    bespoke.gotoPage(event, "/post.html")
   }
 }
 

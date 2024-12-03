@@ -7,7 +7,7 @@ class AddTopPost {
 
   _load() {
     this._formFields = Array.from(
-      document.querySelectorAll("#form-title, #form-author, #form-body")
+      document.querySelectorAll("#form-title, #form-body")
     );
     this._addButton = document.getElementById("add-button");
     this._attachEventListeners();
@@ -37,7 +37,6 @@ class AddTopPost {
     event.preventDefault();
     const post = {
       title: document.getElementById("form-title").value,
-      author: document.getElementById("form-author").value,
       body: document.getElementById("form-body").value,
     };
 
@@ -52,10 +51,14 @@ class AddTopPost {
           body: JSON.stringify(post),
         });
         if (!response.ok) {
+          if (response.status === 403) {
+            bespoke.navigateTo("/loader.html");
+            return;
+          }
           console.error(`Server error: ${response.status}`);
           return;
         }
-        bespoke.navigateTo("top_posts.html");
+        bespoke.navigateTo("/top_posts.html");
       } catch (error) {
         console.error("Fetching failed:", error);
       }

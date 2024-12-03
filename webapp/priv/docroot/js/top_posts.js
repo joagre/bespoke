@@ -48,7 +48,7 @@ class TopPosts {
     const age = bespoke.formatSecondsSinceEpoch(post["created"]);
     return html`
       <div onclick=${(event) => {
-             bespoke.gotoPage(event, "post.html", post["id"]);
+             bespoke.gotoPage(event, "/post.html", post["id"]);
            }} class="top-post">
         ${post["title"]}
         <div class="uk-text-meta uk-margin-small-top">

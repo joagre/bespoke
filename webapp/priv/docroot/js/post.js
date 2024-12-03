@@ -176,7 +176,7 @@ class Post {
     let replies = "";
     if (post["reply-count"] > 0) {
       replies = html`•
-        <button onclick=${(event) => bespoke.gotoPage(event, "post.html", post["id"])}
+        <button onclick=${(event) => bespoke.gotoPage(event, "/post.html", post["id"])}
                 class="uk-icon-button"
                 uk-icon="comments"></button>
         ${post["reply-count"]}`;
@@ -255,7 +255,7 @@ class Post {
         if (postId != -1) {
           bespoke.updatePostStackTopPosition();
         }
-        bespoke.gotoPage(event, "post.html", postId);
+        bespoke.gotoPage(event, "/post.html", postId);
         this._postIdToDelete = null;
       } catch (error) {
         console.error("Fetching failed:", error);

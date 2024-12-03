@@ -140,7 +140,7 @@ class Bespoke {
     }
 
     if (destination === "post.html" && this._isPostStackEmpty()) {
-      this.navigateTo("top_posts.html");
+      this.navigateTo("/top_posts.html");
     } else {
       this.navigateTo(destination);
     }

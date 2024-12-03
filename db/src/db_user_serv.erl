@@ -58,7 +58,7 @@ get_user(Username) ->
 %% Exported: get_user_from_session_id
 %%
 
--spec get_user_from_session_id(session_id) ->
+-spec get_user_from_session_id(session_id()) ->
           {ok, #user{}} | {error, not_found}.
 
 get_user_from_session_id(SessionId) ->
@@ -131,6 +131,7 @@ message_handler(S) ->
                                  mac_address = MacAddress,
                                  updated = os:system_time(second),
                                  session_id = SessionId},
+                    ok = dets:insert(?USER_DB, User),
                     {reply, From, User};
                 Users ->
                     [LastUpdatedUser|_] =
