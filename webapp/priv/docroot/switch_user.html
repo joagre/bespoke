@@ -52,6 +52,7 @@
             <a onclick="switchUser.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="#" uk-icon="icon: unlock" id="toggle-password" role="button" aria-label="Toggle password visibility"></a>
             <input class="uk-input" placeholder="Password" id="form-password" type="text">
           </div>
+          <span class="uk-text-meta">(Use a <a href="#" class="underlined-link" onclick="switchUser.generateStrongPassword(event)">strong</a> password)</span>
           <!-- Switch button -->
           <div class="uk-margin-top uk-text-right">
             <button onclick="switchUser.switchNow(event)" type="submit" class="uk-button uk-button-primary" id="switch-button" disabled>Switch User</button>

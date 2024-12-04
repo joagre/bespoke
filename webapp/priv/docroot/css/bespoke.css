@@ -23,3 +23,7 @@ body {
 .post-divider {
     border-color: #afafaf;
 }
+
+.underlined-link {
+    text-decoration: underline;
+}

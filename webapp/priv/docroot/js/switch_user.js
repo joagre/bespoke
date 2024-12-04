@@ -85,6 +85,14 @@ class SwitchUser {
     UIkit.icon(togglePassword).$destroy();
     UIkit.icon(togglePassword);
   }
+
+  generateStrongPassword(event) {
+    event.preventDefault();
+    const passwordInput = document.getElementById("form-password");
+    const password = bespoke.generateStrongPassword();
+    passwordInput.value = password;
+    this._checkFormCompletion();
+  }
 }
 
 const switchUser = new SwitchUser();
