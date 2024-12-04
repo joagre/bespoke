@@ -8,7 +8,7 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 ## Web app
 
-* Check that captive portal works for android and Ubunti/Chrome
+* Make sure the session-id is used for all operations performed in the app, i.e. creating and deleting posts and comments etc. Remember to add a trash action to top_posts.html.
 
 * Add /switch_user.html
 
@@ -16,11 +16,7 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 * Update and verify that /login.html works
 
-* Clean out db_serv.erl and db_rest.erl (from stale auth code)
-
-* Make sure the session-id is used for all operations performed in the app, i.e. creating and deleting posts and comments etc. Remember to add a trash action to top_posts.html.
-
-===
+* Check that captive portal works for android and Ubunti/Chrome
 
 * Add a HTTP GET back channel for asynchronous updates done by other users, i.e. a websocket is overkill for now (maybe forever).
 
@@ -33,3 +29,8 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 * Maybe ask Kim to improve the layout. Just a little bit for now: Margins, paddings, fonts and coloring. Just very low hanging fruits. More can be done at a later point in time.
 
 * Native WebView wrapper app (for syncing etc)
+
+### Remember
+
+* Enable SSL in Web server
+* Sanitize HTML

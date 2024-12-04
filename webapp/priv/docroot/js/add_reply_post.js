@@ -8,7 +8,7 @@ class AddReplyPost {
 
   _load() {
     this._formFields = Array.from(
-      document.querySelectorAll("#form-author, #form-body")
+      document.querySelectorAll("#form-body")
     );
     this._addButton = document.getElementById("add-button");
     this._attachEventListeners();
@@ -92,7 +92,6 @@ class AddReplyPost {
     event.preventDefault();
 
     const post = {
-      author: document.getElementById("form-author").value,
       body: document.getElementById("form-body").value,
       "parent-post-id": this.parentPost["id"],
       "top-post-id": (this.parentPost["top-post-id"] != null) ?
