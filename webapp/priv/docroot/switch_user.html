@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title id="head-title"></title>
+    <title>Switch User</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css">
@@ -49,8 +49,8 @@
           <span id="form-username-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
           <!-- Password -->
           <div class="uk-margin-top uk-inline uk-width-1-1">
-            <a onclick="switchUser.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="#" uk-icon="icon: unlock" id="toggle-password"></a>
-            <input class="uk-input" placeholder="Password" id="form-password" type="text" required>
+            <a onclick="switchUser.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="#" uk-icon="icon: unlock" id="toggle-password" role="button" aria-label="Toggle password visibility"></a>
+            <input class="uk-input" placeholder="Password" id="form-password" type="text">
           </div>
           <!-- Switch button -->
           <div class="uk-margin-top uk-text-right">
