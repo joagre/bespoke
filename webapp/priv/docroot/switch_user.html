@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title id="head-title"></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/uikit.min.css">
+    <link rel="stylesheet" href="css/bespoke.css">
+    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
+    <link rel="shortcut icon" href="/favicon/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/favicon/site.webmanifest">
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
+    <script src="js/uhtml.min.js" defer></script>
+    <script type="module" src="js/switch_user.js"></script>
+  </head>
+  <body>
+    <div class="uk-container uk-container-xsmall">
+      <!-- Header -->
+      <div class="header uk-flex uk-flex-between uk-flex-middle uk-background-muted uk-padding-small" uk-sticky>
+        <!-- Go back -->
+        <button onclick="bespoke.gotoPage(event, '/top_posts.html')" data-back-destination="top_posts.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+        <!-- Title -->
+        <div class="uk-flex-1 uk-flex uk-flex-center">
+          <div>
+            <b>Switch User</b>
+            <span class="uk-text-meta">(<span id="title-username"></span>)</span>
+          </div>
+        </div>
+      </div>
+      <!-- Content -->
+      <p>
+        Here you can switch to another user. If the user does not
+        exist it will be created, with or without password. If the
+        user exists you must know the password.
+      </p>
+      <p>
+        The user switch will be performed immedietally and when you
+        visit the Bespoke BBS the next time (on this device) you will
+        by default be logged in as this user.
+      </p>
+      <!-- Form -->
+      <div class="uk-container">
+        <form class="uk-form-stacked">
+          <!-- Username -->
+          <input class="uk-input" placeholder="Username" id="form-username" type="text" required>
+          <span id="form-username-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
+          <!-- Password -->
+          <div class="uk-margin-top uk-inline uk-width-1-1">
+            <a onclick="switchUser.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="#" uk-icon="icon: unlock" id="toggle-password"></a>
+            <input class="uk-input" placeholder="Password" id="form-password" type="text" required>
+          </div>
+          <!-- Switch button -->
+          <div class="uk-margin-top uk-text-right">
+            <button onclick="switchUser.switchNow(event)" type="submit" class="uk-button uk-button-primary" id="switch-button" disabled>Switch User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Make relevant ES6 modules available globally -->
+    <script type="module">
+      import bespoke from  "/js/bespoke.js";
+      import switchUser from "/js/switch_user.js";
+      window.bespoke = bespoke;
+      window.switchUser = switchUser;
+    </script>
+  </body>
+</html>
