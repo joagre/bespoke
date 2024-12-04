@@ -148,10 +148,8 @@ message_handler(S) ->
                           fun(User1, User2) ->
                                   User1#user.updated < User2#user.updated
                           end, Users),
-                    RefreshedUser =
-                        LastUpdatedUser#user{session_id = session_id()},
-                    ok = dets:insert(?USER_DB, RefreshedUser),
-                    {reply, From, RefreshedUser}
+                    ok = dets:insert(?USER_DB, LastUpdatedUser),
+                    {reply, From, LastUpdatedUser}
             end;
         {call, From, {authenticate, Username, Password}} ->
             ?log_debug("Call: ~p", [{authenticate, Username, Password}]),

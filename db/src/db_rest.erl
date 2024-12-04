@@ -160,16 +160,10 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             UriPath =
                 case Tokens of
                     [] ->
-                        "/top_posts.html";
+                        "/loader.html";
                     _ ->
                         Url#url.path
                 end,
-            case UriPath of
-                "/top_posts.html" ->
-                    io:format("Returning /top_posts.html\n");
-                _ ->
-                    silent
-            end,
             AbsFilename =
                 filename:join(
                   [filename:absname(code:priv_dir(webapp)), "docroot",
@@ -199,7 +193,7 @@ redirect_or_ack(Socket, Request, Page) ->
             io:format("Captive portal redirect...\n"),
             rester_http_server:response_r(
               Socket, Request, 302, "Found", "",
-              [{location, "http://bespoke.local/login.html"}|
+              [{location, "http://bespoke.local/loader.html"}|
                no_cache_headers()]);
         [{MacAddress, Timestamp}] ->
             %% 2 hours timeout (sync with leasetime in /etc/dhcpcd.conf)
@@ -209,7 +203,7 @@ redirect_or_ack(Socket, Request, Page) ->
                     ok = delete_all_stale_timestamps(),
                     rester_http_server:response_r(
                       Socket, Request, 302, "Found", "",
-                      [{location, "http://bespoke.local/login.html"}|
+                      [{location, "http://bespoke.local/loader.html"}|
                        no_cache_headers()]);
                 false ->
                     case Page of

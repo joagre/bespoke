@@ -89,7 +89,7 @@ class Post {
         window.scrollTo(postData.scrollX, postData.scrollY);
       }
     } catch (error) {
-      console.error("Fetching failed:", error);
+      console.error("Loading of data failed:", error);
     }
   }
 
@@ -258,7 +258,7 @@ class Post {
         bespoke.gotoPage(event, "/post.html", postId);
         this._postIdToDelete = null;
       } catch (error) {
-        console.error("Fetching failed:", error);
+        console.error("Deletion of post failed:", error);
       }
     };
 

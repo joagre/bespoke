@@ -20,15 +20,6 @@ body {
     cursor: pointer;
 }
 
-.uk-divider-icon {
-    border-color: #afafaf !important;
-    border-width: 8px !important;
-}
-
-.parent-post-divider {
-    border-color: black;
-}
-
 .post-divider {
     border-color: #afafaf;
 }

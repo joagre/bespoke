@@ -60,7 +60,7 @@ class AddTopPost {
         }
         bespoke.navigateTo("/top_posts.html");
       } catch (error) {
-        console.error("Fetching failed:", error);
+        console.error("Addition of top post failed:", error);
       }
     };
 

@@ -115,7 +115,7 @@ class AddReplyPost {
         }
         this.goBack(event, true);
       } catch (error) {
-        console.error("Fetching failed:", error);
+        console.error("Addition of reply failed:", error);
       }
     };
 
