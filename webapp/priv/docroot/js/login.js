@@ -21,12 +21,7 @@ class Login {
 
   async _updatePage() {
     try {
-      let response = await fetch("/get_username");
-      if (!response.ok) {
-        console.error(`Server error: ${response.status}`);
-        return;
-      }
-      let username = await response.json();
+      const username = bespoke.getCookieValue("username");
       this._autoUsername.innerText = username;
       this._formUsername.value = username;
     } catch (error) {
@@ -74,7 +69,7 @@ class Login {
           })
           .catch(err => console.error("Error:", err));
       } catch (error) {
-        console.error("Acknowledge to captive portal failed", error);
+        console.error("Authentication failed", error);
       }
     };
 

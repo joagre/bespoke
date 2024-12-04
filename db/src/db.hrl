@@ -28,7 +28,7 @@
         {
          name :: db_user_serv:username() | '_',
          pwhash = not_set :: db_user_serv:pwhash() | not_set | '_',
-         mac_address :: db_dnsmasq:mac_address() | '_',
+         mac_address :: db_user_serv:mac_address() | '_',
          updated :: db_serv:seconds_since_epoch() | '_',
          session_id = not_set :: db_user_serv:session_id() | not_set | '_'
         }).

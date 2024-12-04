@@ -1,9 +1,9 @@
 -module(db_user_serv).
 -export([start_link/0, stop/0]).
 -export([get_user/1, get_user_from_session_id/1, get_user_from_mac_address/1,
-         authenticate/2, user_db_to_list/0]).
+         authenticate/2, switch_user/3, user_db_to_list/0]).
 -export([message_handler/1]).
--export_type([username/0, pwhash/0, session_id/0, password/0]).
+-export_type([username/0, pwhash/0, mac_address/0, session_id/0, password/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/serv.hrl").
@@ -17,6 +17,7 @@
 
 -type username() :: binary().
 -type pwhash() :: binary().
+-type mac_address() :: binary().
 -type session_id() :: binary().
 -type password() :: binary().
 
@@ -68,7 +69,7 @@ get_user_from_session_id(SessionId) ->
 %% Exported: get_user_from_mac_address
 %%
 
--spec get_user_from_mac_address(db_dnsmasq:mac_address()) -> #user{}.
+-spec get_user_from_mac_address(mac_address()) -> #user{}.
 
 get_user_from_mac_address(MacAddress) ->
     serv:call(?MODULE, {get_user_from_mac_address, MacAddress}).
@@ -82,6 +83,16 @@ get_user_from_mac_address(MacAddress) ->
 
 authenticate(Username, Password) ->
     serv:call(?MODULE, {authenticate, Username, Password}).
+
+%%
+%% Exported: switch_user
+%%
+
+-spec switch_user(username(), password(), mac_address()) ->
+          {ok, #user{}} | {error, failure}.
+
+switch_user(Username, Password, MacAddress) ->
+    serv:call(?MODULE, {switch_user, Username, Password, MacAddress}).
 
 %%
 %% Exported: user_db_to_list
@@ -133,12 +144,12 @@ message_handler(S) ->
             case dets:match_object(?USER_DB,
                                    #user{mac_address = MacAddress, _ = '_'}) of
                 [] ->
-                    %% Generate a new user with a session id
+                    %% Note: Generates a completely new user
                     Username = generate_username(S#state.word_list),
                     SessionId = session_id(),
                     User = #user{name = Username,
                                  mac_address = MacAddress,
-                                 updated = os:system_time(second),
+                                 updated = timestamp(),
                                  session_id = SessionId},
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, User};
@@ -155,11 +166,9 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [{authenticate, Username, Password}]),
             case dets:lookup(?USER_DB, Username) of
                 [#user{pwhash = Pwhash} = User] ->
-                    %% Verify password
-                    case enacl:pwhash_str_verify(Pwhash, Password) of
+                    case verify_password(Pwhash, Password) of
                         true ->
-                            SessionId = session_id(),
-                            UpdatedUser = User#user{session_id = SessionId},
+                            UpdatedUser = User#user{session_id = session_id()},
                             ok = dets:insert(?USER_DB, UpdatedUser),
                             {reply, From, {ok, UpdatedUser}};
                         false ->
@@ -167,6 +176,51 @@ message_handler(S) ->
                     end;
                 [] ->
                     {reply, From, {error, failure}}
+            end;
+        {call, From, {switch_user, Username, Password, MacAddress}} ->
+            ?log_debug("Call: ~p",
+                       [{switch_user, Username, Password, MacAddress}]),
+            case dets:lookup(?USER_DB, Username) of
+                [#user{pwhash = not_set} = User] when Password == <<>> ->
+                    UpdatedUser = User#user{mac_address = MacAddress,
+                                            updated = timestamp(),
+                                            session_id = session_id()},
+                    ok = dets:insert(?USER_DB, UpdatedUser),
+                    {reply, From, {ok, UpdatedUser}};
+                [#user{pwhash = not_set} = User] ->
+                    UpdatedUser = User#user{pwhash = hash_password(Password),
+                                            mac_address = MacAddress,
+                                            updated = timestamp(),
+                                            session_id = session_id()},
+                    ok = dets:insert(?USER_DB, UpdatedUser),
+                    {reply, From, {ok, UpdatedUser}};
+                [#user{pwhash = Pwhash} = User] ->
+                    case verify_password(Pwhash, Password) of
+                        true ->
+                            UpdatedUser =
+                                User#user{mac_address = MacAddress,
+                                          updated = timestamp(),
+                                          session_id = session_id()},
+                            ok = dets:insert(?USER_DB, UpdatedUser),
+                            {reply, From, {ok, UpdatedUser}};
+                        false ->
+                            {reply, From, {error, failure}}
+                    end;
+                [] when Password == <<>> ->
+                    User = #user{name = Username,
+                                 mac_address = MacAddress,
+                                 updated = timestamp(),
+                                 session_id = session_id()},
+                    ok = dets:insert(?USER_DB, User),
+                    {reply, From, {ok, User}};
+                [] ->
+                    User = #user{name = Username,
+                                 pwhash = hash_password(Password),
+                                 mac_address = MacAddress,
+                                 updated = timestamp(),
+                                 session_id = session_id()},
+                    ok = dets:insert(?USER_DB, User),
+                    {reply, From, {ok, User}}
             end;
         {call, From, user_db_to_list = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -182,11 +236,8 @@ message_handler(S) ->
             noreply
     end.
 
-session_id() ->
-    ?l2b(base64:encode_to_string(enacl:randombytes(?SESSION_ID_SIZE))).
-
 %%
-%% Call: get_username
+%% Call: generate_username
 %%
 
 generate_username(WordList) ->
@@ -201,8 +252,6 @@ generate_username(WordList) ->
 random_word(Words) ->
     Index = enacl:randombytes_uniform(length(Words) + 1),
     lists:nth(Index, Words).
-
-
 
 %%
 %% Word list
@@ -241,3 +290,19 @@ is_valid_word(Word) ->
         _ ->
             false
     end.
+
+%%
+%% Utilities
+%%
+
+timestamp() ->
+    os:system_time(second).
+
+hash_password(Password) ->
+    enacl:pwhash_str(Password, interactive, interactive).
+
+verify_password(Pwhash, Password) ->
+    enacl:pwhash_str_verify(Pwhash, Password).
+
+session_id() ->
+    ?l2b(base64:encode_to_string(enacl:randombytes(?SESSION_ID_SIZE))).

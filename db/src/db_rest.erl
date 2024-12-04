@@ -149,10 +149,6 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                     rest_util:response(Socket, Request,
                                        {ok, {format, UpdatedJsonTerm}})
             end;
-        ["get_username"] ->
-            {ok, MacAddress} = get_mac_address(Socket),
-            User = db_user_serv:get_user_from_mac_address(MacAddress),
-            rest_util:response(Socket, Request, {ok, {format, User#user.name}});
         %% Act as static web server
 	Tokens when Headers#http_chdr.host == "localhost" orelse
                     Headers#http_chdr.host == "bespoke.local" orelse
@@ -290,6 +286,35 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                             rest_util:response(
                               Socket, Request,
                               {error, bad_request, "Invalid JSON format"})
+                    end
+            end;
+        ["switch_user"] ->
+            case rest_util:parse_body(Request, Body) of
+                {error, _Reason} ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"});
+                SwitchUserJsonTerm ->
+                    case json_term_to_switch_user(SwitchUserJsonTerm) of
+                        {ok, Username, Password} ->
+                            {ok, MacAddress} = get_mac_address(Socket),
+                            case db_user_serv:switch_user(
+                                   Username, Password, MacAddress) of
+                                {ok, User} ->
+                                    UserJsonTerm =
+                                        #{<<"username">> => User#user.name,
+                                          <<"session-id">> =>
+                                              User#user.session_id},
+                                    rest_util:response(
+                                      Socket, Request,
+                                      {ok, {format, UserJsonTerm}});
+                                {error, failure} ->
+                                    rest_util:response(Socket, Request,
+                                                       {error, no_access})
+                            end;
+                        {error, invalid} ->
+                            rest_util:response(Socket, Request,
+                                               {error, no_access})
                     end
             end;
         ["lookup_posts"] ->
@@ -480,6 +505,16 @@ json_term_to_authenticate(
   #{<<"username">> := Username,
     <<"password">> := Password} = AuthenticateJsonTerm) ->
     case no_more_keys([<<"username">>, <<"password">>], AuthenticateJsonTerm) of
+        true ->
+            {ok, Username, Password};
+        false ->
+            {error, invalid}
+    end.
+
+json_term_to_switch_user(
+  #{<<"username">> := Username,
+    <<"password">> := Password} = SwitchUserJsonTerm) ->
+    case no_more_keys([<<"username">>, <<"password">>], SwitchUserJsonTerm) of
         true ->
             {ok, Username, Password};
         false ->
