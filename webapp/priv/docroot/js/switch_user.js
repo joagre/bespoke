@@ -51,11 +51,12 @@ class SwitchUser {
         });
         if (!response.ok) {
           if (response.status === 403) {
-            this._formUsernameError.innerText = "Invalid username or password";
+            this._formUsernameError.innerText = "User could be switched";
             this._formUsernameError.style.display = "block";
           } else {
             console.error(`Server error: ${response.status}`);
           }
+          this._formUsername.focus();
           return;
         }
         const result = await response.json();

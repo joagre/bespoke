@@ -64,6 +64,7 @@ class ChangePassword {
           } else {
             console.error(`Server error: ${response.status}`);
           }
+          this._formPassword1.focus();
           return;
         }
         bespoke.navigateTo("/top_posts.html");

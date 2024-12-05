@@ -6,61 +6,62 @@ class Login {
   }
 
   _load() {
-    this._autoUsername = document.getElementById("auto-username");
     this._formUsername = document.getElementById("form-username");
     this._formUsername.addEventListener("input", () => this._checkFormCompletion());
+    this._formUsername.focus();
     this._formUsernameError = document.getElementById("form-username-error");
     this._formPassword = document.getElementById("form-password");
+    this._formPassword.addEventListener("input", () => this._checkFormCompletion());
     this._loginButton = document.getElementById("login-button");
     this._updatePage();
   }
 
   _checkFormCompletion() {
-    this._loginButton.disabled = this._formUsername.value.trim() === "";
+    this._formUsernameError.style.display = "none";
+    this._loginButton.disabled =
+      this._formUsername.value.trim() === "" ||
+      this._formPassword.value.trim() === "";
   }
 
   async _updatePage() {
     try {
       const username = bespoke.getCookieValue("username");
-      this._autoUsername.innerText = username;
       this._formUsername.value = username;
     } catch (error) {
       console.error("Page update failed:", error);
     }
   }
 
-  authenticate(event) {
+  loginNow(event) {
     event.preventDefault();
-
-    // Hide error span under form-username input
     this._formUsernameError.style.display = "none";
-
-    const authenticate = {
-      username: this._formUsername.value,
-      password: this._formPassword.value,
-    };
-
     const updateServer = async () => {
       try {
-        // REST: Authenticate
-        const response = await fetch("/authenticate", {
+        // REST: Login
+        const payload = {
+          username: this._formUsername.value,
+          password: this._formPassword.value,
+        };
+        const response = await fetch("/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(authenticate),
+          body: JSON.stringify(payload),
         });
         if (!response.ok) {
-          console.warn(`Server error: ${response.status}`);
-          // Show error span under form-username input
-          this._formUsernameError.innerText = "Invalid username or password";
-          this._formUsernameError.style.display = "block";
+          if (response.status === 403) {
+            this._formUsernameError.innerText = "Invalid username or password";
+            this._formUsernameError.style.display = "block";
+          } else {
+            console.error(`Server error: ${response.status}`);
+          }
+          this._formUsername.focus();
           return;
         }
-        const authenticateResult = await response.json();
-        // Set cookies
-        bespoke.setCookieValue("username", authenticateResult["username"]);
-        bespoke.setCookieValue("sessionId", authenticateResult["session-id"]);
+        const result = await response.json();
+        bespoke.setCookieValue("username", result["username"]);
+        bespoke.setCookieValue("sessionId", result["session-id"]);
         // REST: Acknowledge captive portal
         fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
           .then(() => {
@@ -74,6 +75,19 @@ class Login {
     };
 
     updateServer();
+  }
+
+  togglePassword(event) {
+    event.preventDefault();
+    const togglePassword = document.getElementById("toggle-password");
+    var type =
+        this._formPassword.getAttribute("type") === "password" ? "text" :
+        "password";
+    this._formPassword.setAttribute("type", type);
+    var iconType = type === "password" ? "lock" : "unlock";
+    togglePassword.setAttribute("uk-icon", "icon: " + iconType);
+    UIkit.icon(togglePassword).$destroy();
+    UIkit.icon(togglePassword);
   }
 }
 

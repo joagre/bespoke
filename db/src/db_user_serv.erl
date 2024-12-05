@@ -1,7 +1,7 @@
 -module(db_user_serv).
 -export([start_link/0, stop/0]).
 -export([get_user/1, get_user_from_session_id/1, get_user_from_mac_address/1,
-         authenticate/2, switch_user/3, change_password/3, user_db_to_list/0]).
+         login/2, switch_user/3, change_password/3, user_db_to_list/0]).
 -export([message_handler/1]).
 -export_type([username/0, pwhash/0, mac_address/0, session_id/0, password/0]).
 
@@ -75,14 +75,14 @@ get_user_from_mac_address(MacAddress) ->
     serv:call(?MODULE, {get_user_from_mac_address, MacAddress}).
 
 %%
-%% Exported: authenticate
+%% Exported: login
 %%
 
--spec authenticate(username(), password()) ->
+-spec login(username(), password()) ->
           {ok, #user{}} | {error, failure}.
 
-authenticate(Username, Password) ->
-    serv:call(?MODULE, {authenticate, Username, Password}).
+login(Username, Password) ->
+    serv:call(?MODULE, {login, Username, Password}).
 
 %%
 %% Exported: switch_user
@@ -172,8 +172,8 @@ message_handler(S) ->
                     ok = dets:insert(?USER_DB, LastUpdatedUser),
                     {reply, From, LastUpdatedUser}
             end;
-        {call, From, {authenticate, Username, Password}} ->
-            ?log_debug("Call: ~p", [{authenticate, Username, Password}]),
+        {call, From, {login, Username, Password}} ->
+            ?log_debug("Call: ~p", [{login, Username, Password}]),
             case dets:lookup(?USER_DB, Username) of
                 [#user{pwhash = Pwhash} = User] ->
                     case verify_password(Pwhash, Password) of
@@ -182,7 +182,7 @@ message_handler(S) ->
                             ok = dets:insert(?USER_DB, UpdatedUser),
                             {reply, From, {ok, UpdatedUser}};
                         false ->
-                            {error, failure}
+                            {reply, From, {error, failure}}
                     end;
                 [] ->
                     {reply, From, {error, failure}}

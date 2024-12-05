@@ -16,18 +16,16 @@ class Loader {
           return;
         }
         console.log("Captive portal acknowledgment sent to server");
-        // REST: Login
+        // REST: Auto login
         const autoLoginResponse = await fetch("/auto_login");
         if (!autoLoginResponse.ok) {
           console.error(`Login failed: ${response.status}`);
           return;
         }
-        const autoLoginResult = await response.json();
-        // Set cookies
+        const autoLoginResult = await autoLoginResponse.json();
         bespoke.resetCookieState();
         bespoke.setCookieValue("username", autoLoginResult["username"]);
         bespoke.setCookieValue("sessionId", autoLoginResult["session-id"]);
-        // Redirect
         if (autoLoginResult["no-password"]) {
           bespoke.navigateTo("/top_posts.html");
         } else {

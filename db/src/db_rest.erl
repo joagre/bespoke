@@ -275,10 +275,14 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                     case json_term_to_login(JsonTerm) of
                         {ok, Username, Password} ->
                             case db_user_serv:login(Username, Password) of
-                                {ok, User} ->
+                                {ok, #user{name = Username,
+                                           session_id = SessionId}} ->
+                                    PayloadJsonTerm =
+                                        #{<<"username">> => Username,
+                                          <<"session-id">> => SessionId},
                                     rest_util:response(
                                       Socket, Request,
-                                      {ok, {format, User#user.session_id}});
+                                      {ok, {format, PayloadJsonTerm}});
                                 {error, failure} ->
                                     rest_util:response(Socket, Request,
                                                        {error, no_access})
