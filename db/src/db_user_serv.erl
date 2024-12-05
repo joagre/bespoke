@@ -154,7 +154,7 @@ message_handler(S) ->
             case dets:match_object(?USER_DB,
                                    #user{mac_address = MacAddress, _ = '_'}) of
                 [] ->
-                    %% Note: Generates a completely new user
+                    %% Note: Generate a new user
                     User = #user{name = generate_username(S#state.word_list),
                                  mac_address = MacAddress,
                                  updated = timestamp(),
