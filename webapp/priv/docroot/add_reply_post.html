@@ -49,14 +49,10 @@
       <div class="uk-container uk-margin-top">
         <form class="uk-form-stacked">
           <!-- Body text area-->
-          <div class="uk-margin">
-            <div class="uk-form-controls">
-              <textarea class="uk-textarea" placeholder="Body" id="form-body" rows="5" required></textarea>
-            </div>
-          </div>
+          <textarea class="uk-textarea" placeholder="Enter a reply" id="form-body" rows="5" required></textarea>
           <!-- Add button -->
-          <div class="uk-margin uk-text-right">
-            <button onclick="addReplyPost.add(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Reply</button>
+          <div class="uk-margin-top uk-text-right">
+            <button onclick="addReplyPost.addNow(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Reply</button>
           </div>
         </form>
       </div>
