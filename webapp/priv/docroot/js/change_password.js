@@ -59,7 +59,7 @@ class ChangePassword {
         });
         if (!response.ok) {
           if (response.status === 403) {
-            this._formPasswordError.innerText = "Invalid password";
+            this._formPasswordError.innerText = "Password could not be changed";
             this._formPasswordError.style.display = "block";
           } else {
             console.error(`Server error: ${response.status}`);

@@ -29,41 +29,37 @@ class SwitchUser {
 
   switchNow(event) {
     event.preventDefault();
-
-    // Hide error span under form-username input
+    if (this._formUsername.value == bespoke.getCookieValue("username")) {
+      bespoke.navigateTo("/top_posts.html");
+      return;
+    }
     this._formUsernameError.style.display = "none";
-
-    const switchUser = {
-      username: this._formUsername.value,
-      password: this._formPassword.value,
-    };
-
     const updateServer = async () => {
-      // No need to switch user if already logged in as the same user
-      if (this._formUsername.value == bespoke.getCookieValue("username")) {
-        bespoke.navigateTo("/top_posts.html");
-        return;
-      }
       try {
         // REST: Switch user
+        const payload = {
+          username: this._formUsername.value,
+          password: this._formPassword.value,
+        };
         const response = await fetch("/switch_user", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(switchUser),
+          body: JSON.stringify(payload),
         });
         if (!response.ok) {
-          console.warn(`Server error: ${response.status}`);
-          // Show error span under form-username input
-          this._formUsernameError.innerText = "Invalid username or password";
-          this._formUsernameError.style.display = "block";
+          if (response.status === 403) {
+            this._formUsernameError.innerText = "Invalid username or password";
+            this._formUsernameError.style.display = "block";
+          } else {
+            console.error(`Server error: ${response.status}`);
+          }
           return;
         }
-        const switchUserResult = await response.json();
-        // Set cookies
-        bespoke.setCookieValue("username", switchUserResult["username"]);
-        bespoke.setCookieValue("sessionId", switchUserResult["session-id"]);
+        const result = await response.json();
+        bespoke.setCookieValue("username", result["username"]);
+        bespoke.setCookieValue("sessionId", result["session-id"]);
         bespoke.navigateTo("/top_posts.html");
       } catch (error) {
         console.error("User switch failed", error);

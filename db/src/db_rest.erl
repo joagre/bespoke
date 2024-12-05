@@ -294,20 +294,20 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                     rest_util:response(
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"});
-                SwitchUserJsonTerm ->
-                    case json_term_to_switch_user(SwitchUserJsonTerm) of
+                JsonTerm ->
+                    case json_term_to_switch_user(JsonTerm) of
                         {ok, Username, Password} ->
                             {ok, MacAddress} = get_mac_address(Socket),
                             case db_user_serv:switch_user(
                                    Username, Password, MacAddress) of
                                 {ok, User} ->
-                                    UserJsonTerm =
+                                    ResultJsonTerm =
                                         #{<<"username">> => User#user.name,
                                           <<"session-id">> =>
                                               User#user.session_id},
                                     rest_util:response(
                                       Socket, Request,
-                                      {ok, {format, UserJsonTerm}});
+                                      {ok, {format, ResultJsonTerm}});
                                 {error, failure} ->
                                     rest_util:response(Socket, Request,
                                                        {error, no_access})
@@ -322,7 +322,7 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                 {error, _Reason} ->
                     rest_util:response(
                       Socket, Request,
-                      {error, bad_request, "Invalid JSON format1"});
+                      {error, bad_request, "Invalid JSON format"});
                 JsonTerm ->
                     case json_term_to_change_password(JsonTerm) of
                         {ok, Password} ->
@@ -349,7 +349,7 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                         {error, invalid} ->
                             rest_util:response(
                               Socket, Request,
-                              {error, bad_request, "Invalid JSON format2"})
+                              {error, bad_request, "Invalid JSON format"})
                     end
             end;
         ["lookup_posts"] ->
