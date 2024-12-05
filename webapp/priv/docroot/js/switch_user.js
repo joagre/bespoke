@@ -76,10 +76,10 @@ class SwitchUser {
   togglePassword(event) {
     event.preventDefault();
     const togglePassword = document.getElementById("toggle-password");
-    const passwordInput = document.getElementById("form-password");
     var type =
-        passwordInput.getAttribute("type") === "password" ? "text" : "password";
-    passwordInput.setAttribute("type", type);
+        this._formPassword.getAttribute("type") === "password" ? "text" :
+        "password";
+    this._formPassword.setAttribute("type", type);
     var iconType = type === "password" ? "lock" : "unlock";
     togglePassword.setAttribute("uk-icon", "icon: " + iconType);
     UIkit.icon(togglePassword).$destroy();
@@ -88,9 +88,8 @@ class SwitchUser {
 
   generateStrongPassword(event) {
     event.preventDefault();
-    const passwordInput = document.getElementById("form-password");
     const password = bespoke.generateStrongPassword();
-    passwordInput.value = password;
+    this._formPassword.value = password;
     this._checkFormCompletion();
   }
 }

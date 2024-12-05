@@ -317,6 +317,41 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                                                {error, no_access})
                     end
             end;
+        ["change_password"] ->
+            case rest_util:parse_body(Request, Body) of
+                {error, _Reason} ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format1"});
+                JsonTerm ->
+                    case json_term_to_change_password(JsonTerm) of
+                        {ok, Password} ->
+                            {ok, MacAddress} = get_mac_address(Socket),
+                            {ok, #{<<"sessionId">> := SessionId}} =
+                                get_bespoke_cookie(Request),
+                            case db_user_serv:get_user_from_session_id(
+                                   SessionId) of
+                                {ok, #user{name = Username}} ->
+                                    case db_user_serv:change_password(
+                                           Username, Password, MacAddress) of
+                                        ok ->
+                                            rest_util:response(
+                                              Socket, Request, ok_204);
+                                        {error, failure} ->
+                                            rest_util:response(
+                                              Socket, Request,
+                                              {error, no_access})
+                                    end;
+                                {error, not_found} ->
+                                    rest_util:response(Socket, Request,
+                                                       {error, no_access})
+                            end;
+                        {error, invalid} ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request, "Invalid JSON format2"})
+                    end
+            end;
         ["lookup_posts"] ->
             case rest_util:parse_body(Request, Body) of
                 {error, _Reason} ->
@@ -520,6 +555,11 @@ json_term_to_switch_user(
         false ->
             {error, invalid}
     end.
+
+json_term_to_change_password(Password) when is_binary(Password) ->
+    {ok, Password};
+json_term_to_change_password(_) ->
+    {error, invalid}.
 
 %%
 %% Utilities

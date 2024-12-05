@@ -21,7 +21,7 @@
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
-      <div class="header uk-flex uk-flex-between uk-flex-middle uk-background-muted uk-padding-small" uk-sticky>
+      <div class="header uk-flex uk-flex-between uk-flex-middle uk-padding-small" uk-sticky>
         <!-- Title -->
         <div class="uk-flex-1 uk-flex uk-flex-center">
           <div>
@@ -35,7 +35,7 @@
           <div class="uk-padding-small" uk-dropdown="mode: click">
             <ul class="uk-nav uk-dropdown-nav">
               <li class="uk-active"><a href="/switch_user.html">Switch User</a></li>
-              <li class="uk-active"><a href="/update_password.html">Update Password</a></li>
+              <li class="uk-active"><a href="/change_password.html">Change Password</a></li>
               <li class="uk-active"><a href="/about.html">About ♥️</a></li>
             </ul>
           </div>
@@ -45,7 +45,7 @@
       <div id="posts"></div>
       <!-- Footer -->
       <div class="sticky-bottom">
-        <div class="footer uk-flex uk-flex-between uk-flex-around uk-background-muted uk-padding-small">
+        <div class="footer uk-flex uk-flex-between uk-flex-around uk-padding-small">
           <!-- Forum button -->
           <div onclick="javacript:void(0)" class="uk-text-center footer-item">
             <button class="uk-icon-button uk-active active-footer-button" uk-icon="icon: comments"></button>
@@ -62,7 +62,7 @@
             <span class="uk-text-small">File Share</span>
           </div>
           <!-- Create button -->
-          <div onclick="bespoke.gotoPage(event, 'add_top_post.html')" class="uk-text-center footer-item">
+          <div onclick="bespoke.gotoPage(event, '/add_top_post.html')" class="uk-text-center footer-item">
             <button class="uk-icon-button" uk-icon="icon: plus-circle"></button>
             <span class="uk-text-small">Create</span>
           </div>

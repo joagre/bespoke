@@ -19,9 +19,9 @@
   <body>
     <div class="uk-container uk-container-xsmall">
       <!-- Header -->
-      <div class="header uk-flex uk-flex-between uk-flex-middle uk-background-muted uk-padding-small" uk-sticky>
+      <div class="header uk-flex uk-flex-between uk-flex-middle uk-padding-small" uk-sticky>
         <!-- Go back -->
-        <button onclick="bespoke.gotoPage()" data-back-destination="" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+        <button onclick="bespoke.gotoPage(event)" data-back-destination="" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
         <!-- Title -->
         <div class="uk-flex-1 uk-flex uk-flex-center">
           <div class="uk-text-bold">About Bespoke</div>
@@ -29,8 +29,8 @@
       </div>
       <!-- Content -->
       <p>
-        Bespoke BBS is a <i>location-based Bulletin Board System
-        (BBS)</i> (in case you need catch phrase). Interact with
+        Bespoke BBS is a <i>location-based Bulletin Board System</i>
+        (in case you long for a catch phrase). Interact with
         friends using <b>forums</b>, <b>direct messaging</b>
         and <b>file sharing</b>. Bespoke BBS is never connected to the
         Internet but instead exists only in your local vicinity. This
