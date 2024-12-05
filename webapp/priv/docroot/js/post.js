@@ -33,7 +33,7 @@ class Post {
 
     try {
       // REST: Get parent post
-      let response = await fetch("/lookup_posts", {
+      const response = await fetch("/lookup_posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -61,7 +61,7 @@ class Post {
           console.error(`Server error: ${lookupPostsResponse.status}`);
           return;
         }
-        const lookupPostsResult = await response.json();
+        const lookupPostsResult = await lookupPostsResponse.json();
         bespoke.assert(lookupPostsResult.length === 1,
                        "Expected exactly one post");
         this._topPostTitle = lookupPostsResult[0]["title"];
