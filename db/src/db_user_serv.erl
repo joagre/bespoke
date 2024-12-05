@@ -167,7 +167,7 @@ message_handler(S) ->
                     [LastUpdatedUser|_] =
                         lists:sort(
                           fun(User1, User2) ->
-                                  User1#user.updated < User2#user.updated
+                                  User1#user.updated > User2#user.updated
                           end, Users),
                     ok = dets:insert(?USER_DB, LastUpdatedUser),
                     {reply, From, LastUpdatedUser}

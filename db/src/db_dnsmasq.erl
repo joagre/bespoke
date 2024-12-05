@@ -51,7 +51,7 @@ dnsmasq_tool(Parameters) ->
           filename:join([code:lib_dir(main), "bin", "dnsmasq-tool"])),
     Command = ["sudo ", ScriptPath, " /etc/dnsmasq.conf",
                " --restart-dnsmasq", Parameters, " 2>&1; echo $?"],
-    io:format("Calling: ~s\n", [Command]),
+    ?log_info("Calling: ~s\n", [Command]),
     ok.
 %    case string:strip(os:cmd(Command)) of
 %        "0" ->

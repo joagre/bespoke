@@ -8,6 +8,7 @@ class SwitchUser {
   _load() {
     this._formUsername = document.getElementById("form-username");
     this._formUsername.addEventListener("input", () => this._checkFormCompletion());
+    this._formUsername.focus();
     this._formUsernameError = document.getElementById("form-username-error");
     this._formPassword = document.getElementById("form-password");
     this._switchButton = document.getElementById("switch-button");
