@@ -7,10 +7,14 @@ class Post {
   constructor() {
     this._dataLoaded = false;
     this._domReady = false;
-    bespoke.onReady("/post.html", () => this._load());
+    bespoke.onReady("post.html", () => this._load());
   }
 
   _load() {
+    if (!bespoke.isCookieSet()) {
+      bespoke.navigateTo("loader.html");
+      return;
+    }
     document.addEventListener("DOMContentLoaded", () => {
       this._domReady = true;
       if (this._dataLoaded) {
@@ -255,7 +259,7 @@ class Post {
         if (postId != -1) {
           bespoke.updatePostStackTopPosition();
         }
-        bespoke.gotoPage(event, "/post.html", postId);
+        bespoke.gotoPage(event, "post.html", postId);
         this._postIdToDelete = null;
       } catch (error) {
         console.error("Deletion of post failed:", error);

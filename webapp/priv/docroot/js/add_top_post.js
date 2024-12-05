@@ -2,10 +2,14 @@ import bespoke from "/js/bespoke.js";
 
 class AddTopPost {
   constructor() {
-    bespoke.onReady("/add_top_post.html", () => this._load());
+    bespoke.onReady("add_top_post.html", () => this._load());
   }
 
   _load() {
+    if (!bespoke.isCookieSet()) {
+      bespoke.navigateTo("loader.html");
+      return;
+    }
     this._formFields = Array.from(
       document.querySelectorAll("#form-title, #form-body")
     );
@@ -52,13 +56,13 @@ class AddTopPost {
         });
         if (!response.ok) {
           if (response.status === 403) {
-            bespoke.navigateTo("/loader.html");
+            bespoke.navigateTo("loader.html");
             return;
           }
           console.error(`Server error: ${response.status}`);
           return;
         }
-        bespoke.navigateTo("/top_posts.html");
+        bespoke.navigateTo("top_posts.html");
       } catch (error) {
         console.error("Addition of top post failed:", error);
       }

@@ -2,10 +2,14 @@ import bespoke from "/js/bespoke.js";
 
 class Login {
   constructor() {
-    bespoke.onReady("/login.html", () => this._load());
+    bespoke.onReady("login.html", () => this._load());
   }
 
   _load() {
+    if (!bespoke.isCookieSet()) {
+      bespoke.navigateTo("loader.html");
+      return;
+    }
     this._formUsername = document.getElementById("form-username");
     this._formUsername.addEventListener("input", () => this._checkFormCompletion());
     this._formUsername.focus();
@@ -66,7 +70,7 @@ class Login {
         fetch("/captive_portal_ack", { method: "GET", mode: "no-cors" })
           .then(() => {
             console.log("Captive portal acknowledgment sent to server");
-            bespoke.navigateTo("/top_posts.html");
+            bespoke.navigateTo("top_posts.html");
           })
           .catch(err => console.error("Error:", err));
       } catch (error) {

@@ -2,11 +2,15 @@ import bespoke from "/js/bespoke.js";
 
 class AddReplyPost {
   constructor() {
-    bespoke.onReady("/add_reply_post.html", () => this._load());
+    bespoke.onReady("add_reply_post.html", () => this._load());
 
   }
 
   _load() {
+    if (!bespoke.isCookieSet()) {
+      bespoke.navigateTo("loader.html");
+      return;
+    }
     this._formFields = Array.from(
       document.querySelectorAll("#form-body")
     );
@@ -122,17 +126,16 @@ class AddReplyPost {
   }
 
   gotoAddReplyPage(event, postId, popPostStack) {
-    bespoke.setCookieValue("popPostStack", popPostStack);
-    bespoke.gotoPage(event, "/add_reply_post.html", postId);
+    bespoke.setLocalItem("popPostStack", popPostStack);
+    bespoke.gotoPage(event, "add_reply_post.html", postId);
   }
 
   goBack(event, ignorePopPostStack) {
-    if (!ignorePopPostStack &&
-        bespoke.getCookieValue("popPostStack")) {
+    if (!ignorePopPostStack && bespoke.getLocalItem("popPostStack")) {
       bespoke.popPostStack();
     }
-    bespoke.setCookieValue("popPostStack", false);
-    bespoke.gotoPage(event, "/post.html")
+    bespoke.setLocalItem("popPostStack", false);
+    bespoke.gotoPage(event, "post.html")
   }
 }
 

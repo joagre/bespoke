@@ -2,10 +2,14 @@ import bespoke from "/js/bespoke.js";
 
 class SwitchUser {
   constructor() {
-    bespoke.onReady("/switch_user.html", () => this._load());
+    bespoke.onReady("switch_user.html", () => this._load());
   }
 
   _load() {
+    if (!bespoke.isCookieSet()) {
+      bespoke.navigateTo("loader.html");
+      return;
+    }
     this._formUsername = document.getElementById("form-username");
     this._formUsername.addEventListener("input", () => this._checkFormCompletion());
     this._formUsername.focus();
@@ -31,7 +35,7 @@ class SwitchUser {
   switchNow(event) {
     event.preventDefault();
     if (this._formUsername.value == bespoke.getCookieValue("username")) {
-      bespoke.navigateTo("/top_posts.html");
+      bespoke.navigateTo("top_posts.html");
       return;
     }
     this._formUsernameError.style.display = "none";
@@ -62,7 +66,7 @@ class SwitchUser {
         const result = await response.json();
         bespoke.setCookieValue("username", result["username"]);
         bespoke.setCookieValue("sessionId", result["session-id"]);
-        bespoke.navigateTo("/top_posts.html");
+        bespoke.navigateTo("top_posts.html");
       } catch (error) {
         console.error("User switch failed", error);
       }

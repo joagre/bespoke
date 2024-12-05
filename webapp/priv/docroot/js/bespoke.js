@@ -74,11 +74,6 @@ class Bespoke {
     }
   }
 
-  resetCookieState() {
-    this._cookieState = { postStack: [] };
-    this._updateCookieState();
-  }
-
   _getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -123,7 +118,7 @@ class Bespoke {
     if (postId === -1) {
       this.popPostStack();
     } else if (typeof postId === "string") {
-      this.pushPostStack(postId);
+      this._pushPostStack(postId);
     }
 
     if (event != null) {
@@ -144,7 +139,7 @@ class Bespoke {
     }
 
     if (destination === "post.html" && this._isPostStackEmpty()) {
-      this.navigateTo("/top_posts.html");
+      this.navigateTo("top_posts.html");
     } else {
       this.navigateTo(destination);
     }
@@ -163,7 +158,7 @@ class Bespoke {
   }
 
   _isPostStackEmpty() {
-    return this._cookieState.postStack.length === 0;
+    return this.postStackSize() === 0;
   }
 
   setCookieValue(name, value) {
@@ -171,49 +166,75 @@ class Bespoke {
     this._updateCookieState();
   }
 
+  isCookieSet() {
+    return this._cookieState != null;
+  }
+
   getCookieValue(name) {
     return this._cookieState[name];
   }
 
-  clearPostStack() {
-    this._cookieState.postStack = [];
-    this._updateCookieState();
+  setLocalItem(key, value) {
+    console.log("Setting local item:", key, value);
+    localStorage.setItem(key, JSON.stringify(value));
   }
 
-  pushPostStack(postId) {
-    if (this.postStackSize() > 0) {
-      this._cookieState.postStack.slice(-1)[0].scrollX = window.scrollX;
-      this._cookieState.postStack.slice(-1)[0].scrollY = window.scrollY;
+  getLocalItem(key) {
+    const value = localStorage.getItem(key);
+    this.assert(value != null, "Local item is maybe missing");
+    return JSON.parse(value);
+  }
+
+  clearPostStack() {
+    this.setLocalItem("postStack", []);
+  }
+
+  _pushPostStack(postId) {
+    this.assert(postId != null, "post-id is not set");
+    let postStack = this.getLocalItem("postStack");
+    this.assert(postStack != null, "Post stack not found");
+    if (postStack.length > 0) {
+      postStack.slice(-1)[0].scrollX = window.scrollX;
+      postStack.slice(-1)[0].scrollY = window.scrollY;
     }
     const postData = {postId: postId, scrollX: 0, scrollY: 0};
-    this._cookieState.postStack.push(postData);
-    this._updateCookieState();
+    postStack.push(postData);
+    this.setLocalItem("postStack", postStack);
   }
 
   updatePostStackTopPosition() {
-    this._cookieState.postStack.slice(-1)[0].scrollX = window.scrollX;
-    this._cookieState.postStack.slice(-1)[0].scrollY = window.scrollY;
-    this._updateCookieState();
+    let postStack = this.getLocalItem("postStack");
+    this.assert(postStack != null, "Post stack not found");
+    postStack.slice(-1)[0].scrollX = window.scrollX;
+    postStack.slice(-1)[0].scrollY = window.scrollY;
+    this.setLocalItem("postStack", postStack);
   }
 
   popPostStack() {
-    if (this._cookieState.postStack.pop() != null) {
-      this._updateCookieState();
-    }
+    let postStack = this.getLocalItem("postStack");
+    this.assert(postStack != null, "Post stack not found");
+    this.assert(postStack.length > 0, "Post stack is empty");
+    postStack.pop();
+    this.setLocalItem("postStack", postStack);
   }
 
   peekPostStack() {
-    return this._cookieState.postStack.slice(-1)[0];
+    let postStack = this.getLocalItem("postStack");
+    this.assert(postStack != null, "Post stack not found");
+    this.assert(postStack.length > 0, "Post stack is empty");
+    return postStack.slice(-1)[0];
   }
 
   postStackSize() {
-    return this._cookieState.postStack.length;
+    const postStack = this.getLocalItem("postStack");
+    this.assert(postStack != null, "Post stack not found");
+    return postStack.length;
   }
 
   truncatePostStack(length) {
-    this._cookieState.postStack =
-      this._cookieState.postStack.slice(0, length);
-    this._updateCookieState();
+    const postStack = this.getLocalItem("postStack");
+    this.assert(postStack != null, "Post stack not found");
+    this.setLocalItem("postStack", postStack.slice(0, length));
   }
 
   formatSecondsSinceEpoch(secondsSinceEpoch) {

@@ -2,7 +2,7 @@ import bespoke from "/js/bespoke.js";
 
 class Loader {
   constructor() {
-    bespoke.onReady("/loader.html", () => this._load());
+    bespoke.onReady("loader.html", () => this._load());
   }
 
   _load() {
@@ -23,13 +23,12 @@ class Loader {
           return;
         }
         const autoLoginResult = await autoLoginResponse.json();
-        bespoke.resetCookieState();
         bespoke.setCookieValue("username", autoLoginResult["username"]);
         bespoke.setCookieValue("sessionId", autoLoginResult["session-id"]);
         if (autoLoginResult["no-password"]) {
-          bespoke.navigateTo("/top_posts.html");
+          bespoke.navigateTo("top_posts.html");
         } else {
-          bespoke.navigateTo("/login.html");
+          bespoke.navigateTo("login.html");
         }
       } catch (error) {
         console.error("Load failed:", error);

@@ -2,10 +2,14 @@ import bespoke from "/js/bespoke.js";
 
 class ChangePassword {
   constructor() {
-    bespoke.onReady("/change_password.html", () => this._load());
+    bespoke.onReady("change_password.html", () => this._load());
   }
 
   _load() {
+    if (!bespoke.isCookieSet()) {
+      bespoke.navigateTo("loader.html");
+      return;
+    }
     this._formPassword1 = document.getElementById("form-password1");
     this._formPassword1.addEventListener("input",
                                          () => this._checkFormCompletion());
@@ -67,7 +71,7 @@ class ChangePassword {
           this._formPassword1.focus();
           return;
         }
-        bespoke.navigateTo("/top_posts.html");
+        bespoke.navigateTo("top_posts.html");
       } catch (error) {
         console.error("Change password failed", error);
       }

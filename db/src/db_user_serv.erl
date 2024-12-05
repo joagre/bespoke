@@ -155,12 +155,10 @@ message_handler(S) ->
                                    #user{mac_address = MacAddress, _ = '_'}) of
                 [] ->
                     %% Note: Generates a completely new user
-                    Username = generate_username(S#state.word_list),
-                    SessionId = session_id(),
-                    User = #user{name = Username,
+                    User = #user{name = generate_username(S#state.word_list),
                                  mac_address = MacAddress,
                                  updated = timestamp(),
-                                 session_id = SessionId},
+                                 session_id = session_id()},
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, User};
                 Users ->
