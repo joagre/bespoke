@@ -8,14 +8,6 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 ## Web app
 
-* Make sure the session-id is used for all operations performed in the app, i.e. creating and deleting posts and comments etc. Remember to add a trash action to top_posts.html.
-
-* Add /switch_user.html
-
-* Add /change_password.html
-
-* Update and verify that /login.html works
-
 * Check that captive portal works for android and Ubunti/Chrome
 
 * Add a HTTP GET back channel for asynchronous updates done by other users, i.e. a websocket is overkill for now (maybe forever).
@@ -27,6 +19,10 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 * Add direct *messages* between users. They are just special cases of closed *posts*. We keep them in a separate tab and call them "Messages".
 
 * Maybe ask Kim to improve the layout. Just a little bit for now: Margins, paddings, fonts and coloring. Just very low hanging fruits. More can be done at a later point in time.
+
+* Attachments
+
+* File sharing
 
 * Native WebView wrapper app (for syncing etc)
 

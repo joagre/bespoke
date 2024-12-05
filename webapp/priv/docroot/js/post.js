@@ -44,51 +44,49 @@ class Post {
         console.error(`Server error: ${response.status}`);
         return;
       }
-      const data = await response.json();
-      bespoke.assert(data.length === 1, "Expected exactly one post");
-      this._parentPost = data[0];
-
+      const result = await response.json();
+      bespoke.assert(result.length === 1, "Expected exactly one post");
+      this._parentPost = result[0];
       // REST: Get top post title (maybe)
       this._topPostTitle = this._parentPost["title"];
       if (this._topPostTitle == null) {
-        response = await fetch("/lookup_posts", {
+        const lookupPostsResponse = await fetch("/lookup_posts", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify([this._parentPost["top-post-id"]])
         });
-        if (!response.ok) {
-          console.error(`Server error: ${response.status}`);
+        if (!lookupPostsResponse.ok) {
+          console.error(`Server error: ${lookupPostsResponse.status}`);
           return;
         }
-        const topPost = await response.json();
-        bespoke.assert(topPost.length === 1,
-                        "Expected exactly one post");
-        this._topPostTitle = topPost[0]["title"];
+        const lookupPostsResult = await response.json();
+        bespoke.assert(lookupPostsResult.length === 1,
+                       "Expected exactly one post");
+        this._topPostTitle = lookupPostsResult[0]["title"];
       }
       // Possible remove delete button if not the author
       if (this._parentPost["author"] !== bespoke.getCookieValue("username")) {
         document.getElementById("parent-delete").style.display = "none";
       }
       // REST: Get reply posts
-      response = await fetch("/lookup_recursive_posts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(this._parentPost["replies"])
-      });
-      if (!response.ok) {
-        console.error(`Server error: ${response.status}`);
+      const lookupRecursivePostsResponse =
+            await fetch("/lookup_recursive_posts", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(this._parentPost["replies"])
+            });
+      if (!lookupRecursivePostsResponse.ok) {
+        console.error(`Server error: ${lookupRecursivePostsResponse.status}`);
         return;
       }
-      this._replyPosts = await response.json();
+      this._replyPosts = await lookupRecursivePostsResponse.json();
       this._dataLoaded = true;
-
       if (this._domReady) {
         this._populatePage();
-        // Scroll window to saved position
         const postData = bespoke.peekPostStack();
         window.scrollTo(postData.scrollX, postData.scrollY);
       }
@@ -99,26 +97,21 @@ class Post {
 
   _populatePage() {
     const postStackSize = bespoke.postStackSize();
-
     // Populate head title
     const headTitle = postStackSize > 1 ? "Reply" : "Post";
     document.getElementById("head-title").textContent = headTitle;
-
     // Populate header
     const headerTitle = postStackSize > 1 ? "Reply" : "Post";
     document.getElementById("header-title").textContent = headerTitle;
-
     // Insert username into title
     let username = bespoke.getCookieValue("username");
     document.getElementById("title-username").textContent = username;
-
     if (postStackSize > 1) {
       document.getElementById(
         "header-reply-level").textContent = `[level: ${postStackSize - 1}]`;
     } else {
       document.getElementById("header-reply-level").style.display = "none";
     }
-
     // Populate parent post
     document.getElementById("parent-title").innerHTML = this._topPostTitle;
     document.getElementById("parent-body").innerHTML =
@@ -131,7 +124,6 @@ class Post {
       this._parentPost["reply-count"];
     document.getElementById("parent-delete")
       .setAttribute("data-post-id", this._parentPost["id"]);
-
     // Populate replies
     const repliesContainer = document.getElementById("replies");
     const replyTemplates = this._replyPosts.map((replyPost) =>
@@ -172,11 +164,9 @@ class Post {
           </div>
         </div>`;
     }
-
     const age = bespoke.formatSecondsSinceEpoch(post["created"]);
     const replyBodyAttr = `reply-body-${post["id"]}`;
     const replyDividerAttr = `reply-divider-${post["id"]}`;
-
     let replies = "";
     if (post["reply-count"] > 0) {
       replies = html`•
@@ -185,7 +175,6 @@ class Post {
                 uk-icon="comments"></button>
         ${post["reply-count"]}`;
     }
-
     let deleteButton = "";
     if (post["author"] === bespoke.getCookieValue("username")) {
       deleteButton = html`
@@ -194,7 +183,6 @@ class Post {
                 class="uk-icon-button"
                 uk-icon="trash"></button>`;
     }
-
     return html`
       <div>
         <!-- Quoted reply body -->
@@ -243,7 +231,6 @@ class Post {
         const postId =
               this._postIdToDelete === bespoke.peekPostStack().postId ? -1 :
               null;
-
         // REST API: Delete post
         const response = await fetch("/delete_post", {
           method: "POST",
@@ -265,7 +252,6 @@ class Post {
         console.error("Deletion of post failed:", error);
       }
     };
-
     updateServer();
   }
 
@@ -278,7 +264,6 @@ class Post {
     const isHidden = replyQuote.hidden;
     const replyQuoteButton =
           document.getElementById(`reply-quote-button-${postId}`);
-
     if (isHidden) {
       const replyQuoteBody =
             document.getElementById(`reply-quote-body-${postId}`);

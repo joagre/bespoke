@@ -26,18 +26,16 @@ class TopPosts {
         console.error(`Server error: ${response.status}`);
         return;
       }
-      const topPosts = await response.json();
-      this._populatePage(topPosts);
+      const result = await response.json();
+      this._populatePage(result);
     } catch (error) {
       console.error("Page update failed:", error);
     }
   }
 
   _populatePage(topPosts) {
-    // Insert username into title
-    let username = bespoke.getCookieValue("username");
+    const username = bespoke.getCookieValue("username");
     document.getElementById("title-username").textContent = username;
-    // Insert top posts
     const postsContainer = document.getElementById("posts");
     if (topPosts.length === 0) {
       postsContainer.innerHTML = "<p>No posts available.</p>";
