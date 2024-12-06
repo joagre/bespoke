@@ -35,7 +35,9 @@ class SwitchUser {
   switchNow(event) {
     event.preventDefault();
     if (this._formUsername.value == bespoke.getCookieValue("username")) {
-      bespoke.navigateTo("top_posts.html");
+      this._formUsernameError.innerText = "You are already that user!";
+      this._formUsernameError.style.display = "block";
+      this._formUsername.focus();
       return;
     }
     this._formUsernameError.style.display = "none";
@@ -55,7 +57,7 @@ class SwitchUser {
         });
         if (!response.ok) {
           if (response.status === 403) {
-            this._formUsernameError.innerText = "User could be switched";
+            this._formUsernameError.innerText = "Invalid username or password";
             this._formUsernameError.style.display = "block";
           } else {
             console.error(`Server error: ${response.status}`);
