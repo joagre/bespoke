@@ -94,6 +94,7 @@ class SwitchUser {
     event.preventDefault();
     const password = bespoke.generateStrongPassword();
     this._formPassword.value = password;
+    this._formPassword.focus();
     this._checkFormCompletion();
   }
 }
