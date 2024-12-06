@@ -584,7 +584,6 @@ get_mac_address(Socket) ->
 get_mac_address_for_ip_address(IpAddress) ->
     Command = "ip neigh show | awk '/" ++
         inet:ntoa(IpAddress) ++ "/ {print $5}'",
-    ?log_info("*********COMMAND ~p\n",[Command]),
     case string:trim(os:cmd(Command)) of
         "" ->
             {error, not_found};

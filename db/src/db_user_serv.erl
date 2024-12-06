@@ -257,7 +257,7 @@ message_handler(S) ->
     end.
 
 %%
-%% Call: generate_username
+%% Generate username
 %%
 
 generate_username(WordList) ->
