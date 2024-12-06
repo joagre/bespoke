@@ -115,18 +115,18 @@ class Bespoke {
   }
 
   gotoPage(event, destination, postId) {
-    if (postId === -1) {
-      this.popPostStack();
-    } else if (typeof postId === "string") {
-      this._pushPostStack(postId);
-    }
-
     if (event != null) {
       this._handleButtonEvent(event);
     }
 
     if (this._isTextSelected()) {
       return;
+    }
+
+    if (postId === -1) {
+      this.popPostStack();
+    } else if (typeof postId === "string") {
+      this._pushPostStack(postId);
     }
 
     if (destination == null) {

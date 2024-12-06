@@ -55,10 +55,6 @@ class AddTopPost {
           body: JSON.stringify(payload),
         });
         if (!response.ok) {
-          if (response.status === 403) {
-            bespoke.navigateTo("loader.html");
-            return;
-          }
           console.error(`Server error: ${response.status}`);
           return;
         }

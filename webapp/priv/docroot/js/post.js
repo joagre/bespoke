@@ -7,7 +7,8 @@ class Post {
   constructor() {
     this._dataLoaded = false;
     this._domReady = false;
-    bespoke.onReady("post.html", () => this._load());
+    // Note: bespoke.onReady() is not used by design
+    this._load();
   }
 
   _load() {
@@ -25,12 +26,6 @@ class Post {
   }
 
   async _loadData() {
-    if (!document.cookie.includes("bespoke")) {
-      console.log("Cookie not found, retrying in 1 second");
-      setTimeout(() => this._loadData(), 1000);
-      return;
-    }
-
     try {
       // REST: Get parent post
       const response = await fetch("/lookup_posts", {
