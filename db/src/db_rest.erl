@@ -19,9 +19,9 @@ start_link() ->
     ok = db_dnsmasq:clear_all_mac_addresses(),
     Options =
 	[{request_handler, {?MODULE, request_handler, []}},
-         {verify, verify_none},
-         {cacerts, []},
-         {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
+%         {verify, verify_none},
+%         {cacerts, []},
+%         {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
     ?log_info("Database REST API has been started"),
@@ -189,7 +189,7 @@ redirect_or_ack(Socket, Request, Page) ->
             ?log_info("Captive portal redirect...\n"),
             rester_http_server:response_r(
               Socket, Request, 302, "Found", "",
-              [{location, "https://bespoke.local/loader.html"}|
+              [{location, "http://bespoke.local/loader.html"}|
                no_cache_headers()]);
         [{MacAddress, Timestamp}] ->
             %% 2 hours timeout (sync with leasetime in /etc/dhcpcd.conf)
@@ -199,7 +199,7 @@ redirect_or_ack(Socket, Request, Page) ->
                     ok = delete_all_stale_timestamps(),
                     rester_http_server:response_r(
                       Socket, Request, 302, "Found", "",
-                      [{location, "https://bespoke.local/loader.html"}|
+                      [{location, "http://bespoke.local/loader.html"}|
                        no_cache_headers()]);
                 false ->
                     case Page of
