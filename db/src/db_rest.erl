@@ -27,7 +27,7 @@ start_link() ->
     ?log_info("Database REST API has been started"),
     ?CAPTIVE_PORTAL_CACHE =
         ets:new(?CAPTIVE_PORTAL_CACHE, [public, named_table]),
-    rester_http_server:start_link(443, Options).
+    rester_http_server:start_link(80, Options).
 
 %%
 %% Exported: request_handler
