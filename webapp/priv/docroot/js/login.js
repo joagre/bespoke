@@ -74,7 +74,7 @@ class Login {
           })
           .catch(err => console.error("Error:", err));
       } catch (error) {
-        console.error("Authentication failed", error);
+        console.error("Login failed", error);
       }
     };
 

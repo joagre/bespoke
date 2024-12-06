@@ -19,14 +19,15 @@ class Bespoke {
   }
 
   _initializeSwipeListeners() {
-    document.addEventListener("touchstart",
-                              (event) => this._onTouchStart(event),
-                              { passive: false }
-                             );
-    document.addEventListener("touchend",
-                              (event) => this._onTouchEnd(event),
-                              { passive: false }
-                             );
+    document.addEventListener(
+      "touchstart",
+      (event) => this._onTouchStart(event),
+      {passive: false});
+    document.addEventListener(
+      "touchend",
+      (event) => this._onTouchEnd(event),
+      {passive: false}
+    );
   }
 
   _onTouchStart(event) {
@@ -43,10 +44,8 @@ class Bespoke {
   _handleSwipeGesture() {
     const horizontalSwipe = this._touch.endX - this._touch.startX;
     const verticalSwipe = Math.abs(this._touch.endY - this._touch.startY);
-    if (
-      horizontalSwipe > this.SWIPE_THRESHOLD &&
-      verticalSwipe < this.VERTICAL_THRESHOLD
-    ) {
+    if (horizontalSwipe > this.SWIPE_THRESHOLD &&
+        verticalSwipe < this.VERTICAL_THRESHOLD) {
       this._triggerSwipeNavigation();
     }
   }
@@ -55,7 +54,6 @@ class Bespoke {
     const swipeTarget = document.querySelector("[data-back-destination]");
     if (swipeTarget) {
       const destination = swipeTarget.getAttribute("data-back-destination");
-
       if (destination === "") {
         window.history.back();
       } else if (destination === "post.html") {
@@ -68,7 +66,6 @@ class Bespoke {
 
   _initializeCookieState() {
     this._cookieState = this._getCookie("bespoke");
-
     if (!this._cookieState) {
       this.resetCookieState();
     }
@@ -118,17 +115,14 @@ class Bespoke {
     if (event != null) {
       this._handleButtonEvent(event);
     }
-
     if (this._isTextSelected()) {
       return;
     }
-
     if (postId === -1) {
       this.popPostStack();
     } else if (typeof postId === "string") {
       this._pushPostStack(postId);
     }
-
     if (destination == null) {
       if (document.referrer) {
         window.history.back();
@@ -137,7 +131,6 @@ class Bespoke {
         console.error("No referrer found");
       }
     }
-
     if (destination === "post.html" && this._isPostStackEmpty()) {
       this.navigateTo("top_posts.html");
     } else {
@@ -240,7 +233,6 @@ class Bespoke {
   formatSecondsSinceEpoch(secondsSinceEpoch) {
     const now = Math.floor(Date.now() / 1000);
     const ageInSeconds = now - secondsSinceEpoch;
-
     if (ageInSeconds < 60) return `${ageInSeconds}s`;
     if (ageInSeconds < 3600) return `${Math.floor(ageInSeconds / 60)}m`;
     if (ageInSeconds < 86400) return `${Math.floor(ageInSeconds / 3600)}h`;
