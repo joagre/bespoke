@@ -97,6 +97,7 @@ class ChangePassword {
     event.preventDefault();
     const password = bespoke.generateStrongPassword();
     this._formPassword1.value = password;
+    this._formPassword2.focus();
     this._checkFormCompletion();
   }
 }
