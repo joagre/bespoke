@@ -66,6 +66,7 @@ class SwitchUser {
           return;
         }
         const result = await response.json();
+        bespoke.setCookieValue("userId", result["user-id"]);
         bespoke.setCookieValue("username", result["username"]);
         bespoke.setCookieValue("sessionId", result["session-id"]);
         bespoke.navigateTo("top_posts.html");

@@ -23,6 +23,7 @@ class Loader {
           return;
         }
         const autoLoginResult = await autoLoginResponse.json();
+        bespoke.setCookieValue("userId", autoLoginResult["user-id"]);
         bespoke.setCookieValue("username", autoLoginResult["username"]);
         bespoke.setCookieValue("sessionId", autoLoginResult["session-id"]);
         if (autoLoginResult["no-password"]) {

@@ -64,6 +64,7 @@ class Login {
           return;
         }
         const result = await response.json();
+        bespoke.setCookieValue("userId", result["user-id"]);
         bespoke.setCookieValue("username", result["username"]);
         bespoke.setCookieValue("sessionId", result["session-id"]);
         // REST: Acknowledge captive portal

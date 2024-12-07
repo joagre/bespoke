@@ -66,9 +66,6 @@ class Bespoke {
 
   _initializeCookieState() {
     this._cookieState = this._getCookie("bespoke");
-    if (!this._cookieState) {
-      this.resetCookieState();
-    }
   }
 
   _getCookie(name) {
