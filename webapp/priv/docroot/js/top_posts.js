@@ -56,6 +56,7 @@ class TopPosts {
         <div class="uk-text-meta uk-margin-small-top">
           ${post["author"]} •
           ${age} •
+          <span uk-icon="icon: heart"></span> 12 •
           <span uk-icon="comment"></span> ${post["reply-count"]}
         </div>
       </div>

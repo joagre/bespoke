@@ -144,15 +144,15 @@ class Post {
       replyQuote = html`
         <!-- Reply quote -->
         <div class="uk-text-meta quote"
-          onclick=${(event) => this.toggleQuote(event)}
-          data-post-id="${post["id"]}"
-          data-parent-post-id="${post["parent-post-id"]}">
-          <span id="${replyQuoteButtonAttr}" class="uk-icon-link" uk-icon="chevron-down"></span>
+             onclick=${(event) => this.toggleQuote(event)}
+             data-post-id="${post["id"]}"
+             data-parent-post-id="${post["parent-post-id"]}">
+          <span id="${replyQuoteButtonAttr}"
+                class="uk-icon-link" uk-icon="chevron-down"></span>
           In reply to ${replyQuoteAuthor}...
-          <div
-            id="${replyQuoteAttr}"
-            class="uk-card uk-card-body uk-card-default uk-card-small uk-text-meta uk-margin-small-bottom uk-margin-small-top custom-quote-padding"
-            hidden>
+          <div id="${replyQuoteAttr}"
+               class="uk-card uk-card-body uk-card-default uk-card-small uk-text-meta uk-margin-small-bottom uk-margin-small-top custom-quote-padding"
+               hidden>
             <div id="${replyQuoteBodyAttr}" class="quote-body">
               <p>Loading...</p>
             </div>
@@ -165,18 +165,17 @@ class Post {
     let replies = "";
     if (post["reply-count"] > 0) {
       replies = html`•
-        <button onclick=${(event) => bespoke.gotoPage(event, "/post.html", post["id"])}
-                class="uk-icon-button"
-                uk-icon="comments"></button>
-        ${post["reply-count"]}`;
+        <span class="mini-action"><span onclick=${(event) => bespoke.gotoPage(event, "/post.html", post["id"])}
+                                    uk-icon="comments"></span>
+        ${post["reply-count"]}</span>`;
     }
     let deleteButton = "";
     if (post["author"] === bespoke.getCookieValue("username")) {
       deleteButton = html`
-        <button onclick=${(event) => this.openDeletePostModal(event)}
-                data-post-id="${post["id"]}"
-                class="uk-icon-button"
-                uk-icon="trash"></button>`;
+        <span onclick=${(event) => this.openDeletePostModal(event)}
+              data-post-id="${post["id"]}"
+              class="mini-action"
+              uk-icon="trash"></span>`;
     }
     return html`
       <div>
@@ -190,15 +189,16 @@ class Post {
           <!-- Reply meta-data -->
           <div class="uk-text-meta">
             ${post["author"]} •
-            ${age}
+            ${age} •
+            <span class="mini-action"><span uk-icon="icon: heart"></span> 12</span>
             ${replies}
           </div>
           <!-- Reply actions -->
           <div>
             ${deleteButton}
-            <button onclick=${(event) => addReplyPost.gotoAddReplyPage(event, post["id"], true)}
-                    class="uk-icon-button"
-                    uk-icon="reply"></button>
+            <span onclick=${(event) => addReplyPost.gotoAddReplyPage(event, post["id"], true)}
+                  class="mini-action"
+                  uk-icon="reply"></span>
           </div>
         </div>
       </div>
