@@ -10,23 +10,42 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 * Check that captive portal works for android and Ubunti/Chrome
 
-* Add a HTTP GET back channel for asynchronous updates done by other users, i.e. a websocket is overkill for now (maybe forever).
+* Like support
 
-* When a user sifts through *posts* and their *comments* they are automatically marked as read (as the web page scrolls by). The next time a user logins, *posts* that he/she has been accessing will be marked as unread (if there are new *comments* added to them). If a user clicks on such a *post* he/she is automatically taken to the *comments*, but is scrolled down to the unread *comments*. Rinse and repeat.
+* When a user sifts through *posts* and their *comments* they are
+  automatically marked as read (as the web page scrolls by). The next
+  time a user logins, *posts* that he/she has been accessing will be
+  marked as unread (if there are new *comments* added to them). If a
+  user clicks on such a *post* he/she is automatically taken to the
+  *comments*, but is scrolled down to the unread *comments*. Rinse and
+  repeat.
 
-* Add closed *posts*. Members of a closed *posts* just share a password for now. To add a new user to a closed *post*, members propagates the password offline (or whatever).
+* Add a HTTP GET back channel for asynchronous updates done by other
+  users, i.e. a websocket is overkill for now (maybe forever),
+  i.e. one subscribe(postId) allowed per session-id.
 
-* Add direct *messages* between users. They are just special cases of closed *posts*. We keep them in a separate tab and call them "Messages".
+* Make sure refresh of post.html correctly once a minute.
 
-* Maybe ask Kim to improve the layout. Just a little bit for now: Margins, paddings, fonts and coloring. Just very low hanging fruits. More can be done at a later point in time.
+* Add direct *messages* between users. Messages are encrypted blobs in
+  dets. Support for multiple recipients (uniquely encrypted for each
+  recipient).
 
-* Attachments
+* Add aging of *posts* and *messages*. This is done by removing the
+  oldest *posts* and *messages*) when the they reach a certain age
+  limit (e.g. 30 days).
 
-* File sharing
+* Attachments [later]
 
-* Native WebView wrapper app (for syncing etc)
+* File sharing [later]
+
+* Add public key encryption for *posts*, *messages* and *files [later]
+
+* Native WebView wrapper app (for syncing etc) [later]
 
 ### Remember
 
 * Enable SSL in Web server
+
 * Sanitize HTML
+
+* Maybe ask Kim to improve the layout. Just a little bit for now: Margins, paddings, fonts and coloring. Just very low hanging fruits. More can be done at a later point in time.
