@@ -137,6 +137,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             User = db_user_serv:get_user_from_mac_address(MacAddress),
             PayloadJsonTerm =
                 #{<<"no-password">> => true,
+                  <<"user-id">> => User#user.id,
                   <<"username">> => User#user.name,
                   <<"session-id">> => User#user.session_id},
             case User#user.pwhash of
@@ -274,10 +275,12 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                     case json_term_to_login(JsonTerm) of
                         {ok, Username, Password} ->
                             case db_user_serv:login(Username, Password) of
-                                {ok, #user{name = Username,
+                                {ok, #user{id = UserId,
+                                           name = Username,
                                            session_id = SessionId}} ->
                                     PayloadJsonTerm =
-                                        #{<<"username">> => Username,
+                                        #{<<"user-id">> => UserId,
+                                          <<"username">> => Username,
                                           <<"session-id">> => SessionId},
                                     rest_util:response(
                                       Socket, Request,
@@ -306,7 +309,8 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                                    Username, Password, MacAddress) of
                                 {ok, User} ->
                                     PayloadJsonTerm =
-                                        #{<<"username">> => User#user.name,
+                                        #{<<"user-id">> => User#user.id,
+                                          <<"username">> => User#user.name,
                                           <<"session-id">> =>
                                               User#user.session_id},
                                     rest_util:response(
