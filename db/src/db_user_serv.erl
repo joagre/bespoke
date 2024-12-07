@@ -1,7 +1,9 @@
 -module(db_user_serv).
 -export([start_link/0, stop/0]).
--export([get_user/1, get_user_from_session_id/1, get_user_from_mac_address/1,
-         login/2, switch_user/3, change_password/3, user_db_to_list/0]).
+-export([get_user/1, get_user_from_username/1, get_user_from_session_id/1,
+         get_user_from_mac_address/1,
+         login/2, switch_user/3, change_password/3,
+         user_db_to_list/0]).
 -export([message_handler/1]).
 -export_type([username/0, pwhash/0, mac_address/0, session_id/0, password/0]).
 
@@ -49,11 +51,21 @@ stop() ->
 %% Exported: get_user
 %%
 
--spec get_user(db_user_serv:username()) ->
+-spec get_user(db_serv:user_id()) ->
           {ok, #user{}} | {error, not_found}.
 
-get_user(Username) ->
-    serv:call(?MODULE, {get_user, Username}).
+get_user(UserId) ->
+    serv:call(?MODULE, {get_user, UserId}).
+
+%%
+%% Exported: get_user_from_username
+%%
+
+-spec get_user_from_username(db_user_serv:username()) ->
+          {ok, #user{}} | {error, not_found}.
+
+get_user_from_username(Username) ->
+    serv:call(?MODULE, {get_user_from_username, Username}).
 
 %%
 %% Exported: get_user_from_session_id
@@ -122,7 +134,7 @@ init(Parent) ->
         dets:open_file(
           ?USER_DB,
           [{file, filename:join(code:priv_dir(db), ?USER_DB_FILENAME)},
-           {keypos, #user.name}]),
+           {keypos, #user.id}]),
     ?log_info("Database user server has been started"),
     {ok, #state{parent = Parent,
                 word_list = init_word_list()}}.
@@ -133,8 +145,17 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             ok = dets:close(?USER_DB),
             {reply, From, ok};
-        {call, From, {get_user, Username}} ->
-            case dets:lookup(?USER_DB, Username) of
+        {call, From, {get_user, UserId}} ->
+            case dets:lookup(?USER_DB, UserId) of
+                [User] ->
+                    {reply, From, {ok, User}};
+                [] ->
+                    {reply, From, {error, not_found}}
+            end;
+        {call, From, {get_user_from_username, Username}} ->
+            ?log_debug("Call: ~p", [{get_user_from_username, Username}]),
+            case dets:match_object(?USER_DB,
+                                   #user{name = Username, _ = '_'}) of
                 [User] ->
                     {reply, From, {ok, User}};
                 [] ->
@@ -155,7 +176,8 @@ message_handler(S) ->
                                    #user{mac_address = MacAddress, _ = '_'}) of
                 [] ->
                     %% Note: Generate a new user
-                    User = #user{name = generate_username(S#state.word_list),
+                    User = #user{id = db_serv:get_user_id(),
+                                 name = generate_username(S#state.word_list),
                                  mac_address = MacAddress,
                                  updated = timestamp(),
                                  session_id = session_id()},
@@ -215,14 +237,16 @@ message_handler(S) ->
                             {reply, From, {error, failure}}
                     end;
                 [] when Password == <<>> ->
-                    User = #user{name = Username,
+                    User = #user{id = db_serv:get_user_id(),
+                                 name = Username,
                                  mac_address = MacAddress,
                                  updated = timestamp(),
                                  session_id = session_id()},
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, {ok, User}};
                 [] ->
-                    User = #user{name = Username,
+                    User = #user{id = db_serv:get_user_id(),
+                                 name = Username,
                                  pwhash = hash_password(Password),
                                  mac_address = MacAddress,
                                  updated = timestamp(),

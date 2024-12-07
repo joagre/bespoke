@@ -1,12 +1,12 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
--export([list_top_posts/0,
-         lookup_posts/1, lookup_posts/2,
-         insert_post/1,
+-export([get_user_id/0,
+         list_top_posts/0, lookup_posts/1, lookup_posts/2, insert_post/1,
          delete_post/1]).
 -export([sync/0]).
 -export([message_handler/1]).
--export_type([post_id/0, title/0, body/0, author/0, seconds_since_epoch/0]).
+-export_type([user_id/0, post_id/0, title/0, body/0, author/0,
+              seconds_since_epoch/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -18,6 +18,7 @@
 -define(META_DB_FILENAME, "meta.db").
 -define(META_DB, meta).
 
+-type user_id() :: integer().
 -type post_id() :: binary().
 -type title() :: binary().
 -type body() :: binary().
@@ -26,6 +27,7 @@
 
 -record(state, {
                 parent :: pid(),
+                next_user_id = 0 :: integer(),
                 next_post_id = 0 :: integer()
                }).
 
@@ -47,6 +49,15 @@ start_link() ->
 
 stop() ->
     serv:call(?MODULE, stop).
+
+%%
+%% Exported: get_user_id
+%%
+
+-spec get_user_id() -> user_id().
+
+get_user_id() ->
+    serv:call(?MODULE, get_user_id).
 
 %%
 %% Exported: list_top_posts
@@ -120,6 +131,7 @@ init(Parent) ->
     end,
     ?log_info("Database server has been started"),
     {ok, #state{parent = Parent,
+                next_user_id = Meta#meta.next_user_id,
                 next_post_id = Meta#meta.next_post_id}}.
 
 message_handler(S) ->
@@ -129,6 +141,13 @@ message_handler(S) ->
             ok = dets:close(?META_DB),
             ok = dets:close(?POST_DB),
             {reply, From, ok};
+        {call, From, get_user_id = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            [#meta{next_user_id = NextUserId} = Meta] =
+                dets:lookup(?META_DB, basic),
+            UpdatedMeta = Meta#meta{next_user_id = NextUserId + 1},
+            ok = dets:insert(?META_DB, UpdatedMeta),
+            {reply, From, NextUserId};
         {call, From, list_top_posts = Call} ->
             ?log_debug("Call: ~p", [Call]),
             TopPosts =

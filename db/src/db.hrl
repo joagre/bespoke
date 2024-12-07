@@ -26,6 +26,7 @@
 
 -record(user,
         {
+         id :: db_serv:user_id() | '_',
          name :: db_user_serv:username() | '_',
          pwhash = not_set :: db_user_serv:pwhash() | not_set | '_',
          mac_address :: db_user_serv:mac_address() | '_',
