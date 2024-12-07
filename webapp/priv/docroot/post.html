@@ -42,12 +42,13 @@
           <div class="uk-text-meta">
             <span id="parent-author"></span> •
             <span id="parent-age"></span> •
+            <span class="mini-action"><span class="bleeding-heart" uk-icon="icon: heart"></span> 12</span> •
             <span uk-icon="comments"></span> <span id="parent-replies"></span>
           </div>
           <!-- Parent actions -->
           <div>
-            <button id="parent-delete" onclick="post.openDeletePostModal(event)" data-post-id="0" class="uk-icon-button" uk-icon="trash"></button>
-            <button onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="uk-icon-button" uk-icon="reply"></button>
+            <span id="parent-delete" onclick="post.openDeletePostModal(event)" data-post-id="0" class="mini-action" uk-icon="trash"></span>
+            <span onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="mini-action" uk-icon="reply"></span>
           </div>
         </div>
       </div>

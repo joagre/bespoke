@@ -1,3 +1,16 @@
+:root {
+    /* UIKit Standard Colors */
+    --uk-primary: #1e87f0; /* Blue */
+    --uk-secondary: #222; /* Dark Gray */
+    --uk-muted: #999; /* Light Gray */
+    --uk-success: #32d296; /* Green */
+    --uk-warning: #faa05a; /* Orange */
+    --uk-danger: #f0506e; /* Red */
+    --uk-meta: #666; /* Gray for metadata */
+    /* Custom Colors */
+    --uk-light: #f9f9f9; /* Light Gray */
+}
+
 body {
     font-family: Arial, sans-serif;
 }
@@ -5,13 +18,13 @@ body {
 .header {
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
-    background-color: #ececec;
+    background-color: var(--uk-light);
 }
 
 .footer {
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
-    background-color: #ececec;
+    background-color: var(--uk-light);
 }
 
 .active-footer-button {
@@ -23,9 +36,17 @@ body {
 }
 
 .post-divider {
-    border-color: #afafaf;
+    border-color: var(--uk-muted);
 }
 
 .underlined-link {
     text-decoration: underline;
+}
+
+.mini-action {
+    cursor: pointer;
+}
+
+.mini-action:hover {
+    color: var(--uk-primary);
 }
