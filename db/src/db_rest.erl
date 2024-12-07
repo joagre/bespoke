@@ -515,6 +515,7 @@ add_optional_members([{_Key, not_set}|Rest], JsonTerm) ->
 add_optional_members([{Key, Value}|Rest], JsonTerm) ->
     add_optional_members(Rest, maps:put(Key, Value, JsonTerm)).
 
+%% Top post
 json_term_to_post(#{<<"title">> := Title,
                     <<"body">> := Body} = PostJsonTerm, Username) ->
     case no_more_keys([<<"title">>, <<"body">>],
@@ -524,6 +525,7 @@ json_term_to_post(#{<<"title">> := Title,
         false ->
             {error, invalid}
     end;
+%% Reply post
 json_term_to_post(#{<<"parent-post-id">> := ParentPostId,
                     <<"top-post-id">> := TopPostId,
                     <<"body">> := Body} = JsonTerm, Username) ->

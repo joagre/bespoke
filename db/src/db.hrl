@@ -14,7 +14,8 @@
          author :: db_serv:author() | '_',
          created = not_set :: db_serv:seconds_since_epoch() | not_set | '_',
          reply_count = 0 :: integer() | '_',
-         replies = [] :: [db_serv:post_id()] | '_'
+         replies = [] :: [db_serv:post_id()] | '_',
+         likers = [] :: [db_serv:user_id()] | '_'
         }).
 
 -record(meta,
@@ -28,10 +29,10 @@
         {
          id :: db_serv:user_id() | '_',
          name :: db_user_serv:username() | '_',
-         pwhash = not_set :: db_user_serv:pwhash() | not_set | '_',
+         session_id = not_set :: db_user_serv:session_id() | not_set | '_',
          mac_address :: db_user_serv:mac_address() | '_',
-         updated :: db_serv:seconds_since_epoch() | '_',
-         session_id = not_set :: db_user_serv:session_id() | not_set | '_'
+         pwhash = not_set :: db_user_serv:pwhash() | not_set | '_',
+         updated :: db_serv:seconds_since_epoch() | '_'
         }).
 
 -endif.
