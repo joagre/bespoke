@@ -8,8 +8,6 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 ## Web app
 
-* Like support
-
 * When a user sifts through *posts* and their *comments* they are
   automatically marked as read (as the web page scrolls by). The next
   time a user logins, *posts* that he/she has been accessing will be
