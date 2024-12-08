@@ -46,18 +46,20 @@ clear_all_mac_addresses() ->
 %%
 
 dnsmasq_tool(Parameters) ->
-    ScriptPath =
-        filename:absname(
-          filename:join([code:lib_dir(main), "bin", "dnsmasq-tool"])),
-    Command = ["sudo ", ScriptPath, " /etc/dnsmasq.conf",
-               " --restart-dnsmasq", Parameters, " 2>&1; echo $?"],
-    ?log_info("Calling: ~s\n", [Command]),
     ok.
-%    case string:strip(os:cmd(Command)) of
-%        "0" ->
-%            ok;
-%        UnexpectedOutput ->
-%            ?log_error("Unexpected output from dnsmasq-tool: ~s",
-%                       [UnexpectedOutput]),
-%            {error, UnexpectedOutput}
-%    end.
+
+%% dnsmasq_tool(Parameters) ->
+%%     ScriptPath =
+%%         filename:absname(
+%%           filename:join([code:lib_dir(main), "bin", "dnsmasq-tool"])),
+%%     Command = ["sudo ", ScriptPath, " /etc/dnsmasq.conf",
+%%                " --restart-dnsmasq", Parameters, " 2>&1; echo $?"],
+%%     ?log_info("Calling: ~s\n", [Command]),
+%%     case string:strip(os:cmd(Command)) of
+%%         "0" ->
+%%             ok;
+%%         UnexpectedOutput ->
+%%             ?log_error("Unexpected output from dnsmasq-tool: ~s",
+%%                        [UnexpectedOutput]),
+%%             {error, UnexpectedOutput}
+%%     end.
