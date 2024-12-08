@@ -35,7 +35,8 @@ body {
     cursor: pointer;
 }
 
-.post-divider {
+.post-divider,
+.parent-post-divider {
     border-color: var(--uk-muted);
 }
 

@@ -175,6 +175,16 @@ class Bespoke {
     return JSON.parse(value);
   }
 
+  setRawLocalItem(key, value) {
+    console.log("Setting local item:", key, value);
+    localStorage.setItem(key, value);
+  }
+
+  getRawLocalItem(key) {
+    const value = localStorage.getItem(key);
+    return value;
+  }
+
   clearPostStack() {
     this.setLocalItem("postStack", []);
   }

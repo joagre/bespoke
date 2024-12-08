@@ -104,7 +104,7 @@ class Post {
     if (postStackSize > 1) {
       document.getElementById(
         "header-reply-level").textContent = `[level: ${postStackSize - 1}]`;
-    } else {n
+    } else {
       document.getElementById("header-reply-level").style.display = "none";
     }
     // Populate parent post
@@ -128,6 +128,8 @@ class Post {
                                 this._replyPosts)
     );
     render(repliesContainer, html`${replyTemplates}`);
+    // Add observers to post-dividers
+    this._addHasBeenReadObservers();
   }
 
   _createReplyTemplate(parentPost, post, replyPosts) {
@@ -161,7 +163,6 @@ class Post {
     }
     // Reply body
     const replyBodyAttr = `reply-body-${post["id"]}`;
-    const replyDividerAttr = `reply-divider-${post["id"]}`;
     // Age
     const age = bespoke.formatSecondsSinceEpoch(post["created"]);
     // Replies
@@ -176,7 +177,6 @@ class Post {
     if (post["author"] === bespoke.getCookieValue("username")) {
       deleteButton = html`
         <span onclick=${(event) => this.openDeletePostModal(event)}
-              data-post-id="${post["id"]}"
               class="mini-action"
               uk-icon="trash"></span>`;
     }
@@ -191,7 +191,8 @@ class Post {
         </div>
         <div class="uk-flex uk-flex-between uk-flex-middle">
           <!-- Reply meta-data -->
-          <div class="uk-text-meta">
+          <div class="uk-text-meta meta-data">
+            <span uk-icon="icon: check" class="uk-text-success" hidden></span>
             ${post["author"]} •
             ${age} •
             <span onclick=${(event) => this.toggleLike(event)}
@@ -207,15 +208,62 @@ class Post {
                   uk-icon="reply"></span>
           </div>
         </div>
-      </div>
-      <hr id="${replyDividerAttr}" class="uk-margin-small post-divider">`;
+        <hr class="uk-margin-small post-divider">
+      </div>`;
+  }
+
+  _addHasBeenReadObservers() {
+    // Add an observer to each node that has the class name "post-divider"
+    const postDividers = document.getElementsByClassName("post-divider");
+    for (const postDivider of postDividers) {
+      const postElement = postDivider.closest("[data-post-id]");
+      const postId = postElement.getAttribute("data-post-id");
+      if (bespoke.getRawLocalItem(`post-${postId}`) != "") {
+        // Add observer
+        this._addHasBeenReadObserver(postDivider);
+      } else {
+        // Mark it as read in the UI
+        const metaDataElement = postElement.querySelector('.meta-data');
+        const hasBeenReadElement = metaDataElement.children[0];
+        hasBeenReadElement.hidden = false;
+      }
+    }
+  }
+
+  _addHasBeenReadObserver(postDivider) {
+    const options = {
+      // Uses the viewport as the root
+      root: null,
+      // Shrinks the bottom by 50%, making the upper 50% the active area
+      rootMargin: '0px 0px -50% 0px',
+      // Trigger as soon as any part is visible within the adjusted root
+      threshold: 0
+    };
+    const callback = (entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const postElement = postDivider.closest("[data-post-id]");
+          const postId = postElement.getAttribute("data-post-id");
+          // Mark it as read in the UI
+          const metaDataElement = postElement.querySelector('.meta-data');
+          const hasBeenReadElement = metaDataElement.children[0];
+          hasBeenReadElement.hidden = false;
+          // Mark it as read in the local storage
+          bespoke.setRawLocalItem(`post-${postId}`, "");
+          // Stop observing
+          observer.unobserve(entry.target);
+        }
+      });
+    };
+    const observer = new IntersectionObserver(callback, options);
+    observer.observe(postDivider);
   }
 
   openDeletePostModal(event) {
     event.stopPropagation();
     // Extract post to delete
-    this._postIdToDelete =
-      event.currentTarget.getAttribute("data-post-id");
+    const postElement = event.currentTarget.closest("[data-post-id]");
+    this._postIdToDelete = postElement.getAttribute("data-post-id");
     // Update the post modal body
     const replyPost = this._replyPosts.find(
       (replyPost) => replyPost["id"] === this._postIdToDelete
@@ -258,11 +306,11 @@ class Post {
 
   toggleQuote(event) {
     event.preventDefault();
-    const postId =
-          event.currentTarget.closest("[data-post-id]").getAttribute("data-post-id");
-    const parentPostId =
-          event.currentTarget.closest("[data-parent-post-id]")
-          .getAttribute("data-parent-post-id");
+    const postElement = event.currentTarget.closest("[data-post-id]");
+    const postId = postElement.getAttribute("data-post-id");
+    const parentPostElement =
+          event.currentTarget.closest("[data-parent-post-id]");
+    const parentPostId = parentPostElement.getAttribute("data-parent-post-id");
     const replyQuote = document.getElementById(`reply-quote-${postId}`);
     const isHidden = replyQuote.hidden;
     const replyQuoteButton =
