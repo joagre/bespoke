@@ -2,7 +2,7 @@
 -export([start_link/0, stop/0]).
 -export([get_user_id/0,
          list_top_posts/0, lookup_posts/1, lookup_posts/2, insert_post/1,
-         delete_post/1]).
+         delete_post/1, toggle_like/2]).
 -export([sync/0]).
 -export([message_handler/1]).
 -export_type([user_id/0, post_id/0, title/0, body/0, author/0,
@@ -108,6 +108,16 @@ sync() ->
     serv:call(?MODULE, sync).
 
 %%
+%% Exported: toggle_like
+%%
+
+-spec toggle_like(post_id(), user_id()) ->
+          {ok, [user_id()]} | {error, not_found}.
+
+toggle_like(PostId, UserId) ->
+    serv:call(?MODULE, {toggle_like, PostId, UserId}).
+
+%%
 %% Server
 %%
 
@@ -196,6 +206,23 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             ok = dets:sync(?POST_DB),
             {reply, From, ok};
+        {call, From, {toggle_like, PostId, UserId} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            case dets:lookup(?POST_DB, PostId) of
+                [#post{likers = Likers} = Post] ->
+                    UpdatedLikers =
+                        case lists:member(UserId, Likers) of
+                            true ->
+                                lists:delete(UserId, Likers);
+                            false ->
+                                [UserId|Likers]
+                        end,
+                    ok = dets:insert(?POST_DB,
+                                     Post#post{likers = UpdatedLikers}),
+                    {reply, From, {ok, UpdatedLikers}};
+                [] ->
+                    {reply, From, {error, not_found}}
+            end;
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             exit(Reason);
         {system, From, Request} ->

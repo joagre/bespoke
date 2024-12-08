@@ -480,6 +480,34 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                       Socket, Request,
                       {error, bad_request, "post-id must be a string"})
             end;
+        ["toggle_like"] ->
+            case rest_util:parse_body(Request, Body) of
+                {error, _Reason} ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"});
+                PostId when is_binary(PostId) ->
+                    {ok, #{<<"sessionId">> := SessionId}} =
+                        get_bespoke_cookie(Request),
+                    case db_user_serv:get_user_from_session_id(SessionId) of
+                        {ok, User} ->
+                            {ok, Likers} =
+                                db_serv:toggle_like(PostId, User#user.id),
+                            PayloadJsonTerm =
+                                #{<<"liked">> =>
+                                      lists:member(User#user.id, Likers),
+                                  <<"likes-count">> => length(Likers)},
+                            rest_util:response(
+                              Socket, Request, {ok, {format, PayloadJsonTerm}});
+                        {error, not_found} ->
+                            rest_util:response(Socket, Request,
+                                               {error, no_access})
+                    end;
+                _ ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "post-id must be a string"})
+            end;
 	_ ->
 	    ?log_error("~p not found", [Tokens]),
 	    rest_util:response(Socket, Request, {error, not_found})
@@ -497,13 +525,15 @@ post_to_json_term(#post{id = Id,
                         author = Author,
                         created = Created,
                         reply_count = ReplyCount,
-                        replies = Replies}) ->
+                        replies = Replies,
+                        likers = Likers}) ->
     JsonTerm = #{<<"id">> => Id,
                  <<"body">> => Body,
                  <<"author">> => Author,
                  <<"created">> => Created,
                  <<"reply-count">> => ReplyCount,
-                 <<"replies">> => Replies},
+                 <<"replies">> => Replies,
+                 <<"likes-count">> => length(Likers)},
     add_optional_members([{<<"title">>, Title},
                           {<<"parent-post-id">>, ParentPostId},
                           {<<"top-post-id">>, TopPostId}], JsonTerm).

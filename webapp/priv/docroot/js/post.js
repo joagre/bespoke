@@ -104,10 +104,12 @@ class Post {
     if (postStackSize > 1) {
       document.getElementById(
         "header-reply-level").textContent = `[level: ${postStackSize - 1}]`;
-    } else {
+    } else {n
       document.getElementById("header-reply-level").style.display = "none";
     }
     // Populate parent post
+    document.getElementById("parent-post")
+      .setAttribute("data-post-id", this._parentPost["id"]);
     document.getElementById("parent-title").innerHTML = this._topPostTitle;
     document.getElementById("parent-body").innerHTML =
       bespoke.formatMarkdown(this._parentPost["body"]);
@@ -144,9 +146,7 @@ class Post {
       replyQuote = html`
         <!-- Reply quote -->
         <div class="uk-text-meta quote"
-             onclick=${(event) => this.toggleQuote(event)}
-             data-post-id="${post["id"]}"
-             data-parent-post-id="${post["parent-post-id"]}">
+             onclick=${(event) => this.toggleQuote(event)}>
           <span id="${replyQuoteButtonAttr}"
                 class="uk-icon-link" uk-icon="chevron-down"></span>
           In reply to ${replyQuoteAuthor}...
@@ -159,16 +159,19 @@ class Post {
           </div>
         </div>`;
     }
-    const age = bespoke.formatSecondsSinceEpoch(post["created"]);
+    // Reply body
     const replyBodyAttr = `reply-body-${post["id"]}`;
     const replyDividerAttr = `reply-divider-${post["id"]}`;
+    // Age
+    const age = bespoke.formatSecondsSinceEpoch(post["created"]);
+    // Replies
     let replies = "";
     if (post["reply-count"] > 0) {
       replies = html`•
-        <span class="mini-action"><span onclick=${(event) => bespoke.gotoPage(event, "/post.html", post["id"])}
-                                    uk-icon="comments"></span>
+        <span class="mini-action"><span onclick=${(event) => bespoke.gotoPage(event, "/post.html", post["id"])} uk-icon="comments"></span>
         ${post["reply-count"]}</span>`;
     }
+    // Delete button
     let deleteButton = "";
     if (post["author"] === bespoke.getCookieValue("username")) {
       deleteButton = html`
@@ -178,7 +181,8 @@ class Post {
               uk-icon="trash"></span>`;
     }
     return html`
-      <div>
+      <div data-post-id="${post["id"]}"
+           data-parent-post-id="${post["parent-post-id"]}">
         <!-- Quoted reply body -->
         ${replyQuote}
         <!-- Reply body -->
@@ -190,7 +194,9 @@ class Post {
           <div class="uk-text-meta">
             ${post["author"]} •
             ${age} •
-            <span class="mini-action"><span uk-icon="icon: heart"></span> 12</span>
+            <span onclick=${(event) => this.toggleLike(event)}
+                  class="mini-action"><span uk-icon="icon: heart"></span>
+              <span>${post["likes-count"]}</span></span>
             ${replies}
           </div>
           <!-- Reply actions -->
@@ -252,9 +258,11 @@ class Post {
 
   toggleQuote(event) {
     event.preventDefault();
-    const postId = event.currentTarget.getAttribute("data-post-id");
+    const postId =
+          event.currentTarget.closest("[data-post-id]").getAttribute("data-post-id");
     const parentPostId =
-          event.currentTarget.getAttribute("data-parent-post-id");
+          event.currentTarget.closest("[data-parent-post-id]")
+          .getAttribute("data-parent-post-id");
     const replyQuote = document.getElementById(`reply-quote-${postId}`);
     const isHidden = replyQuote.hidden;
     const replyQuoteButton =
@@ -271,6 +279,41 @@ class Post {
       replyQuote.hidden = true;
       replyQuoteButton.setAttribute("uk-icon", "chevron-down");
     }
+  }
+
+  toggleLike(event) {
+    event.preventDefault();
+    const likeButton = event.currentTarget;
+    const updateServer = async () => {
+      try {
+        const postElement = likeButton.closest("[data-post-id]");
+        const postId = postElement.getAttribute("data-post-id");
+        // REST API: Like post
+        const response = await fetch("/toggle_like", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(postId)
+        });
+        if (!response.ok) {
+          console.error(`Server error: ${response.status}`);
+          return;
+        }
+        const result = await response.json();
+        // Update the heart icon state
+        if (result["liked"]) {
+          likeButton.children[0].classList.add("bleeding-heart");
+        } else {
+          likeButton.children[0].classList.remove("bleeding-heart");
+        }
+        // Update the likes count
+        likeButton.children[1].innerText = result["likes-count"];
+      } catch (error) {
+        console.error("Like post failed:", error);
+      }
+    };
+    updateServer();
   }
 }
 

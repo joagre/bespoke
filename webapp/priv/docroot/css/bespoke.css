@@ -8,7 +8,7 @@
     --uk-danger: #f0506e; /* Red */
     --uk-meta: #666; /* Gray for metadata */
     /* Custom Colors */
-    --uk-light: #f9f9f9; /* Light Gray */
+    --uk-light: #ebebeb; /* Light Gray */
 }
 
 body {
@@ -37,6 +37,10 @@ body {
 
 .post-divider {
     border-color: var(--uk-muted);
+}
+
+.unread-post-divider {
+    border-color: var(--uk-warning);
 }
 
 .underlined-link {

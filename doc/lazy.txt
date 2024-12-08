@@ -1,6 +1,12 @@
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:80
 sudo iptables -t nat -A POSTROUTING -j MASQUERADE
 
+sudo iptables -A OUTPUT -o wlan1 -d 192.168.0.1 -j DROP
+sudo iptables -A OUTPUT -o wlan1 -d 192.168.4.0/24 -j ACCEPT
+
+
+
+
 ====
 
 Use this to add a default route such as wlan1 -> wlan0:

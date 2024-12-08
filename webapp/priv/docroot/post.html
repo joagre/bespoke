@@ -32,7 +32,7 @@
         </div>
       </div>
       <!-- Parent post -->
-      <div class="uk-margin-small-top">
+      <div id="parent-post" class="uk-margin-small-top">
         <!-- Parent title -->
         <div id="parent-title"></div>
         <!-- Parent body -->
@@ -42,7 +42,7 @@
           <div class="uk-text-meta">
             <span id="parent-author"></span> •
             <span id="parent-age"></span> •
-            <span class="mini-action"><span class="bleeding-heart" uk-icon="icon: heart"></span> 12</span> •
+            <span onclick="post.toggleLike(event)" class="mini-action"><span uk-icon="icon: heart"></span> <span></span></span> •
             <span uk-icon="comments"></span> <span id="parent-replies"></span>
           </div>
           <!-- Parent actions -->
