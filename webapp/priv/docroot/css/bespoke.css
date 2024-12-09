@@ -53,7 +53,7 @@ body {
 }
 
 .mini-action:hover {
-    color: var(--uk-primary);
+    color: var(--uk-secondary);
 }
 
 .bleeding-heart {
