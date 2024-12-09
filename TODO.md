@@ -8,24 +8,13 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 ## Web app
 
-* When a user sifts through *posts* and their *comments* they are
-  automatically marked as read (as the web page scrolls by). The next
-  time a user logins, *posts* that he/she has been accessing will be
-  marked as unread (if there are new *comments* added to them). If a
-  user clicks on such a *post* he/she is automatically taken to the
-  *comments*, but is scrolled down to the unread *comments*. Rinse and
-  repeat.
-
 * Add a HTTP GET back channel for asynchronous updates done by other
   users, i.e. a websocket is overkill for now (maybe forever),
-  i.e. one subscribe(postId) allowed per session-id.
-
-* Make sure refresh of post.html correctly once a minute.
-
-* Mark top posts if there are unread comments.
+  i.e. one subscribe(postId) allowed per session-id. Do this for both
+  posts.html and top_post.html.
 
 * Add aging of *posts*. This is done by removing *posts* when the they
-  reach a certain age (e.g. 30 days). Optional.
+  reach a certain age (e.g. 30 days). Optional. [later]
 
 * Attachments [later]
 

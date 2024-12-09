@@ -84,8 +84,20 @@ class Post {
       this._dataLoaded = true;
       if (this._domReady) {
         this._populatePage();
-        const postData = bespoke.peekPostStack();
-        window.scrollTo(postData.scrollX, postData.scrollY);
+        if (bespoke.getLocalItem("childPost")) {
+          // Scroll to first unread post
+          console.log("Scrolling to unread post");
+          document.getElementById("unread-post").scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest"
+          });
+        } else {
+          // Scroll to saved position
+          const postData = bespoke.peekPostStack();
+          console.log("Scrolling to saved position");
+          window.scrollTo(postData.scrollX, postData.scrollY);
+        }
       }
     } catch (error) {
       console.error("Loading of data failed:", error);
@@ -203,7 +215,8 @@ class Post {
         </div>
         <div class="uk-flex uk-flex-between uk-flex-middle">
           <!-- Reply meta-data -->
-          <div class="uk-text-meta">
+          <div class="uk-text-meta meta-data">
+            <span uk-icon="icon: check" class="uk-text-success" hidden></span>
             ${post["author"]} •
             ${age} •
             <span onclick=${(event) => this.toggleLike(event)}
@@ -226,13 +239,33 @@ class Post {
   _addHasBeenReadObservers() {
     // Add an observer to each node that has the class name "post-divider"
     const postDividers = document.getElementsByClassName("post-divider");
+    let firstUnreadPostFound = false;
+    let postElement = null;
     for (const postDivider of postDividers) {
-      const postElement = postDivider.closest("[data-post-id]");
+      postElement = postDivider.closest("[data-post-id]");
       const postId = postElement.getAttribute("data-post-id");
       if (bespoke.getRawLocalItem(`post-${postId}`) != "") {
-        // Add observer
+        // Add observer to unread post
         this._addHasBeenReadObserver(postDivider);
+        // Mark the first unread post
+        if (!firstUnreadPostFound) {
+          console.log(`${postId} is the first unread post`);
+          postElement.setAttribute("id", "unread-post");
+          firstUnreadPostFound = true;
+        }
+      } else {
+        // Mark it as read in the UI
+        const metaDataElement = postElement.querySelector('.meta-data');
+        const hasBeenReadElement = metaDataElement.children[0];
+        hasBeenReadElement.hidden = false;
       }
+    }
+    // If all posts are read, mark the last post as unread to make
+    // sure that last post is shown
+    if (!firstUnreadPostFound && postElement != null) {
+      const postId = postElement.getAttribute("data-post-id");
+      console.log(`${postId} is the last post`);
+      postElement.setAttribute("id", "unread-post");
     }
   }
 

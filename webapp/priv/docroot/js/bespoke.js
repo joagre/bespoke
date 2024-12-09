@@ -109,17 +109,21 @@ class Bespoke {
   }
 
   gotoPage(event, destination, postId) {
+    // Prevent form submission
     if (event != null) {
       this._handleButtonEvent(event);
     }
+    // Prevent navigation if text is selected
     if (this._isTextSelected()) {
       return;
     }
+    // -1 is a special value to indicate that the post stack should be popped
     if (postId === -1) {
       this.popPostStack();
     } else if (typeof postId === "string") {
       this._pushPostStack(postId);
     }
+    // If destination is not set, go back to the referrer
     if (destination == null) {
       if (document.referrer) {
         window.history.back();
@@ -128,14 +132,24 @@ class Bespoke {
         console.error("No referrer found");
       }
     }
+    // If the post stack is empty, go to the top posts page
     if (destination === "post.html" && this._isPostStackEmpty()) {
       this.navigateTo("top_posts.html");
     } else {
+      // If the destination is the post page, set the child post flag
+      if (destination === "post.html") {
+        if (typeof postId === "string") {
+          bespoke.setLocalItem("childPost", true);
+        } else {
+          bespoke.setLocalItem("childPost", false);
+        }
+      }
       this.navigateTo(destination);
     }
   }
 
   _handleButtonEvent(event) {
+    // Prevent form submission
     if (event.target.tagName === "BUTTON" || event.target.closest("button")) {
       event.stopPropagation();
     }
