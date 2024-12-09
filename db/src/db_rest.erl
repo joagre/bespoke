@@ -536,7 +536,31 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                       Socket, Request,
                       {error, bad_request, "post-id must be a string"})
             end;
-	_ ->
+        ["subscribe_on_changes"] ->
+            case rest_util:parse_body(Request, Body) of
+                {error, _Reason} ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"});
+                PostIds ->
+                    case lists:all(fun(PostId) when is_binary(PostId) ->
+                                           true;
+                                      (_) ->
+                                           false
+                                   end, PostIds) of
+                        true ->
+                            %% Note: Hangs until a post has changed!
+                            ChangedPostId = db_serv:subscribe_on_changes(PostIds),
+                            ?log_info("Post ~s has been changed", [ChangedPostId]),
+                            rest_util:response(Socket, Request,
+                                               {ok, {format, ChangedPostId}});
+                        false ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request, "post-ids must be strings"})
+                    end
+            end;
+        _ ->
 	    ?log_error("~p not found", [Tokens]),
 	    rest_util:response(Socket, Request, {error, not_found})
     end.

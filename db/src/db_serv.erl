@@ -5,7 +5,8 @@
          lookup_posts/1, lookup_posts/2, lookup_post_ids/1, lookup_post_ids/2,
          insert_post/1,
          delete_post/1,
-         toggle_like/2]).
+         toggle_like/2,
+         subscribe_on_changes/1]).
 -export([sync/0]).
 -export([message_handler/1]).
 -export_type([user_id/0, post_id/0, title/0, body/0, author/0,
@@ -20,6 +21,7 @@
 -define(POST_DB, posts).
 -define(META_DB_FILENAME, "meta.db").
 -define(META_DB, meta).
+-define(SUBSCRIPTION_DB, db_serv_subscriptions).
 
 -type user_id() :: integer().
 -type post_id() :: binary().
@@ -27,12 +29,21 @@
 -type body() :: binary().
 -type author() :: binary().
 -type seconds_since_epoch() :: integer().
+-type monitor_ref() :: reference().
+-type subscription_id() :: reference().
 
 -record(state, {
                 parent :: pid(),
                 next_user_id = 0 :: integer(),
                 next_post_id = 0 :: integer()
                }).
+
+-record(subscription, {
+                       id :: subscription_id() | '_',
+                       subscriber :: pid() | '_',
+                       monitor_ref :: monitor_ref(),
+                       post_ids :: [post_id()] | '_'
+                      }).
 
 %%
 %% Exported: start_link
@@ -133,6 +144,19 @@ toggle_like(PostId, UserId) ->
     serv:call(?MODULE, {toggle_like, PostId, UserId}).
 
 %%
+%% Exported: subscribe_on_changes
+%%
+
+-spec subscribe_on_changes([post_id()]) -> post_id().
+
+subscribe_on_changes(PostIds) ->
+    SubscribeId = serv:call(?MODULE, {subscribe_on_changes, self(), PostIds}),
+    receive
+        {SubscribeId, PostId} ->
+            PostId
+    end.
+
+%%
 %% Server
 %%
 
@@ -154,6 +178,8 @@ init(Parent) ->
         [Meta] ->
             ok
     end,
+    ?SUBSCRIPTION_DB =
+        ets:new(?SUBSCRIPTION_DB, [{keypos, #subscription.id}, named_table]),
     ?log_info("Database server has been started"),
     {ok, #state{parent = Parent,
                 next_user_id = Meta#meta.next_user_id,
@@ -190,7 +216,7 @@ message_handler(S) ->
         {call, From, {lookup_post_ids, PostIds, Mode} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, do_lookup_post_ids(PostIds, Mode)};
-        {call, From, {insert_post_ids, Post} = Call} ->
+        {call, From, {insert_post, Post} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case do_insert_post(S#state.next_post_id, Post) of
                 {ok, NextUpcomingPostId, InsertedPost} ->
@@ -205,8 +231,7 @@ message_handler(S) ->
                 [#post{parent_post_id = ParentPostId}]
                   when ParentPostId /= not_set ->
                     [ParentPost] = dets:lookup(?POST_DB, ParentPostId),
-                    ok = dets:insert(
-                           ?POST_DB,
+                    ok = insert_and_inform(
                            ParentPost#post{
                              replies = lists:delete(
                                          PostId,
@@ -215,7 +240,7 @@ message_handler(S) ->
                     ok = update_parent_count(ParentPost#post.id, -N),
                     {reply, From, ok};
                 [_TopPost] ->
-                    _ = delete_all([PostId]),
+                    _N = delete_all([PostId]),
                     {reply, From, ok};
                 [] ->
                     {reply, From, {error, not_found}}
@@ -235,12 +260,27 @@ message_handler(S) ->
                             false ->
                                 [UserId|Likers]
                         end,
-                    ok = dets:insert(?POST_DB,
-                                     Post#post{likers = UpdatedLikers}),
+                    ok = insert_and_inform(Post#post{likers = UpdatedLikers}),
                     {reply, From, {ok, UpdatedLikers}};
                 [] ->
                     {reply, From, {error, not_found}}
             end;
+        {call, From, {subscribe_on_changes, Subscriber, PostIds} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            SubscriptionId = make_ref(),
+            true = ets:insert(?SUBSCRIPTION_DB,
+                              #subscription{
+                                 id = SubscriptionId,
+                                 subscriber = Subscriber,
+                                 monitor_ref = monitor(process, Subscriber),
+                                 post_ids = PostIds}),
+            {reply, From, SubscriptionId};
+        {'DOWN', MonitorRef, process, Pid, _Reason} ->
+            ?log_info("Subscriber died", [Pid]),
+            true = ets:match_delete(
+                     ?SUBSCRIPTION_DB,
+                     #subscription{monitor_ref = MonitorRef, _ = '_'}),
+            noreply;
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             exit(Reason);
         {system, From, Request} ->
@@ -274,7 +314,7 @@ do_insert_post(NextPostId, Post) ->
                 Post#post{
                   id = NewPostId,
                   created = seconds_since_epoch(Post#post.created)},
-            ok = dets:insert(?POST_DB, UpdatedPost),
+            ok = insert_and_inform(UpdatedPost),
             case ParentPost of
                 not_set ->
                     {ok, NextUpcomingPostId, UpdatedPost};
@@ -282,7 +322,7 @@ do_insert_post(NextPostId, Post) ->
                     UpdatedParentPost =
                         ParentPost#post{
                           replies = Replies ++ [NewPostId]},
-                    ok = dets:insert(?POST_DB, UpdatedParentPost),
+                    ok = insert_and_inform(UpdatedParentPost),
                     ok = update_parent_count(ParentPost#post.id, 1),
                     {ok, NextUpcomingPostId, UpdatedPost}
             end;
@@ -332,10 +372,38 @@ update_parent_count(not_set, _N) ->
     ok;
 update_parent_count(PostId, N) ->
     [Post] = dets:lookup(?POST_DB, PostId),
-    ok = dets:insert(?POST_DB,
-                     Post#post{
-                       reply_count = Post#post.reply_count + N}),
+    ok = insert_and_inform(Post#post{reply_count = Post#post.reply_count + N}),
     update_parent_count(Post#post.parent_post_id, N).
+
+
+%%
+%% Subscription handling
+%%
+
+insert_and_inform(Post) when is_record(Post, post) ->
+    ok = dets:insert(?POST_DB, Post),
+    inform_subscribers(Post#post.id).
+
+delete_and_inform(PostId) ->
+    ok = dets:delete(?POST_DB, PostId),
+    inform_subscribers(PostId).
+
+inform_subscribers(PostId) ->
+    ets:foldl(
+      fun(#subscription{id = Id,
+                        subscriber = Subscriber,
+                        monitor_ref = MonitorRef,
+                        post_ids = PostIds}, Acc) ->
+              case lists:member(PostId, PostIds) of
+                  true ->
+                      Subscriber ! {Id, PostId},
+                      true = demonitor(MonitorRef),
+                      true = ets:delete(?SUBSCRIPTION_DB, Id),
+                      Acc;
+                  false ->
+                      Acc
+              end
+      end, ok, ?SUBSCRIPTION_DB).
 
 %%
 %% Lookup posts
@@ -380,7 +448,7 @@ delete_all([]) ->
     0;
 delete_all([PostId|Rest]) ->
     [Post] = dets:lookup(?POST_DB, PostId),
-    ok = dets:delete(?POST_DB, PostId),
+    ok = delete_and_inform(PostId),
     delete_all(Post#post.replies) + delete_all(Rest) + 1.
 
 %%

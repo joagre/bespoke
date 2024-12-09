@@ -15,7 +15,6 @@ class TopPosts {
     }
     bespoke.clearPostStack();
     this._updatePage();
-    setInterval(() => this._updatePage(), 60000);
   }
 
   async _updatePage() {
@@ -36,6 +35,8 @@ class TopPosts {
         annotatedTopPosts.push(post);
       }
       this._populatePage(annotatedTopPosts);
+      const topPostIds = topPosts.map((post) => post["id"]);
+      this._subscribeOnChanges(topPostIds);
     } catch (error) {
       console.error("Page update failed:", error);
     }
@@ -111,6 +112,30 @@ class TopPosts {
       </div>`;
   }
 
+  async _subscribeOnChanges(postIds) {
+    try {
+      console.log('Subscribing on changes...');
+      const response = await fetch('/subscribe_on_changes', {
+        method: "POST",
+        headers: {
+          "Conncection": "close",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(postIds)
+      });
+      if (!response.ok) {
+        console.error(`Server error: ${response.status}`);
+        console.log('Retrying in 5 seconds');
+        setTimeout(() => this._subscribeOnChanges(postIds), 5000);
+        return;
+      }
+      const postId = await response.json();
+      console.log(`${postId} has changed`);
+      this._updatePage(); // Voila!
+    } catch (error) {
+      console.error('Subscribe on changes failed:', error);
+    }
+  }
 }
 
 const topPosts = new TopPosts();
