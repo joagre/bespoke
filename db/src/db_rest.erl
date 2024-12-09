@@ -533,7 +533,7 @@ post_to_json_term(#post{id = Id,
                  <<"created">> => Created,
                  <<"reply-count">> => ReplyCount,
                  <<"replies">> => Replies,
-                 <<"likes-count">> => length(Likers)},
+                 <<"likers">> => Likers},
     add_optional_members([{<<"title">>, Title},
                           {<<"parent-post-id">>, ParentPostId},
                           {<<"top-post-id">>, TopPostId}], JsonTerm).

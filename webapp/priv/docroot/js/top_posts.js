@@ -57,6 +57,7 @@ class TopPosts {
           ${age} •
           <span uk-icon="icon: heart"></span> 12 •
           <span uk-icon="comment"></span> ${post["reply-count"]}
+          <span class="number-of-comments">/ <span class="uk-text-warning">66</span></span>
         </div>
       </div>
       <hr class="uk-margin-small post-divider">`;

@@ -32,12 +32,3 @@
 .reply-body p:last-child {
     margin-bottom: 0;
 }
-
-.bleeding-heart {
-    color: red;
-}
-
-.bleeding-heart svg path {
-    fill: currentColor;
-    stroke: currentColor;
-}

@@ -8,7 +8,9 @@ class Post {
     this._dataLoaded = false;
     this._domReady = false;
     // Note: bespoke.onReady() is not used by design
-    this._load();
+    if (window.location.pathname.endsWith("post.html")) {
+      this._load();
+    }
   }
 
   _load() {
@@ -61,7 +63,7 @@ class Post {
                        "Expected exactly one post");
         this._topPostTitle = lookupPostsResult[0]["title"];
       }
-      // Possible remove delete button if not the author
+      // Possible remove delete action if not the author
       if (this._parentPost["author"] !== bespoke.getCookieValue("username")) {
         document.getElementById("parent-delete").style.display = "none";
       }
@@ -117,6 +119,11 @@ class Post {
       this._parentPost["author"];
     document.getElementById("parent-age").textContent =
       bespoke.formatSecondsSinceEpoch(this._parentPost["created"]);
+    if (this._parentPost["likers"].includes(bespoke.getCookieValue("userId"))) {
+      document.getElementById("parent-like-icon").classList.add("bleeding-heart");
+    }
+    document.getElementById("parent-likes-count").textContent =
+      this._parentPost["likers"].length;
     document.getElementById("parent-replies").textContent =
       this._parentPost["reply-count"];
     document.getElementById("parent-delete")
@@ -137,7 +144,7 @@ class Post {
     let replyQuote = "";
     if (post["parent-post-id"] != null &&
         post["parent-post-id"] != parentPost["id"]) {
-      const replyQuoteButtonAttr = `reply-quote-button-${post["id"]}`;
+      const replyQuoteActionAttr = `reply-quote-action-${post["id"]}`;
       const replyQuoteAttr = `reply-quote-${post["id"]}`;
       const replyQuoteBodyAttr = `reply-quote-body-${post["id"]}`;
       const parentReplyPost = replyPosts.find(
@@ -149,7 +156,7 @@ class Post {
         <!-- Reply quote -->
         <div class="uk-text-meta quote"
              onclick=${(event) => this.toggleQuote(event)}>
-          <span id="${replyQuoteButtonAttr}"
+          <span id="${replyQuoteActionAttr}"
                 class="uk-icon-link" uk-icon="chevron-down"></span>
           In reply to ${replyQuoteAuthor}...
           <div id="${replyQuoteAttr}"
@@ -165,6 +172,11 @@ class Post {
     const replyBodyAttr = `reply-body-${post["id"]}`;
     // Age
     const age = bespoke.formatSecondsSinceEpoch(post["created"]);
+    // Like
+    let likeAttr = "";
+    if (post["likers"].includes(bespoke.getCookieValue("userId"))) {
+      likeAttr = "bleeding-heart";
+    }
     // Replies
     let replies = "";
     if (post["reply-count"] > 0) {
@@ -172,10 +184,10 @@ class Post {
         <span class="mini-action"><span onclick=${(event) => bespoke.gotoPage(event, "/post.html", post["id"])} uk-icon="comments"></span>
         ${post["reply-count"]}</span>`;
     }
-    // Delete button
-    let deleteButton = "";
+    // Delete action
+    let deleteAction = "";
     if (post["author"] === bespoke.getCookieValue("username")) {
-      deleteButton = html`
+      deleteAction = html`
         <span onclick=${(event) => this.openDeletePostModal(event)}
               class="mini-action"
               uk-icon="trash"></span>`;
@@ -196,13 +208,13 @@ class Post {
             ${post["author"]} •
             ${age} •
             <span onclick=${(event) => this.toggleLike(event)}
-                  class="mini-action"><span uk-icon="icon: heart"></span>
-              <span>${post["likes-count"]}</span></span>
+                  class="mini-action"><span class="${likeAttr}" uk-icon="icon: heart"></span>
+              <span>${post["likers"].length}</span></span>
             ${replies}
           </div>
           <!-- Reply actions -->
           <div>
-            ${deleteButton}
+            ${deleteAction}
             <span onclick=${(event) => addReplyPost.gotoAddReplyPage(event, post["id"], true)}
                   class="mini-action"
                   uk-icon="reply"></span>
@@ -313,8 +325,8 @@ class Post {
     const parentPostId = parentPostElement.getAttribute("data-parent-post-id");
     const replyQuote = document.getElementById(`reply-quote-${postId}`);
     const isHidden = replyQuote.hidden;
-    const replyQuoteButton =
-          document.getElementById(`reply-quote-button-${postId}`);
+    const replyQuoteAction =
+          document.getElementById(`reply-quote-action-${postId}`);
     if (isHidden) {
       const replyQuoteBody =
             document.getElementById(`reply-quote-body-${postId}`);
@@ -322,19 +334,19 @@ class Post {
             document.getElementById(`reply-body-${parentPostId}`);
       replyQuoteBody.innerHTML = replyBody.innerHTML;
       replyQuote.hidden = false;
-      replyQuoteButton.setAttribute("uk-icon", "chevron-up");
+      replyQuoteAction.setAttribute("uk-icon", "chevron-up");
     } else {
       replyQuote.hidden = true;
-      replyQuoteButton.setAttribute("uk-icon", "chevron-down");
+      replyQuoteAction.setAttribute("uk-icon", "chevron-down");
     }
   }
 
   toggleLike(event) {
     event.preventDefault();
-    const likeButton = event.currentTarget;
+    const likeAction = event.currentTarget;
     const updateServer = async () => {
       try {
-        const postElement = likeButton.closest("[data-post-id]");
+        const postElement = likeAction.closest("[data-post-id]");
         const postId = postElement.getAttribute("data-post-id");
         // REST API: Like post
         const response = await fetch("/toggle_like", {
@@ -351,12 +363,12 @@ class Post {
         const result = await response.json();
         // Update the heart icon state
         if (result["liked"]) {
-          likeButton.children[0].classList.add("bleeding-heart");
+          likeAction.children[0].classList.add("bleeding-heart");
         } else {
-          likeButton.children[0].classList.remove("bleeding-heart");
+          likeAction.children[0].classList.remove("bleeding-heart");
         }
         // Update the likes count
-        likeButton.children[1].innerText = result["likes-count"];
+        likeAction.children[1].innerText = result["likes-count"];
       } catch (error) {
         console.error("Like post failed:", error);
       }

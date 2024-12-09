@@ -55,3 +55,12 @@ body {
 .mini-action:hover {
     color: var(--uk-primary);
 }
+
+.bleeding-heart {
+    color: red;
+}
+
+.bleeding-heart svg path {
+    fill: currentColor;
+    stroke: currentColor;
+}
