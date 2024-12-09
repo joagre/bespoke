@@ -1,8 +1,11 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
 -export([get_user_id/0,
-         list_top_posts/0, lookup_posts/1, lookup_posts/2, insert_post/1,
-         delete_post/1, toggle_like/2]).
+         list_top_posts/0,
+         lookup_posts/1, lookup_posts/2, lookup_post_ids/1, lookup_post_ids/2,
+         insert_post/1,
+         delete_post/1,
+         toggle_like/2]).
 -export([sync/0]).
 -export([message_handler/1]).
 -export_type([user_id/0, post_id/0, title/0, body/0, author/0,
@@ -79,6 +82,18 @@ lookup_posts(PostIds) ->
 
 lookup_posts(PostIds, Mode) ->
     serv:call(?MODULE, {lookup_posts, PostIds, Mode}).
+
+%%
+%% Exported: lookup_post_ids
+%%
+
+-spec lookup_post_ids([post_id()], flat | recursive) -> [post_id()].
+
+lookup_post_ids(PostIds) ->
+    lookup_posts(PostIds, flat).
+
+lookup_post_ids(PostIds, Mode) ->
+    serv:call(?MODULE, {lookup_post_ids, PostIds, Mode}).
 
 %%
 %% Exported: insert_post
@@ -172,7 +187,10 @@ message_handler(S) ->
         {call, From, {lookup_posts, PostIds, Mode} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, do_lookup_posts(PostIds, Mode)};
-        {call, From, {insert_post, Post} = Call} ->
+        {call, From, {lookup_post_ids, PostIds, Mode} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            {reply, From, do_lookup_post_ids(PostIds, Mode)};
+        {call, From, {insert_post_ids, Post} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case do_insert_post(S#state.next_post_id, Post) of
                 {ok, NextUpcomingPostId, InsertedPost} ->
@@ -340,6 +358,19 @@ do_lookup_posts(PostIds, Mode) ->
       fun(PostA, PostB) ->
               PostA#post.created =< PostB#post.created
       end, Posts).
+
+do_lookup_post_ids(PostIds, Mode) ->
+    lists:foldr(
+      fun(PostId, Acc) ->
+              case dets:lookup(?POST_DB, PostId) of
+                  [Post] when Mode == flat ->
+                      [Post#post.id|Acc];
+                  [Post] when Mode == recursive ->
+                      Replies =
+                          do_lookup_post_ids(Post#post.replies, Mode),
+                      [Post#post.id|Acc] ++ Replies
+              end
+      end, [], PostIds).
 
 %%
 %% Delete all posts (recursively)

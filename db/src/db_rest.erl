@@ -423,6 +423,34 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                       Socket, Request,
                       {error, bad_request, "Invalid JSON format"})
             end;
+        ["lookup_recursive_post_ids"] ->
+            case rest_util:parse_body(Request, Body) of
+                {error, _Reason} ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"});
+                PostIds when is_list(PostIds) ->
+                    case lists:all(fun(PostId) when is_binary(PostId) ->
+                                           true;
+                                      (_) ->
+                                           false
+                                   end, PostIds) of
+                        true ->
+                            PayloadJsonTerm =
+                                db_serv:lookup_post_ids(PostIds, recursive),
+                            rest_util:response(
+                              Socket, Request, {ok, {format, PayloadJsonTerm}});
+                        false ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request,
+                               "post-ids must be strings"})
+                    end;
+                _ ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"})
+            end;
         ["insert_post"] ->
             case rest_util:parse_body(Request, Body) of
                 {error, _Reason} ->

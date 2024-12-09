@@ -40,10 +40,6 @@ body {
     border-color: var(--uk-muted);
 }
 
-.unread-post-divider {
-    border-color: var(--uk-warning);
-}
-
 .underlined-link {
     text-decoration: underline;
 }

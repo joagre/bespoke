@@ -181,7 +181,7 @@ class Post {
     let replies = "";
     if (post["reply-count"] > 0) {
       replies = html`•
-        <span class="mini-action"><span onclick=${(event) => bespoke.gotoPage(event, "/post.html", post["id"])} uk-icon="comments"></span>
+        <span class="mini-action"><span onclick=${(event) => bespoke.gotoPage(event, "/post.html", post["id"])} uk-icon="comment"></span>
         ${post["reply-count"]}</span>`;
     }
     // Delete action
@@ -203,8 +203,7 @@ class Post {
         </div>
         <div class="uk-flex uk-flex-between uk-flex-middle">
           <!-- Reply meta-data -->
-          <div class="uk-text-meta meta-data">
-            <span uk-icon="icon: check" class="uk-text-success" hidden></span>
+          <div class="uk-text-meta">
             ${post["author"]} •
             ${age} •
             <span onclick=${(event) => this.toggleLike(event)}
@@ -233,33 +232,22 @@ class Post {
       if (bespoke.getRawLocalItem(`post-${postId}`) != "") {
         // Add observer
         this._addHasBeenReadObserver(postDivider);
-      } else {
-        // Mark it as read in the UI
-        const metaDataElement = postElement.querySelector('.meta-data');
-        const hasBeenReadElement = metaDataElement.children[0];
-        hasBeenReadElement.hidden = false;
       }
     }
   }
 
   _addHasBeenReadObserver(postDivider) {
     const options = {
-      // Uses the viewport as the root
-      root: null,
-      // Shrinks the bottom by 50%, making the upper 50% the active area
-      rootMargin: '0px 0px -50% 0px',
-      // Trigger as soon as any part is visible within the adjusted root
-      threshold: 0
+      root: null, // Uses the viewport as the root
+      rootMargin: '0px', // No margin adjustments; full viewport
+      threshold: 0 // Trigger when any part is visible
     };
     const callback = (entries, observer) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const postElement = postDivider.closest("[data-post-id]");
           const postId = postElement.getAttribute("data-post-id");
-          // Mark it as read in the UI
-          const metaDataElement = postElement.querySelector('.meta-data');
-          const hasBeenReadElement = metaDataElement.children[0];
-          hasBeenReadElement.hidden = false;
+          console.log(`${postId} has been read`);
           // Mark it as read in the local storage
           bespoke.setRawLocalItem(`post-${postId}`, "");
           // Stop observing

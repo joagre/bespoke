@@ -26,10 +26,45 @@ class TopPosts {
         console.error(`Server error: ${response.status}`);
         return;
       }
-      const result = await response.json();
-      this._populatePage(result);
+      const topPosts = await response.json();
+      // How many replies have been read
+      let annotatedTopPosts = [];
+      for (const post of topPosts) {
+        const hasBeenRead = await this._howManyHasBeenRead(post["id"]);
+        bespoke.assert(hasBeenRead !== null, "Failed to get read count");
+        post.hasBeenRead = hasBeenRead;
+        annotatedTopPosts.push(post);
+      }
+      this._populatePage(annotatedTopPosts);
     } catch (error) {
       console.error("Page update failed:", error);
+    }
+  }
+
+  async _howManyHasBeenRead(postId) {
+    try {
+      const response = await fetch("/lookup_recursive_post_ids", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([postId])
+      });
+      if (!response.ok) {
+        console.error(`Server error: ${response.status}`);
+        return null;
+      }
+      const postIds = await response.json();
+      let hasBeenRead = 0;
+      for (const postId of postIds) {
+        if (bespoke.getRawLocalItem(`post-${postId}`) == "") {
+          hasBeenRead++;
+        }
+      }
+      return hasBeenRead;
+    } catch (error) {
+      console.error("Recursive lookup of post-ids failed:", error);
+      return null;
     }
   }
 
@@ -47,7 +82,21 @@ class TopPosts {
   }
 
   _createPostTemplate(post) {
+    // Age
     const age = bespoke.formatSecondsSinceEpoch(post["created"]);
+    // Like
+    let likeAttr = "";
+    if (post["likers"].includes(bespoke.getCookieValue("userId"))) {
+      likeAttr = "bleeding-heart";
+    }
+    // Replies
+    let replies;
+    if (post["reply-count"] == post.hasBeenRead       ) {
+      replies = html`• <span uk-icon="comment"></span> ${post["reply-count"]}`;
+    } else {
+      replies =
+        html`• <span uk-icon="commenting"></span> ${post.hasBeenRead} (${post["reply-count"]})`;
+    }
     return html`
       <div onclick=${(event) => bespoke.gotoPage(event, "post.html", post["id"])}
            class="top-post">
@@ -55,13 +104,13 @@ class TopPosts {
         <div class="uk-text-meta uk-margin-small-top">
           ${post["author"]} •
           ${age} •
-          <span uk-icon="icon: heart"></span> 12 •
-          <span uk-icon="comment"></span> ${post["reply-count"]}
-          <span class="number-of-comments">/ <span class="uk-text-warning">66</span></span>
+          <span class="${likeAttr}" uk-icon="icon: heart"></span> ${post["likers"].length}
+          ${replies}
         </div>
-      </div>
-      <hr class="uk-margin-small post-divider">`;
+        <hr class="uk-margin-small post-divider">
+      </div>`;
   }
+
 }
 
 const topPosts = new TopPosts();
