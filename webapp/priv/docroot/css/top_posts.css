@@ -17,9 +17,3 @@
     max-width: 750px;
     z-index: 999;
 }
-
-/* Prevent sticky behavior from affecting the button, i.e.
-   prevent the button to flicker while the page scrolls. */
-.non-sticky {
-    position: relative;
-}

@@ -11,6 +11,10 @@
     --uk-light: #ebebeb; /* Light Gray */
 }
 
+html {
+  overflow-y: scroll;
+}
+
 body {
     font-family: Arial, sans-serif;
 }
@@ -59,4 +63,10 @@ body {
 .bleeding-heart svg path {
     fill: currentColor;
     stroke: currentColor;
+}
+
+/* Prevent sticky behavior from affecting the button, i.e.
+   prevent the button to flicker while the page scrolls. */
+.non-sticky {
+    position: relative;
 }
