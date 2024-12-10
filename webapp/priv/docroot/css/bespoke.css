@@ -20,19 +20,28 @@ body {
 }
 
 .header {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    margin-bottom: 0.75em !important;
     background-color: var(--uk-light);
 }
 
 .footer {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
+    padding: 0.5em 0.5em 0.5em 0.5em;
     background-color: var(--uk-light);
 }
 
 .active-footer-button {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--uk-primary);
+    color: white;
+    cursor: not-allowed;
+}
+
+.active-footer-button:disabled {
+  opacity: 0.7;
+}
+
+.post-meta-data {
+    margin-top: 0.25rem;
 }
 
 .post-divider,
@@ -49,7 +58,7 @@ body {
 }
 
 .mini-action:hover {
-    color: var(--uk-secondary);
+    color: var(--uk-primary);
 }
 
 .bleeding-heart {
@@ -61,8 +70,7 @@ body {
     stroke: currentColor;
 }
 
-/* Prevent sticky behavior from affecting the button, i.e.
-   prevent the button to flicker while the page scrolls. */
+/* Prevent the button get stuck in hover state after page scrolling */
 .non-sticky {
     position: relative;
 }

@@ -19,9 +19,9 @@
     <script type="module" src="js/add_reply_post.js"></script>
   </head>
   <body hidden>
-    <div class="uk-container uk-container-xsmall">
+    <div class="uk-container uk-container-xsmall uk-padding-remove">
       <!-- Header -->
-      <div class="header uk-flex uk-flex-between uk-flex-middle uk-padding-small" uk-sticky>
+      <div class="header uk-flex uk-flex-between uk-flex-middle" uk-sticky>
         <!-- Go back -->
         <button onclick="addReplyPost.goBack(event, false)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
         <!-- Title -->
@@ -32,29 +32,31 @@
           </div>
         </div>
       </div>
-      <!-- Parent post -->
-      <div class="uk-margin-small-top">
-        <!-- Parent title -->
-        <div id="parent-title"></div>
-        <!-- Parent body -->
-        <div id="parent-body"></div>
-        <!-- Parent meta-data -->
-        <div class="uk-text-meta uk-margin-small-top">
-          <span id="parent-author"></span> •
-          <span id="parent-age"></span> •
-          <span uk-icon="comments"></span> <span id="parent-replies"></span>
-        </div>
-      </div>
-      <!-- Form -->
-      <div class="uk-container uk-margin-top">
-        <form class="uk-form-stacked">
-          <!-- Body text area-->
-          <textarea class="uk-textarea" placeholder="Enter a reply" id="form-body" rows="5" required></textarea>
-          <!-- Add button -->
-          <div class="uk-margin-top uk-text-right">
-            <button onclick="addReplyPost.addNow(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Reply</button>
+      <div class="uk-margin-small-left uk-margin-small-right">
+        <!-- Parent post -->
+        <div>
+          <!-- Parent title -->
+          <div id="parent-title"></div>
+          <!-- Parent body -->
+          <div id="parent-body"></div>
+          <!-- Parent meta-data -->
+          <div class="post-meta-data uk-text-meta">
+            <span id="parent-author"></span> •
+            <span id="parent-age"></span> •
+            <span uk-icon="comments"></span> <span id="parent-replies"></span>
           </div>
-        </form>
+        </div>
+        <!-- Form -->
+        <div class="uk-container uk-margin-top">
+          <form class="uk-form-stacked">
+            <!-- Body text area-->
+            <textarea class="uk-textarea" placeholder="Enter a reply" id="form-body" rows="5" required></textarea>
+            <!-- Add button -->
+            <div class="uk-margin-top uk-text-right">
+              <button onclick="addReplyPost.addNow(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Reply</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
     <!-- Make relevant ES6 modules available globally -->

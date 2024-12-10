@@ -17,9 +17,9 @@
     <script type="module" src="js/bespoke.js"></script>
   </head>
   <body>
-    <div class="uk-container uk-container-xsmall">
+    <div class="uk-container uk-container-xsmall uk-padding-remove">
       <!-- Header -->
-      <div class="header uk-flex uk-flex-between uk-flex-middle uk-padding-small" uk-sticky>
+      <div class="header uk-flex uk-flex-between uk-flex-middle" uk-sticky>
         <!-- Go back -->
         <button onclick="bespoke.gotoPage(event)" data-back-destination="" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
         <!-- Title -->
@@ -27,17 +27,19 @@
           <div class="uk-text-bold">About Bespoke</div>
         </div>
       </div>
-      <!-- Content -->
-      <p>
-        Bespoke BBS is a <i>location-based Bulletin Board System</i>
-        (in case you long for a catch phrase). Interact with
-        friends using <b>forums</b>, <b>direct messaging</b>
-        and <b>file sharing</b>. Bespoke BBS is never connected to the
-        Internet but instead exists only in your local vicinity. This
-        is a feature.
-      </p>
-      <p>Enjoy and be kind.</p>
-      <p>/The team ❤️</p>
+      <div class="uk-margin-small-left uk-margin-small-right">
+        <!-- Content -->
+        <p>
+          Bespoke BBS is a <i>location-based Bulletin Board System</i>
+          (in case you long for a catch phrase). Interact with
+          friends using <b>forums</b>, <b>direct messaging</b>
+          and <b>file sharing</b>. Bespoke BBS is never connected to the
+          Internet but instead exists only in your local vicinity. This
+          is a feature.
+        </p>
+        <p>Enjoy and be kind.</p>
+        <p>/The team ❤️</p>
+      </div>
     </div>
     <!-- Make relevant ES6 modules available globally -->
     <script type="module">

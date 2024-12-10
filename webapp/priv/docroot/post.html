@@ -19,9 +19,9 @@
     <script type="module" src="js/post.js"></script>
   </head>
   <body hidden>
-    <div class="uk-container uk-container-xsmall">
+    <div class="uk-container uk-container-xsmall uk-padding-remove">
       <!-- Header -->
-      <div class="header uk-flex uk-flex-between uk-flex-middle uk-padding-small" uk-sticky>
+      <div class="header uk-flex uk-flex-between uk-flex-middle" uk-sticky>
         <!-- Go back -->
         <div class="non-sticky">
           <button onclick="bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
@@ -33,31 +33,33 @@
           <span id="header-reply-level" class="uk-text-meta"></span>
         </div>
       </div>
-      <!-- Parent post -->
-      <div id="parent-post" class="uk-margin-small-top">
-        <!-- Parent title -->
-        <div id="parent-title"></div>
-        <!-- Parent body -->
-        <div id="parent-body"></div>
-        <div class="uk-flex uk-flex-between uk-flex-middle">
-          <!-- Parent meta-data -->
-          <div class="uk-text-meta">
-            <span uk-icon="icon: check" class="uk-text-success"></span>
-            <span id="parent-author"></span> •
-            <span id="parent-age"></span> •
-            <span onclick="post.toggleLike(event)" class="mini-action"><span id="parent-like-icon" uk-icon="icon: heart"></span> <span id="parent-likes-count"></span></span> •
-            <span uk-icon="comment"></span> <span id="parent-replies"></span>
+      <div class="uk-margin-small-left uk-margin-small-right">
+        <!-- Parent post -->
+        <div id="parent-post">
+          <!-- Parent title -->
+          <div id="parent-title"></div>
+          <!-- Parent body -->
+          <div id="parent-body"></div>
+          <div class="uk-flex uk-flex-between uk-flex-middle">
+            <!-- Parent meta-data -->
+            <div class="post-meta-data uk-text-meta">
+              <span uk-icon="icon: check" class="uk-text-success"></span>
+              <span id="parent-author"></span> •
+              <span id="parent-age"></span> •
+              <span onclick="post.toggleLike(event)" class="mini-action"><span id="parent-like-icon" uk-icon="icon: heart"></span> <span id="parent-likes-count"></span></span> •
+              <span uk-icon="comment"></span> <span id="parent-replies"></span>
+            </div>
+            <!-- Parent actions -->
+            <div>
+              <span id="parent-delete" onclick="post.openDeletePostModal(event)" data-post-id="0" class="mini-action" uk-icon="trash"></span>
+              <span onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="mini-action" uk-icon="reply"></span>
+            </div>
           </div>
-          <!-- Parent actions -->
-          <div>
-            <span id="parent-delete" onclick="post.openDeletePostModal(event)" data-post-id="0" class="mini-action" uk-icon="trash"></span>
-            <span onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="mini-action" uk-icon="reply"></span>
-          </div>
+          <hr class="parent-post-divider">
         </div>
-        <hr class="parent-post-divider">
+        <!-- Replies -->
+        <div id="replies"></div>
       </div>
-      <!-- Replies -->
-      <div id="replies"></div>
     </div>
     <!-- Modal dialog to delete a post -->
     <div id="delete-post-modal" uk-modal>

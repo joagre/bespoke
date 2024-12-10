@@ -84,6 +84,10 @@ class TopPosts {
     const postTemplates =
           topPosts.map((post) => this._createPostTemplate(post));
     render(postsContainer, html`${postTemplates}`);
+    // Footer
+    const activeFooterButton = document.querySelector(".forum-button");
+    activeFooterButton.classList.add("active-footer-button");
+    activeFooterButton.setAttribute("disabled", "true");
   }
 
   _createPostTemplate(post) {
@@ -106,7 +110,7 @@ class TopPosts {
       <div onclick=${(event) => bespoke.gotoPage(event, "post.html", post["id"])}
            class="top-post">
         ${post["title"]}
-        <div class="uk-text-meta uk-margin-small-top">
+        <div class="post-meta-data uk-text-meta">
           ${post["author"]} •
           ${age} •
           <span class="${likeAttr}" uk-icon="icon: heart"></span> ${post["likers"].length}
