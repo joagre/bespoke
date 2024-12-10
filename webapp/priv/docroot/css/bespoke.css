@@ -35,10 +35,6 @@ body {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
-.footer-item {
-    cursor: pointer;
-}
-
 .post-divider,
 .parent-post-divider {
     border-color: var(--uk-muted);
