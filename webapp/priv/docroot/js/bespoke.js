@@ -295,6 +295,31 @@ class Bespoke {
     }
     return password;
   }
+
+  async subscribeOnChanges(postIds, callback) {
+    try {
+      console.log('Subscribing on changes...');
+      const response = await fetch('/subscribe_on_changes', {
+        method: "POST",
+        headers: {
+          "Conncection": "close",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(postIds)
+      });
+      if (!response.ok) {
+        console.error(`Server error: ${response.status}`);
+        console.log('Retrying in 5 seconds');
+        setTimeout(() => this.subscribeOnChanges(postIds, callback), 5000);
+        return;
+      }
+      const postId = await response.json();
+      console.log(`${postId} has changed`);
+      callback(); // Voila!
+    } catch (error) {
+      console.error('Subscribe on changes failed:', error);
+    }
+  }
 }
 
 const bespoke = new Bespoke();

@@ -35,8 +35,9 @@ class TopPosts {
         annotatedTopPosts.push(post);
       }
       this._populatePage(annotatedTopPosts);
-      const topPostIds = topPosts.map((post) => post["id"]);
-      this._subscribeOnChanges(topPostIds);
+      // Subscribe on changes
+      const postIds = topPosts.map((post) => post["id"]);
+      bespoke.subscribeOnChanges(postIds, this._updatePage);
     } catch (error) {
       console.error("Page update failed:", error);
     }
@@ -70,8 +71,11 @@ class TopPosts {
   }
 
   _populatePage(topPosts) {
+    // Header
     const username = bespoke.getCookieValue("username");
     document.getElementById("title-username").textContent = username;
+    // Body
+    document.body.hidden = false;
     const postsContainer = document.getElementById("posts");
     if (topPosts.length === 0) {
       postsContainer.innerHTML = "<p>No posts available.</p>";
@@ -110,31 +114,6 @@ class TopPosts {
         </div>
         <hr class="uk-margin-small post-divider">
       </div>`;
-  }
-
-  async _subscribeOnChanges(postIds) {
-    try {
-      console.log('Subscribing on changes...');
-      const response = await fetch('/subscribe_on_changes', {
-        method: "POST",
-        headers: {
-          "Conncection": "close",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(postIds)
-      });
-      if (!response.ok) {
-        console.error(`Server error: ${response.status}`);
-        console.log('Retrying in 5 seconds');
-        setTimeout(() => this._subscribeOnChanges(postIds), 5000);
-        return;
-      }
-      const postId = await response.json();
-      console.log(`${postId} has changed`);
-      this._updatePage(); // Voila!
-    } catch (error) {
-      console.error('Subscribe on changes failed:', error);
-    }
   }
 }
 

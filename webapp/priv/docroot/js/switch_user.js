@@ -27,6 +27,7 @@ class SwitchUser {
     try {
       const username = bespoke.getCookieValue("username");
       document.getElementById("title-username").textContent = username;
+      document.body.hidden = false;
     } catch (error) {
       console.error("Page update failed:", error);
     }

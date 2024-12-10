@@ -24,6 +24,7 @@ class AddReplyPost {
     try {
       const username = bespoke.getCookieValue("username");
       document.getElementById("title-username").textContent = username;
+      document.body.hidden = false;
       // REST: Get parent post
       const response = await fetch("/lookup_posts", {
         method: "POST",

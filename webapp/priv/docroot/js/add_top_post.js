@@ -36,6 +36,7 @@ class AddTopPost {
   _updatePage() {
     const username = bespoke.getCookieValue("username");
     document.getElementById("title-username").textContent = username;
+    document.body.hidden = false;
   }
 
   addTopPost(event) {

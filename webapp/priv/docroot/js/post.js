@@ -99,6 +99,10 @@ class Post {
           window.scrollTo(postData.scrollX, postData.scrollY);
         }
       }
+      // Subscribe on changes
+      const postIds = this._replyPosts.map((post) => post["id"]);
+      postIds.push(bespoke.peekPostStack().postId);
+      bespoke.subscribeOnChanges(postIds, this._load);
     } catch (error) {
       console.error("Loading of data failed:", error);
     }
@@ -141,6 +145,7 @@ class Post {
     document.getElementById("parent-delete")
       .setAttribute("data-post-id", this._parentPost["id"]);
     // Populate replies
+    document.body.hidden = false;
     const repliesContainer = document.getElementById("replies");
     const replyTemplates = this._replyPosts.map((replyPost) =>
       this._createReplyTemplate(this._parentPost, replyPost,
