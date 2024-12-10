@@ -151,9 +151,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                                        {ok, {format, UpdatedPayloadJsonTerm}})
             end;
         %% Act as static web server
-	Tokens when Headers#http_chdr.host == "localhost" orelse
-                    Headers#http_chdr.host == "bespoke.local" orelse
-                    Headers#http_chdr.host == "bespoke" ->
+	Tokens ->
             UriPath =
                 case Tokens of
                     [] ->
@@ -172,10 +170,7 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
                       [{content_type, {url, UriPath}}]);
                 false ->
                     rest_util:response(Socket, Request, {error, not_found})
-            end;
-        _ ->
-            ?log_info("Unexpected request: ~p\n", [{Request, Url, Tokens}]),
-            rest_util:response(Socket, Request, {error, not_found})
+            end
     end.
 
 no_cache_headers() ->
