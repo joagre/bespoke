@@ -115,12 +115,14 @@ http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
             case ets:lookup(?CAPTIVE_PORTAL_CACHE, MacAddress) of
                 [] ->
                     ?log_info("Captive portal ack (not found)\n"),
-                    ets:insert(?CAPTIVE_PORTAL_CACHE, {MacAddress, timestamp()}),
+                    ets:insert(?CAPTIVE_PORTAL_CACHE,
+                               {MacAddress, timestamp()}),
                     rester_http_server:response_r(
                       Socket, Request, 204, "OK", "", no_cache_headers());
                 [{MacAddress, _Timestamp}] ->
                     ?log_info("Captive portal ack (found)\n"),
-                    ets:insert(?CAPTIVE_PORTAL_CACHE, {MacAddress, timestamp()}),
+                    ets:insert(?CAPTIVE_PORTAL_CACHE,
+                               {MacAddress, timestamp()}),
                     rester_http_server:response_r(
                       Socket, Request, 204, "OK", "", no_cache_headers())
             end;

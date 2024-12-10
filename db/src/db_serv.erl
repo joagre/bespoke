@@ -155,8 +155,7 @@ subscribe_on_changes(PostIds) ->
         {SubscribeId, PostId} ->
             PostId;
         UnknownMessage ->
-            io:format("asdasdasdasdasdasdasdasdasdasdadasdasdadadasdasdadadasdasdasdasdadasdasdas: ~p~n", [UnknownMessage]),
-
+            io:format("**************** ~p~n", [UnknownMessage]),
             throw({unknown_message, UnknownMessage})
     end.
 
