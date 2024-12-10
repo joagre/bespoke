@@ -39,16 +39,16 @@ class AddReplyPost {
       }
       const result = await response.json();
       bespoke.assert(result.length === 1, "Expected exactly one post");
-      this.parentPost = result[0];
+      this._parentPost = result[0];
       // REST: Get top post title (if necessary)
-      this.topPostTitle = this.parentPost["title"];
+      this.topPostTitle = this._parentPost["title"];
       if (this.topPostTitle == null) {
         const lookupPostsResponse = await fetch("/lookup_posts", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify([this.parentPost["top-post-id"]]),
+          body: JSON.stringify([this._parentPost["top-post-id"]]),
         });
         if (!lookupPostsResponse.ok) {
           console.error(`Server error: ${response.status}`);
@@ -66,16 +66,23 @@ class AddReplyPost {
   }
 
   _populatePage() {
+    document.getElementById("parent-post")
+      .setAttribute("data-post-id", this._parentPost["id"]);
     document.getElementById("parent-title").innerHTML = this.topPostTitle;
     document.getElementById("parent-body").innerHTML = bespoke.formatMarkdown(
-      this.parentPost["body"]
+      this._parentPost["body"]
     );
     document.getElementById("parent-author").textContent =
-      this.parentPost["author"];
+      this._parentPost["author"];
     document.getElementById("parent-age").textContent =
-      bespoke.formatSecondsSinceEpoch(this.parentPost["created"]);
+      bespoke.formatSecondsSinceEpoch(this._parentPost["created"]);
+    if (this._parentPost["likers"].includes(bespoke.getCookieValue("userId"))) {
+      document.getElementById("parent-like-icon").classList.add("bleeding-heart");
+    }
+    document.getElementById("parent-likes-count").textContent =
+      this._parentPost["likers"].length;
     document.getElementById("parent-replies").textContent =
-      this.parentPost["reply-count"];
+      this._parentPost["reply-count"];
   }
 
   _attachEventListeners() {
@@ -98,9 +105,9 @@ class AddReplyPost {
         // REST: Add reply post
         const payload = {
           body: document.getElementById("form-body").value,
-          "parent-post-id": this.parentPost["id"],
-          "top-post-id": (this.parentPost["top-post-id"] != null) ?
-            this.parentPost["top-post-id"] : this.parentPost["id"]
+          "parent-post-id": this._parentPost["id"],
+          "top-post-id": (this._parentPost["top-post-id"] != null) ?
+            this._parentPost["top-post-id"] : this._parentPost["id"]
         };
         const response = await fetch("/insert_post", {
           method: "POST",

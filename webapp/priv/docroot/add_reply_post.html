@@ -34,7 +34,7 @@
       </div>
       <div class="uk-margin-small-left uk-margin-small-right">
         <!-- Parent post -->
-        <div>
+        <div id="parent-post">
           <!-- Parent title -->
           <div id="parent-title"></div>
           <!-- Parent body -->
@@ -43,6 +43,7 @@
           <div class="post-meta-data uk-text-meta">
             <span id="parent-author"></span> •
             <span id="parent-age"></span> •
+            <span onclick="post.toggleLike(event)" class="mini-action"><span id="parent-like-icon" uk-icon="icon: heart"></span> <span id="parent-likes-count"></span></span> •
             <span uk-icon="comments"></span> <span id="parent-replies"></span>
           </div>
         </div>
@@ -63,8 +64,10 @@
     <script type="module">
       import bespoke from "/js/bespoke.js";
       import addReplyPost from "/js/add_reply_post.js";
+      import post from "/js/post.js";
       window.bespoke = bespoke;
       window.addReplyPost = addReplyPost;
+      window.post = post;
     </script>
   </body>
 </html>

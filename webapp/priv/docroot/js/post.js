@@ -8,7 +8,7 @@ class Post {
     this._dataLoaded = false;
     this._domReady = false;
     // Note: bespoke.onReady() is not used by design
-    if (window.location.pathname.endsWith("post.html")) {
+    if (window.location.pathname == "/post.html") {
       this._load();
     }
   }
@@ -102,7 +102,8 @@ class Post {
       // Subscribe on changes
       const postIds = this._replyPosts.map((post) => post["id"]);
       postIds.push(bespoke.peekPostStack().postId);
-      bespoke.subscribeOnChanges(postIds, this._load);
+      const self = this;
+      bespoke.subscribeOnChanges(postIds, () => self._load);
     } catch (error) {
       console.error("Loading of data failed:", error);
     }
