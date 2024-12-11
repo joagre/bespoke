@@ -1,15 +1,23 @@
 -module(db_rest).
 -export([start_link/0]).
--export([request_handler/4]).
+%% rester_http_server callbacks
+-export([init/2, info/3, close/2, error/3, http_request/4]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
 -include_lib("rester/include/rester.hrl").
 -include_lib("rester/include/rester_http.hrl").
+-include_lib("rester/include/rester_socket.hrl").
 -include("db.hrl").
 
 -define(CAPTIVE_PORTAL_CACHE, captive_portal_cache).
 -define(LEASETIME, 7200).
+
+-record(state, {
+                subscriptions = #{} ::
+                  #{rester_socket() =>
+                        {Request :: term(), db_serv:subscription_id()}}
+               }).
 
 %%
 %% Exported: start_link
@@ -18,47 +26,94 @@
 start_link() ->
     ok = db_dnsmasq:clear_all_mac_addresses(),
     Options =
-	[{request_handler, {?MODULE, request_handler, []}},
+	[{request_module, ?MODULE},
 %         {verify, verify_none},
 %         {cacerts, []},
 %         {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
-    ?log_info("Database REST API has been started"),
     ?CAPTIVE_PORTAL_CACHE =
         ets:new(?CAPTIVE_PORTAL_CACHE, [public, named_table]),
+    ?log_info("Database REST API has been started"),
     rester_http_server:start_link(80, Options).
 
 %%
-%% Exported: request_handler
+%% Exported: init callback
 %%
 
-request_handler(Socket, Request, Body, Options) ->
+init(_Socket, Options) ->
+    ?log_info("init: ~p", [Options]),
+    {ok, #state{}}.
+
+%%
+%% Exported: info callback
+%%
+
+info(Socket, {subscription_change, SubscriptionId, PostId}, State) ->
+    ?log_info("Post ~s has been changed", [PostId]),
+    case maps:get(Socket, State#state.subscriptions, not_found) of
+        not_found ->
+            {ok, State};
+        {Request, SubscriptionId} ->
+            rest_util:response(Socket, Request, {ok, {format, PostId}}),
+            UpdatedState =
+                State#state{
+                  subscriptions = maps:remove(Socket, State#state.subscriptions)},
+            {ok, UpdatedState};
+        SpuriousSubscriptionId ->
+            ?log_error("Spurious subscription id ~p\n", [SpuriousSubscriptionId]),
+            {ok, State}
+    end;
+info(_Socket, Info, State) ->
+    ?log_info("info: ~p\n", [{Info, State}]),
+    {ok, State}.
+
+%%
+%% Exported: close callback
+%%
+
+close(_Socket, State) ->
+    ?log_info("close: ~p\n", [State]),
+    {ok, State}.
+
+%%
+%% Exported: error callback
+%%
+
+error(_Socket, Error, State) ->
+    ?log_info("error: ~p", [{Error, State}]),
+    {stop, normal, State}.
+
+%%
+%% Exported: http_request callback
+%%
+
+http_request(Socket, Request, Body, State) ->
     ?log_info("Request = ~s, Headers = ~s, Body = ~p",
               [rester_http:format_request(Request),
                rester_http:format_hdr(Request#http_request.headers),
                Body]),
-    try request_handler_(Socket, Request, Body, Options) of
+    try http_request_(Socket, Request, Body, State) of
 	Result ->
             Result
     catch
 	_Class:Reason:StackTrace ->
-	    ?log_error("request_handler crashed: ~p\n~p\n",
+	    ?log_error("http_request crashed: ~p\n~p\n",
                        [Reason, StackTrace]),
 	    erlang:error(Reason)
     end.
 
-request_handler_(Socket, Request, Body, Options) ->
+http_request_(Socket, Request, Body, State) ->
     case Request#http_request.method of
 	'GET' ->
-	    http_get(Socket, Request, Body, Options);
+	    http_get(Socket, Request, Body, State);
 	'POST' ->
-	    http_post(Socket, Request, Body, Options);
+	    http_post(Socket, Request, Body, State);
 	_ ->
 	    rest_util:response(Socket, Request, {error, not_allowed})
     end.
 
-http_get(Socket, Request, Body, Options) ->
+http_get(Socket, Request, Body, State) ->
     Url = Request#http_request.uri,
     case string:tokens(Url#url.path, "/") of
 	["versions"] ->
@@ -66,12 +121,12 @@ http_get(Socket, Request, Body, Options) ->
 	    rester_http_server:response_r(Socket, Request, 200, "OK", Object,
                                           [{content_type, "application/json"}]);
 	["v1"|Tokens] ->
-	    http_get(Socket, Request, Options, Url, Tokens, Body, v1);
+	    http_get(Socket, Request, Url, Tokens, Body, State, v1);
 	Tokens ->
-	    http_get(Socket, Request, Options, Url, Tokens,  Body, v1)
+	    http_get(Socket, Request, Url, Tokens,  Body, State, v1)
     end.
 
-http_get(Socket, Request, _Options, Url, Tokens, _Body, v1) ->
+http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
     Headers = Request#http_request.headers,
     case Tokens of
         %% On Ubuntu Core, the network manager will check for connectivity
@@ -251,16 +306,16 @@ delete_all_stale_timestamps() ->
                           ets:delete(?CAPTIVE_PORTAL_CACHE, MacAddress)
                   end, StaleMacAddresses).
 
-http_post(Socket, Request, Body, Options) ->
+http_post(Socket, Request, Body, State) ->
     Url = Request#http_request.uri,
     case string:tokens(Url#url.path, "/") of
 	["v1" | Tokens] ->
-	    http_post(Socket, Request, Options, Url, Tokens, Body, v1);
+	    http_post(Socket, Request, Url, Tokens, Body, State, v1);
 	Tokens ->
-	    http_post(Socket, Request, Options, Url, Tokens, Body, v1)
+	    http_post(Socket, Request, Url, Tokens, Body, State, v1)
     end.
 
-http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
+http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
     case Tokens of
         ["login"] ->
             case rest_util:parse_body(Request, Body) of
@@ -546,11 +601,14 @@ http_post(Socket, Request, _Options, _Url, Tokens, Body, v1) ->
                                            false
                                    end, PostIds) of
                         true ->
-                            %% Note: Hangs until a post has changed!
-                            ChangedPostId = db_serv:subscribe_on_changes(PostIds),
-                            ?log_info("Post ~s has been changed", [ChangedPostId]),
-                            rest_util:response(Socket, Request,
-                                               {ok, {format, ChangedPostId}});
+                            SubscriptionId =
+                                db_serv:subscribe_on_changes(PostIds),
+                            UpdatedState =
+                                State#state{
+                                  subscriptions =
+                                      maps:put(Socket, {Request, SubscriptionId},
+                                               State#state.subscriptions)},
+                            {ok, UpdatedState};
                         false ->
                             rest_util:response(
                               Socket, Request,

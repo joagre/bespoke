@@ -10,7 +10,7 @@
 -export([sync/0]).
 -export([message_handler/1]).
 -export_type([user_id/0, post_id/0, title/0, body/0, author/0,
-              seconds_since_epoch/0]).
+              seconds_since_epoch/0, subscription_id/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -147,17 +147,10 @@ toggle_like(PostId, UserId) ->
 %% Exported: subscribe_on_changes
 %%
 
--spec subscribe_on_changes([post_id()]) -> post_id().
+-spec subscribe_on_changes([post_id()]) -> subscription_id().
 
 subscribe_on_changes(PostIds) ->
-    SubscribeId = serv:call(?MODULE, {subscribe_on_changes, self(), PostIds}),
-    receive
-        {SubscribeId, PostId} ->
-            PostId;
-        UnknownMessage ->
-            io:format("**************** ~p~n", [UnknownMessage]),
-            throw({unknown_message, UnknownMessage})
-    end.
+    serv:call(?MODULE, {subscribe_on_changes, self(), PostIds}).
 
 %%
 %% Server
@@ -279,7 +272,7 @@ message_handler(S) ->
                                  post_ids = PostIds}),
             {reply, From, SubscriptionId};
         {'DOWN', MonitorRef, process, Pid, _Reason} ->
-            ?log_info("Subscriber died", [Pid]),
+            ?log_info("Subscriber died: ~w", [Pid]),
             true = ets:match_delete(
                      ?SUBSCRIPTION_DB,
                      #subscription{monitor_ref = MonitorRef, _ = '_'}),
@@ -393,15 +386,15 @@ delete_and_inform(PostId) ->
 
 inform_subscribers(PostId) ->
     ets:foldl(
-      fun(#subscription{id = Id,
+      fun(#subscription{id = SubscriptionId,
                         subscriber = Subscriber,
                         monitor_ref = MonitorRef,
                         post_ids = PostIds}, Acc) ->
               case lists:member(PostId, PostIds) of
                   true ->
-                      Subscriber ! {Id, PostId},
+                      Subscriber ! {subscription_change, SubscriptionId, PostId},
                       true = demonitor(MonitorRef),
-                      true = ets:delete(?SUBSCRIPTION_DB, Id),
+                      true = ets:delete(?SUBSCRIPTION_DB, SubscriptionId),
                       Acc;
                   false ->
                       Acc
