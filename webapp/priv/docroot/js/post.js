@@ -89,7 +89,7 @@ class Post {
           console.log("Scrolling to unread post");
           document.getElementById("unread-post").scrollIntoView({
             behavior: "smooth",
-            block: "center",
+            block: "start",
             inline: "nearest"
           });
         } else {
