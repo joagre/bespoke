@@ -66,20 +66,32 @@ parse_data(Request, Body, Options) ->
 	    {error, "Unknown content type"}
     end.
 
-parse_json_string(Data, _Options) ->
-%    case lists:keysearch(jsone_options, 1, Options) of
-%        {value, {_, JsoneOptions}} ->
-%            ok;
-%        false ->
-%            JsoneOptions = []
-%    end,
+parse_json_string(Data, Options) ->
     try json:decode(iolist_to_binary(Data)) of
-	Term ->
-            {ok, Term}
+	JsonMap ->
+            {ok, munge_json(JsonMap, Options)}
     catch
-	error:Reason ->
+        error:Reason ->
 	    {error, Reason}
     end.
+
+munge_json(JsonMap, Options) ->
+    case lists:keysearch(json_options, 1, Options) of
+        {value, {_, JsonOptions}} ->
+            case lists:member(proplist, JsonOptions) of
+                true ->
+                    proplistify(JsonMap);
+                false ->
+                    JsonMap
+            end;
+        false ->
+            JsonMap
+    end.
+
+proplistify(#{}) ->
+    [{}];
+proplistify(JsonMap) ->
+    proplists:from_map(JsonMap).
 
 parse_data(B) when is_binary(B) ->
     B;
@@ -242,13 +254,10 @@ if_modified_since(IfModifiedSince, Lmt) ->
 response(Socket,Request,ok)  ->
     rester_http_server:response_r(Socket,Request,200,"OK","",[]);
 response(Socket,Request,ok_204)  ->
-    rester_http_server:response_r(Socket,Request,204,"No Content","",[]);
+    rester_http_server:response_r(Socket,Request,204,"OK","",[]);
 response(Socket,Request,{ok, String})
   when is_list(String) ->
     rester_http_server:response_r(Socket,Request,200,"OK",String,[]);
-%% 302 redirect
-response(Socket,Request,{redirect, URL}) ->
-    rester_http_server:response_r(Socket,Request,302,"Found","",[{location, URL}]);
 response(Socket,Request,{ok, Atom})
   when is_atom(Atom) ->
     rester_http_server:response_r(Socket,Request,200,"OK",
