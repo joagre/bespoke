@@ -8,10 +8,12 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 ## Web app
 
-* Add a HTTP GET back channel for asynchronous updates done by other
-  users, i.e. a websocket is overkill for now (maybe forever),
-  i.e. one subscribe(postId) allowed per session-id. Do this for both
-  posts.html and top_post.html.
+*  THIS HAS BEEN DONE. NEED TO BE TESTED: Add a HTTP GET back channel
+for asynchronous updates done by other users, i.e. a websocket is
+overkill for now (maybe forever), i.e. one subscribe(postId) allowed
+per session-id. Do this for both posts.html and top_post.html.
+
+* Make sure top_posts.html and post.html are refreshed each 60 seconds.
 
 * Add aging of *posts*. This is done by removing *posts* when the they
   reach a certain age (e.g. 30 days). Optional. [later]
