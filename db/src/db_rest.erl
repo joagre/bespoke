@@ -58,10 +58,12 @@ info(Socket, {subscription_change, SubscriptionId, PostId}, State) ->
             rest_util:response(Socket, Request, {ok, {format, PostId}}),
             UpdatedState =
                 State#state{
-                  subscriptions = maps:remove(Socket, State#state.subscriptions)},
+                  subscriptions =
+                      maps:remove(Socket, State#state.subscriptions)},
             {ok, UpdatedState};
         SpuriousSubscriptionId ->
-            ?log_error("Spurious subscription id ~p\n", [SpuriousSubscriptionId]),
+            ?log_error("Spurious subscription id ~p\n",
+                       [SpuriousSubscriptionId]),
             {ok, State}
     end;
 info(_Socket, Info, State) ->
@@ -125,6 +127,10 @@ http_get(Socket, Request, Body, State) ->
 	Tokens ->
 	    http_get(Socket, Request, Url, Tokens,  Body, State, v1)
     end.
+
+%%
+%% HTTP GET
+%%
 
 http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
     Headers = Request#http_request.headers,
@@ -230,10 +236,308 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
             end
     end.
 
-no_cache_headers() ->
-    [{"Cache-Control", "no-cache, no-store, must-revalidate"},
-     {"Pragma", "no-cache"},
-     {"Expires", 0}].
+%%
+%% HTTP POST
+%%
+
+http_post(Socket, Request, Body, State) ->
+    Url = Request#http_request.uri,
+    case string:tokens(Url#url.path, "/") of
+	["v1" | Tokens] ->
+	    http_post(Socket, Request, Url, Tokens, Body, State, v1);
+	Tokens ->
+	    http_post(Socket, Request, Url, Tokens, Body, State, v1)
+    end.
+
+http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
+    case Tokens of
+        ["login"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                JsonTerm ->
+                    case json_term_to_login(JsonTerm) of
+                        {ok, Username, Password} ->
+                            case db_user_serv:login(Username, Password) of
+                                {ok, #user{id = UserId,
+                                           name = Username,
+                                           session_id = SessionId}} ->
+                                    PayloadJsonTerm =
+                                        #{<<"user-id">> => UserId,
+                                          <<"username">> => Username,
+                                          <<"session-id">> => SessionId},
+                                    rest_util:response(
+                                      Socket, Request,
+                                      {ok, {format, PayloadJsonTerm}});
+                                {error, failure} ->
+                                    rest_util:response(Socket, Request,
+                                                       {error, no_access})
+                            end;
+                        {error, invalid} ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request, "Invalid JSON format"})
+                    end
+            end;
+        ["switch_user"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                JsonTerm ->
+                    case json_term_to_switch_user(JsonTerm) of
+                        {ok, Username, Password} ->
+                            {ok, MacAddress} = get_mac_address(Socket),
+                            case db_user_serv:switch_user(
+                                   Username, Password, MacAddress) of
+                                {ok, User} ->
+                                    PayloadJsonTerm =
+                                        #{<<"user-id">> => User#user.id,
+                                          <<"username">> => User#user.name,
+                                          <<"session-id">> =>
+                                              User#user.session_id},
+                                    rest_util:response(
+                                      Socket, Request,
+                                      {ok, {format, PayloadJsonTerm}});
+                                {error, failure} ->
+                                    rest_util:response(Socket, Request,
+                                                       {error, no_access})
+                            end;
+                        {error, invalid} ->
+                            rest_util:response(Socket, Request,
+                                               {error, no_access})
+                    end
+            end;
+        ["change_password"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                JsonTerm ->
+                    case json_term_to_change_password(JsonTerm) of
+                        {ok, Password} ->
+                            {ok, MacAddress} = get_mac_address(Socket),
+                            {ok, #{<<"sessionId">> := SessionId}} =
+                                get_bespoke_cookie(Request),
+                            case db_user_serv:get_user_from_session_id(
+                                   SessionId) of
+                                {ok, #user{name = Username}} ->
+                                    case db_user_serv:change_password(
+                                           Username, Password, MacAddress) of
+                                        ok ->
+                                            rest_util:response(
+                                              Socket, Request, ok_204);
+                                        {error, failure} ->
+                                            rest_util:response(
+                                              Socket, Request,
+                                              {error, no_access})
+                                    end;
+                                {error, not_found} ->
+                                    rest_util:response(Socket, Request,
+                                                       {error, no_access})
+                            end;
+                        {error, invalid} ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request, "Invalid JSON format"})
+                    end
+            end;
+        ["lookup_posts"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                PostIds when is_list(PostIds) ->
+                    case lists:all(fun(PostId) when is_binary(PostId) ->
+                                           true;
+                                      (_) ->
+                                           false
+                                   end, PostIds) of
+                        true ->
+                            Posts = db_serv:lookup_posts(PostIds),
+                            PayloadJsonTerm =
+                                lists:map(fun(Post) ->
+                                                  post_to_json_term(Post)
+                                          end, Posts),
+                            rest_util:response(
+                              Socket, Request, {ok, {format, PayloadJsonTerm}});
+                        false ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request,
+                               "post-ids must be strings"})
+                    end;
+                _ ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"})
+            end;
+        ["lookup_recursive_posts"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                PostIds when is_list(PostIds) ->
+                    case lists:all(fun(PostId) when is_binary(PostId) ->
+                                           true;
+                                      (_) ->
+                                           false
+                                   end, PostIds) of
+                        true ->
+                            Posts =
+                                db_serv:lookup_posts(PostIds, recursive),
+                            PayloadJsonTerm =
+                                lists:map(fun(Post) ->
+                                                  post_to_json_term(Post)
+                                          end, Posts),
+                            rest_util:response(
+                              Socket, Request, {ok, {format, PayloadJsonTerm}});
+                        false ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request,
+                               "post-ids must be strings"})
+                    end;
+                _ ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"})
+            end;
+        ["lookup_recursive_post_ids"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                PostIds when is_list(PostIds) ->
+                    case lists:all(fun(PostId) when is_binary(PostId) ->
+                                           true;
+                                      (_) ->
+                                           false
+                                   end, PostIds) of
+                        true ->
+                            PayloadJsonTerm =
+                                db_serv:lookup_post_ids(PostIds, recursive),
+                            rest_util:response(
+                              Socket, Request, {ok, {format, PayloadJsonTerm}});
+                        false ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request,
+                               "post-ids must be strings"})
+                    end;
+                _ ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "Invalid JSON format"})
+            end;
+        ["insert_post"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                JsonTerm ->
+                    {ok, #{<<"sessionId">> := SessionId}} =
+                        get_bespoke_cookie(Request),
+                    case db_user_serv:get_user_from_session_id(SessionId) of
+                        {ok, #user{name = Username}} ->
+                            case json_term_to_post(JsonTerm, Username) of
+                                {ok, Post} ->
+                                    {ok, InsertedPost} =
+                                        db_serv:insert_post(Post),
+                                    PayloadJsonTerm =
+                                        post_to_json_term(InsertedPost),
+                                    rest_util:response(
+                                      Socket, Request,
+                                      {ok, {format, PayloadJsonTerm}});
+                                {error, invalid} ->
+                                    rest_util:response(
+                                      Socket, Request,
+                                      {error, bad_request, "Invalid post"})
+                            end;
+                        {error, not_found} ->
+                            rest_util:response(Socket, Request,
+                                               {error, no_access})
+                    end
+            end;
+        ["delete_post"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                PostId when is_binary(PostId) ->
+                    {ok, #{<<"sessionId">> := SessionId}} =
+                        get_bespoke_cookie(Request),
+                    case db_user_serv:get_user_from_session_id(SessionId) of
+                        {ok, _User} ->
+                            case db_serv:delete_post(PostId) of
+                                ok ->
+                                    rest_util:response(Socket, Request, ok_204);
+                                {error, not_found} ->
+                                    rest_util:response(Socket, Request,
+                                                       {error, not_found})
+                            end;
+                        {error, not_found} ->
+                            rest_util:response(Socket, Request,
+                                               {error, no_access})
+                    end;
+                _ ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "post-id must be a string"})
+            end;
+        ["toggle_like"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                PostId when is_binary(PostId) ->
+                    {ok, #{<<"sessionId">> := SessionId}} =
+                        get_bespoke_cookie(Request),
+                    case db_user_serv:get_user_from_session_id(SessionId) of
+                        {ok, User} ->
+                            {ok, Likers} =
+                                db_serv:toggle_like(PostId, User#user.id),
+                            PayloadJsonTerm =
+                                #{<<"liked">> =>
+                                      lists:member(User#user.id, Likers),
+                                  <<"likes-count">> => length(Likers)},
+                            rest_util:response(
+                              Socket, Request, {ok, {format, PayloadJsonTerm}});
+                        {error, not_found} ->
+                            rest_util:response(Socket, Request,
+                                               {error, no_access})
+                    end;
+                _ ->
+                    rest_util:response(
+                      Socket, Request,
+                      {error, bad_request, "post-id must be a string"})
+            end;
+        ["subscribe_on_changes"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                PostIds ->
+                    case lists:all(fun(PostId) when is_binary(PostId) ->
+                                           true;
+                                      (_) ->
+                                           false
+                                   end, PostIds) of
+                        true ->
+                            SubscriptionId =
+                                db_serv:subscribe_on_changes(PostIds),
+                            UpdatedState =
+                                State#state{
+                                  subscriptions =
+                                      maps:put(Socket,
+                                               {Request, SubscriptionId},
+                                               State#state.subscriptions)},
+                            {ok, UpdatedState};
+                        false ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request, "post-ids must be strings"})
+                    end
+            end;
+        _ ->
+	    ?log_error("~p not found", [Tokens]),
+	    rest_util:response(Socket, Request, {error, not_found})
+    end.
+
+%%
+%% Captive portal
+%%
 
 redirect_or_ack(Socket, Request, Page) ->
     {ok, MacAddress} = get_mac_address(Socket),
@@ -305,320 +609,6 @@ delete_all_stale_timestamps() ->
     lists:foreach(fun(MacAddress) ->
                           ets:delete(?CAPTIVE_PORTAL_CACHE, MacAddress)
                   end, StaleMacAddresses).
-
-http_post(Socket, Request, Body, State) ->
-    Url = Request#http_request.uri,
-    case string:tokens(Url#url.path, "/") of
-	["v1" | Tokens] ->
-	    http_post(Socket, Request, Url, Tokens, Body, State, v1);
-	Tokens ->
-	    http_post(Socket, Request, Url, Tokens, Body, State, v1)
-    end.
-
-http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
-    case Tokens of
-        ["login"] ->
-            case rest_util:parse_body(Request, Body) of
-                {error, _Reason} ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"});
-                JsonTerm ->
-                    case json_term_to_login(JsonTerm) of
-                        {ok, Username, Password} ->
-                            case db_user_serv:login(Username, Password) of
-                                {ok, #user{id = UserId,
-                                           name = Username,
-                                           session_id = SessionId}} ->
-                                    PayloadJsonTerm =
-                                        #{<<"user-id">> => UserId,
-                                          <<"username">> => Username,
-                                          <<"session-id">> => SessionId},
-                                    rest_util:response(
-                                      Socket, Request,
-                                      {ok, {format, PayloadJsonTerm}});
-                                {error, failure} ->
-                                    rest_util:response(Socket, Request,
-                                                       {error, no_access})
-                            end;
-                        {error, invalid} ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request, "Invalid JSON format"})
-                    end
-            end;
-        ["switch_user"] ->
-            case rest_util:parse_body(Request, Body) of
-                {error, _Reason} ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"});
-                JsonTerm ->
-                    case json_term_to_switch_user(JsonTerm) of
-                        {ok, Username, Password} ->
-                            {ok, MacAddress} = get_mac_address(Socket),
-                            case db_user_serv:switch_user(
-                                   Username, Password, MacAddress) of
-                                {ok, User} ->
-                                    PayloadJsonTerm =
-                                        #{<<"user-id">> => User#user.id,
-                                          <<"username">> => User#user.name,
-                                          <<"session-id">> =>
-                                              User#user.session_id},
-                                    rest_util:response(
-                                      Socket, Request,
-                                      {ok, {format, PayloadJsonTerm}});
-                                {error, failure} ->
-                                    rest_util:response(Socket, Request,
-                                                       {error, no_access})
-                            end;
-                        {error, invalid} ->
-                            rest_util:response(Socket, Request,
-                                               {error, no_access})
-                    end
-            end;
-        ["change_password"] ->
-            case rest_util:parse_body(Request, Body) of
-                {error, _Reason} ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"});
-                JsonTerm ->
-                    case json_term_to_change_password(JsonTerm) of
-                        {ok, Password} ->
-                            {ok, MacAddress} = get_mac_address(Socket),
-                            {ok, #{<<"sessionId">> := SessionId}} =
-                                get_bespoke_cookie(Request),
-                            case db_user_serv:get_user_from_session_id(
-                                   SessionId) of
-                                {ok, #user{name = Username}} ->
-                                    case db_user_serv:change_password(
-                                           Username, Password, MacAddress) of
-                                        ok ->
-                                            rest_util:response(
-                                              Socket, Request, ok_204);
-                                        {error, failure} ->
-                                            rest_util:response(
-                                              Socket, Request,
-                                              {error, no_access})
-                                    end;
-                                {error, not_found} ->
-                                    rest_util:response(Socket, Request,
-                                                       {error, no_access})
-                            end;
-                        {error, invalid} ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request, "Invalid JSON format"})
-                    end
-            end;
-        ["lookup_posts"] ->
-            case rest_util:parse_body(Request, Body) of
-                {error, _Reason} ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"});
-                PostIds when is_list(PostIds) ->
-                    case lists:all(fun(PostId) when is_binary(PostId) ->
-                                           true;
-                                      (_) ->
-                                           false
-                                   end, PostIds) of
-                        true ->
-                            Posts = db_serv:lookup_posts(PostIds),
-                            PayloadJsonTerm =
-                                lists:map(fun(Post) ->
-                                                  post_to_json_term(Post)
-                                          end, Posts),
-                            rest_util:response(
-                              Socket, Request, {ok, {format, PayloadJsonTerm}});
-                        false ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request,
-                               "post-ids must be strings"})
-                    end;
-                _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"})
-            end;
-        ["lookup_recursive_posts"] ->
-            case rest_util:parse_body(Request, Body) of
-                {error, _Reason} ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"});
-                PostIds when is_list(PostIds) ->
-                    case lists:all(fun(PostId) when is_binary(PostId) ->
-                                           true;
-                                      (_) ->
-                                           false
-                                   end, PostIds) of
-                        true ->
-                            Posts =
-                                db_serv:lookup_posts(PostIds, recursive),
-                            PayloadJsonTerm =
-                                lists:map(fun(Post) ->
-                                                  post_to_json_term(Post)
-                                          end, Posts),
-                            rest_util:response(
-                              Socket, Request, {ok, {format, PayloadJsonTerm}});
-                        false ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request,
-                               "post-ids must be strings"})
-                    end;
-                _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"})
-            end;
-        ["lookup_recursive_post_ids"] ->
-            case rest_util:parse_body(Request, Body) of
-                {error, _Reason} ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"});
-                PostIds when is_list(PostIds) ->
-                    case lists:all(fun(PostId) when is_binary(PostId) ->
-                                           true;
-                                      (_) ->
-                                           false
-                                   end, PostIds) of
-                        true ->
-                            PayloadJsonTerm =
-                                db_serv:lookup_post_ids(PostIds, recursive),
-                            rest_util:response(
-                              Socket, Request, {ok, {format, PayloadJsonTerm}});
-                        false ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request,
-                               "post-ids must be strings"})
-                    end;
-                _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"})
-            end;
-        ["insert_post"] ->
-            case rest_util:parse_body(Request, Body) of
-                {error, _Reason} ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"});
-                JsonTerm ->
-                    {ok, #{<<"sessionId">> := SessionId}} =
-                        get_bespoke_cookie(Request),
-                    case db_user_serv:get_user_from_session_id(SessionId) of
-                        {ok, #user{name = Username}} ->
-                            case json_term_to_post(JsonTerm, Username) of
-                                {ok, Post} ->
-                                    {ok, InsertedPost} =
-                                        db_serv:insert_post(Post),
-                                    PayloadJsonTerm =
-                                        post_to_json_term(InsertedPost),
-                                    rest_util:response(
-                                      Socket, Request,
-                                      {ok, {format, PayloadJsonTerm}});
-                                {error, invalid} ->
-                                    rest_util:response(
-                                      Socket, Request,
-                                      {error, bad_request, "Invalid post"})
-                            end;
-                        {error, not_found} ->
-                            rest_util:response(Socket, Request,
-                                               {error, no_access})
-                    end
-            end;
-        ["delete_post"] ->
-            case rest_util:parse_body(Request, Body) of
-                {error, _Reason} ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"});
-                PostId when is_binary(PostId) ->
-                    {ok, #{<<"sessionId">> := SessionId}} =
-                        get_bespoke_cookie(Request),
-                    case db_user_serv:get_user_from_session_id(SessionId) of
-                        {ok, _User} ->
-                            case db_serv:delete_post(PostId) of
-                                ok ->
-                                    rest_util:response(Socket, Request, ok_204);
-                                {error, not_found} ->
-                                    rest_util:response(Socket, Request,
-                                                       {error, not_found})
-                            end;
-                        {error, not_found} ->
-                            rest_util:response(Socket, Request,
-                                               {error, no_access})
-                    end;
-                _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "post-id must be a string"})
-            end;
-        ["toggle_like"] ->
-            case rest_util:parse_body(Request, Body) of
-                {error, _Reason} ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"});
-                PostId when is_binary(PostId) ->
-                    {ok, #{<<"sessionId">> := SessionId}} =
-                        get_bespoke_cookie(Request),
-                    case db_user_serv:get_user_from_session_id(SessionId) of
-                        {ok, User} ->
-                            {ok, Likers} =
-                                db_serv:toggle_like(PostId, User#user.id),
-                            PayloadJsonTerm =
-                                #{<<"liked">> =>
-                                      lists:member(User#user.id, Likers),
-                                  <<"likes-count">> => length(Likers)},
-                            rest_util:response(
-                              Socket, Request, {ok, {format, PayloadJsonTerm}});
-                        {error, not_found} ->
-                            rest_util:response(Socket, Request,
-                                               {error, no_access})
-                    end;
-                _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "post-id must be a string"})
-            end;
-        ["subscribe_on_changes"] ->
-            case rest_util:parse_body(Request, Body) of
-                {error, _Reason} ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"});
-                PostIds ->
-                    case lists:all(fun(PostId) when is_binary(PostId) ->
-                                           true;
-                                      (_) ->
-                                           false
-                                   end, PostIds) of
-                        true ->
-                            SubscriptionId =
-                                db_serv:subscribe_on_changes(PostIds),
-                            UpdatedState =
-                                State#state{
-                                  subscriptions =
-                                      maps:put(Socket, {Request, SubscriptionId},
-                                               State#state.subscriptions)},
-                            {ok, UpdatedState};
-                        false ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request, "post-ids must be strings"})
-                    end
-            end;
-        _ ->
-	    ?log_error("~p not found", [Tokens]),
-	    rest_util:response(Socket, Request, {error, not_found})
-    end.
 
 %%
 %% Marshalling
@@ -744,4 +734,19 @@ get_cookie(Name, [Cookie|Rest]) ->
             {ok, json:decode(?l2b(uri_string:percent_decode(Value)))};
         _ ->
             get_cookie(Name, Rest)
+    end.
+
+no_cache_headers() ->
+    [{"Cache-Control", "no-cache, no-store, must-revalidate"},
+     {"Pragma", "no-cache"},
+     {"Expires", 0}].
+
+parse_body(Socket, Request, Body) ->
+    case rest_util:parse_body(Request, Body) of
+        {error, _Reason} ->
+            {return, rest_util:response(
+                       Socket, Request,
+                       {error, bad_request, "Invalid JSON format"})};
+        JsonTerm ->
+            JsonTerm
     end.
