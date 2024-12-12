@@ -731,7 +731,7 @@ get_cookie(_Name, []) ->
 get_cookie(Name, [Cookie|Rest]) ->
     case string:tokens(Cookie, "=") of
         [Name, Value] ->
-            {ok, json:decode(?l2b(uri_string:percent_decode(Value)))};
+            {ok, json:decode(uri_string:percent_decode(?l2b(Value)))};
         _ ->
             get_cookie(Name, Rest)
     end.

@@ -146,11 +146,14 @@ class Post {
       if (bespoke.getLocalItem("childPost")) {
         // Scroll to first unread post
         console.log("Scrolling to unread post");
-        document.getElementById("unread-post").scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-          inline: "nearest"
-        });
+        const unreadPost = document.getElementById("unread-post");
+        if (unreadPost) {
+          unreadPost.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+            inline: "nearest"
+          });
+        }
       } else {
         // Scroll to saved position
         const postData = bespoke.peekPostStack();
