@@ -32,7 +32,7 @@
 	 }).
 
 %% client headers
--record(http_chdr,
+-record(http_chdr, 
 	{
 	  host,
 	  connection,
@@ -56,7 +56,7 @@
 	 }).
 
 %% server headers
--record(http_shdr,
+-record(http_shdr, 
 	{
 	  connection,
 	  transfer_encoding,
@@ -69,3 +69,4 @@
 
 
 -endif.
+
