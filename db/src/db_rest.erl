@@ -24,18 +24,28 @@
 %%
 
 start_link() ->
+    application:load(db),
     ok = db_dnsmasq:clear_all_mac_addresses(),
     Options =
 	[{request_module, ?MODULE},
-%         {verify, verify_none},
-%         {cacerts, []},
-%         {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
+         {verify, verify_none},
+         {cacerts, []},
+         {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
     ?CAPTIVE_PORTAL_CACHE =
         ets:new(?CAPTIVE_PORTAL_CACHE, [public, named_table]),
     ?log_info("Database REST API has been started"),
-    rester_http_server:start_link(80, Options).
+    HttpPort = application:get_env(db, http_port, 80),
+    rester_http_server:start_link(HttpPort, Options),
+    case application:get_env(db, https_port, undefined) of
+	undefined ->
+	    ignore;
+	HttpPort -> 
+	    ok;
+	HttpsPort ->
+	    rester_http_server:start_link(HttpsPort, Options)
+    end.
 
 %%
 %% Exported: init callback
