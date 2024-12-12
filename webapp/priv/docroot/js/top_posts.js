@@ -37,7 +37,7 @@ class TopPosts {
       this._populatePage(annotatedTopPosts);
       // Subscribe on changes
       const postIds = topPosts.map((post) => post["id"]);
-      bespoke.subscribeOnChanges(postIds, this._updatePage);
+      bespoke.subscribeOnChanges(postIds, () => this._updatePage());
     } catch (error) {
       console.error("Page update failed:", error);
     }

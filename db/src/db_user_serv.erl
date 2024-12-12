@@ -194,7 +194,7 @@ message_handler(S) ->
             end;
         {call, From, {login, Username, Password}} ->
             ?log_debug("Call: ~p", [{login, Username, Password}]),
-            case dets:lookup(?USER_DB, Username) of
+            case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 [#user{pwhash = Pwhash} = User] ->
                     case verify_password(Pwhash, Password) of
                         true ->
@@ -210,7 +210,7 @@ message_handler(S) ->
         {call, From, {switch_user, Username, Password, MacAddress}} ->
             ?log_debug("Call: ~p",
                        [{switch_user, Username, Password, MacAddress}]),
-            case dets:lookup(?USER_DB, Username) of
+            case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 [#user{pwhash = not_set} = User] when Password == <<>> ->
                     UpdatedUser = User#user{mac_address = MacAddress,
                                             updated = timestamp(),
@@ -257,7 +257,7 @@ message_handler(S) ->
         {call, From, {change_password, Username, Password, MacAddress}} ->
             ?log_debug("Call: ~p",
                        [{change_password, Username, Password, MacAddress}]),
-            case dets:lookup(?USER_DB, Username) of
+            case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 [User] ->
                     UpdatedUser =
                         User#user{pwhash = hash_password(Password)},
@@ -286,7 +286,7 @@ message_handler(S) ->
 
 generate_username(WordList) ->
     Username = ?l2b([random_word(WordList), random_word(WordList)]),
-    case dets:lookup(?USER_DB, Username) of
+    case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
         [] ->
             Username;
         _ ->

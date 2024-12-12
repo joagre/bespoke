@@ -5,6 +5,7 @@ const { html, render } = uhtml;
 
 class Post {
   constructor() {
+    this._firstLoad = true;
     this._dataLoaded = false;
     this._domReady = false;
     // Note: bespoke.onReady() is not used by design
@@ -84,26 +85,11 @@ class Post {
       this._dataLoaded = true;
       if (this._domReady) {
         this._populatePage();
-        if (bespoke.getLocalItem("childPost")) {
-          // Scroll to first unread post
-          console.log("Scrolling to unread post");
-          document.getElementById("unread-post").scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-            inline: "nearest"
-          });
-        } else {
-          // Scroll to saved position
-          const postData = bespoke.peekPostStack();
-          console.log("Scrolling to saved position");
-          window.scrollTo(postData.scrollX, postData.scrollY);
-        }
       }
       // Subscribe on changes
       const postIds = this._replyPosts.map((post) => post["id"]);
       postIds.push(bespoke.peekPostStack().postId);
-      const self = this;
-      bespoke.subscribeOnChanges(postIds, () => self._load);
+      bespoke.subscribeOnChanges(postIds, () => this._load());
     } catch (error) {
       console.error("Loading of data failed:", error);
     }
@@ -155,6 +141,24 @@ class Post {
     render(repliesContainer, html`${replyTemplates}`);
     // Add observers to post-dividers
     this._addHasBeenReadObservers();
+    // Scroll to the correct position on first load
+    if (this._firstLoad) {
+      if (bespoke.getLocalItem("childPost")) {
+        // Scroll to first unread post
+        console.log("Scrolling to unread post");
+        document.getElementById("unread-post").scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "nearest"
+        });
+      } else {
+        // Scroll to saved position
+        const postData = bespoke.peekPostStack();
+        console.log("Scrolling to saved position");
+        window.scrollTo(postData.scrollX, postData.scrollY);
+      }
+      this._firstLoad = false;
+    }
   }
 
   _createReplyTemplate(parentPost, post, replyPosts) {
