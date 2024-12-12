@@ -88,6 +88,8 @@ class TopPosts {
     const activeFooterButton = document.querySelector(".forum-button");
     activeFooterButton.classList.add("active-footer-button");
     activeFooterButton.setAttribute("disabled", "true");
+    // Refresh each 30 seconds
+    setTimeout(() => this._updatePage(), 30000);
   }
 
   _createPostTemplate(post) {

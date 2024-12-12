@@ -203,7 +203,7 @@ message_handler(S) ->
             SortedTopPosts =
                 lists:sort(
                   fun(PostA, PostB) ->
-                          PostA#post.created =< PostB#post.created
+                          PostA#post.created > PostB#post.created
                   end, TopPosts),
             {reply, From, SortedTopPosts};
         {call, From, {lookup_posts, PostIds, Mode} = Call} ->

@@ -159,6 +159,8 @@ class Post {
       }
       this._firstLoad = false;
     }
+    // Refresh each 30 seconds
+    setTimeout(() => this._load(), 30000);
   }
 
   _createReplyTemplate(parentPost, post, replyPosts) {
