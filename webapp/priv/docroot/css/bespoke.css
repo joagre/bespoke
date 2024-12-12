@@ -57,12 +57,6 @@ body {
     cursor: pointer;
 }
 
-/*
-.mini-action:hover {
-    color: var(--uk-primary);
-}
-*/
-
 .bleeding-heart {
     color: red;
 }
