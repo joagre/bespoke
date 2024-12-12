@@ -4,4 +4,5 @@
   {vsn, git},
   {modules, ["@@MODULES@@"]},
   {registered, []},
-  {applications, [kernel, stdlib, apptools, jsone, rester, db]}]}.
+  {mod, {webapp_app, []}},
+  {applications, [kernel, stdlib, apptools, rester, db]}]}.

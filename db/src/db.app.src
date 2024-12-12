@@ -3,6 +3,6 @@
  [{description,"Bespoke database"},
   {vsn, git},
   {modules, ["@@MODULES@@"]},
-  {registered, [db_serv]},
+  {registered, [db_serv, db_user_serv]},
   {mod, {db_app, []}},
   {applications, [kernel, stdlib, apptools, rester]}]}.

@@ -1,7 +1,7 @@
 ERL=$(shell which erl)
 ERL_TOP=$(ERL:%/bin/erl=%)
 LPATH=$(abspath $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..)
-LIBS=apptools db enacl main rester
+LIBS=apptools db enacl main rester webapp
 TESTS=db
 
 all:
@@ -10,7 +10,7 @@ all:
 	done
 
 setcap:
-	(cd db; make setcap)
+	(cd webapp; make setcap)
 
 clean:
 	for lib in $(LIBS) ; do \

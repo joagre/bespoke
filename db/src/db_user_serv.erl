@@ -10,7 +10,7 @@
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/serv.hrl").
 -include_lib("apptools/include/shorthand.hrl").
--include("db.hrl").
+-include("../include/db.hrl").
 
 -define(USER_DB_FILENAME, "users.db").
 -define(USER_DB, users).

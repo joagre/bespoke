@@ -15,7 +15,7 @@
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
 -include_lib("apptools/include/serv.hrl").
--include("db.hrl").
+-include("../include/db.hrl").
 
 -define(POST_DB_FILENAME, "posts.db").
 -define(POST_DB, posts).

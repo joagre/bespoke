@@ -1,8 +1,7 @@
--module(db_dnsmasq).
+-module(webapp_dnsmasq).
 -export([set_post_login_mac_address/1,
          clear_mac_addresses/1,
          clear_all_mac_addresses/0]).
--export_type([mac_address/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -45,7 +44,7 @@ clear_all_mac_addresses() ->
 %% Utilities
 %%
 
-dnsmasq_tool(Parameters) ->
+dnsmasq_tool(_Parameters) ->
     ok.
 
 %% dnsmasq_tool(Parameters) ->

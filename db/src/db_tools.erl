@@ -2,7 +2,7 @@
 -export([create_subreddit_db/0, purge_subreddit_db/0, dump_subreddit_db/0,
          create_dummy_db/0]).
 
--include("db.hrl").
+-include("../include/db.hrl").
 -include("../../apptools/include/log.hrl").
 -include("../../apptools/include/shorthand.hrl").
 

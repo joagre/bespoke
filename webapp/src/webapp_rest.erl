@@ -1,4 +1,4 @@
--module(db_rest).
+-module(webapp_rest).
 -export([start_link/0]).
 %% rester_http_server callbacks
 -export([init/2, info/3, close/2, error/3, http_request/4]).
@@ -8,7 +8,7 @@
 -include_lib("rester/include/rester.hrl").
 -include_lib("rester/include/rester_http.hrl").
 -include_lib("rester/include/rester_socket.hrl").
--include("db.hrl").
+-include_lib("db/include/db.hrl").
 
 -define(CAPTIVE_PORTAL_CACHE, captive_portal_cache).
 -define(LEASETIME, 7200).
@@ -24,24 +24,23 @@
 %%
 
 start_link() ->
-    application:load(db),
-    ok = db_dnsmasq:clear_all_mac_addresses(),
+    ok = webapp_dnsmasq:clear_all_mac_addresses(),
     Options =
 	[{request_module, ?MODULE},
          {verify, verify_none},
          {cacerts, []},
-         {certfile, filename:join([code:priv_dir(db), "cert.pem"])},
+         {certfile, filename:join([code:priv_dir(webapp), "cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
     ?CAPTIVE_PORTAL_CACHE =
         ets:new(?CAPTIVE_PORTAL_CACHE, [public, named_table]),
     ?log_info("Database REST API has been started"),
-    HttpPort = application:get_env(db, http_port, 80),
+    HttpPort = application:get_env(webapp, http_port, 80),
     rester_http_server:start_link(HttpPort, Options),
-    case application:get_env(db, https_port, undefined) of
+    case application:get_env(webapp, https_port, undefined) of
 	undefined ->
 	    ignore;
-	HttpPort -> 
+	HttpPort ->
 	    ok;
 	HttpsPort ->
 	    rester_http_server:start_link(HttpsPort, Options)
@@ -182,7 +181,7 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
             ?log_info("Request to ~s~s\n",
                       [Headers#http_chdr.host, Url#url.path]),
             {ok, MacAddress} = get_mac_address(Socket),
-            ok = db_dnsmasq:set_post_login_mac_address(MacAddress),
+            ok = webapp_dnsmasq:set_post_login_mac_address(MacAddress),
             case ets:lookup(?CAPTIVE_PORTAL_CACHE, MacAddress) of
                 [] ->
                     ?log_info("Captive portal ack (not found)\n"),
@@ -615,7 +614,7 @@ delete_all_stale_timestamps() ->
                      (_, Acc) ->
                           Acc
                   end, [], ?CAPTIVE_PORTAL_CACHE),
-    ok = db_dnsmasq:clear_mac_addresses(StaleMacAddresses),
+    ok = webapp_dnsmasq:clear_mac_addresses(StaleMacAddresses),
     lists:foreach(fun(MacAddress) ->
                           ets:delete(?CAPTIVE_PORTAL_CACHE, MacAddress)
                   end, StaleMacAddresses).
