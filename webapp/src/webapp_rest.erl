@@ -124,6 +124,10 @@ http_request_(Socket, Request, Body, State) ->
 	    rest_util:response(Socket, Request, {error, not_allowed})
     end.
 
+%%
+%% HTTP GET
+%%
+
 http_get(Socket, Request, Body, State) ->
     Url = Request#http_request.uri,
     case string:tokens(Url#url.path, "/") of
@@ -136,10 +140,6 @@ http_get(Socket, Request, Body, State) ->
 	Tokens ->
 	    http_get(Socket, Request, Url, Tokens,  Body, State, v1)
     end.
-
-%%
-%% HTTP GET
-%%
 
 http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
     Headers = Request#http_request.headers,
