@@ -13,7 +13,6 @@ class ChangePassword {
     this._formPassword1 = document.getElementById("form-password1");
     this._formPassword1.addEventListener("input",
                                          () => this._checkFormCompletion());
-    this._formPassword1.focus();
     this._formPassword2 = document.getElementById("form-password2");
     this._formPassword2.addEventListener("input",
                                          () => this._checkFormCompletion());
@@ -44,6 +43,7 @@ class ChangePassword {
       const username = bespoke.getCookieValue("username");
       document.getElementById("title-username").textContent = username;
       document.body.hidden = false;
+      this._formPassword1.focus();
     } catch (error) {
       console.error("Page update failed:", error);
     }

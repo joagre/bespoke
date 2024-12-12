@@ -14,7 +14,6 @@ class AddReplyPost {
       document.querySelectorAll("#form-body")
     );
     this._formBody = document.getElementById("form-body");
-    this._formBody.focus();
     this._addButton = document.getElementById("add-button");
     this._attachEventListeners();
     this._updatePage();
@@ -60,6 +59,7 @@ class AddReplyPost {
         this.topPostTitle = topPost["title"];
       }
       this._populatePage();
+      this._formBody.focus();
     } catch (error) {
       console.error("Page update failed:", error);
     }

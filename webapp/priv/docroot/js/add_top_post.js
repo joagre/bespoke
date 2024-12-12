@@ -14,7 +14,6 @@ class AddTopPost {
       document.querySelectorAll("#form-title, #form-body")
     );
     this._formTitle = document.getElementById("form-title");
-    this._formTitle.focus();
     this._addButton = document.getElementById("add-button");
     this._attachEventListeners();
     this._updatePage();
@@ -37,6 +36,7 @@ class AddTopPost {
     const username = bespoke.getCookieValue("username");
     document.getElementById("title-username").textContent = username;
     document.body.hidden = false;
+    this._formTitle.focus();
   }
 
   addTopPost(event) {

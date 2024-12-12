@@ -12,7 +12,6 @@ class SwitchUser {
     }
     this._formUsername = document.getElementById("form-username");
     this._formUsername.addEventListener("input", () => this._checkFormCompletion());
-    this._formUsername.focus();
     this._formUsernameError = document.getElementById("form-username-error");
     this._formPassword = document.getElementById("form-password");
     this._switchButton = document.getElementById("switch-button");
@@ -28,6 +27,7 @@ class SwitchUser {
       const username = bespoke.getCookieValue("username");
       document.getElementById("title-username").textContent = username;
       document.body.hidden = false;
+      this._formUsername.focus();
     } catch (error) {
       console.error("Page update failed:", error);
     }

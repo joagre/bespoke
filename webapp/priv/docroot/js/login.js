@@ -18,13 +18,12 @@ class Login {
     this._formPassword.addEventListener("input", () => this._checkFormCompletion());
     this._loginButton = document.getElementById("login-button");
     this._updatePage();
+    this._checkFormCompletion();
   }
 
   _checkFormCompletion() {
     this._formUsernameError.style.display = "none";
-    this._loginButton.disabled =
-      this._formUsername.value.trim() === "" ||
-      this._formPassword.value.trim() === "";
+    this._loginButton.disabled = this._formUsername.value.trim() === "";
   }
 
   async _updatePage() {

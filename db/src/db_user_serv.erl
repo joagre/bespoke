@@ -345,6 +345,10 @@ timestamp() ->
 hash_password(Password) ->
     enacl:pwhash_str(Password, interactive, interactive).
 
+verify_password(not_set, <<>>) ->
+    true;
+verify_password(not_set, _Password) ->
+    false;
 verify_password(Pwhash, Password) ->
     enacl:pwhash_str_verify(Pwhash, Password).
 
