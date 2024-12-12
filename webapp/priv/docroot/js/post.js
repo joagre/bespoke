@@ -64,7 +64,7 @@ class Post {
                        "Expected exactly one post");
         this._topPostTitle = lookupPostsResult[0]["title"];
       }
-      // Possible remove delete action if not the author
+      // Possible to remove delete action if not author
       if (this._parentPost["author"] !== bespoke.getCookieValue("username")) {
         document.getElementById("parent-delete").style.display = "none";
       }
@@ -123,7 +123,8 @@ class Post {
     document.getElementById("parent-age").textContent =
       bespoke.formatSecondsSinceEpoch(this._parentPost["created"]);
     if (this._parentPost["likers"].includes(bespoke.getCookieValue("userId"))) {
-      document.getElementById("parent-like-icon").classList.add("bleeding-heart");
+      document.getElementById("parent-like-icon")
+        .classList.add("bleeding-heart");
     }
     document.getElementById("parent-likes-count").textContent =
       this._parentPost["likers"].length;
