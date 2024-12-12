@@ -54,7 +54,7 @@
             </div>
             <!-- Parent actions -->
             <div>
-              <span id="parent-delete" onclick="post.openDeletePostModal(event)" data-post-id="0" class="mini-action" uk-icon="trash"></span>
+              <span id="parent-delete" onclick="post.openDeletePostDialog(event)" data-post-id="0" class="mini-action" uk-icon="trash"></span>
               <span onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="mini-action" uk-icon="reply"></span>
             </div>
           </div>
@@ -64,8 +64,8 @@
         <div id="replies"></div>
       </div>
     </div>
-    <!-- Modal dialog to delete a post -->
-    <div id="delete-post-modal" uk-modal>
+    <!-- Dialog to delete a post -->
+    <div id="delete-post-dialog" uk-modal>
       <div class="uk-modal-dialog uk-modal-body">
         <h2 class="uk-modal-title">Delete Post</h2>
         <p id="delete-post-body"></p>

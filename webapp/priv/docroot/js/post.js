@@ -216,7 +216,7 @@ class Post {
     let deleteAction = "";
     if (post["author"] === bespoke.getCookieValue("username")) {
       deleteAction = html`
-        <span onclick=${(event) => this.openDeletePostModal(event)}
+        <span onclick=${(event) => this.openDeletePostDialog(event)}
               class="mini-action"
               uk-icon="trash"></span>`;
     }
@@ -308,19 +308,19 @@ class Post {
     observer.observe(postDivider);
   }
 
-  openDeletePostModal(event) {
+  openDeletePostDialog(event) {
     event.stopPropagation();
     // Extract post to delete
     const postElement = event.currentTarget.closest("[data-post-id]");
     this._postIdToDelete = postElement.getAttribute("data-post-id");
-    // Update the post modal body
+    // Update the delete post dialog
     const replyPost = this._replyPosts.find(
       (replyPost) => replyPost["id"] === this._postIdToDelete
     );
     const postAuthor = replyPost ? replyPost["author"] : "this post";
     document.getElementById("delete-post-body").innerHTML =
       `Do you really want to delete this post written by ${postAuthor}?`;
-    UIkit.modal("#delete-post-modal").show();
+    UIkit.modal("#delete-post-dialog").show();
   }
 
   deletePost(event) {
