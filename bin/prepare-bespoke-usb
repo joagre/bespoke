@@ -1,0 +1,27 @@
+#!/bin/bash
+
+USB_INTERFACE=$(ip link | grep -Eo '^[0-9]+: (en[^:]+):' | awk '{print $2}' | tr -d ':')
+TARGET_IP="192.168.7.1"
+
+if [ ! -d /sys/class/net/$USB_INTERFACE ]; then
+    echo "Error: network interface $USB_INTERFACE not found"
+    exit 1
+fi
+
+if [ ! -d /sys/class/net/wlp2s0 ]; then
+    echo "Error: network interface wlp2s0 not found"
+    exit 1
+fi
+
+for IFACE in $(ip -o -4 addr show | grep "$TARGET_IP" | awk '{print $2}'); do
+    echo "Removing $TARGET_IP from $IFACE"
+    sudo ip addr del "$TARGET_IP/24" dev "$IFACE"
+done
+
+echo "Setting $TARGET_IP on $USB_INTERFACE"
+sudo ip addr add $TARGET_IP/24 dev $USB_INTERFACE
+sudo ip link set $USB_INTERFACE up
+sudo sysctl -w net.ipv4.ip_forward=1 > /dev/null
+sudo iptables -t nat -A POSTROUTING -o wlp2s0 -j MASQUERADE
+sudo iptables -A FORWARD -i wlp2s0 -o $USB_INTERFACE -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i $USB_INTERFACE -o wlp2s0 -j ACCEPT
