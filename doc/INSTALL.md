@@ -16,23 +16,21 @@ ssh.
 # Configure ethernet over USB
 
 * Insert SD card into Pi
-* Reboot
+* Boot
+* Login to Pi over ssh/WiFi
 * Attach a **data** USB cable from Pi to host
 * On Pi: Use `ip addr show` to verify that `usb0` is up
-* On host: Use `ip addr show` to verify that `enxdecde80060f0`
-  (example) is up
-* On Pi:
+* On host: Use `ip addr show` to verify that `enXXX` is up, where
+`XXX` is a random number like `enxdecde80060f0`
+* On Pi: Prepare dhcpcd:
 
-````
-sudo apt install dhcpcd5
+```
 sudo systemctl stop NetworkManager
 sudo systemctl disable NetworkManager
 sudo systemctl mask NetworkManager
-sudo systemctl enable dhcpcd
-sudo systemctl start dhcpcd
-````
-* On Pi: Add this to `/etc/dhcpcd.conf`:
-* On Pi: Enable and start dhcpcd
+sudo apt install dhcpcd5
+```
+
 * On Pi: Add this to `/etc/dhcpcd.conf`:
 
 ```
@@ -42,8 +40,14 @@ static routers=192.168.7.1
 static domain_name_servers=8.8.8.8 8.8.4.4
 ```
 
-* On Pi: `sudo systemctl restart dhcpcd`
-* On host: Temporary assign an address to `enxdecde80060f0`, e.g.
+* On Pi: Start dhcpcd:
+
+```
+sudo systemctl enable dhcpcd
+sudo systemctl start dhcpcd
+```
+
+* On host: Temporary assign an ip address to `enxdecde80060f0`, e.g.
 
 ```
 sudo ip addr add 192.168.7.1/24 dev enxdecde80060f0
@@ -52,7 +56,7 @@ sudo ip link set enxdecde80060f0 up
 
 * On host: `ping 192.168.7.1`
 * On Pi: `ping 192.168.7.2`
-* On host: Temporary let enxdecde80060f0 port forward to wlp2s0
+* On host: Temporary let Pi use the host as a default gateway:
 
 ```
 sudo sysctl -w net.ipv4.ip_forward=1
@@ -61,11 +65,11 @@ sudo iptables -A FORWARD -i wlp2s0 -o enxdecde80060f0 -m state --state RELATED,E
 sudo iptables -A FORWARD -i enxdecde80060f0 -o wlp2s0 -j ACCEPT
 ```
 
-NOTE: Make sure to disable the default gatyeway over wlan0. usb0
-should be the only default gateway.
+The script `./bin/prepare-bespoke-usb` assigns an ip address and link
+to `enXXX` and creates all config needed for the default gateway on
+the Pi to work. Look in the script for details.
 
-The enXXX interface on the host will be different each time the usb
-cable is inserted. Call `./bin/prepare-bespoke-usb` each time the usb
-cable is inserted. It's like magic.
+Furthermore, make sure to disable the default gatyeway over
+wlan0. usb0 should be the only default gateway.
 
 # Configure Wifi AP
