@@ -18,8 +18,11 @@ class Loader {
         console.log("Captive portal acknowledgment sent to server");
         // REST: Auto login
         const autoLoginResponse = await fetch("/auto_login");
-        if (!autoLoginResponse.ok) {
-          console.error(`Login failed: ${response.status}`);
+        if (autoLoginResponse.redirected) {
+          bespoke.navigateTo(autoLoginResponse.url);
+          return;
+        } else if (!autoLoginResponse.ok) {
+          console.error(`Login failed: ${autoLoginResponse.status}`);
           return;
         }
         const autoLoginResult = await autoLoginResponse.json();

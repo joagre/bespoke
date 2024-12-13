@@ -205,22 +205,32 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
             rest_util:response(Socket, Request,
                                {ok, {format, PayloadJsonTerm}});
         ["auto_login"] ->
-            {ok, MacAddress} = get_mac_address(Socket),
-            User = db_user_serv:get_user_from_mac_address(MacAddress),
-            PayloadJsonTerm =
-                #{<<"no-password">> => true,
-                  <<"user-id">> => User#user.id,
-                  <<"username">> => User#user.name,
-                  <<"session-id">> => User#user.session_id},
-            case User#user.pwhash of
-                not_set ->
-                    rest_util:response(Socket, Request,
-                                       {ok, {format, PayloadJsonTerm}});
-                _ ->
-                    UpdatedPayloadJsonTerm =
-                        maps:put(<<"no-password">>, false, PayloadJsonTerm),
-                    rest_util:response(Socket, Request,
-                                       {ok, {format, UpdatedPayloadJsonTerm}})
+            %% does the file /var/tmp/bespoke.bootstrap exist?
+            case filelib:is_regular("/var/tmp/bespoke.bootstrap") of
+                true ->
+                    rester_http_server:response_r(
+                      Socket, Request, 302, "Found", "",
+                      [{location, "/bootstrap.html"}|no_cache_headers()]);
+                false ->
+                    {ok, MacAddress} = get_mac_address(Socket),
+                    User = db_user_serv:get_user_from_mac_address(MacAddress),
+                    PayloadJsonTerm =
+                        #{<<"no-password">> => true,
+                          <<"user-id">> => User#user.id,
+                          <<"username">> => User#user.name,
+                          <<"session-id">> => User#user.session_id},
+                    case User#user.pwhash of
+                        not_set ->
+                            rest_util:response(Socket, Request,
+                                               {ok, {format, PayloadJsonTerm}});
+                        _ ->
+                            UpdatedPayloadJsonTerm =
+                                maps:put(<<"no-password">>, false,
+                                         PayloadJsonTerm),
+                            rest_util:response(
+                              Socket, Request,
+                              {ok, {format, UpdatedPayloadJsonTerm}})
+                    end
             end;
         %% Act as static web server
 	Tokens ->
@@ -260,6 +270,22 @@ http_post(Socket, Request, Body, State) ->
 
 http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
     case Tokens of
+        ["bootstrap"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                JsonTerm ->
+                    case json_term_to_bootstrap(JsonTerm) of
+                        {ok, _SSID} ->
+                            ok = file:delete("/var/tmp/bespoke.bootstrap"),
+                            %% FIXME: Do something meaningful with SSID
+                            rest_util:response(Socket, Request, ok_204);
+                        {error, invalid} ->
+                            rest_util:response(
+                              Socket, Request,
+                              {error, bad_request, "Invalid JSON format"})
+                    end
+            end;
         ["login"] ->
             case parse_body(Socket, Request, Body) of
                 {return, Result} ->
@@ -622,6 +648,11 @@ delete_all_stale_timestamps() ->
 %%
 %% Marshalling
 %%
+
+json_term_to_bootstrap(#{<<"ssid">> := SSID}) when is_binary(SSID) ->
+    {ok, SSID};
+json_term_to_bootstrap(_) ->
+    {error, invalid}.
 
 post_to_json_term(#post{id = Id,
                         title = Title,

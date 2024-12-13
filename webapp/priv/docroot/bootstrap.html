@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bootstrap Bespoke BBS</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/uikit.min.css">
+    <link rel="stylesheet" href="css/bespoke.css">
+    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
+    <link rel="shortcut icon" href="/favicon/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/favicon/site.webmanifest">
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
+    <script src="js/uhtml.min.js" defer></script>
+    <script type="module" src="js/bootstrap.js"></script>
+  </head>
+  <body>
+    <div class="uk-container uk-container-xsmall uk-padding-remove">
+      <!-- Header -->
+      <div class="header uk-flex uk-flex-between uk-flex-middle" uk-sticky>
+        <!-- Title -->
+        <div class="uk-flex-1 uk-flex uk-flex-center">
+          <div class="uk-text-bold">Bootstrap Bespoke BBS</div>
+        </div>
+      </div>
+      <div class="uk-margin-small-left uk-margin-small-right">
+        <!-- Content -->
+        <p>
+          Provide a name for the Bespoke BBS SSID or it will default
+          to <i>BespokeBBS</i>. The name should typically be
+          descriptive for your purposes.
+        </p>
+        <p>
+          <span class="uk-label">Note</span> Theis bootstrap procedure
+          will not be shown again. If you want to go through the
+          bootstrap again, create the empty
+          file <code>/var/tmp/bespoke.bootstrap</code>. If this means
+          nothing to you, re-install the Bespoke BBS image instead.
+        </p>
+        <!-- Form -->
+        <div class="uk-container">
+          <form class="uk-form-stacked">
+            <!-- SSID -->
+            <div class="uk-inline uk-width-1-1">
+              <input class="uk-input" value="BespokeBBS" placeholder="Enter a Bespoke SSID" id="form-ssid" type="text" required>
+            </div>
+            <span id="form-ssid-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
+            <!-- Apply button -->
+            <div class="uk-margin-top uk-text-right">
+              <button onclick="bootstrap.bootstrapNow(event)" type="submit" class="uk-button uk-button-primary" id="apply-button">Apply</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- Make relevant ES6 modules available globally -->
+    <script type="module">
+      import bespoke from  "/js/bespoke.js";
+      import bootstrap from "/js/bootstrap.js";
+      window.bespoke = bespoke;
+      window.bootstrap = bootstrap;
+    </script>
+  </body>
+</html>
