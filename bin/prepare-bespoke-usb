@@ -1,6 +1,12 @@
 #!/bin/bash
 
 USB_IF=$(ip link | grep -Eo '^[0-9]+: (en[^:]+):' | awk '{print $2}' | tr -d ':')
+
+if [ -z "$USB_IF" ]; then
+    echo "Error: no USB network interface found"
+    exit 1
+fi
+
 GATEWAY_IF="wlp2s0"
 TARGET_IP="192.168.7.1"
 
