@@ -19,7 +19,7 @@ for IF in $(ip -o -4 addr show | grep "$TARGET_IP" | awk '{print $2}'); do
     sudo ip addr del "$TARGET_IP/24" dev "$IF"
 done
 
-echo "Setting $TARGET_IP on $USB_IF"
+echo "Setting $TARGET_IP on $USB_IF and enabling IP forwarding"
 sudo ip addr add $TARGET_IP/24 dev $USB_IF
 sudo ip link set $USB_IF up
 sudo sysctl -w net.ipv4.ip_forward=1 > /dev/null
