@@ -205,7 +205,6 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
             rest_util:response(Socket, Request,
                                {ok, {format, PayloadJsonTerm}});
         ["auto_login"] ->
-            %% does the file /var/tmp/bespoke.bootstrap exist?
             case filelib:is_regular("/var/tmp/bespoke.bootstrap") of
                 true ->
                     rester_http_server:response_r(
