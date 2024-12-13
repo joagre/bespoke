@@ -65,9 +65,9 @@ sudo iptables -A FORWARD -i wlp2s0 -o enxdecde80060f0 -m state --state RELATED,E
 sudo iptables -A FORWARD -i enxdecde80060f0 -o wlp2s0 -j ACCEPT
 ```
 
-The script `./bin/prepare-bespoke-usb` assigns an ip address and link
-to `enXXX` and creates all config needed for the default gateway on
-the Pi to work. Look in the script for details.
+NOTE: The script `./bin/prepare-bespoke-usb` assigns an ip address and
+link to `enXXX` and creates all config needed for the default gateway
+on the Pi to work. Look in the script for details.
 
 Furthermore, make sure to disable the default gatyeway over
 wlan0. usb0 should be the only default gateway.
