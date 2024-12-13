@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Look for the USB Ethernet interface (enXXX)
+USB_INTERFACE=$(ip link | grep -Eo '^[0-9]+: (en[^:]+):' | awk '{print $2}' | tr -d ':')
+
+# Check if an interface was found
+if [ -n "$USB_INTERFACE" ]; then
+    echo "Setting IP for $USB_INTERFACE"
+    sudo ip addr add 192.168.7.1/24 dev "$USB_INTERFACE"
+    sudo ip link set "$USB_INTERFACE" up
+else
+    echo "No USB Ethernet interface found"
+fi
