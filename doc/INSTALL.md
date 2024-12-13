@@ -65,18 +65,7 @@ NOTE: Make sure to disable the default gatyeway over wlan0. usb0
 should be the only default gateway.
 
 The enXXX interface on the host will be different each time the usb
-cable is inserted. Add an address to it on the host with call to
-bin/set-usb-address. Magic!
+cable is inserted. Call `./bin/prepare-bespoke-usb` each time the usb
+cable is inserted. It's like magic.
 
-
-lazy:
-
-
-ip addr add 192.168.7.1/24 dev enxdecde80060f0
-ip link set enxdecde80060f0 up
-sysctl -w net.ipv4.ip_forward=1
-iptables -t nat -A POSTROUTING -o wlp2s0 -j MASQUERADE
-iptables -A FORWARD -i wlp2s0 -o enx121035d5560b -m state --state RELATED,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -i enx121035d5560b -o wlp2s0 -j ACCEPT
-iptables -t nat -L -n -v
-iptables -L -n -v
+# Configure Wifi AP
