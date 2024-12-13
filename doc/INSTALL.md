@@ -63,8 +63,9 @@ sudo iptables -t nat -L -n -v
 sudo iptables -L -n -v
 ```
 
-NOTE: usb0 will ge a different mac-address on each reboot. If this is
-a problem, fix it yourself.
-
 NOTE: Make sure to disable the default gatyeway over wlan0. usb0
 should be the only default gateway.
+
+The enXXX interface on the host will be different each time the usb
+cable is inserted. Add an address to it on the host with call to
+bin/set-usb-address. Magic!
