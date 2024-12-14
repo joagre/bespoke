@@ -53,10 +53,15 @@ sudo systemctl start dhcpcd
 sudo ip addr add 192.168.7.1/24 dev enxdecde80060f0
 sudo ip link set enxdecde80060f0 up
 ```
+NOTE: The network manager on the host may now and then remove this
+addres automatically. For your own good. Fucking retard. Renaming
+ethernet-over-usb interfaces to `usbeth` solves this. More on that
+below.
 
 * On host: `ping 192.168.7.1`
 * On Pi: `ping 192.168.7.2`
-* On host: Temporary let Pi use the host as a default gateway:
+* On host: Make it possible for the Pi to use the host as a default
+  gateway:
 
 ```
 sudo sysctl -w net.ipv4.ip_forward=1
@@ -65,14 +70,23 @@ sudo iptables -A FORWARD -i wlp2s0 -o enxdecde80060f0 -m state --state RELATED,E
 sudo iptables -A FORWARD -i enxdecde80060f0 -o wlp2s0 -j ACCEPT
 ```
 
-NOTE: If you update the host with a udev rule that always renames
+If you update the host with a udev rule that always renames
 usb-over-ethernet (enXXX) devices to `usbeth`, i.e `SUBSYSTEM=="net",
 ACTION=="add", DRIVERS=="usb", NAME="usbeth"`, you can use the script
 `./bin/usbeth-setup` which assigns the ip address and link to
 `usbeth`, and creates all config needed for the default gateway on the
 Pi to work. Look in the script for details.
 
-Finally, make sure to disable (on the Pi) the default gatyeway over
-wlan0. usb0 should be the only default gateway.
-
 # Configure Wifi AP
+
+# Route all traffic to the portal
+
+# Install required packages
+
+# Build and install Bespoke BBS
+
+Touch /var/tmp/bespoke.bootstrap
+
+# Create image
+
+# How to install image on Pi
