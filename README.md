@@ -1,4 +1,4 @@
-# Bespoke - A location-based BBS
+# Bespoke BBS - A location-based BBS
 
 ## Pre-requisites
 
