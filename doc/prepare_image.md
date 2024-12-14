@@ -1,14 +1,16 @@
-# Hardware
+# Prepare a Bespoke image
+
+## Hardware
 
 Raspberry Pi Zero 2W
 
-# OS
+## OS
 
-Prepare a SD card with Raspberry Pi 64 OS Lite using
+Prepare a SD card with Raspbian Pi 64 OS Lite using
 `rpi-imager`. Configure a wlan, assign the hostname to bespoke and
 enable ssh.
 
-# Enable USB gadget mode on the SD card
+## Enable USB gadget mode on the SD card
 
 Edit `bootfs/config.txt`:
 
@@ -26,7 +28,7 @@ dwc2
 g_ether
 ```
 
-# Configure ethernet over USB
+## Configure ethernet over USB
 
 * Insert SD card into Pi
 * Start Pi
@@ -98,7 +100,7 @@ ACTION=="add", DRIVERS=="usb", NAME="usbeth"`, you can use the script
 well create the config neededed for the default gateway on the Pi to
 work. Look in the script for details.
 
-# Configure Wifi AP on Pi
+## Configure Wifi AP on Pi
 
 Install hostapd and dnsmasq and stop them temporarily:
 
@@ -175,7 +177,7 @@ sudo rm -f /etc/wpa_supplicant/wpa_supplicant.conf
 sudo systemctl disable wpa_supplicant.service
 ```
 
-# Route all traffic on port 80 and 443 to the local portal
+## Route all traffic on port 80 and 443 to the local portal
 
 Redirect traffic:
 
@@ -195,19 +197,19 @@ Add the following line to `/etc/rc.local` before exit 0:
 iptables-restore < /etc/iptables.ipv4.nat
 ```
 
-# Install required packages
+## Install required packages
 
 ```
 sudo apt install libsodium-dev erlang-nox
 ```
 
-# Build and install Bespoke BBS
+## Build and install Bespoke BBS
 
 Talk with Tony
 
 Touch `/var/tmp/bespoke.bootstrap`
 
-# Create image
+## Create image
 
 Talk with Tony
 
