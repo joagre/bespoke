@@ -97,7 +97,7 @@ If you update the host with a udev rule that always renames
 usb-over-ethernet (enXXX) devices to `usbeth`, i.e `SUBSYSTEM=="net",
 ACTION=="add", DRIVERS=="usb", NAME="usbeth"`, then you can use the
 script `./bin/usbeth-setup` to assign an ip address and link to
-`usbeth`, as well create the network config neededed for the default
+`usbeth`, as well as create the network config needed for the default
 gateway on the Pi to work. Look in the script for details.
 
 ## Configure Wifi AP on Pi
