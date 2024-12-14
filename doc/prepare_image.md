@@ -175,9 +175,32 @@ sudo rm -f /etc/wpa_supplicant/wpa_supplicant.conf
 sudo systemctl disable wpa_supplicant.service
 ```
 
-# Route all traffic to the portal
+# Route all traffic on port 80 and 443 to the local portal
+
+Redirect traffic:
+
+```
+sudo apt install iptables
+sudo iptables -F
+sudo iptables -t nat -F
+sudo iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:80
+sudo iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 443 -j DNAT --to-destination 192.168.4.1:443
+sudo iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+```
+
+Add the following line to `/etc/rc.local` before exit 0:
+
+```
+iptables-restore < /etc/iptables.ipv4.nat
+```
 
 # Install required packages
+
+
+
+
+
 
 # Build and install Bespoke BBS
 
