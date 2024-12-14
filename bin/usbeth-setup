@@ -1,12 +1,6 @@
 #!/bin/bash
 
-USB_IF=usbeth
-
-if [ -z "$USB_IF" ]; then
-    echo "Error: no USB network interface found"
-    exit 1
-fi
-
+USB_IF="usbeth"
 GATEWAY_IF="wlp2s0"
 TARGET_IP="192.168.7.1"
 
