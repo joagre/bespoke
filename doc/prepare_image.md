@@ -197,15 +197,20 @@ iptables-restore < /etc/iptables.ipv4.nat
 
 # Install required packages
 
-
-
-
-
+```
+sudo apt install libsodium-dev erlang-nox
+```
 
 # Build and install Bespoke BBS
 
-Touch /var/tmp/bespoke.bootstrap
+Talk with Tony
+
+Touch `/var/tmp/bespoke.bootstrap`
 
 # Create image
 
+Talk with Tony
+
 # How to install image on Pi
+
+Talk with Tony
