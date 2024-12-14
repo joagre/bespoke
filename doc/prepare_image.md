@@ -35,7 +35,7 @@ g_ether
 * Login to Pi over ssh/WiFi
 * Attach a **data** USB cable from Pi to host
 * Use `ip addr show` to verify that `usb0` is up on the Pi
-* Do the same and host and verift `enXXX` is up, where `XXX` is a
+* Do the same and host and verify `enXXX` is up, where `XXX` is a
   random number like `enxdecde80060f0`.
 
 NOTE: `enxdecde80060f0` will be something else the next time a USB
