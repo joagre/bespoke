@@ -3,6 +3,7 @@
 ## Pre-requisites
 
 - [Erlang](http://www.erlang.org/)
+- [Libsodium](https://doc.libsodium.org/)
 
 ## Build
 
