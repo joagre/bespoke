@@ -5,8 +5,8 @@ Raspberry Pi Zero 2W
 # OS
 
 Prepare a SD card with Raspberry Pi 64 OS Lite using
-`rpi-imager`. Configure a wlan, assign the hostname to b3s and enable
-ssh.
+`rpi-imager`. Configure a wlan, assign the hostname to bespoke and
+enable ssh.
 
 # Enable USB gadget mode on the SD card
 
@@ -115,6 +115,7 @@ Edit `/etc/dhcpcd.conf`:
 interface wlan0
 static ip_address=192.168.4.1/24
 nohook wpa_supplicant
+nogateway
 ```
 
 Restart dhcpcd:
@@ -126,7 +127,7 @@ sudo service dhcpcd restart
 Backup dnsmasq.conf:
 
 ```
-sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sudo cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
 ```
 
 Edit `/etc/dnsmasq.conf`:
@@ -141,7 +142,7 @@ Edit `/etc/hostapd/hostapd.conf`:
 ```
 interface=wlan0
 driver=nl80211
-ssid=Your_SSID
+ssid=BespokeBBS
 hw_mode=g
 channel=7
 wmm_enabled=0
@@ -170,6 +171,8 @@ Remove wpa_supplicant:
 
 ```
 sudo apt remove --purge -y wpa_supplicant
+sudo rm -f /etc/wpa_supplicant/wpa_supplicant.conf
+sudo systemctl disable wpa_supplicant.service
 ```
 
 # Route all traffic to the portal
