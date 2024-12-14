@@ -9,6 +9,28 @@ all:
 		(cd $$lib && env ERL_LIBS=. $(MAKE) all) || exit 1; \
 	done
 
+release:
+	@rm -fr releases/b3s
+	@mkdir -p releases/b3s
+	@for lib in $(LIBS); do \
+		mkdir -p releases/b3s/$$lib/ebin; \
+		cp -r $$lib/ebin/*.beam $$lib/ebin/*.app releases/b3s/$$lib/ebin; \
+	done
+	@for lib in $(LIBS); do \
+		mkdir -p releases/b3s/$$lib; \
+		cp -r $$lib/priv releases/b3s/$$lib; \
+	done
+
+
+# copy all files but keep the directory hierarchy
+
+
+#	cp -fr */ebin/{*.app,*.beam} releases/b3s
+#	cp -fr */priv releases/b3scp -fr bin releases/b3s
+#	cp LICENSE releases/b3s
+
+
+
 
 
 setcap:
