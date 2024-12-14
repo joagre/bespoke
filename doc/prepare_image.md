@@ -66,7 +66,7 @@ sudo systemctl enable dhcpcd
 sudo systemctl start dhcpcd
 ```
 
-* Assign a temporary ip address to `enxdecde80060f0`, e.g.
+* Assign a temporary ip address to `enxdecde80060f0` on the host, e.g.
 
 ```
 sudo ip addr add 192.168.7.1/24 dev enxdecde80060f0
@@ -78,7 +78,7 @@ address. For your own good I suppose. Fucking retard. Renaming
 ethernet-over-usb interfaces to `usbeth` solves this. More on that
 later.
 
-Test the connection over ISB
+Test the connection over USB:
 
 * Test `ping 192.168.7.1` on the host
 * Test `ping 192.168.7.2` on the Pi
@@ -97,8 +97,8 @@ If you update the host with a udev rule that always renames
 usb-over-ethernet (enXXX) devices to `usbeth`, i.e `SUBSYSTEM=="net",
 ACTION=="add", DRIVERS=="usb", NAME="usbeth"`, you can use the script
 `./bin/usbeth-setup` to assign an ip address and link to `usbeth`, as
-well create the config neededed for the default gateway on the Pi to
-work. Look in the script for details.
+well create the network config neededed for the default gateway on the
+Pi to work. Look in the script for details.
 
 ## Configure Wifi AP on Pi
 
