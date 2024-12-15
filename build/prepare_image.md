@@ -214,9 +214,6 @@ iptables-restore < /etc/iptables.ipv4.nat
 ```
 sudo apt install libsodium-dev erlang-nox wamerican emacs-nox erlang-mode
 sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp`
-
-
-
 ```
 
 ## Build and install Bespoke BBS
@@ -240,6 +237,13 @@ Active bootstrap mode:
 
 ```
 touch /var/tmp/bespoke.bootstrap
+```
+
+Give root permissions to the script that changes the SSID:
+
+```
+sudo chown root:root /home/pi/bespoke/main/bin/change-ssid
+sudo chmod 700 /home/pi/bespoke/main/bin/change-ssid
 ```
 
 ## Create image
