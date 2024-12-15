@@ -246,6 +246,19 @@ sudo chown root:root /home/pi/bespoke/main/bin/change-ssid
 sudo chmod 700 /home/pi/bespoke/main/bin/change-ssid
 ```
 
+Edit `/etc/sudoers.d/change-ssid`:
+
+```
+pi ALL=(ALL) NOPASSWD: /home/pi/bespoke/main/bin/change-ssid
+```
+
+Change permission:
+
+```
+sudo chown root:root /etc/sudoers.d/change-ssid
+sudo chmod 440 /etc/sudoers.d/change-ssid
+```
+
 ## Create image
 
 Talk with Tony
