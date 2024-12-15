@@ -2,7 +2,9 @@ all:
 	(cd src && $(MAKE) all)
 	(cd c_src && $(MAKE))
 
-release: all
+release:
+	(cd src && $(MAKE) all)
+	(cd c_src && $(MAKE) release)
 
 clean:
 	(cd src && $(MAKE) clean)
