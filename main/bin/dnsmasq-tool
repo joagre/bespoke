@@ -27,7 +27,7 @@ usage () {
     exit 1
 }
 
-is-param () {
+is_param () {
     case $1 in
         --*)
             usage;
@@ -37,7 +37,7 @@ is-param () {
     esac
 }
 
-is-mac-address () {
+is_mac_address () {
     if ! echo $1 | grep -qE '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'; then
         echo "Error: $1 is not a valid MAC address"
         exit 1
@@ -80,8 +80,8 @@ while :; do
             if [ $# -lt 2 ]; then
                 usage
             fi
-            is-param $2
-            is-mac-address $2
+            is_param $2
+            is_mac_address $2
             # Remove any existing dhcp-host entry for this MAC address
             sed -i "/dhcp-host=$2/d" $tmpfile
             # Add post-login entry
@@ -92,8 +92,8 @@ while :; do
             if [ $# -lt 2 ]; then
                 usage
             fi
-            is-param $2
-            is-mac-address $2
+            is_param $2
+            is_mac_address $2
             # Remove any existing dhcp-host entry for this MAC address
             sed -i "/dhcp-host=$2/d" $tmpfile
             shift

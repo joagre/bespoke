@@ -9,7 +9,7 @@ usage () {
     exit 1
 }
 
-is-ssid () {
+is_ssid () {
     if [[ $1 =~ ^[a-zA-Z0-9_-]+$ ]]; then
         return 0
     else
@@ -21,7 +21,7 @@ if [ $# -ne 1 ]; then
     usage
 fi
 
-if [ ! is-ssid $1 ]; then
+if [ ! is_ssid $1 ]; then
     usage
 fi
 
