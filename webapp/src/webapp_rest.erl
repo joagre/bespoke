@@ -275,9 +275,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 JsonTerm ->
                     case json_term_to_bootstrap(JsonTerm) of
-                        {ok, _SSID} ->
+                        {ok, SSID} ->
                             ok = file:delete("/var/tmp/bespoke.bootstrap"),
-                            %% FIXME: Do something meaningful with SSID
+                            ok = change_ssid(SSID),
                             rest_util:response(Socket, Request, ok_204);
                         {error, invalid} ->
                             rest_util:response(
@@ -788,4 +788,19 @@ parse_body(Socket, Request, Body) ->
                        {error, bad_request, "Invalid JSON format"})};
         JsonTerm ->
             JsonTerm
+    end.
+
+change_ssid(SSID) ->
+    ScriptPath =
+        filename:absname(
+          filename:join([code:lib_dir(main), "bin", "change-ssid"])),
+    Command = ["sudo ", ScriptPath, " ", ?b2l(SSID), " 2>&1; echo $?"],
+    ?log_info("Calling: ~s\n", [Command]),
+    case string:strip(os:cmd(Command)) of
+        "0" ->
+            ok;
+        UnexpectedOutput ->
+            ?log_error("Unexpected output from dnsmasq-tool: ~s",
+                       [UnexpectedOutput]),
+            {error, UnexpectedOutput}
     end.

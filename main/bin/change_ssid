@@ -29,10 +29,11 @@ fi
 HOSTAPD_CONF="/etc/hostapd/hostapd.conf"
 KEY_TO_UPDATE="ssid"
 NEW_VALUE=$1
-
 tmpfile=$(mktemp)
 sed "s/^${KEY_TO_UPDATE}=.*/${KEY_TO_UPDATE}=${NEW_VALUE}/" "$HOSTAPD_CONF" > $tmpfile
 mv $tmpfile $HOSTAPD_CONF
 
-# Reboot
-reboot
+# Restart hostapd
+systemctl restart hostapd
+
+exit 0
