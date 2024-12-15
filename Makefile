@@ -9,7 +9,10 @@ all:
 		(cd $$lib && env ERL_LIBS=. $(MAKE) all) || exit 1; \
 	done
 
-release:
+release: mrproper
+	@for lib in $(LIBS) ; do \
+		(cd $$lib && env ERL_LIBS=. $(MAKE) all) || exit 1; \
+	done
 	@rm -fr releases/b3s
 	@mkdir -p releases/b3s
 	@for lib in $(LIBS); do \
@@ -17,21 +20,22 @@ release:
 		cp -r $$lib/ebin/*.beam $$lib/ebin/*.app releases/b3s/$$lib/ebin; \
 	done
 	@for lib in $(LIBS); do \
-		mkdir -p releases/b3s/$$lib; \
-		cp -r $$lib/priv releases/b3s/$$lib; \
+		if [ -d $$lib/priv ]; then \
+			mkdir -p releases/b3s/$$lib; \
+			cp -r $$lib/priv releases/b3s/$$lib; \
+		fi; \
 	done
-
-
-# copy all files but keep the directory hierarchy
-
-
-#	cp -fr */ebin/{*.app,*.beam} releases/b3s
-#	cp -fr */priv releases/b3scp -fr bin releases/b3s
-#	cp LICENSE releases/b3s
-
-
-
-
+	@for lib in $(LIBS); do \
+		if [ -d $$lib/bin ]; then \
+			mkdir -p releases/b3s/$$lib; \
+			cp -r $$lib/bin releases/b3s/$$lib; \
+		fi; \
+	done
+	@cp LICENSE releases/b3s
+	@echo "Building release"
+	@echo "Version: $(shell cat VERSION)"
+	@echo "Release: releases/b3s-$(shell cat VERSION).tar.gz"
+	@tar -czf releases/b3s-$(shell cat VERSION).tar.gz -C releases b3s
 
 setcap:
 	(cd webapp; make setcap)

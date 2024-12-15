@@ -207,7 +207,10 @@ sudo apt install libsodium-dev erlang-nox
 
 Talk with Tony
 
-Touch `/var/tmp/bespoke.bootstrap`
+``
+touch `/var/tmp/bespoke.bootstrap`
+sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp
+```
 
 ## Create image
 
