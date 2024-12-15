@@ -13,3 +13,4 @@ setcap:
 
 clean:
 	(cd src && $(MAKE) clean)
+	rm -f priv/cert.pem

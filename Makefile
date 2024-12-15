@@ -33,6 +33,7 @@ release: mrproper
 	done
 	@cp LICENSE releases/b3s
 	@find releases/b3s -name "*.dump" -exec rm {} \;
+	@find releases/b3s -name "*.db" -exec rm {} \;
 	@find releases/b3s -name ".gitignore" -exec rm {} \;
 	@echo "Building release"
 	@echo "Version: $(shell cat VERSION)"
