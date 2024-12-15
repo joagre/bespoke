@@ -1,7 +1,7 @@
 all:
 	(cd src && $(MAKE) all)
 
-release:
+release: all
 
 clean:
 	(cd src && $(MAKE) clean)
