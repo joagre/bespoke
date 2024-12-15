@@ -1,0 +1,12 @@
+[Unit]
+Description=Bespoke BBS
+After=network.target
+
+[Service]
+ExecStart=/home/pi/bespoke/bin/bespoke --release
+WorkingDirectory=/home/pi/bespoke
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target

@@ -94,8 +94,7 @@ sudo iptables -A FORWARD -i enxdecde80060f0 -o wlp2s0 -j ACCEPT
 ```
 
 If you update the host with a udev rule that always renames
-usb-over-ethernet (enXXX) devices to `usbeth`, i.e `SUBSYSTEM=="net",
-ACTION=="add", DRIVERS=="usb", NAME="usbeth"`, then you can use the
+usb-over-ethernet (enXXX) devices to `usbeth`, i.e `SUBSYSTEM=="net", ACTION=="add", DRIVERS=="usb", NAME="usbeth", ENV{NM_UNMANAGED}="1"`, then you can use the
 script `./bin/usbeth-setup` to assign an ip address and link to
 `usbeth`, as well as create the network config needed for the default
 gateway on the Pi to work. Look in the script for details.
@@ -197,10 +196,11 @@ Add the following line to `/etc/rc.local` before exit 0:
 iptables-restore < /etc/iptables.ipv4.nat
 ```
 
-## Install required packages
+## Install and prepare required packages
 
 ```
 sudo apt install libsodium-dev erlang-nox wamerican
+sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp`
 ```
 
 ## Build and install Bespoke BBS
@@ -209,14 +209,20 @@ Do this on a build machine sporting OTP-25.2.3 (no more, no less):
 
 ```
 make release
-scp releases/b3s-0.1.0.tar.gz pi@bespoke.local:/home/pi/
+scp build/releases/bespoke-0.1.0.tar.gz pi@bespoke.local:/home/pi/
 ```
 
 Do this on the Pi:
 
 ```
-tar zxvf b3s-0.1.0.tar.gz
-sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp`
+tar zxvf bespoke-0.1.0.tar.gz
+sudo cp bespoke/config/bespoke.service /etc/systemd/system
+sudo systemctl daemon-reload
+```
+
+Active bootstrap mode:
+
+```
 touch /var/tmp/bespoke.bootstrap
 ```
 

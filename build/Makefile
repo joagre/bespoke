@@ -25,6 +25,9 @@ release:
 	done
 	@echo "Copying bin files"
 	cp -r ../bin releases/bespoke
+	@echo "Copying bespoke service"
+	mkdir -p releases/bespoke/config
+	cp -r bespoke.service releases/bespoke/config
 	@echo "Removing spurious files"
 	@find releases/bespoke -name "*.dump" -exec rm {} \;
 	@find releases/bespoke -name "*.db" -exec rm {} \;
