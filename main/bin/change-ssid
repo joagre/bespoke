@@ -21,7 +21,7 @@ if [ $# -ne 1 ]; then
     usage
 fi
 
-if [ ! is_ssid $1 ]; then
+if ! is_ssid "$1"; then
     usage
 fi
 
