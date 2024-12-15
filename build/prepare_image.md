@@ -199,7 +199,7 @@ iptables-restore < /etc/iptables.ipv4.nat
 ## Install and prepare required packages
 
 ```
-sudo apt install libsodium-dev erlang-nox wamerican
+sudo apt install libsodium-dev erlang-nox wamerican emacs-nox erlang-mode
 sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp`
 ```
 

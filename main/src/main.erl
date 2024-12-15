@@ -8,7 +8,7 @@
 -spec start() -> ok.
 
 start() ->
-    ok = application:start(sasl),
+    {ok, _} = application:ensure_all_started(sasl),
     {ok, _} = application:ensure_all_started(ssl),
     ok = application:start(apptools),
     ok = application:start(rester),
