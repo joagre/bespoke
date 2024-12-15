@@ -1,0 +1,38 @@
+# -*- mode: sh; -*-
+#!/bin/bash
+
+grep -q "Raspberry Pi" /proc/cpuinfo || exit 255
+
+usage () {
+    >&2 echo "change-ssid <SSID>"
+    >&2 echo "    Update SSID in /etc/hostapd/hostapd.conf and reboot"
+    exit 1
+}
+
+is-ssid () {
+    if [[ $1 =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+if [ $# -ne 1 ]; then
+    usage
+fi
+
+if [ ! is-ssid $1 ]; then
+    usage
+fi
+
+# Update SSID in /etc/hostapd/hostapd.conf
+HOSTAPD_CONF="/etc/hostapd/hostapd.conf"
+KEY_TO_UPDATE="ssid"
+NEW_VALUE=$1
+
+tmpfile=$(mktemp)
+sed "s/^${KEY_TO_UPDATE}=.*/${KEY_TO_UPDATE}=${NEW_VALUE}/" "$HOSTAPD_CONF" > $tmpfile
+mv $tmpfile $HOSTAPD_CONF
+
+# Reboot
+reboot

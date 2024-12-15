@@ -1,6 +1,8 @@
 # -*- mode: sh; -*-
 #!/bin/sh
 
+grep -q "Raspberry Pi" /proc/cpuinfo || exit 255
+
 # Example usage:
 #
 # $ dnsmasq-tool /etc/dnsmasq.conf --post 01:11:22:33:44:55 --clear 02:11:22:33:44:55 --stdout --restart-dnsmasq
