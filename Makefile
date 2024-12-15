@@ -10,34 +10,10 @@ all:
 	done
 
 release: mrproper
-	@for lib in $(LIBS) ; do \
+	for lib in $(LIBS) ; do \
 		(cd $$lib && env ERL_LIBS=. ERLC_FLAGS="+debug_info" $(MAKE) release) || exit 1; \
 	done
-	@rm -fr releases/b3s
-	@mkdir -p releases/b3s
-	@for lib in $(LIBS); do \
-		mkdir -p releases/b3s/$$lib/ebin; \
-		cp -r $$lib/ebin/*.beam $$lib/ebin/*.app releases/b3s/$$lib/ebin; \
-	done
-	@for lib in $(LIBS); do \
-		if [ -d $$lib/priv ]; then \
-			mkdir -p releases/b3s/$$lib; \
-			cp -r $$lib/priv releases/b3s/$$lib; \
-		fi; \
-	done
-	@for lib in $(LIBS); do \
-		if [ -d $$lib/bin ]; then \
-			mkdir -p releases/b3s/$$lib; \
-			cp -r $$lib/bin releases/b3s/$$lib; \
-		fi; \
-	done
-	@find releases/b3s -name "*.dump" -exec rm {} \;
-	@find releases/b3s -name "*.db" -exec rm {} \;
-	@find releases/b3s -name ".gitignore" -exec rm {} \;
-	@echo "Building release"
-	@echo "Version: $(shell cat VERSION)"
-	@echo "Release: releases/b3s-$(shell cat VERSION).tar.gz"
-	@tar -czf releases/b3s-$(shell cat VERSION).tar.gz -C releases b3s
+	(cd build && $(MAKE) release)
 
 setcap:
 	(cd webapp; make setcap)
