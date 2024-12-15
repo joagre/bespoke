@@ -205,11 +205,19 @@ sudo apt install libsodium-dev erlang-nox
 
 ## Build and install Bespoke BBS
 
-Talk with Tony
+Do this on the build machine:
 
-``
-touch `/var/tmp/bespoke.bootstrap`
-sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp
+```
+make release
+scp releases/b3s-0.1.0.tar.gz pi@bespoke.local:/home/pi/
+```
+
+Do this on the Pi:
+
+```
+tar zxvf b3s-0.1.0.tar.gz
+touch /var/tmp/bespoke.bootstrap
+sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp`
 ```
 
 ## Create image
