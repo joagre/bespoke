@@ -32,6 +32,8 @@ release: mrproper
 		fi; \
 	done
 	@cp LICENSE releases/b3s
+	@find releases/b3s -name "*.dump" -exec rm {} \;
+	@find releases/b3s -name ".gitignore" -exec rm {} \;
 	@echo "Building release"
 	@echo "Version: $(shell cat VERSION)"
 	@echo "Release: releases/b3s-$(shell cat VERSION).tar.gz"
