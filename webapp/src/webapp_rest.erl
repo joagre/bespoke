@@ -794,7 +794,7 @@ change_ssid(SSID) ->
     ScriptPath =
         filename:absname(
           filename:join([code:lib_dir(main), "bin", "change-ssid"])),
-    Command = ["sudo ", ScriptPath, " ", ?b2l(SSID), " 2>&1; echo $?"],
+    Command = ["sudo bash ", ScriptPath, " ", ?b2l(SSID), " 2>&1; echo $?"],
     ?log_info("Calling: ~s\n", [Command]),
     case string:strip(os:cmd(Command)) of
         "0" ->

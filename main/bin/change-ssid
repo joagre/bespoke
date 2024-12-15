@@ -10,11 +10,7 @@ usage () {
 }
 
 is_ssid () {
-    if [[ $1 =~ ^[a-zA-Z0-9_-]+$ ]]; then
-        return 0
-    else
-        return 1
-    fi
+    [[ $1 =~ ^[a-zA-Z0-9_-]+$ ]]
 }
 
 if [ $# -ne 1 ]; then
