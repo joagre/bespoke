@@ -26,7 +26,7 @@ if [ -z "${erl}" ]; then
 fi
 
 bin_dir=${0%/*}
-erl_libs=${bin_dir}/../..
+erl_libs=${bin_dir}/..
 erl_config="-config ${bin_dir}/bespoke.config"
 pa="-pa ${erl_libs}/*/test"
 perform="-eval main:start()"
