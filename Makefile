@@ -31,7 +31,6 @@ release: mrproper
 			cp -r $$lib/bin releases/b3s/$$lib; \
 		fi; \
 	done
-	@cp LICENSE releases/b3s
 	@find releases/b3s -name "*.dump" -exec rm {} \;
 	@find releases/b3s -name "*.db" -exec rm {} \;
 	@find releases/b3s -name ".gitignore" -exec rm {} \;
