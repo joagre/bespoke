@@ -216,8 +216,8 @@ Do this on the Pi:
 
 ```
 tar zxvf b3s-0.1.0.tar.gz
-touch /var/tmp/bespoke.bootstrap
 sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp`
+touch /var/tmp/bespoke.bootstrap
 ```
 
 ## Create image
@@ -227,16 +227,3 @@ Talk with Tony
 # How to install image on Pi
 
 Talk with Tony
-
-
-On build machine:
-
-jocke@eve:~/projects/bespoke$ erl
-Erlang/OTP 25 [erts-13.1.5] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [jit:ns]
-
-On Pi:
-
-pi@bespoke:~/b3s $ erl
-Erlang/OTP 25 [erts-13.1.5] [source] [64-bit] [smp:4:4] [ds:4:4:10] [async-threads:1] [jit]
-
-Still the same problem. I give up.
