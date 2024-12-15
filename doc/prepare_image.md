@@ -200,12 +200,12 @@ iptables-restore < /etc/iptables.ipv4.nat
 ## Install required packages
 
 ```
-sudo apt install libsodium-dev erlang-nox
+sudo apt install libsodium-dev erlang-nox wamerican
 ```
 
 ## Build and install Bespoke BBS
 
-Do this on the build machine:
+Do this on a build machine sporting OTP-25.2.3 (no more, no less):
 
 ```
 make release
@@ -227,3 +227,16 @@ Talk with Tony
 # How to install image on Pi
 
 Talk with Tony
+
+
+On build machine:
+
+jocke@eve:~/projects/bespoke$ erl
+Erlang/OTP 25 [erts-13.1.5] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [jit:ns]
+
+On Pi:
+
+pi@bespoke:~/b3s $ erl
+Erlang/OTP 25 [erts-13.1.5] [source] [64-bit] [smp:4:4] [ds:4:4:10] [async-threads:1] [jit]
+
+Still the same problem. I give up.

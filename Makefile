@@ -11,7 +11,7 @@ all:
 
 release: mrproper
 	@for lib in $(LIBS) ; do \
-		(cd $$lib && env ERL_LIBS=. ERLC_FLAGS="+system_version25" $(MAKE) release) || exit 1; \
+		(cd $$lib && env ERL_LIBS=. ERLC_FLAGS="+debug_info" $(MAKE) release) || exit 1; \
 	done
 	@rm -fr releases/b3s
 	@mkdir -p releases/b3s
