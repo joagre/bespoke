@@ -30,7 +30,7 @@ erl_libs=${bin_dir}/..
 erl_config="-config ${bin_dir}/bespoke.config"
 shell=""
 pa="-pa ${erl_libs}/*/test"
-perform="-eval 'main:start()'"
+perform="-eval main:start()"
 sname=""
 
 while :; do
@@ -65,6 +65,7 @@ while :; do
     command shift
 done
 
-env ERL_LIBS=${erl_libs} ${erl} ${shell} ${sname} ${pa} ${erl_config} ${shell} ${perform} ${erl_options}
+export ERL_LIBS=${erl_libs}
+${erl} ${shell} ${sname} ${pa} ${erl_config} ${shell} ${perform} ${erl_options}
 
 exit $?

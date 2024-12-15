@@ -177,6 +177,7 @@ init(Parent) ->
     ?SUBSCRIPTION_DB =
         ets:new(?SUBSCRIPTION_DB, [{keypos, #subscription.id}, named_table]),
     ?log_info("Database server has been started"),
+    io:format("Database server has been started"),
     {ok, #state{parent = Parent,
                 next_user_id = Meta#meta.next_user_id,
                 next_post_id = Meta#meta.next_post_id}}.
