@@ -277,6 +277,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     case json_term_to_bootstrap(JsonTerm) of
                         {ok, SSID} ->
                             ok = file:delete("/var/tmp/bespoke.bootstrap"),
+                            {ok, MacAddress} = get_mac_address(Socket),
+                            ets:delete(?CAPTIVE_PORTAL_CACHE, MacAddress),
                             ok = change_ssid(SSID),
                             rest_util:response(Socket, Request, ok_204);
                         {error, invalid} ->
