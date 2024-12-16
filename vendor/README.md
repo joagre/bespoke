@@ -7,9 +7,9 @@ Download libsodium and build it for ARM:
 ```
 tar zxvf libsodium-1.0.20.tar.gz
 cd libsodium-1.0.20
-sudo apt install gcc-arm-linux-gnueabihf
-mkdir libsodium-build
-./configure --host=arm-linux-gnueabihf --prefix=$(cd ../libsodium-build; pwd)
+sudo apt install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+mkdir libsodium-arm
+./configure --host=aarch64-linux-gnu --prefix=$(cd ../libsodium-arm; pwd)
 make
 make install
 ```
