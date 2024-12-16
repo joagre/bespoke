@@ -12,9 +12,6 @@ CFLAGS+=-std=c18 -O -Wno-incompatible-pointer-types -Wno-unused-result
 LDFLAGS+=-shared
 
 # Add paths for cross-compiled libsodium headers and library if necessary
-
-Hmm. This is not ok for some reason in my Makefile:
-
 LIBSODIUM_INCLUDE ?=
 LIBSODIUM_LIB ?=
 ifneq ($(LIBSODIUM_INCLUDE),)
@@ -30,7 +27,7 @@ all: ../priv/enacl_nif.so
 
 release: clean
 	$(MAKE) CROSS_COMPILE=aarch64-linux-gnu- LIBSODIUM_INCLUDE=../../vendor/libsodium-arm/include LIBSODIUM_LIB=../../vendor/libsodium-arm/lib all
-	arm-linux-gnueabihf-$(STRIP) ../priv/enacl_nif.so
+	aarch64-linux-gnu-$(STRIP) ../priv/enacl_nif.so
 
 ../priv/enacl_nif.so: $(SOURCES)
 	$(CC) $(CFLAGS) -o ../priv/enacl_nif.so -fpic $(SOURCES) $(LDFLAGS) -lsodium
