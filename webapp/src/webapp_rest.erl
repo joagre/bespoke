@@ -796,7 +796,7 @@ change_ssid(SSID) ->
           filename:join([code:lib_dir(main), "bin", "change-ssid"])),
     Command = ["sudo bash ", ScriptPath, " ", ?b2l(SSID), " 2>&1; echo $?"],
     ?log_info("Calling: ~s\n", [Command]),
-    case string:strip(os:cmd(Command)) of
+    case string:trim(os:cmd(Command)) of
         "0" ->
             ok;
         UnexpectedOutput ->
