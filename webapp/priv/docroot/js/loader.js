@@ -8,28 +8,24 @@ class Loader {
   _load() {
     const redirect = async () => {
       try {
-        // REST: Acknowledge captive portal
-        const response = await fetch("/captive_portal_ack",
-                                     { method: "GET", mode: "no-cors" });
-        if (!response.ok) {
-          console.error(`Captive portal failed: ${response.status}`);
+        if (!bespoke.captivePortalAck()) {
+          console.error("Captive portal not acknowledged!");
           return;
         }
-        console.log("Captive portal acknowledgment sent to server");
         // REST: Auto login
-        const autoLoginResponse = await fetch("/auto_login");
-        if (autoLoginResponse.redirected) {
-          bespoke.navigateTo(autoLoginResponse.url);
+        const response = await fetch("/auto_login");
+        if (response.redirected) {
+          bespoke.navigateTo(response.url);
           return;
-        } else if (!autoLoginResponse.ok) {
-          console.error(`Login failed: ${autoLoginResponse.status}`);
+        } else if (!response.ok) {
+          console.error(`Login failed: ${response.status}`);
           return;
         }
-        const autoLoginResult = await autoLoginResponse.json();
-        bespoke.setCookieValue("userId", autoLoginResult["user-id"]);
-        bespoke.setCookieValue("username", autoLoginResult["username"]);
-        bespoke.setCookieValue("sessionId", autoLoginResult["session-id"]);
-        if (autoLoginResult["no-password"]) {
+        const result = await response.json();
+        bespoke.setCookieValue("userId", result["user-id"]);
+        bespoke.setCookieValue("username", result["username"]);
+        bespoke.setCookieValue("sessionId", result["session-id"]);
+        if (result["no-password"]) {
           bespoke.navigateTo("top_posts.html");
         } else {
           bespoke.navigateTo("login.html");

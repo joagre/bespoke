@@ -327,6 +327,18 @@ class Bespoke {
       console.error('Subscribe on changes failed:', error);
     }
   }
+
+  async captivePortalAck() {
+    // REST: Acknowledge captive portal
+    const response = await fetch("/captive_portal_ack",
+                                 { method: "GET", mode: "no-cors" });
+    if (!response.ok) {
+      console.error(`Captive portal failed: ${response.status}`);
+      return false;
+    }
+    console.log("Captive portal acknowledgment sent to server");
+    return true
+  }
 }
 
 const bespoke = new Bespoke();

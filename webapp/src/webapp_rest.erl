@@ -194,7 +194,7 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
                       [Headers#http_chdr.host, Url#url.path]),
             {ok, MacAddress} = get_mac_address(Socket),
             ok = webapp_dnsmasq:set_post_login_mac_address(MacAddress),
-            {ok, IpAddress} = rester_socket:peername(Socket),
+            {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
             {ok, MacAddress} = get_mac_address(Socket),
             PortalCacheEntry =
                 #portal_cache_entry{ip_address = IpAddress,
@@ -587,7 +587,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
 %%
 
 redirect_or_ack(Socket, Request, Page) ->
-    {ok, IpAddress} = rester_socket:peername(Socket),
+    {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
     case ets:lookup(?PORTAL_CACHE, IpAddress) of
         [] ->
             ?log_info("Captive portal redirect"),
@@ -652,11 +652,12 @@ delete_all_stale_timestamps() ->
     ok = webapp_dnsmasq:clear_mac_addresses(StaleMacAddresses),
     %% Clear the portal cache
     lists:foreach(fun(#portal_cache_entry{ip_address = IpAddress}) ->
+                          ?log_info("Purging ~p", [IpAddress]),
                           true = ets:delete(?PORTAL_CACHE, IpAddress)
                   end, StalePortalCacheEntries).
 
 update_portal_cache_entry(Socket) ->
-    {ok, IpAddress} = rester_socket:peername(Socket),
+    {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
     case ets:lookup(?PORTAL_CACHE, IpAddress) of
         [] ->
             true;
