@@ -228,9 +228,9 @@ scp build/releases/bespoke-0.1.0.tar.gz pi@bespoke.local:/home/pi/
 Do this on the Pi:
 
 ```
+rm -rf bespoke-0.1.0/
 tar zxvf bespoke-0.1.0.tar.gz
-cd bespoke-0.1.0
-make install
+cd bespoke-0.1.0; make install
 ```
 
 Edit/create `/etc/sudoers.d/change-ssid`:
