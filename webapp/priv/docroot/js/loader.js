@@ -38,7 +38,6 @@ class Loader {
         console.error("Load failed:", error);
       }
     };
-
     redirect();
   }
 }

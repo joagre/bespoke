@@ -1,0 +1,10 @@
+# -*- mode: makefile -*-
+
+install: update
+	touch /var/tmp/bespoke.bootstrap
+
+update:
+	sudo cp config/bespoke.service /etc/systemd/system
+	sudo systemctl daemon-reload
+	sudo chown root:root main/bin/change-ssid
+	sudo chmod 700 main/bin/change-ssid

@@ -24,10 +24,12 @@ release:
 		fi; \
 	done
 	@echo "Copying bin files"
-	cp -r ../bin releases/bespoke
+	@cp -r ../bin releases/bespoke
 	@echo "Copying bespoke service"
-	mkdir -p releases/bespoke/config
-	cp -r bespoke.service releases/bespoke/config
+	@mkdir -p releases/bespoke/config
+	@cp bespoke.service releases/bespoke/config
+	@echo "Copy top Makefile"
+	@cp Makefile.release releases/bespoke/Makefile
 	@echo "Removing spurious files"
 	@find releases/bespoke -name "*.dump" -exec rm {} \;
 	@find releases/bespoke -name "*.db" -exec rm {} \;

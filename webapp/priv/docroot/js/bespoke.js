@@ -136,7 +136,7 @@ class Bespoke {
       }
     }
     // If the post stack is empty, go to the top posts page
-    if (destination === "post.html" && this._isPostStackEmpty()) {
+    if (destination === "post.html" && this.isPostStackEmpty()) {
       this.navigateTo("top_posts.html");
     } else {
       // If the destination is the post page, set the child post flag
@@ -164,7 +164,7 @@ class Bespoke {
     return selection && selection.toString().length > 0;
   }
 
-  _isPostStackEmpty() {
+  isPostStackEmpty() {
     return this.postStackSize() === 0;
   }
 
@@ -173,8 +173,12 @@ class Bespoke {
     this._updateCookieState();
   }
 
-  isCookieSet() {
-    return this._cookieState != null;
+  hasSessionId() {
+    if (this._cookieState != null) {
+      const sessionId = this.getCookieValue("sessionId");
+      return sessionId != null;
+    }
+    return false;
   }
 
   getCookieValue(name) {

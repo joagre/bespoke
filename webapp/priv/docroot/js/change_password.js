@@ -6,7 +6,7 @@ class ChangePassword {
   }
 
   _load() {
-    if (!bespoke.isCookieSet()) {
+    if (!bespoke.hasSessionId()) {
       bespoke.navigateTo("loader.html");
       return;
     }

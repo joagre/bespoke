@@ -8,14 +8,21 @@ class Post {
     this._firstLoad = true;
     this._dataLoaded = false;
     this._domReady = false;
+    this._refreshTimer = null;
     // Note: bespoke.onReady() is not used by design
     if (window.location.pathname == "/post.html") {
       this._load();
     }
   }
 
+  destructor() {
+    if (this._refreshTimer != null) {
+      clearInterval(this._refreshTimer);
+    }
+  }
+
   _load() {
-    if (!bespoke.isCookieSet()) {
+    if (!bespoke.hasSessionId() || bespoke.isPostStackEmpty()) {
       bespoke.navigateTo("loader.html");
       return;
     }
@@ -164,7 +171,7 @@ class Post {
       this._firstLoad = false;
     }
     // Refresh each 30 seconds
-    setTimeout(() => this._load(), 30000);
+    this._refreshTimer = setInterval(() => this._load(), 30000);
   }
 
   _createReplyTemplate(parentPost, post, replyPosts) {

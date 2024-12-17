@@ -2,6 +2,7 @@
 -export([start_link/0]).
 %% rester_http_server callbacks
 -export([init/2, info/3, close/2, error/3, http_request/4]).
+-export([delete_all_stale_timestamps/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -10,14 +11,22 @@
 -include_lib("rester/include/rester_socket.hrl").
 -include_lib("db/include/db.hrl").
 
--define(CAPTIVE_PORTAL_CACHE, captive_portal_cache).
--define(LEASETIME, 7200).
+-define(PORTAL_CACHE, portal_cache).
+-define(PORTAL_CACHE_TIMEOUT, 5 * 60). % 5 minutes
+
+-type(timestamp() :: integer()).
 
 -record(state, {
                 subscriptions = #{} ::
                   #{rester_socket() =>
                         {Request :: term(), db_serv:subscription_id()}}
                }).
+
+-record(portal_cache_entry, {
+                             ip_address :: inet:ip_address(),
+                             mac_address :: db_user_serv:mac_address(),
+                             timestamp :: timestamp()
+                            }).
 
 %%
 %% Exported: start_link
@@ -32,11 +41,14 @@ start_link() ->
          {certfile, filename:join([code:priv_dir(webapp), "cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
-    ?CAPTIVE_PORTAL_CACHE =
-        ets:new(?CAPTIVE_PORTAL_CACHE, [public, named_table]),
+    ?PORTAL_CACHE = ets:new(?PORTAL_CACHE,
+                            [{keypos, #portal_cache_entry.ip_address},
+                             public, named_table]),
+    {ok, _} = timer:apply_interval(?PORTAL_CACHE_TIMEOUT * 1000,
+                                   ?MODULE, delete_all_stale_timestamps, []),
     ?log_info("Database REST API has been started"),
     HttpPort = application:get_env(webapp, http_port, 80),
-    rester_http_server:start_link(HttpPort, Options),
+    {ok, _} = rester_http_server:start_link(HttpPort, Options),
     case application:get_env(webapp, https_port, undefined) of
 	undefined ->
 	    ignore;
@@ -182,22 +194,18 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
                       [Headers#http_chdr.host, Url#url.path]),
             {ok, MacAddress} = get_mac_address(Socket),
             ok = webapp_dnsmasq:set_post_login_mac_address(MacAddress),
-            case ets:lookup(?CAPTIVE_PORTAL_CACHE, MacAddress) of
-                [] ->
-                    ?log_info("Captive portal ack (not found)\n"),
-                    ets:insert(?CAPTIVE_PORTAL_CACHE,
-                               {MacAddress, timestamp()}),
-                    rester_http_server:response_r(
-                      Socket, Request, 204, "OK", "", no_cache_headers());
-                [{MacAddress, _Timestamp}] ->
-                    ?log_info("Captive portal ack (found)\n"),
-                    ets:insert(?CAPTIVE_PORTAL_CACHE,
-                               {MacAddress, timestamp()}),
-                    rester_http_server:response_r(
-                      Socket, Request, 204, "OK", "", no_cache_headers())
-            end;
+            {ok, IpAddress} = rester_socket:peername(Socket),
+            {ok, MacAddress} = get_mac_address(Socket),
+            PortalCacheEntry =
+                #portal_cache_entry{ip_address = IpAddress,
+                                    mac_address = MacAddress,
+                                    timestamp = timestamp()},
+            true = ets:insert(?PORTAL_CACHE, PortalCacheEntry),
+            rester_http_server:response_r(
+              Socket, Request, 204, "OK", "", no_cache_headers());
         %% Bespoke API
         ["list_top_posts"] ->
+            true = update_portal_cache_entry(Socket),
             Posts = db_serv:list_top_posts(),
             PayloadJsonTerm = lists:map(fun(Post) ->
                                                 post_to_json_term(Post)
@@ -233,6 +241,7 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
             end;
         %% Act as static web server
 	Tokens ->
+            true = update_portal_cache_entry(Socket),
             UriPath =
                 case Tokens of
                     [] ->
@@ -259,6 +268,7 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
 %%
 
 http_post(Socket, Request, Body, State) ->
+    true = update_portal_cache_entry(Socket),
     Url = Request#http_request.uri,
     case string:tokens(Url#url.path, "/") of
 	["v1" | Tokens] ->
@@ -277,9 +287,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     case json_term_to_bootstrap(JsonTerm) of
                         {ok, SSID} ->
                             ok = file:delete("/var/tmp/bespoke.bootstrap"),
-                            {ok, MacAddress} = get_mac_address(Socket),
-                            ets:delete(?CAPTIVE_PORTAL_CACHE, MacAddress),
                             ok = change_ssid(SSID),
+                            %% Purge the portal cache
+                            true = ets:delete_all_objects(?PORTAL_CACHE),
                             rest_util:response(Socket, Request, ok_204);
                         {error, invalid} ->
                             rest_util:response(
@@ -571,25 +581,24 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
 	    rest_util:response(Socket, Request, {error, not_found})
     end.
 
+
 %%
-%% Captive portal
+%% Portal cache
 %%
 
 redirect_or_ack(Socket, Request, Page) ->
-    {ok, MacAddress} = get_mac_address(Socket),
-    case ets:lookup(?CAPTIVE_PORTAL_CACHE, MacAddress) of
+    {ok, IpAddress} = rester_socket:peername(Socket),
+    case ets:lookup(?PORTAL_CACHE, IpAddress) of
         [] ->
-            ?log_info("Captive portal redirect...\n"),
+            ?log_info("Captive portal redirect"),
             rester_http_server:response_r(
               Socket, Request, 302, "Found", "",
               [{location, "http://bespoke.local/loader.html"}|
                no_cache_headers()]);
-        [{MacAddress, Timestamp}] ->
-            %% 2 hours timeout (sync with leasetime in /etc/dhcpcd.conf)
-            case timestamp() - Timestamp > ?LEASETIME of
+        [#portal_cache_entry{timestamp = Timestamp}] ->
+            case timestamp() - Timestamp > ?PORTAL_CACHE_TIMEOUT of
                 true ->
-                    ?log_info("Captive portal redirect (timeout)\n"),
-                    ok = delete_all_stale_timestamps(),
+                    ?log_info("Captive portal redirect (timeout)"),
                     rester_http_server:response_r(
                       Socket, Request, 302, "Found", "",
                       [{location, "http://bespoke.local/loader.html"}|
@@ -598,16 +607,12 @@ redirect_or_ack(Socket, Request, Page) ->
                     case Page of
                         "hotspot-detect.html" ->
                             ?log_info("Returning 200 OK (Apple mode)\n"),
-                            true = ets:insert(?CAPTIVE_PORTAL_CACHE,
-                                              {MacAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK",
                               "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
                               [{content_type, "text/html"}|no_cache_headers()]);
                         "canonical.html" ->
                             ?log_info("Returning 200 OK (/canonical.html)\n"),
-                            ets:insert(?CAPTIVE_PORTAL_CACHE,
-                                       {MacAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK",
                               "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
@@ -615,16 +620,12 @@ redirect_or_ack(Socket, Request, Page) ->
                                no_cache_headers()]);
                         "success.txt" ->
                             ?log_info("Returning 200 OK (/success.txt)\n"),
-                            ets:insert(?CAPTIVE_PORTAL_CACHE,
-                                       {MacAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 200, "OK", "success",
                               [{content_type, "text/plain"},
                                no_cache_headers()]);
                         _ ->
                             ?log_info("Returning 204 No Content (generic)\n"),
-                            ets:insert(?CAPTIVE_PORTAL_CACHE,
-                                       {MacAddress, timestamp()}),
                             rester_http_server:response_r(
                               Socket, Request, 204, "OK", "",
                               no_cache_headers())
@@ -633,18 +634,38 @@ redirect_or_ack(Socket, Request, Page) ->
     end.
 
 delete_all_stale_timestamps() ->
-    Threshold = timestamp() - ?LEASETIME,
-    StaleMacAddresses =
-        ets:foldr(fun({MacAddress, Timestamp}, Acc)
+    ?log_info("Purging the captive portal"),
+    Threshold = timestamp() - ?PORTAL_CACHE_TIMEOUT,
+    StalePortalCacheEntries =
+        ets:foldr(fun(#portal_cache_entry{
+                         timestamp = Timestamp} = PortalCacheEntry, Acc)
                         when Timestamp < Threshold ->
-                          [MacAddress|Acc];
+                          [PortalCacheEntry|Acc];
                      (_, Acc) ->
                           Acc
-                  end, [], ?CAPTIVE_PORTAL_CACHE),
+                  end, [], ?PORTAL_CACHE),
+    %% Clear the MAC addresses
+    StaleMacAddresses =
+        lists:map(fun(#portal_cache_entry{mac_address = MacAddress}) ->
+                          MacAddress
+                  end, StalePortalCacheEntries),
     ok = webapp_dnsmasq:clear_mac_addresses(StaleMacAddresses),
-    lists:foreach(fun(MacAddress) ->
-                          ets:delete(?CAPTIVE_PORTAL_CACHE, MacAddress)
-                  end, StaleMacAddresses).
+    %% Clear the portal cache
+    lists:foreach(fun(#portal_cache_entry{ip_address = IpAddress}) ->
+                          true = ets:delete(?PORTAL_CACHE, IpAddress)
+                  end, StalePortalCacheEntries).
+
+update_portal_cache_entry(Socket) ->
+    {ok, IpAddress} = rester_socket:peername(Socket),
+    case ets:lookup(?PORTAL_CACHE, IpAddress) of
+        [] ->
+            true;
+        [PortalCacheEntry] ->
+            %% Update the timestamp
+            true = ets:insert(?PORTAL_CACHE,
+                              PortalCacheEntry#portal_cache_entry{
+                                timestamp = timestamp()})
+    end.
 
 %%
 %% Marshalling

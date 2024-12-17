@@ -228,31 +228,18 @@ scp build/releases/bespoke-0.1.0.tar.gz pi@bespoke.local:/home/pi/
 Do this on the Pi:
 
 ```
+rm -fr bespoke
 tar zxvf bespoke-0.1.0.tar.gz
-sudo cp bespoke/config/bespoke.service /etc/systemd/system
-sudo systemctl daemon-reload
+make install
 ```
 
-Active bootstrap mode:
-
-```
-touch /var/tmp/bespoke.bootstrap
-```
-
-Give root permissions to the script that changes the SSID:
-
-```
-sudo chown root:root /home/pi/bespoke/main/bin/change-ssid
-sudo chmod 700 /home/pi/bespoke/main/bin/change-ssid
-```
-
-Edit `/etc/sudoers.d/change-ssid`:
+Edit/create `/etc/sudoers.d/change-ssid`:
 
 ```
 pi ALL=(ALL) NOPASSWD: /home/pi/bespoke/main/bin/change-ssid
 ```
 
-Change permission:
+Change permissions:
 
 ```
 sudo chown root:root /etc/sudoers.d/change-ssid

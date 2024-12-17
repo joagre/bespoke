@@ -12,7 +12,7 @@
 -include_lib("apptools/include/shorthand.hrl").
 -include("../include/db.hrl").
 
--define(USER_DB_FILENAME, "users.db").
+-define(USER_DB_FILENAME, "/var/tmp/users.db").
 -define(USER_DB, users).
 -define(WORD_LIST_PATH, "/usr/share/dict/words").
 -define(SESSION_ID_SIZE, 16).
@@ -132,9 +132,7 @@ user_db_to_list() ->
 init(Parent) ->
     {ok, ?USER_DB} =
         dets:open_file(
-          ?USER_DB,
-          [{file, filename:join(code:priv_dir(db), ?USER_DB_FILENAME)},
-           {keypos, #user.id}]),
+          ?USER_DB, [{file, ?USER_DB_FILENAME}, {keypos, #user.id}]),
     ?log_info("Database user server has been started"),
     {ok, #state{parent = Parent,
                 word_list = init_word_list()}}.

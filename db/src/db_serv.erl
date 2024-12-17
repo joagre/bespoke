@@ -17,9 +17,9 @@
 -include_lib("apptools/include/serv.hrl").
 -include("../include/db.hrl").
 
--define(POST_DB_FILENAME, "posts.db").
+-define(POST_DB_FILENAME, "/var/tmp/posts.db").
 -define(POST_DB, posts).
--define(META_DB_FILENAME, "meta.db").
+-define(META_DB_FILENAME, "/var/tmp/meta.db").
 -define(META_DB, meta).
 -define(SUBSCRIPTION_DB, db_serv_subscriptions).
 
@@ -159,14 +159,10 @@ subscribe_on_changes(PostIds) ->
 init(Parent) ->
     {ok, ?POST_DB} =
         dets:open_file(
-          ?POST_DB,
-          [{file, filename:join(code:priv_dir(db), ?POST_DB_FILENAME)},
-           {keypos, #post.id}]),
+          ?POST_DB, [{file, ?POST_DB_FILENAME}, {keypos, #post.id}]),
     {ok, ?META_DB} =
         dets:open_file(
-          ?META_DB,
-          [{file, filename:join(code:priv_dir(db), ?META_DB_FILENAME)},
-           {keypos, #meta.type}]),
+          ?META_DB, [{file, ?META_DB_FILENAME}, {keypos, #meta.type}]),
     case dets:lookup(?META_DB, basic) of
         [] ->
             Meta = #meta{},

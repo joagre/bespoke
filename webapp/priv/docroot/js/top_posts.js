@@ -5,11 +5,18 @@ const { html, render } = uhtml;
 
 class TopPosts {
   constructor() {
+    this._refreshTimer = null;
     bespoke.onReady("top_posts.html", () => this._load());
   }
 
+  destructor() {
+    if (this._refreshTimer != null) {
+      clearInterval(this._refreshTimer);
+    }
+  }
+
   _load() {
-    if (!bespoke.isCookieSet()) {
+    if (!bespoke.hasSessionId()) {
       bespoke.navigateTo("loader.html");
       return;
     }
@@ -89,7 +96,7 @@ class TopPosts {
     activeFooterButton.classList.add("active-footer-button");
     activeFooterButton.setAttribute("disabled", "true");
     // Refresh each 30 seconds
-    setTimeout(() => this._updatePage(), 30000);
+    this._refreshTimer = setInterval(() => this._updatePage(), 30000);
   }
 
   _createPostTemplate(post) {
