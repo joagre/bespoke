@@ -1,40 +1,43 @@
 LIBS=apptools db enacl main rester webapp
+RELEASE_DIR="bespoke-$(shell cat ../VERSION)"
+TARGET_DIR="releases/$(RELEASE_DIR)"
 
 release:
 	@echo "Cleaning up"
-	@rm -fr releases/bespoke
-	@mkdir -p releases/bespoke
+	@rm -fr $(TARGET_DIR)
+	@mkdir -p $(TARGET_DIR)
 	@echo "Copying ebin files"
 	@for lib in $(LIBS); do \
-		mkdir -p releases/bespoke/$$lib/ebin; \
-		cp -r ../$$lib/ebin/*.beam ../$$lib/ebin/*.app releases/bespoke/$$lib/ebin; \
+		mkdir -p $(TARGET_DIR)/$$lib/ebin; \
+		cp -r ../$$lib/ebin/*.beam ../$$lib/ebin/*.app $(TARGET_DIR)/$$lib/ebin; \
 	done
 	@echo "Copying priv files"
 	@for lib in $(LIBS); do \
 		if [ -d ../$$lib/priv ]; then \
-			mkdir -p releases/bespoke/$$lib; \
-			cp -r ../$$lib/priv releases/bespoke/$$lib; \
+			mkdir -p $(TARGET_DIR)/$$lib; \
+			cp -r ../$$lib/priv $(TARGET_DIR)/$$lib; \
 		fi; \
 	done
 	@echo "Copying bin files"
 	@for lib in $(LIBS); do \
 		if [ -d ../$$lib/bin ]; then \
-			mkdir -p releases/bespoke/$$lib; \
-			cp -r ../$$lib/bin releases/bespoke/$$lib; \
+			mkdir -p $(TARGET_DIR)/$$lib; \
+			cp -r ../$$lib/bin $(TARGET_DIR)/$$lib; \
 		fi; \
 	done
 	@echo "Copying bin files"
-	@cp -r ../bin releases/bespoke
+	@cp -r ../bin $(TARGET_DIR)
 	@echo "Copying bespoke service"
-	@mkdir -p releases/bespoke/config
-	@cp bespoke.service releases/bespoke/config
+	@mkdir -p $(TARGET_DIR)/config
+	@cp bespoke.service $(TARGET_DIR)/config
 	@echo "Copy top Makefile"
-	@cp Makefile.release releases/bespoke/Makefile
+	@cp Makefile.release $(TARGET_DIR)/Makefile
 	@echo "Removing spurious files"
-	@find releases/bespoke -name "*.dump" -exec rm {} \;
-	@find releases/bespoke -name "*.db" -exec rm {} \;
-	@find releases/bespoke -name ".gitignore" -exec rm {} \;
+	@find $(TARGET_DIR) -name "*.dump" -exec rm {} \;
+	@find $(TARGET_DIR) -name "*.db" -exec rm {} \;
+	@find $(TARGET_DIR) -name ".gitignore" -exec rm {} \;
+	@rm -f bin/usbeth-setup main/bin/run_test
 	@echo "Building release"
 	@echo "Version: $(shell cat ../VERSION)"
-	@echo "Release: releases/bespoke-$(shell cat ../VERSION).tar.gz"
-	@tar -czf releases/bespoke-$(shell cat ../VERSION).tar.gz -C releases bespoke
+	@echo "Release: $(TARGET_DIR).tar.gz"
+	@tar -czf $(TARGET_DIR).tar.gz -C releases $(RELEASE_DIR)

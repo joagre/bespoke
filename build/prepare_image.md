@@ -228,8 +228,8 @@ scp build/releases/bespoke-0.1.0.tar.gz pi@bespoke.local:/home/pi/
 Do this on the Pi:
 
 ```
-rm -fr bespoke
 tar zxvf bespoke-0.1.0.tar.gz
+cd bespoke-0.1.0
 make install
 ```
 
@@ -248,8 +248,27 @@ sudo chmod 440 /etc/sudoers.d/change-ssid
 
 ## Create image
 
-Talk with Tony
+Take a backup of the SD card:
+
+```
+sudo dd if=/dev/mmcblk0 of=/media/jocke/EXTERNSL/sd_backup.img bs=4M status=progress
+```
+
+Verify backup (optional):
+
+```
+sudo cmp /dev/mmcblk0 /media/jocke/EXTERNSL/sd_backup.img
+<No news is good news>
+```
+
+
+
+
+
 
 # How to install image on Pi
 
-Talk with Tony
+```
+sudo dd if=/media/jocke/EXTERNSL/sd_backup.img of=/dev/mmcblk0 bs=4M status=progress
+sync
+```
