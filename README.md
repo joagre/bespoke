@@ -41,9 +41,8 @@ four times farther.
 
 ### Installation
 
-* $15: Buy a Raspberry Pi Zero 2 W, e.g. https://www.adafruit.com/product/5291)
-* $10: Buy a SD/MicroSD Memory Card (8 GB SDHC),
-  e.g. https://www.adafruit.com/product/1294
+* $15: Buy a Raspberry Pi Zero 2 W: https://www.adafruit.com/product/5291)
+* $10: Buy a SD/MicroSD Memory Card (8 GB SDHC): https://www.adafruit.com/product/1294
 
 Download the latest Bespoke image from
 https://github.com/joagre/bespoke/releases and write it to the SD
@@ -58,9 +57,7 @@ sync
 Optionally buy an extra WiFi USB adapter and a Directional Panel
 Antenna to extened the range:
 
-* $28: WiFi USB adapter,
-  e.g. https://alfa-network.eu/wi-fi/wi-fi-adapters/awus036nhv
-* $18: Directional Panel Antenna,
-  e.g. https://alfa-network.eu/antennas/wi-fi-antennas/apa-m25
+* $28: WiFi USB adapter: https://alfa-network.eu/wi-fi/wi-fi-adapters/awus036nhv
+* $18: Directional Panel Antenna: https://alfa-network.eu/antennas/wi-fi-antennas/apa-m25
 
 That's it.
