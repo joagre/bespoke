@@ -1,33 +1,23 @@
 ERL=$(shell which erl)
 ERL_TOP=$(ERL:%/bin/erl=%)
 LPATH=$(abspath $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..)
-LIBS=apptools db enacl main rester webapp
-TESTS=db
 
 all:
-	for lib in $(LIBS) ; do \
-		(cd $$lib && env ERL_LIBS=. ERLC_FLAGS="+debug_info" $(MAKE) all) || exit 1; \
-	done
+	(cd lib && $(MAKE) all)
 
 release: mrproper
-	for lib in $(LIBS) ; do \
-		(cd $$lib && env ERL_LIBS=. ERLC_FLAGS="+debug_info" $(MAKE) release) || exit 1; \
-	done
+	(cd lib && $(MAKE) release)
 	(cd build && $(MAKE) release)
 
 setcap:
 	(cd webapp; make setcap)
 
 clean:
-	for lib in $(LIBS) ; do \
-		(cd $$lib && env ERL_LIBS=. $(MAKE) clean) || exit 1; \
-	done
+	(cd lib && $(MAKE) clean)
 	rm -f .dialyzer.plt
 
 runtest:
-	for lib in $(TESTS) ; do \
-		(cd $$lib/test && env ERL_LIBS=. $(MAKE) runtest) || exit 1; \
-	done
+	(cd lib && $(MAKE) runtest)
 
 mrproper: clean cleanfluff
 	rm -f .dialyzer_init.plt
@@ -44,7 +34,7 @@ cleanfluff:
 DIALYZER_APPS=apptools db main rester webapp
 
 dialyzer: .dialyzer.plt all
-	dialyzer --verbose --no_check_plt --plt .dialyzer.plt -r $(DIALYZER_APPS:%=$(LPATH)/bespoke/%/ebin)
+	dialyzer --verbose --no_check_plt --plt .dialyzer.plt -r $(DIALYZER_APPS:%=$(LPATH)/bespoke/lib/%/ebin)
 
 .dialyzer.plt: .dialyzer_init.plt
 	rm -f $@ ; cp $< $@

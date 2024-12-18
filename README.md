@@ -2,6 +2,8 @@
 
 ## What?
 
+This must be possible to write more more straight forward:
+
 <b>Bespoke BBS (B3S)</b> is a <i>location-based Bulletin Board
 System</i>. It’s not meant for the Internet—instead, it lives in your
 local area as a WiFi Access Point. This is by design, encouraging
@@ -9,9 +11,8 @@ genuine local interactions.
 
 The first version of B3S includes a straightforward <b>Forum</b>. In
 the near future, the Forum will be fleshed out with features you’d
-expect—such as attachments, images, and reactions like downvotes (and
-whatnot). After that, <b>end-to-end encrypted messaging</b> and
-<b>file sharing</b> come next.
+expect—such as attachments, and downvotes (and whatnot). After that,
+<b>end-to-end encrypted messaging</b> and <b>file sharing</b> come next.
 
 Further down the line, the B3S client Web app will be wrapped into
 native apps for <b>Android</b> and <b>iPhone</b>. These apps will make

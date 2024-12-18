@@ -10,7 +10,7 @@ ALL_OBJECTS=$(ERL_OBJECTS)
 ERL_MODULES=$(ERL_SOURCES:%.erl=%)
 comma=,
 empty=
-space = $(empty) $(empty)
+space=$(empty) $(empty)
 MODULES=$(subst $(space),$(comma),$(ERL_MODULES))
 VERSION=$(shell git describe --always --tags)
 APP_SRC=$(APP).app.src
@@ -18,7 +18,13 @@ APP_TARGET=../ebin/$(APP).app
 
 .PRECIOUS: $(YRL_SRC:%.yrl=%.erl) $(XRL_SRC:%.xrl=%.erl)
 
-all: $(APP_TARGET) $(ALL_OBJECTS)
+all:
+	env ERLC_FLAGS=+debug_info $(MAKE) build
+
+release:
+	$(MAKE) build
+
+build: $(APP_TARGET) $(ALL_OBJECTS)
 
 clean:
 	rm -f $(APP_TARGET) $(ALL_OBJECTS) *.core .*.d

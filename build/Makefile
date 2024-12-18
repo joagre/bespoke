@@ -8,21 +8,21 @@ release:
 	@mkdir -p $(TARGET_DIR)
 	@echo "Copying ebin files"
 	@for lib in $(LIBS); do \
-		mkdir -p $(TARGET_DIR)/$$lib/ebin; \
-		cp -r ../$$lib/ebin/*.beam ../$$lib/ebin/*.app $(TARGET_DIR)/$$lib/ebin; \
+		mkdir -p $(TARGET_DIR)/lib/$$lib/ebin; \
+		cp -r ../lib/$$lib/ebin/*.beam ../lib/$$lib/ebin/*.app $(TARGET_DIR)/lib/$$lib/ebin; \
 	done
 	@echo "Copying priv files"
 	@for lib in $(LIBS); do \
-		if [ -d ../$$lib/priv ]; then \
-			mkdir -p $(TARGET_DIR)/$$lib; \
-			cp -r ../$$lib/priv $(TARGET_DIR)/$$lib; \
+		if [ -d ../lib/$$lib/priv ]; then \
+			mkdir -p $(TARGET_DIR)/lib/$$lib; \
+			cp -r ../lib/$$lib/priv $(TARGET_DIR)/lib/$$lib; \
 		fi; \
 	done
 	@echo "Copying bin files"
 	@for lib in $(LIBS); do \
-		if [ -d ../$$lib/bin ]; then \
-			mkdir -p $(TARGET_DIR)/$$lib; \
-			cp -r ../$$lib/bin $(TARGET_DIR)/$$lib; \
+		if [ -d ../lib/$$lib/bin ]; then \
+			mkdir -p $(TARGET_DIR)/lib/$$lib; \
+			cp -r ../lib/$$lib/bin $(TARGET_DIR)/lib/$$lib; \
 		fi; \
 	done
 	@echo "Copying bin files"
