@@ -4,8 +4,6 @@
 
 ## What?
 
-This must be possible to write more more straight forward:
-
 <b>Bespoke BBS (B3S)</b> is a <i>location-based Bulletin Board
 System</i>. It’s not meant for the Internet—instead, it lives in your
 local area as a WiFi Access Point. This is by design, encouraging
@@ -64,7 +62,7 @@ BespokeBBS SSID and follow the instructions.
 That's it.
 
 Optionally buy an extra WiFi USB adapter and a Directional Panel
-Antenna to extened the range:
+Antenna to extend the range:
 
 * $28: WiFi USB adapter:
   https://alfa-network.eu/wi-fi/wi-fi-adapters/awus036nhv
