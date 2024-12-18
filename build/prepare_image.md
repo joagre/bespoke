@@ -212,7 +212,7 @@ iptables-restore < /etc/iptables.ipv4.nat
 ## Install and prepare required packages
 
 ```
-sudo apt install libsodium-dev erlang-nox wamerican emacs-nox erlang-mode
+sudo apt install libsodium-dev erlang-nox wamerican emacs-nox erlang-mode ntpdate
 sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp`
 ```
 
@@ -228,9 +228,10 @@ scp build/releases/bespoke-0.1.0.tar.gz pi@bespoke.local:/home/pi/
 Do this on the Pi:
 
 ```
-rm -rf bespoke-0.1.0/
+sudo ntpdate pool.ntp.org
 tar zxvf bespoke-0.1.0.tar.gz
-cd bespoke-0.1.0; make install
+cd bespoke-0.1.0
+make install
 ```
 
 Edit/create `/etc/sudoers.d/change-ssid`:
@@ -248,27 +249,23 @@ sudo chmod 440 /etc/sudoers.d/change-ssid
 
 ## Create image
 
-Take a backup of the SD card:
+Shrink partition:
 
 ```
-sudo dd if=/dev/mmcblk0 of=/media/jocke/EXTERNSL/sd_backup.img bs=4M status=progress
+sudo dd if=/dev/mmcblk0 of=/media/jocke/EXTERNSL/bespoke-0.1.0-32GB.img bs=4M status=progress
+sync
+sudo apt update && sudo apt install -y wget parted gzip pigz xz-utils udev e2fsprogs
+wget https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
+./pishrink.sh bespoke-0.1.0-32GB.img bespoke-0.1.0-pishrinked.img
+sync
+mv bespoke-0.1.0-pishrinked.img bespoke-0.1.0.img
+gzip bespoke-0.1.0.img
 ```
-
-Verify backup (optional):
-
-```
-sudo cmp /dev/mmcblk0 /media/jocke/EXTERNSL/sd_backup.img
-<No news is good news>
-```
-
-
-
-
-
 
 # How to install image on Pi
 
 ```
-sudo dd if=/media/jocke/EXTERNSL/sd_backup.img of=/dev/mmcblk0 bs=4M status=progress
+gunzip bespoke-0.1.0.img.gz
+sudo dd if=bespoke-0.1.0.img of=/dev/mmcblk0 bs=4M status=progress
 sync
 ```
