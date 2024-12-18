@@ -54,10 +54,13 @@ sudo dd if=bespoke-0.1.0.img of=/dev/mmcblk0 bs=4M status=progress
 sync
 ```
 
+Insert the SD card into the Pi and power it up, then connect to the
+BespokeBBS SSID and follow the instructions.
+
+That's it.
+
 Optionally buy an extra WiFi USB adapter and a Directional Panel
 Antenna to extened the range:
 
 * $28: WiFi USB adapter: https://alfa-network.eu/wi-fi/wi-fi-adapters/awus036nhv
 * $18: Directional Panel Antenna: https://alfa-network.eu/antennas/wi-fi-antennas/apa-m25
-
-That's it.
