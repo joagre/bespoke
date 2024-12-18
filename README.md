@@ -2,7 +2,7 @@
 
 ## What?
 
-<n>Bespoke BBS (B3S)</b> is a <i>location-based Bulletin Board
+<b>Bespoke BBS (B3S)</b> is a <i>location-based Bulletin Board
 System</i>. It’s not meant for the Internet—instead, it lives in your
 local area as a WiFi Access Point. This is by design, encouraging
 genuine local interactions.
