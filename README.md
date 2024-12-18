@@ -1,5 +1,7 @@
 # Bespoke BBS (B3S) - A location-based BBS
 
+![Screenshots](doc/snapshots.png)
+
 ## What?
 
 This must be possible to write more more straight forward:
