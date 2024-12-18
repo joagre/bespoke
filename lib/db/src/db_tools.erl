@@ -6,9 +6,6 @@
 -include("../../apptools/include/log.hrl").
 -include("../../apptools/include/shorthand.hrl").
 
--define(SUBMISSION_DB_FILENAME, "/var/tmp/submissions.db").
--define(COMMENT_DB_FILENAME, "/var/tmp/comments.db").
-
 %%
 %% Exported: dump_subreddit
 %%
@@ -43,31 +40,35 @@ create_subreddit_db() ->
 
 get_cached_subreddit(SubmissionsFile, CommentsFile, NoSubmissions,
                      MinNoComments) ->
+    SubmissionsDbFile =
+        filename:join(code:priv_dir(webapp), "submissions.db"),
+    CommentsDbFile =
+        filename:join(code:priv_dir(webapp), "comments.db"),
     %% If there is no submission database just delete the comments
     %% database as well (if it exists)
-    case filelib:is_regular(?SUBMISSION_DB_FILENAME) of
+    case filelib:is_regular(SubmissionsDbFile) of
         true ->
             ok;
         false ->
-            case filelib:is_regular(?COMMENT_DB_FILENAME) of
+            case filelib:is_regular(CommentsDbFile) of
                 true ->
                     io:format("** Deleting comment database~n"),
-                    _ = file:delete(?COMMENT_DB_FILENAME);
+                    _ = file:delete(CommentsDbFile);
                 false ->
                     ok
             end
     end,
     %% Recreate the databases if they do not exist
-    case filelib:is_regular(?SUBMISSION_DB_FILENAME) of
+    case filelib:is_regular(SubmissionsDbFile) of
         true ->
-            case filelib:is_regular(?COMMENT_DB_FILENAME) of
+            case filelib:is_regular(CommentsDbFile) of
                 true ->
                     io:format("** Using cached databases~n"),
-                    open_dbs(?SUBMISSION_DB_FILENAME, ?COMMENT_DB_FILENAME);
+                    open_dbs(SubmissionsDbFile, CommentsDbFile);
                 false ->
                     io:format("** Using cached submission database~n"),
                     {SubmissionDb, CommentDb} =
-                        open_dbs(?SUBMISSION_DB_FILENAME, ?COMMENT_DB_FILENAME),
+                        open_dbs(SubmissionsDbFile, CommentsDbFile),
                     io:format("** Creating new comment database~n"),
                     {NoParentsIds, NoComments, ParsedComments} =
                         populate_comment_db(
@@ -81,7 +82,7 @@ get_cached_subreddit(SubmissionsFile, CommentsFile, NoSubmissions,
             end;
         false ->
             {SubmissionDb, CommentDb} =
-                open_dbs(?SUBMISSION_DB_FILENAME, ?COMMENT_DB_FILENAME),
+                open_dbs(SubmissionsDbFile, CommentsDbFile),
             io:format("** Creating new submission database~n"),
             {NoSubmissions, ParsedSubmissions} =
                 populate_submission_db(
