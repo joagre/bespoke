@@ -42,7 +42,7 @@ four times farther.
 
 ### Installation
 
-* $15: Buy a Raspberry Pi Zero 2 W: https://www.adafruit.com/product/5291)
+* $15: Buy a Raspberry Pi Zero 2W: https://www.adafruit.com/product/5291
 * $10: Buy a SD/MicroSD Memory Card (8 GB SDHC):
   https://www.adafruit.com/product/1294
 
