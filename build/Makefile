@@ -40,3 +40,6 @@ release:
 	@echo "Version: $(shell cat ../VERSION)"
 	@echo "Release: $(TARGET_DIR).tar.gz"
 	@tar -czf $(TARGET_DIR).tar.gz -C releases $(RELEASE_DIR)
+
+clean:
+	rm -fr releases/*

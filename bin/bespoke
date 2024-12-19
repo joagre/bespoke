@@ -9,7 +9,7 @@ usage () {
     exit 100
 }
 
-isparam () {
+is_param () {
     case $1 in
         --*)
             usage;
@@ -47,7 +47,7 @@ while :; do
             if [ $# -lt 2 ]; then
                 usage
             fi
-            isparam $2
+            is_param $2
 	    sname="-sname $2"
             shift
             ;;
@@ -67,5 +67,4 @@ done
 
 export ERL_LIBS=${erl_libs}
 ${erl} ${shell} ${sname} ${pa} ${erl_config} ${shell} ${perform} ${erl_options}
-
 exit $?

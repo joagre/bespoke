@@ -19,11 +19,12 @@ clean:
 runtest:
 	(cd lib && $(MAKE) runtest)
 
-mrproper: clean cleanfluff
-	rm -f .dialyzer_init.plt
-
-cleanfluff:
+mrproper: clean
 	find . \( -name erl_crash.dump -or -name '*.beam' -or -name "*~" -or -name '#*' -or -name '.#*' \) -exec rm {} \;
+
+distclean: mrproper
+	rm -f .dialyzer_init.plt
+	(cd build && $(MAKE) clean)
 
 #
 # Type checking
