@@ -1,7 +1,3 @@
-ERL=$(shell which erl)
-ERL_TOP=$(ERL:%/bin/erl=%)
-LPATH=$(abspath $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..)
-
 all:
 	(cd lib && $(MAKE) all)
 
@@ -9,15 +5,15 @@ release: mrproper
 	(cd lib && $(MAKE) release)
 	(cd build && $(MAKE) release)
 
+runtest:
+	(cd lib && $(MAKE) runtest)
+
 setcap:
 	(cd webapp; make setcap)
 
 clean:
 	(cd lib && $(MAKE) clean)
 	rm -f .dialyzer.plt
-
-runtest:
-	(cd lib && $(MAKE) runtest)
 
 mrproper: clean
 	find . \( -name erl_crash.dump -or -name '*.beam' -or -name "*~" -or -name '#*' -or -name '.#*' \) -exec rm {} \;
@@ -30,8 +26,9 @@ distclean: mrproper
 # Type checking
 #
 
-.PHONY: dialyzer
-
+ERL=$(shell which erl)
+ERL_TOP=$(ERL:%/bin/erl=%)
+LPATH=$(abspath $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..)
 DIALYZER_APPS=apptools db main rester webapp
 
 dialyzer: .dialyzer.plt all
