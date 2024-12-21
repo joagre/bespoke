@@ -317,7 +317,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                       {ok, {format, PayloadJsonTerm}});
                                 {error, failure} ->
                                     rest_util:response(Socket, Request,
-                                                       {error, no_access})
+                                                       {error, unauthorized})
                             end;
                         {error, invalid} ->
                             rest_util:response(
@@ -345,12 +345,11 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                       Socket, Request,
                                       {ok, {format, PayloadJsonTerm}});
                                 {error, failure} ->
-                                    rest_util:response(Socket, Request,
-                                                       {error, no_access})
+                                    rest_util:response(
+                                      Socket, Request, {error, forbidden})
                             end;
                         {error, invalid} ->
-                            rest_util:response(Socket, Request,
-                                               {error, no_access})
+                            rest_util:response(Socket, Request, {error, badarg})
                     end
             end;
         ["change_password"] ->
@@ -374,16 +373,14 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                         {error, failure} ->
                                             rest_util:response(
                                               Socket, Request,
-                                              {error, no_access})
+                                              {error, forbidden})
                                     end;
                                 {error, not_found} ->
                                     rest_util:response(Socket, Request,
-                                                       {error, no_access})
+                                                       {error, unauthorized})
                             end;
                         {error, invalid} ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request, "Invalid JSON format"})
+                            rest_util:response(Socket, Request, {error, badarg})
                     end
             end;
         ["lookup_posts"] ->
@@ -405,15 +402,10 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             rest_util:response(
                               Socket, Request, {ok, {format, PayloadJsonTerm}});
                         false ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request,
-                               "post-ids must be strings"})
+                            rest_util:response(Socket, Request, {error, badarg})
                     end;
                 _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"})
+                    rest_util:response(Socket, Request, {error, badarg})
             end;
         ["lookup_recursive_posts"] ->
             case parse_body(Socket, Request, Body) of
@@ -435,15 +427,10 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             rest_util:response(
                               Socket, Request, {ok, {format, PayloadJsonTerm}});
                         false ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request,
-                               "post-ids must be strings"})
+                            rest_util:response(Socket, Request, {error, badarg})
                     end;
                 _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"})
+                    rest_util:response(Socket, Request, {error, badarg})
             end;
         ["lookup_recursive_post_ids"] ->
             case parse_body(Socket, Request, Body) of
@@ -461,15 +448,10 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             rest_util:response(
                               Socket, Request, {ok, {format, PayloadJsonTerm}});
                         false ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request,
-                               "post-ids must be strings"})
+                            rest_util:response(Socket, Request, {error, badarg})
                     end;
                 _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "Invalid JSON format"})
+                    rest_util:response(Socket, Request, {error, badarg})
             end;
         ["insert_post"] ->
             case parse_body(Socket, Request, Body) of
@@ -482,21 +464,25 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         {ok, #user{name = Username}} ->
                             case json_term_to_post(JsonTerm, Username) of
                                 {ok, Post} ->
-                                    {ok, InsertedPost} =
-                                        db_serv:insert_post(Post),
-                                    PayloadJsonTerm =
-                                        post_to_json_term(InsertedPost),
-                                    rest_util:response(
-                                      Socket, Request,
-                                      {ok, {format, PayloadJsonTerm}});
+                                    case db_serv:insert_post(Post) of
+                                        {ok, InsertedPost} ->
+                                            db_serv:insert_post(Post),
+                                            PayloadJsonTerm =
+                                                post_to_json_term(InsertedPost),
+                                            rest_util:response(
+                                              Socket, Request,
+                                              {ok, {format, PayloadJsonTerm}});
+                                        {error, invalid_post} ->
+                                            rest_util:response(
+                                              Socket, Request, {error, badarg})
+                                    end;
                                 {error, invalid} ->
                                     rest_util:response(
-                                      Socket, Request,
-                                      {error, bad_request, "Invalid post"})
+                                      Socket, Request, {error, badarg})
                             end;
                         {error, not_found} ->
                             rest_util:response(Socket, Request,
-                                               {error, no_access})
+                                               {error, unauthorized})
                     end
             end;
         ["delete_post"] ->
@@ -517,12 +503,10 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             end;
                         {error, not_found} ->
                             rest_util:response(Socket, Request,
-                                               {error, no_access})
+                                               {error, unauthorized})
                     end;
                 _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "post-id must be a string"})
+                    rest_util:response(Socket, Request, {error, badarg})
             end;
         ["toggle_like"] ->
             case parse_body(Socket, Request, Body) of
@@ -542,13 +526,11 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             rest_util:response(
                               Socket, Request, {ok, {format, PayloadJsonTerm}});
                         {error, not_found} ->
-                            rest_util:response(Socket, Request,
-                                               {error, no_access})
+                            rest_util:response(
+                              Socket, Request, {error, unauthorized})
                     end;
                 _ ->
-                    rest_util:response(
-                      Socket, Request,
-                      {error, bad_request, "post-id must be a string"})
+                    rest_util:response(Socket, Request, {error, badarg})
             end;
         ["subscribe_on_changes"] ->
             case parse_body(Socket, Request, Body) of
@@ -571,9 +553,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                                State#state.subscriptions)},
                             {ok, UpdatedState};
                         false ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request, "post-ids must be strings"})
+                            rest_util:response(Socket, Request, {error, badarg})
                     end
             end;
         _ ->
@@ -809,7 +789,7 @@ parse_body(Socket, Request, Body) ->
         {error, _Reason} ->
             {return, rest_util:response(
                        Socket, Request,
-                       {error, bad_request, "Invalid JSON format"})};
+                       {error, bad_request, "Invalid JSON syntax"})};
         JsonTerm ->
             JsonTerm
     end.

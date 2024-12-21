@@ -198,25 +198,24 @@ insert_subreddit(SubmissionDb, CommentDb) ->
       SubmissionDb, fun({Id, #{<<"author">> := Author,
                                <<"created_utc">> := Created,
                                <<"id">> := Id,
-                               <<"selftext">> := Body,
+                               <<"selftext">> := Selftext,
                                <<"title">> := Title}}) ->
                             io:format("** Inserting submission ~p~n", [Id]),
                             Post = #post{id = Id,
                                          title = Title,
-                                         body = Body,
+                                         body = Selftext,
                                          author = Author,
-                                         created = Created},
-                            {ok, _} = db_serv:insert_post(
-                                        patch_post(Post)),
+                                         created = patch_created(Created)},
+                            {ok, _} = db_serv:insert_post(Post),
                             ok = insert_comments(CommentDb, Id),
                             continue
                     end).
 
 %% The reddit json api returns the created_utc field as a list!
-patch_post(#post{created = Created} = Post) when is_binary(Created) ->
-    Post#post{created = ?b2i(Created)};
-patch_post(Post) ->
-    Post.
+patch_created(Created) when is_binary(Created) ->
+    ?b2i(Created);
+patch_created(Created) ->
+    Created.
 
 insert_comments(CommentDb, ParentId) ->
     Comments = dets:lookup(CommentDb, ParentId),
@@ -230,10 +229,9 @@ insert_comments(CommentDb, ParentId) ->
                                        top_post_id = LinkId,
                                        body = Body,
                                        author = Author,
-                                       created = Created},
+                                       created = patch_created(Created)},
                           io:format("** Inserting comment ~p~n", [Id]),
-                          {ok, _} = db_serv:insert_post(
-                                      patch_post(Post)),
+                          {ok, _} = db_serv:insert_post(Post),
                           insert_comments(CommentDb, Id)
                   end, Comments).
 

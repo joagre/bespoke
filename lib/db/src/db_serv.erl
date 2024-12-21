@@ -115,6 +115,13 @@ lookup_post_ids(PostIds, Mode) ->
 insert_post(Post) ->
     serv:call(?MODULE, {insert_post, Post}).
 
+
+
+
+
+
+
+
 %%
 %% delete_post
 %%
