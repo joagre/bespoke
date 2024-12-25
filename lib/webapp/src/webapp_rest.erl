@@ -225,7 +225,8 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
                         #{<<"no-password">> => true,
                           <<"user-id">> => User#user.id,
                           <<"username">> => User#user.name,
-                          <<"session-id">> => User#user.session_id},
+                          <<"session-id">> =>
+                              base64:encode(User#user.session_id)},
                     case User#user.pwhash of
                         not_set ->
                             rest_util:response(Socket, Request,
@@ -292,37 +293,76 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             true = ets:delete_all_objects(?PORTAL_CACHE),
                             rest_util:response(Socket, Request, ok_204);
                         {error, invalid} ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request, "Invalid JSON format"})
+                            rest_util:response(Socket, Request, {error, badarg})
                     end
             end;
-        ["login"] ->
+        ["generate_challenge"] ->
+            case parse_body(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                Username when is_binary(Username) ->
+                    case db_user_serv:get_user_from_username(Username) of
+                        {ok, #user{salt = Salt}} ->
+                            Challenge = webapp_auth:generate_challenge(),
+                            PayloadJsonTerm =
+                                #{<<"salt">> => base64:encode(Salt),
+                                  <<"challenge">> => base64:encode(Challenge)},
+                            rest_util:response(Socket, Request,
+                                               {ok, {format, PayloadJsonTerm}});
+                        {error, not_found} ->
+                            rest_util:response(Socket, Request,
+                                               {error, unauthorized})
+                    end;
+                _ ->
+                    rest_util:response(Socket, Request, {error, badarg})
+            end;
+        ["verify_client_response"] ->
             case parse_body(Socket, Request, Body) of
                 {return, Result} ->
                     Result;
                 JsonTerm ->
-                    case json_term_to_login(JsonTerm) of
-                        {ok, Username, Password} ->
-                            case db_user_serv:login(Username, Password) of
-                                {ok, #user{id = UserId,
-                                           name = Username,
-                                           session_id = SessionId}} ->
-                                    PayloadJsonTerm =
-                                        #{<<"user-id">> => UserId,
-                                          <<"username">> => Username,
-                                          <<"session-id">> => SessionId},
-                                    rest_util:response(
-                                      Socket, Request,
-                                      {ok, {format, PayloadJsonTerm}});
-                                {error, failure} ->
+                    case json_term_to_verify_client_response(JsonTerm) of
+                        {ok, Username, ClientResponse, Salt, Challenge} ->
+                            case db_user_serv:get_user_from_username(
+                                   Username) of
+                                {ok, #user{pwhash = Pwhash}} ->
+                                    case webapp_auth:verify_client_response(
+                                           ClientResponse, Challenge, Pwhash) of
+                                        true ->
+                                            case db_user_serv:login(
+                                                   Username, Salt, Pwhash) of
+                                                {ok, #user{id = UserId,
+                                                           name = Username,
+                                                           session_id =
+                                                               SessionId}} ->
+                                                    PayloadJsonTerm =
+                                                        #{<<"user-id">> =>
+                                                              UserId,
+                                                          <<"username">> =>
+                                                              Username,
+                                                          <<"session-id">> =>
+                                                              base64:encode(
+                                                                SessionId)},
+                                                    rest_util:response(
+                                                      Socket, Request,
+                                                      {ok, {format,
+                                                            PayloadJsonTerm}});
+                                                {error, failure} ->
+                                                    rest_util:response(
+                                                      Socket, Request,
+                                                      {error, unauthorized})
+                                            end;
+                                        false ->
+                                            rest_util:response(
+                                              Socket, Request,
+                                              {error, unauthorized})
+                                    end;
+                                {error, not_found} ->
                                     rest_util:response(Socket, Request,
                                                        {error, unauthorized})
                             end;
                         {error, invalid} ->
-                            rest_util:response(
-                              Socket, Request,
-                              {error, bad_request, "Invalid JSON format"})
+                            rest_util:response(Socket, Request, {error, badarg})
                     end
             end;
         ["switch_user"] ->
@@ -340,7 +380,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                         #{<<"user-id">> => User#user.id,
                                           <<"username">> => User#user.name,
                                           <<"session-id">> =>
-                                              User#user.session_id},
+                                              base64:encode(
+                                                User#user.session_id)},
                                     rest_util:response(
                                       Socket, Request,
                                       {ok, {format, PayloadJsonTerm}});
@@ -358,15 +399,15 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 JsonTerm ->
                     case json_term_to_change_password(JsonTerm) of
-                        {ok, Password} ->
+                        {ok, Salt, Hash} ->
                             {ok, MacAddress} = get_mac_address(Socket),
                             {ok, #{<<"sessionId">> := SessionId}} =
                                 get_bespoke_cookie(Request),
                             case db_user_serv:get_user_from_session_id(
-                                   SessionId) of
+                                   base64:decode(SessionId)) of
                                 {ok, #user{name = Username}} ->
                                     case db_user_serv:change_password(
-                                           Username, Password, MacAddress) of
+                                           Username, MacAddress, Salt, Hash) of
                                         ok ->
                                             rest_util:response(
                                               Socket, Request, ok_204);
@@ -460,7 +501,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 JsonTerm ->
                     {ok, #{<<"sessionId">> := SessionId}} =
                         get_bespoke_cookie(Request),
-                    case db_user_serv:get_user_from_session_id(SessionId) of
+                    case db_user_serv:get_user_from_session_id(
+                           base64:decode(SessionId)) of
                         {ok, #user{name = Username}} ->
                             case json_term_to_post(JsonTerm, Username) of
                                 {ok, Post} ->
@@ -492,7 +534,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 PostId when is_binary(PostId) ->
                     {ok, #{<<"sessionId">> := SessionId}} =
                         get_bespoke_cookie(Request),
-                    case db_user_serv:get_user_from_session_id(SessionId) of
+                    case db_user_serv:get_user_from_session_id(
+                           base64:decode(SessionId)) of
                         {ok, _User} ->
                             case db_serv:delete_post(PostId) of
                                 ok ->
@@ -515,7 +558,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 PostId when is_binary(PostId) ->
                     {ok, #{<<"sessionId">> := SessionId}} =
                         get_bespoke_cookie(Request),
-                    case db_user_serv:get_user_from_session_id(SessionId) of
+                    case db_user_serv:get_user_from_session_id(
+                           base64:decode(SessionId)) of
                         {ok, User} ->
                             {ok, Likers} =
                                 db_serv:toggle_like(PostId, User#user.id),
@@ -652,11 +696,6 @@ update_portal_cache_entry(Socket) ->
 %% Marshalling
 %%
 
-json_term_to_bootstrap(#{<<"ssid">> := SSID}) when is_binary(SSID) ->
-    {ok, SSID};
-json_term_to_bootstrap(_) ->
-    {error, invalid}.
-
 post_to_json_term(#post{id = Id,
                         title = Title,
                         parent_post_id = ParentPostId,
@@ -685,6 +724,48 @@ add_optional_members([{_Key, not_set}|Rest], JsonTerm) ->
 add_optional_members([{Key, Value}|Rest], JsonTerm) ->
     add_optional_members(Rest, maps:put(Key, Value, JsonTerm)).
 
+json_term_to_bootstrap(#{<<"ssid">> := SSID}) when is_binary(SSID) ->
+    {ok, SSID};
+json_term_to_bootstrap(_) ->
+    {error, invalid}.
+
+json_term_to_verify_client_response(#{<<"username">> := Username,
+                                      <<"clientResponse">> := ClientResponse,
+                                      <<"salt">> := Salt,
+                                      <<"challenge">> := Challenge} = JsonTerm) ->
+    case no_more_keys([<<"username">>, <<"clientResponse">>,
+                       <<"salt">>, <<"challenge">>], JsonTerm) of
+        true ->
+            {ok, Username, base64:decode(ClientResponse), base64:decode(Salt),
+             base64:decode(Challenge)};
+        false ->
+            {error, invalid}
+    end;
+json_term_to_verify_client_response(_) ->
+    {error, invalid}.
+
+json_term_to_switch_user(
+  #{<<"username">> := Username,
+    <<"password">> := Password} = JsonTerm) ->
+    case no_more_keys([<<"username">>, <<"password">>], JsonTerm) of
+        true ->
+            {ok, Username, Password};
+        false ->
+            {error, invalid}
+    end.
+
+json_term_to_change_password(
+  #{<<"salt">> := Salt,
+    <<"hash">> := Hash} = JsonTerm) when is_binary(Hash), is_binary(Salt) ->
+    case no_more_keys([<<"salt">>, <<"hash">>], JsonTerm) of
+        true ->
+            {ok, base64:decode(Salt), base64:decode(Hash)};
+        false ->
+            {error, invalid}
+    end;
+json_term_to_change_password(_) ->
+    {error, invalid}.
+
 %% Top post
 json_term_to_post(#{<<"title">> := Title,
                     <<"body">> := Body} = PostJsonTerm, Username) ->
@@ -711,34 +792,6 @@ json_term_to_post(#{<<"parent-post-id">> := ParentPostId,
             {error, invalid}
     end;
 json_term_to_post(_, _) ->
-    {error, invalid}.
-
-no_more_keys(RequiredKeys, Map) ->
-    lists:sort(maps:keys(Map)) =:= lists:sort(RequiredKeys).
-
-json_term_to_login(
-  #{<<"username">> := Username,
-    <<"password">> := Password} = JsonTerm) ->
-    case no_more_keys([<<"username">>, <<"password">>], JsonTerm) of
-        true ->
-            {ok, Username, Password};
-        false ->
-            {error, invalid}
-    end.
-
-json_term_to_switch_user(
-  #{<<"username">> := Username,
-    <<"password">> := Password} = JsonTerm) ->
-    case no_more_keys([<<"username">>, <<"password">>], JsonTerm) of
-        true ->
-            {ok, Username, Password};
-        false ->
-            {error, invalid}
-    end.
-
-json_term_to_change_password(Password) when is_binary(Password) ->
-    {ok, Password};
-json_term_to_change_password(_) ->
     {error, invalid}.
 
 %%
@@ -808,3 +861,6 @@ change_ssid(SSID) ->
                        [UnexpectedOutput]),
             {error, UnexpectedOutput}
     end.
+
+no_more_keys(RequiredKeys, Map) ->
+    lists:sort(maps:keys(Map)) =:= lists:sort(RequiredKeys).

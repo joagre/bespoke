@@ -31,6 +31,7 @@
          name :: db_user_serv:username() | '_',
          session_id = not_set :: db_user_serv:session_id() | not_set | '_',
          mac_address :: db_user_serv:mac_address() | '_',
+         salt = not_set :: db_user_serv:salt() | not_set | '_',
          pwhash = not_set :: db_user_serv:pwhash() | not_set | '_',
          updated :: db_serv:seconds_since_epoch() | '_'
         }).

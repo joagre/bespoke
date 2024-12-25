@@ -2,10 +2,11 @@
 -export([start_link/0, stop/0]).
 -export([get_user/1, get_user_from_username/1, get_user_from_session_id/1,
          get_user_from_mac_address/1,
-         login/2, switch_user/3, change_password/3,
+         login/3, switch_user/3, change_password/4,
          user_db_to_list/0]).
 -export([message_handler/1]).
--export_type([username/0, pwhash/0, mac_address/0, session_id/0, password/0]).
+-export_type([username/0, pwhash/0, mac_address/0, session_id/0, salt/0,
+              password/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/serv.hrl").
@@ -21,6 +22,7 @@
 -type pwhash() :: binary().
 -type mac_address() :: binary().
 -type session_id() :: binary().
+-type salt() :: binary().
 -type password() :: binary().
 
 -record(state, {
@@ -90,11 +92,11 @@ get_user_from_mac_address(MacAddress) ->
 %% Exported: login
 %%
 
--spec login(username(), password()) ->
+-spec login(username(), salt(), pwhash()) ->
           {ok, #user{}} | {error, failure}.
 
-login(Username, Password) ->
-    serv:call(?MODULE, {login, Username, Password}).
+login(Username, Salt, Pwhash) ->
+    serv:call(?MODULE, {login, Username, Salt, Pwhash}).
 
 %%
 %% Exported: switch_user
@@ -110,11 +112,11 @@ switch_user(Username, Password, MacAddress) ->
 %% Exported: change_password
 %%
 
--spec change_password(username(), password(), mac_address()) ->
+-spec change_password(username(), mac_address(), salt(), pwhash()) ->
           ok | {error, failure}.
 
-change_password(Username, Password, MacAddress) ->
-    serv:call(?MODULE, {change_password, Username, Password, MacAddress}).
+change_password(Username, MacAddress, Salt, Pwhash) ->
+    serv:call(?MODULE, {change_password, Username, MacAddress, Salt, Pwhash}).
 
 %%
 %% Exported: user_db_to_list
@@ -143,15 +145,16 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             ok = dets:close(?USER_DB),
             {reply, From, ok};
-        {call, From, {get_user, UserId}} ->
+        {call, From, {get_user, UserId} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?USER_DB, UserId) of
                 [User] ->
                     {reply, From, {ok, User}};
                 [] ->
                     {reply, From, {error, not_found}}
             end;
-        {call, From, {get_user_from_username, Username}} ->
-            ?log_debug("Call: ~p", [{get_user_from_username, Username}]),
+        {call, From, {get_user_from_username, Username} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB,
                                    #user{name = Username, _ = '_'}) of
                 [User] ->
@@ -159,8 +162,8 @@ message_handler(S) ->
                 [] ->
                     {reply, From, {error, not_found}}
             end;
-        {call, From, {get_user_from_session_id, SessionId}} ->
-            ?log_debug("Call: ~p", [{get_user_from_session_id, SessionId}]),
+        {call, From, {get_user_from_session_id, SessionId} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB,
                                    #user{session_id = SessionId, _ = '_'}) of
                 [User] ->
@@ -168,8 +171,8 @@ message_handler(S) ->
                 [] ->
                     {reply, From, {error, not_found}}
             end;
-        {call, From, {get_user_from_mac_address, MacAddress}} ->
-            ?log_debug("Call: ~p", [{get_user_from_mac_address, MacAddress}]),
+        {call, From, {get_user_from_mac_address, MacAddress} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB,
                                    #user{mac_address = MacAddress, _ = '_'}) of
                 [] ->
@@ -190,24 +193,22 @@ message_handler(S) ->
                     ok = dets:insert(?USER_DB, LastUpdatedUser),
                     {reply, From, LastUpdatedUser}
             end;
-        {call, From, {login, Username, Password}} ->
-            ?log_debug("Call: ~p", [{login, Username, Password}]),
+        {call, From, {login, Username, Salt, Pwhash} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
-                [#user{pwhash = Pwhash} = User] ->
-                    case verify_password(Pwhash, Password) of
-                        true ->
-                            UpdatedUser = User#user{session_id = session_id()},
-                            ok = dets:insert(?USER_DB, UpdatedUser),
-                            {reply, From, {ok, UpdatedUser}};
-                        false ->
-                            {reply, From, {error, failure}}
-                    end;
+                [User] ->
+                    UpdatedUser =
+                        User#user{session_id = session_id(),
+                                  salt = Salt,
+                                  pwhash = Pwhash,
+                                  updated = timestamp()},
+                    ok = dets:insert(?USER_DB, UpdatedUser),
+                    {reply, From, {ok, UpdatedUser}};
                 [] ->
                     {reply, From, {error, failure}}
             end;
-        {call, From, {switch_user, Username, Password, MacAddress}} ->
-            ?log_debug("Call: ~p",
-                       [{switch_user, Username, Password, MacAddress}]),
+        {call, From, {switch_user, Username, Password, MacAddress} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 [#user{pwhash = not_set} = User] when Password == <<>> ->
                     UpdatedUser = User#user{mac_address = MacAddress,
@@ -252,13 +253,15 @@ message_handler(S) ->
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, {ok, User}}
             end;
-        {call, From, {change_password, Username, Password, MacAddress}} ->
-            ?log_debug("Call: ~p",
-                       [{change_password, Username, Password, MacAddress}]),
+        {call, From,
+         {change_password, Username, MacAddress, Salt, Pwhash} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 [User] ->
                     UpdatedUser =
-                        User#user{pwhash = hash_password(Password)},
+                        User#user{mac_address = MacAddress,
+                                  salt = Salt,
+                                  pwhash = Pwhash},
                     ok = dets:insert(?USER_DB, UpdatedUser),
                     {reply, From, ok};
                 [] ->
@@ -292,7 +295,7 @@ generate_username(WordList) ->
     end.
 
 random_word(Words) ->
-    Index = enacl:randombytes_uniform(length(Words) + 1),
+    Index = rand:uniform(length(Words)),
     lists:nth(Index, Words).
 
 %%
@@ -340,9 +343,12 @@ is_valid_word(Word) ->
 timestamp() ->
     os:system_time(second).
 
+%%% REMOVE
+
 hash_password(Password) ->
     enacl:pwhash_str(Password, interactive, interactive).
 
+%% REMOVE
 verify_password(not_set, <<>>) ->
     true;
 verify_password(not_set, _Password) ->
@@ -351,4 +357,4 @@ verify_password(Pwhash, Password) ->
     enacl:pwhash_str_verify(Pwhash, Password).
 
 session_id() ->
-    ?l2b(base64:encode_to_string(enacl:randombytes(?SESSION_ID_SIZE))).
+    crypto:strong_rand_bytes(?SESSION_ID_SIZE).
