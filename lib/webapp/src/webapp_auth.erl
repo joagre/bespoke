@@ -1,9 +1,10 @@
 -module(webapp_auth).
 -export([generate_challenge/0, verify_client_response/3]).
--export_type([challenge/0, client_response/0]).
+-export_type([salt/0, challenge/0, client_response/0]).
 
 -define(CHALLENGE_SIZE, 32).
 
+-type salt() :: binary().
 -type challenge() :: binary().
 -type client_response() :: binary().
 

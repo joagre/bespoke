@@ -12,7 +12,10 @@
 -include_lib("db/include/db.hrl").
 
 -define(PORTAL_CACHE, portal_cache).
--define(PORTAL_CACHE_TIMEOUT, 5 * 60). % 5 minutes
+-define(PORTAL_TIMEOUT, 5 * 60). % 5 minutes
+
+-define(CHALLENGE_CACHE, challenge_cache).
+-define(CHALLENGE_TIMEOUT, 5 * 60). % 5 minutes
 
 -type(timestamp() :: integer()).
 
@@ -28,6 +31,12 @@
                              timestamp :: timestamp()
                             }).
 
+-record(challenge_cache_entry, {
+                                username :: db_user_serv:username(),
+                                challenge :: webapp_auth:challenge(),
+                                timestamp :: timestamp()
+                               }).
+
 %%
 %% Exported: start_link
 %%
@@ -41,11 +50,16 @@ start_link() ->
          {certfile, filename:join([code:priv_dir(webapp), "cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
+    %% Create a named table for the portal cache
     ?PORTAL_CACHE = ets:new(?PORTAL_CACHE,
                             [{keypos, #portal_cache_entry.ip_address},
                              public, named_table]),
-    {ok, _} = timer:apply_interval(?PORTAL_CACHE_TIMEOUT * 1000,
+    {ok, _} = timer:apply_interval(?PORTAL_TIMEOUT * 1000,
                                    ?MODULE, delete_all_stale_timestamps, []),
+    %% Create a named table for the challenge cache
+    ?CHALLENGE_CACHE = ets:new(?CHALLENGE_CACHE,
+                               [{keypos, #challenge_cache_entry.username},
+                                public, named_table]),
     ?log_info("Database REST API has been started"),
     HttpPort = application:get_env(webapp, http_port, 80),
     {ok, _} = rester_http_server:start_link(HttpPort, Options),
@@ -307,6 +321,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             PayloadJsonTerm =
                                 #{<<"salt">> => base64:encode(Salt),
                                   <<"challenge">> => base64:encode(Challenge)},
+                            true = add_challenge_to_cache(Username, Challenge),
                             rest_util:response(Socket, Request,
                                                {ok, {format, PayloadJsonTerm}});
                         {error, not_found} ->
@@ -316,51 +331,14 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 _ ->
                     rest_util:response(Socket, Request, {error, badarg})
             end;
-        ["verify_client_response"] ->
+        ["login"] ->
             case parse_body(Socket, Request, Body) of
                 {return, Result} ->
                     Result;
                 JsonTerm ->
-                    case json_term_to_verify_client_response(JsonTerm) of
-                        {ok, Username, ClientResponse, Salt, Challenge} ->
-                            case db_user_serv:get_user_from_username(
-                                   Username) of
-                                {ok, #user{pwhash = Pwhash}} ->
-                                    case webapp_auth:verify_client_response(
-                                           ClientResponse, Challenge, Pwhash) of
-                                        true ->
-                                            case db_user_serv:login(
-                                                   Username, Salt, Pwhash) of
-                                                {ok, #user{id = UserId,
-                                                           name = Username,
-                                                           session_id =
-                                                               SessionId}} ->
-                                                    PayloadJsonTerm =
-                                                        #{<<"user-id">> =>
-                                                              UserId,
-                                                          <<"username">> =>
-                                                              Username,
-                                                          <<"session-id">> =>
-                                                              base64:encode(
-                                                                SessionId)},
-                                                    rest_util:response(
-                                                      Socket, Request,
-                                                      {ok, {format,
-                                                            PayloadJsonTerm}});
-                                                {error, failure} ->
-                                                    rest_util:response(
-                                                      Socket, Request,
-                                                      {error, unauthorized})
-                                            end;
-                                        false ->
-                                            rest_util:response(
-                                              Socket, Request,
-                                              {error, unauthorized})
-                                    end;
-                                {error, not_found} ->
-                                    rest_util:response(Socket, Request,
-                                                       {error, unauthorized})
-                            end;
+                    case json_term_to_login(JsonTerm) of
+                        {ok, Username, ClientResponse} ->
+                            do_login(Socket, Request, Username, ClientResponse);
                         {error, invalid} ->
                             rest_util:response(Socket, Request, {error, badarg})
                     end
@@ -605,6 +583,44 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
 	    rest_util:response(Socket, Request, {error, not_found})
     end.
 
+%%
+%% Login
+%%
+
+do_login(Socket, Request, Username, ClientResponse) ->
+    case get_challenge_from_cache(Username) of
+        {ok, Challenge} ->
+            case db_user_serv:get_user_from_username(Username) of
+                {ok, #user{salt = Salt, pwhash = Pwhash}} ->
+                    case webapp_auth:verify_client_response(
+                           ClientResponse, Challenge, Pwhash) of
+                        true ->
+                            case db_user_serv:login(Username, Salt, Pwhash) of
+                                {ok, #user{id = UserId,
+                                           name = Username,
+                                           session_id = SessionId}} ->
+                                    PayloadJsonTerm =
+                                        #{<<"user-id">> => UserId,
+                                          <<"username">> => Username,
+                                          <<"session-id">> =>
+                                              base64:encode(SessionId)},
+                                    rest_util:response(
+                                      Socket, Request,
+                                      {ok, {format, PayloadJsonTerm}});
+                                {error, failure} ->
+                                    rest_util:response(Socket, Request,
+                                                       {error, unauthorized})
+                            end;
+                        false ->
+                            rest_util:response(Socket, Request,
+                                               {error, unauthorized})
+                    end;
+                {error, not_found} ->
+                    rest_util:response(Socket, Request, {error, unauthorized})
+            end;
+        {error, not_found} ->
+            rest_util:response(Socket, Request, {error, unauthorized})
+    end.
 
 %%
 %% Portal cache
@@ -620,7 +636,7 @@ redirect_or_ack(Socket, Request, Page) ->
               [{location, "http://bespoke.local/loader.html"}|
                no_cache_headers()]);
         [#portal_cache_entry{timestamp = Timestamp}] ->
-            case timestamp() - Timestamp > ?PORTAL_CACHE_TIMEOUT of
+            case timestamp() - Timestamp > ?PORTAL_TIMEOUT of
                 true ->
                     ?log_info("Captive portal redirect (timeout)"),
                     rester_http_server:response_r(
@@ -659,7 +675,7 @@ redirect_or_ack(Socket, Request, Page) ->
 
 delete_all_stale_timestamps() ->
     ?log_info("Purging the captive portal"),
-    Threshold = timestamp() - ?PORTAL_CACHE_TIMEOUT,
+    Threshold = timestamp() - ?PORTAL_TIMEOUT,
     StalePortalCacheEntries =
         ets:foldr(fun(#portal_cache_entry{
                          timestamp = Timestamp} = PortalCacheEntry, Acc)
@@ -691,6 +707,36 @@ update_portal_cache_entry(Socket) ->
                               PortalCacheEntry#portal_cache_entry{
                                 timestamp = timestamp()})
     end.
+
+%%
+%% Challenge cache
+%%
+
+add_challenge_to_cache(UserId, Challenge) ->
+    ets:insert(?CHALLENGE_CACHE,
+               #challenge_cache_entry{username = UserId,
+                                      challenge = Challenge,
+                                      timestamp = timestamp()}).
+
+get_challenge_from_cache(Username) ->
+    true = purge_challenge_cache(),
+    case ets:lookup(?CHALLENGE_CACHE, Username) of
+        [] ->
+            {error, not_found};
+        [#challenge_cache_entry{challenge = Challenge}] ->
+            {ok, Challenge}
+    end.
+
+purge_challenge_cache() ->
+    Threshold = timestamp() - ?CHALLENGE_TIMEOUT,
+    ets:foldl(
+      fun(#challenge_cache_entry{username = Username,
+                                 timestamp = Timestamp}, _Acc)
+            when Timestamp < Threshold ->
+              ets:delete(?CHALLENGE_CACHE, Username);
+         (_, Acc) ->
+              Acc
+      end, true, ?CHALLENGE_CACHE).
 
 %%
 %% Marshalling
@@ -729,19 +775,15 @@ json_term_to_bootstrap(#{<<"ssid">> := SSID}) when is_binary(SSID) ->
 json_term_to_bootstrap(_) ->
     {error, invalid}.
 
-json_term_to_verify_client_response(#{<<"username">> := Username,
-                                      <<"clientResponse">> := ClientResponse,
-                                      <<"salt">> := Salt,
-                                      <<"challenge">> := Challenge} = JsonTerm) ->
-    case no_more_keys([<<"username">>, <<"clientResponse">>,
-                       <<"salt">>, <<"challenge">>], JsonTerm) of
+json_term_to_login(#{<<"username">> := Username,
+                     <<"clientResponse">> := ClientResponse} = JsonTerm) ->
+    case no_more_keys([<<"username">>, <<"clientResponse">>], JsonTerm) of
         true ->
-            {ok, Username, base64:decode(ClientResponse), base64:decode(Salt),
-             base64:decode(Challenge)};
+            {ok, Username, base64:decode(ClientResponse)};
         false ->
             {error, invalid}
     end;
-json_term_to_verify_client_response(_) ->
+json_term_to_login(_) ->
     {error, invalid}.
 
 json_term_to_switch_user(
