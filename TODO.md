@@ -25,9 +25,6 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 ### Remember
 
-* Remove all ["X"] syntax, non longer needed
-
-
 * Enable only SSL in Web server
 
 * Sanitize HTML
