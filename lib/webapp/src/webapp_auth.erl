@@ -1,10 +1,9 @@
 -module(webapp_auth).
 -export([generate_challenge/0, verify_client_response/3]).
--export_type([salt/0, challenge/0, client_response/0]).
+-export_type([challenge/0, client_response/0]).
 
 -define(CHALLENGE_SIZE, 32).
 
--type salt() :: binary().
 -type challenge() :: binary().
 -type client_response() :: binary().
 
@@ -22,8 +21,8 @@ generate_challenge() ->
 %%
 
 -spec verify_client_response(
-        client_response(), challenge(), db_user_serv:pwhash()) -> boolean().
+        client_response(), challenge(), db_user_serv:password_hash()) -> boolean().
 
-verify_client_response(ClientResponse, Challenge, Pwhash) ->
-    ExpectedResponse = crypto:mac(hmac, sha256, Pwhash, Challenge),
+verify_client_response(ClientResponse, Challenge, PasswordHash) ->
+    ExpectedResponse = crypto:mac(hmac, sha256, PasswordHash, Challenge),
     crypto:hash_equals(ExpectedResponse, ClientResponse).

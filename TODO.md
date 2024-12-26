@@ -25,8 +25,9 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 ### Remember
 
-* Enable SSL in Web server
+* Remove all ["X"] syntax, non longer needed
+
+
+* Enable only SSL in Web server
 
 * Sanitize HTML
-
-* Maybe ask Kim to improve the layout. Just a little bit for now: Margins, paddings, fonts and coloring. Just very low hanging fruits. More can be done at a later point in time.

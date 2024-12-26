@@ -2,11 +2,11 @@
 -export([start_link/0, stop/0]).
 -export([get_user/1, get_user_from_username/1, get_user_from_session_id/1,
          get_user_from_mac_address/1,
-         login/3, switch_user/3, change_password/4,
+         login/4, switch_user/2, switch_user/4, change_password/4,
          user_db_to_list/0]).
 -export([message_handler/1]).
--export_type([username/0, pwhash/0, mac_address/0, session_id/0, salt/0,
-              password/0]).
+-export_type([username/0, session_id/0, mac_address/0, password_salt/0,
+              password_hash/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/serv.hrl").
@@ -19,11 +19,10 @@
 -define(SESSION_ID_SIZE, 16).
 
 -type username() :: binary().
--type pwhash() :: binary().
--type mac_address() :: binary().
 -type session_id() :: binary().
--type salt() :: binary().
--type password() :: binary().
+-type mac_address() :: binary().
+-type password_salt() :: binary().
+-type password_hash() :: binary().
 
 -record(state, {
                 parent :: pid(),
@@ -92,31 +91,42 @@ get_user_from_mac_address(MacAddress) ->
 %% Exported: login
 %%
 
--spec login(username(), salt(), pwhash()) ->
+-spec login(username(), mac_address(), password_salt(), password_hash()) ->
           {ok, #user{}} | {error, failure}.
 
-login(Username, Salt, Pwhash) ->
-    serv:call(?MODULE, {login, Username, Salt, Pwhash}).
+login(Username, MacAddress, PasswordSalt, PasswordHash) ->
+    serv:call(?MODULE, {login, Username, MacAddress, PasswordSalt,
+                        PasswordHash}).
 
 %%
 %% Exported: switch_user
 %%
 
--spec switch_user(username(), password(), mac_address()) ->
+-spec switch_user(username(), mac_address()) ->
           {ok, #user{}} | {error, failure}.
 
-switch_user(Username, Password, MacAddress) ->
-    serv:call(?MODULE, {switch_user, Username, Password, MacAddress}).
+switch_user(Username, MacAddress) ->
+    serv:call(?MODULE, {switch_user, Username, MacAddress}).
+
+-spec switch_user(username(), mac_address(), password_salt(),
+                  password_hash()) ->
+          #user{}.
+
+switch_user(Username, MacAddress, PasswordSalt, PasswordHash) ->
+    serv:call(?MODULE, {switch_user, Username, MacAddress, PasswordSalt,
+                        PasswordHash}).
 
 %%
 %% Exported: change_password
 %%
 
--spec change_password(username(), mac_address(), salt(), pwhash()) ->
+-spec change_password(username(), mac_address(), password_salt(),
+                      password_hash()) ->
           ok | {error, failure}.
 
-change_password(Username, MacAddress, Salt, Pwhash) ->
-    serv:call(?MODULE, {change_password, Username, MacAddress, Salt, Pwhash}).
+change_password(Username, MacAddress, PasswordSalt, PasswordHash) ->
+    serv:call(?MODULE, {change_password, Username, MacAddress, PasswordSalt,
+                        PasswordHash}).
 
 %%
 %% Exported: user_db_to_list
@@ -193,75 +203,88 @@ message_handler(S) ->
                     ok = dets:insert(?USER_DB, LastUpdatedUser),
                     {reply, From, LastUpdatedUser}
             end;
-        {call, From, {login, Username, Salt, Pwhash} = Call} ->
+        {call, From, {login, Username, MacAddress, PasswordSalt,
+                      PasswordHash} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 [User] ->
                     UpdatedUser =
                         User#user{session_id = session_id(),
-                                  salt = Salt,
-                                  pwhash = Pwhash,
+                                  mac_address = MacAddress,
+                                  password_salt = PasswordSalt,
+                                  password_hash = PasswordHash,
                                   updated = timestamp()},
                     ok = dets:insert(?USER_DB, UpdatedUser),
                     {reply, From, {ok, UpdatedUser}};
                 [] ->
                     {reply, From, {error, failure}}
             end;
-        {call, From, {switch_user, Username, Password, MacAddress} = Call} ->
+        %% Switch to user without password
+        {call, From, {switch_user, Username, MacAddress} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
-                [#user{pwhash = not_set} = User] when Password == <<>> ->
-                    UpdatedUser = User#user{mac_address = MacAddress,
-                                            updated = timestamp(),
-                                            session_id = session_id()},
-                    ok = dets:insert(?USER_DB, UpdatedUser),
-                    {reply, From, {ok, UpdatedUser}};
-                [#user{pwhash = not_set} = User] ->
-                    UpdatedUser = User#user{pwhash = hash_password(Password),
+                %% User without password exists
+                [#user{password_hash = not_set} = User] ->
+                    UpdatedUser = User#user{session_id = session_id(),
                                             mac_address = MacAddress,
-                                            updated = timestamp(),
-                                            session_id = session_id()},
+                                            updated = timestamp()},
                     ok = dets:insert(?USER_DB, UpdatedUser),
                     {reply, From, {ok, UpdatedUser}};
-                [#user{pwhash = Pwhash} = User] ->
-                    case verify_password(Pwhash, Password) of
-                        true ->
-                            UpdatedUser =
-                                User#user{mac_address = MacAddress,
-                                          updated = timestamp(),
-                                          session_id = session_id()},
-                            ok = dets:insert(?USER_DB, UpdatedUser),
-                            {reply, From, {ok, UpdatedUser}};
-                        false ->
-                            {reply, From, {error, failure}}
-                    end;
-                [] when Password == <<>> ->
-                    User = #user{id = db_serv:get_user_id(),
-                                 name = Username,
-                                 mac_address = MacAddress,
-                                 updated = timestamp(),
-                                 session_id = session_id()},
-                    ok = dets:insert(?USER_DB, User),
-                    {reply, From, {ok, User}};
+                %% User *with* password exists
+                [_] ->
+                    {reply, From, {error, failure}};
+                %% Create new user without password
                 [] ->
                     User = #user{id = db_serv:get_user_id(),
                                  name = Username,
-                                 pwhash = hash_password(Password),
+                                 session_id = session_id(),
                                  mac_address = MacAddress,
-                                 updated = timestamp(),
-                                 session_id = session_id()},
+                                 updated = timestamp()},
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, {ok, User}}
             end;
-        {call, From,
-         {change_password, Username, MacAddress, Salt, Pwhash} = Call} ->
+        %% Switch to user *with* password
+        {call, From, {switch_user, Username, MacAddress, PasswordSalt,
+                      PasswordHash} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
+                %% User without password exists
+                [#user{password_hash = not_set} = User] ->
+                    UpdatedUser = User#user{session_id = session_id(),
+                                            mac_address = MacAddress,
+                                            password_salt = PasswordSalt,
+                                            password_hash = PasswordHash,
+                                            updated = timestamp()},
+                    ok = dets:insert(?USER_DB, User),
+                    {reply, From, UpdatedUser};
+                %% User *with* password exists
+                [User] ->
+                    UpdatedUser = User#user{session_id = session_id(),
+                                            mac_address = MacAddress,
+                                            updated = timestamp()},
+                    ok = dets:insert(?USER_DB, User),
+                    {reply, From, UpdatedUser};
+                %% Create new user *with* password
+                [] ->
+                    User = #user{id = db_serv:get_user_id(),
+                                 name = Username,
+                                 session_id = session_id(),
+                                 mac_address = MacAddress,
+                                 password_salt = PasswordSalt,
+                                 password_hash = PasswordHash,
+                                 updated = timestamp()},
+                    ok = dets:insert(?USER_DB, User),
+                    {reply, From, User}
+            end;
+        {call, From, {change_password, Username, MacAddress, PasswordSalt,
+                      PasswordHash} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 [User] ->
                     UpdatedUser =
                         User#user{mac_address = MacAddress,
-                                  salt = Salt,
-                                  pwhash = Pwhash},
+                                  password_salt = PasswordSalt,
+                                  password_hash = PasswordHash},
                     ok = dets:insert(?USER_DB, UpdatedUser),
                     {reply, From, ok};
                 [] ->
@@ -342,19 +365,6 @@ is_valid_word(Word) ->
 
 timestamp() ->
     os:system_time(second).
-
-%%% REMOVE
-
-hash_password(Password) ->
-    enacl:pwhash_str(Password, interactive, interactive).
-
-%% REMOVE
-verify_password(not_set, <<>>) ->
-    true;
-verify_password(not_set, _Password) ->
-    false;
-verify_password(Pwhash, Password) ->
-    enacl:pwhash_str_verify(Pwhash, Password).
 
 session_id() ->
     crypto:strong_rand_bytes(?SESSION_ID_SIZE).
