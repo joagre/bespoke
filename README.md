@@ -29,14 +29,14 @@ keep things <b>local</b>, <b>simple</b>, and <b>meaningful</b> instead.
 ## How?
 
 B3S is a self-contained BBS web app running behind its own WiFi Access
-Point—no Internet required, ever. The necessary hardware is incredibly
-cheap, and installation is almost effortless.
+Point—no Internet required. The necessary hardware is cheap, and
+installation is effortless.
 
 You might wonder if the WiFi range is too short to make this
 practical. In most cases, with properly positioned hardware and a
 clear line of sight, you can achieve a range of several hundred
 meters. Add a low-cost sector antenna, and that range extends up to
-four times farther.
+four times.
 
 ### Installation
 
