@@ -8,7 +8,7 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 ## Web app
 
-* Add attachment support for Forum posts
+* Add attachment support for forum posts
 
 * Add end-to-end encrypted direct messaging
 
