@@ -9,14 +9,13 @@ System</i>. It’s not meant for the Internet—instead, it lives in your
 local area as a WiFi Access Point. This is by design, encouraging
 genuine local interactions.
 
-The first version of B3S includes a straightforward
-<i>Forum</i>. End-to-end encrypted <i>Direct Messaging</i> and <i>File
-Sharing</i> are in the pipe.
+The first version of B3S includes a <i>Forum</i> and end-to-end
+encrypted <i>Direct Messaging</i> and <i>File Sharing</i> are in the
+pipe.
 
-The B3S client Web app will, at a later stage, be wrapped into native
-apps for Android and iPhone. These apps will make it effortless to
-sync content in the background just by passing near a B3S
-instance. You’ll also be able to interact with B3S offline, with
+The B3S client Web app will be wrapped into native Android app to make
+it effortless to sync content in the background just by passing near a
+B3S instance. You’ll also be able to interact with B3S offline, with
 syncing handled automatically when reconnected.
 
 ## Why?
@@ -29,14 +28,13 @@ keep things <b>local</b>, <b>simple</b>, and <b>meaningful</b> instead.
 ## How?
 
 B3S is a self-contained BBS web app running behind its own WiFi Access
-Point—no Internet required. The necessary hardware is cheap, and
+Point—no Internet required. The necessary hardware is cheap and
 installation is effortless.
 
 You might wonder if the WiFi range is too short to make this
-practical. In most cases, with properly positioned hardware and a
-clear line of sight, you can achieve a range of several hundred
-meters. Add a low-cost sector antenna, and that range extends up to
-four times.
+practical. In most cases, with a clear line of sight, you can achieve
+a range of several hundred meters. Add a low-cost sector antenna, and
+that range extends up to four times.
 
 ### Installation
 
