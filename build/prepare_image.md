@@ -28,6 +28,10 @@ dwc2
 g_ether
 ```
 
+
+
+
+
 ## Configure ethernet over USB
 
 * Insert SD card into Pi
@@ -223,7 +227,8 @@ Do this on a build machine:
 ```
 make release
 scp build/releases/bespoke-0.1.0.tar.gz pi@bespoke.local:/home/pi/
-scp config/bespoke.service pi@bespoke.local:/home/pi/
+scp build/config/bespoke.service pi@bespoke.local:/home/pi/
+scp build/config/99-usb-wifi-host.rules pi@bespoke.local:/home/pi/
 ```
 
 Do this on the Pi:
