@@ -139,6 +139,14 @@ dhcp-range=192.168.4.10,192.168.4.100,255.255.255.0,24h
 address=/#/192.168.4.1
 ```
 
+Start dnsmasq:
+
+```
+sudo systemctl unmask hostapd
+sudo systemctl enable dnsmasq
+sudo systemctl start dnsmasq
+```
+
 Edit `/etc/hostapd/hostapd.conf`:
 
 ```
@@ -146,7 +154,7 @@ interface=wlan0
 driver=nl80211
 ssid=BespokeBBS
 hw_mode=n
-channel=7
+channel=1
 wmm_enabled=0
 macaddr_acl=0
 auth_algs=1
@@ -167,43 +175,32 @@ auth_algs=1
 ignore_broadcast_ssid=0
 ```
 
-sudo ifconfig wlan1 down
-echo "Before:"
-sudo iw reg get
-sudo iw reg set BO
-sudo iwconfig wlan1 txpower 30
-#sudo iw dev wlan1 set txpower fixed 3000
-sudo ifconfig wlan1 up
-echo "After:"
-sudo iw reg get
-
-
-
-
-
-
-
-
-Backup `/etc/hostapd/hostapd.conf`:
+Copy the default (wlan0) hostapd service to `hostapd-wlan1.service`:
 
 ```
-sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.orig`
+sudo cp /lib/systemd/system/hostapd.service /etc/systemd/system/hostapd-wlan1.service
 ```
 
-Edit `/etc/default/hostapd`:
+Update `/etc/systemd/system/hostapd-wlan1.service`:
 
 ```
-DAEMON_CONF="/etc/hostapd/hostapd.conf"
-```
+[Unit]
+Description=Access point and authentication server for Wi-Fi and Ethernet (wlan1)
+Documentation=man:hostapd(8)
+After=network.target
+ConditionFileNotEmpty=/etc/hostapd/hostapd_wlan1.conf
 
-Start and enable hostapd and dnsmasq:
+[Service]
+Type=forking
+PIDFile=/run/hostapd_wlan1.pid
+Restart=on-failure
+RestartSec=2
+Environment=DAEMON_CONF=/etc/hostapd/hostapd_wlan1.conf
+EnvironmentFile=-/etc/default/hostapd
+ExecStart=/usr/sbin/hostapd -B -P /run/hostapd_wlan1.pid $DAEMON_OPTS ${DAEMON_CONF}
 
-```
-sudo systemctl unmask hostapd
-sudo systemctl enable hostapd
-sudo systemctl enable dnsmasq
-sudo systemctl start hostapd
-sudo systemctl start dnsmasq
+[Install]
+WantedBy=multi-user.target
 ```
 
 Remove wpa_supplicant:
@@ -282,6 +279,9 @@ sudo chown root:root /etc/sudoers.d/change-ssid
 sudo chmod 440 /etc/sudoers.d/change-ssid
 
 sudo mv blacklist-rfkill.conf /etc/modprobe.d/
+
+
+
 ```
 
 Done!

@@ -9,10 +9,10 @@ fi
 
 sudo ifconfig wlan1 down
 echo "==== Before ===="
-iwconfig
+iwconfig wlan1
 sudo iw reg set BO
 sudo iwconfig wlan1 txpower 30
 #sudo iw dev wlan1 set txpower fixed 3000
 sudo ifconfig wlan1 up
 echo "==== After ===="
-iwconfig
+iwconfig wlan1
