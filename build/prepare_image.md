@@ -139,25 +139,49 @@ dhcp-range=192.168.4.10,192.168.4.100,255.255.255.0,24h
 address=/#/192.168.4.1
 ```
 
-Backup `/etc/hostapd/hostapd.conf`:
-
-```
-sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.orig`
-```
-
 Edit `/etc/hostapd/hostapd.conf`:
 
 ```
 interface=wlan0
 driver=nl80211
 ssid=BespokeBBS
-hw_mode=g
+hw_mode=n
 channel=7
 wmm_enabled=0
 macaddr_acl=0
 auth_algs=1
 ignore_broadcast_ssid=0
 ```
+
+Edit `/etc/hostapd/hostapd-wlan1.conf`:
+
+```
+interface=wlan1
+driver=nl80211
+ssid=BespokeBBS1111
+hw_mode=n
+channel=6
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+```
+sudo ifconfig wlan1 down
+echo "Before:"
+sudo iw reg get
+sudo iw reg set BO
+sudo iwconfig wlan1 txpower 30
+#sudo iw dev wlan1 set txpower fixed 3000
+sudo ifconfig wlan1 up
+echo "After:"
+sudo iw reg get
+
+
+
+
+
+
+
 
 Backup `/etc/hostapd/hostapd.conf`:
 
