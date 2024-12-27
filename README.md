@@ -10,11 +10,11 @@ local area as a WiFi Access Point. This is by design, encouraging
 genuine local interactions.
 
 The first version of B3S includes a straightforward
-<b>Forum</b>. <b>End-to-end encrypted messaging</b> and <b>file
-sharing</b> are in the pipe.
+<i>Forum</i>. End-to-end encrypted <i>Direct Messaging</i> and <i>File
+Sharing</i> are in the pipe.
 
 The B3S client Web app will be wrapped into native apps for
-<b>Android</b> and <b>iPhone</b>. These apps will make it effortless
+<i>Android</i> and <i>iPhone</i>. These apps will make it effortless
 to sync content in the background just by passing near a B3S
 instance. You’ll also be able to interact with B3S offline, with
 syncing handled automatically when reconnected.
@@ -24,7 +24,7 @@ syncing handled automatically when reconnected.
 Because the Internet has become a cesspool of mass surveillance,
 intrusive advertisements, manipulative algorithms, influencers,
 relentless tracking, and endless spam. Let’s strip away the noise and
-keep things <b>local, simple, and meaningful</b> instead.
+keep things <b>local</b>, <b>simple</b>, and <b>meaningful</b> instead.
 
 ## How?
 
