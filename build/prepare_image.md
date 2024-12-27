@@ -166,6 +166,7 @@ macaddr_acl=0
 auth_algs=1
 ignore_broadcast_ssid=0
 ```
+
 sudo ifconfig wlan1 down
 echo "Before:"
 sudo iw reg get
