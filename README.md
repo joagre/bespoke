@@ -9,15 +9,14 @@ System</i>. It’s not meant for the Internet—instead, it lives in your
 local area as a WiFi Access Point. This is by design, encouraging
 genuine local interactions.
 
-The first version of B3S includes a straightforward <b>Forum</b>. In
-the near future, the Forum will be fleshed out with features you’d
-expect—such as attachments, and downvotes (and whatnot). After that,
-<b>end-to-end encrypted messaging</b> and <b>file sharing</b> come next.
+The first version of B3S includes a straightforward
+<b>Forum</b>. <b>End-to-end encrypted messaging</b> and <b>file
+sharing</b> are in the pipe.
 
-Further down the line, the B3S client Web app will be wrapped into
-native apps for <b>Android</b> and <b>iPhone</b>. These apps will make
-it effortless to sync content in the background just by passing near a
-B3S instance. You’ll also be able to interact with B3S offline, with
+The B3S client Web app will be wrapped into native apps for
+<b>Android</b> and <b>iPhone</b>. These apps will make it effortless
+to sync content in the background just by passing near a B3S
+instance. You’ll also be able to interact with B3S offline, with
 syncing handled automatically when reconnected.
 
 ## Why?
