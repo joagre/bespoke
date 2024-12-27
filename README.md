@@ -9,7 +9,7 @@ System</i>. It’s not meant for the Internet—instead, it lives in your
 local area as a WiFi Access Point. This is by design, encouraging
 genuine local interactions.
 
-The first version of B3S includes a <i>Forum</i> and end-to-end
+The first version of B3S includes a <i>Forum</i> but both end-to-end
 encrypted <i>Direct Messaging</i> and <i>File Sharing</i> are in the
 pipe.
 
