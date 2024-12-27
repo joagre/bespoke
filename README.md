@@ -23,9 +23,8 @@ syncing handled automatically when reconnected.
 
 Because the Internet has become a cesspool of mass surveillance,
 intrusive advertisements, manipulative algorithms, influencers,
-relentless tracking, and endless spam. You know what I mean. Let’s
-strip away the noise and keep things <b>local, simple, and
-meaningful</b> instead.
+relentless tracking, and endless spam. Let’s strip away the noise and
+keep things <b>local, simple, and meaningful</b> instead.
 
 ## How?
 
