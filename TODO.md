@@ -1,4 +1,4 @@
-# A suggested TODO list
+# TODO
 
 ## Captive portal mechanics
 
@@ -8,20 +8,16 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 ## Web app
 
+* Add attachment support for Forum posts
+
+* Add end-to-end encrypted direct messaging
+
+* Add file sharing
+
 * Add aging of *posts*. This is done by removing *posts* when the they
-  reach a certain age (e.g. 30 days). Optional. [later]
+  reach a certain age (e.g. 30 days). Optional.
 
-* Attachments [later]
-
-* File sharing [later]
-
-* Add public key encryption for *posts*, *messages* and *files* [later]
-
-* Add direct *messages* between users. Messages are encrypted blobs in
-  dets (public key encrypted). Support for multiple recipients
-  (uniquely encrypted for each recipient). [later]
-
-* Native WebView wrapper app (for syncing etc) [later]
+* Add native WebView wrapper apps (for syncing and offline browsing)
 
 ### Remember
 
