@@ -27,9 +27,11 @@ release:
 	done
 	@echo "Copying bin files"
 	@cp -r ../bin $(TARGET_DIR)
+
 	@echo "Copying bespoke service"
 	@mkdir -p $(TARGET_DIR)/config
 	@cp bespoke.service $(TARGET_DIR)/config
+
 	@echo "Copy top Makefile"
 	@cp Makefile.release $(TARGET_DIR)/Makefile
 	@echo "Removing spurious files"

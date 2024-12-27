@@ -218,11 +218,12 @@ sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp`
 
 ## Build and install Bespoke BBS
 
-Do this on a build machine sporting OTP-25.2.3 (no more, no less):
+Do this on a build machine:
 
 ```
 make release
 scp build/releases/bespoke-0.1.0.tar.gz pi@bespoke.local:/home/pi/
+scp config/bespoke.service pi@bespoke.local:/home/pi/
 ```
 
 Do this on the Pi:
@@ -232,6 +233,15 @@ sudo ntpdate pool.ntp.org
 tar zxvf bespoke-0.1.0.tar.gz
 cd bespoke-0.1.0
 make install
+```
+
+and activate the Bespoke start-script:
+
+```
+sudo cp bespoke.service /etc/systemd/system
+sudo systemctl daemon-reload
+sudo systemctl start bespoke.service
+sudo systemctl enable bespoke.service
 ```
 
 Edit/create `/etc/sudoers.d/change-ssid`:
