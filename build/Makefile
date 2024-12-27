@@ -1,4 +1,4 @@
-LIBS=apptools db enacl main rester webapp
+LIBS=apptools db main rester webapp
 RELEASE_DIR="bespoke-$(shell cat ../VERSION)"
 TARGET_DIR="releases/$(RELEASE_DIR)"
 

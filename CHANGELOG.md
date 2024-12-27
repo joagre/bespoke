@@ -1,5 +1,16 @@
 # Changelog
 
-## 0.1.0
+## [0.2.0]
+
+### Changed [0.2.0]
+
+- Moved Argon2 password hashing from the server to the browser,
+  i.e. the server will **never** perform any encryption from now on.
+
+### Added [0.2.0]
+
+- Forum posts can now have attachments
+
+## [0.1.0]
 
 Initial release
