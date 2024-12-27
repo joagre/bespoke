@@ -13,9 +13,9 @@ The first version of B3S includes a straightforward
 <i>Forum</i>. End-to-end encrypted <i>Direct Messaging</i> and <i>File
 Sharing</i> are in the pipe.
 
-The B3S client Web app will be wrapped into native apps for
-<i>Android</i> and <i>iPhone</i>. These apps will make it effortless
-to sync content in the background just by passing near a B3S
+The B3S client Web app will, at a later stage, be wrapped into native
+apps for Android and iPhone. These apps will make it effortless to
+sync content in the background just by passing near a B3S
 instance. You’ll also be able to interact with B3S offline, with
 syncing handled automatically when reconnected.
 
