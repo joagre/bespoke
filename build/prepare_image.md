@@ -212,8 +212,8 @@ iptables-restore < /etc/iptables.ipv4.nat
 ## Install and prepare required packages
 
 ```
-sudo apt install erlang-nox wamerican emacs-nox erlang-mode ntpdate
-sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp`
+sudo apt install erlang-nox wamerican emacs-nox erlang-mode ntpdate rfkill
+sudo setcap cap_net_bind_service=+ep `find /usr/local/lib/erlang/ -name beam.smp`
 ```
 
 ## Build, install and config Bespoke BBS
@@ -231,6 +231,7 @@ Copy necessary config files to the Pi:
 scp build/config/bespoke.service pi@bespoke.local:/home/pi/
 scp build/config/99-usb-wifi-host.rules pi@bespoke.local:/home/pi/
 scp build/config/change-ssid pi@bespoke.local:/home/pi/
+scp build/config/blacklist-rfkill.conf pi@bespoke.local:/home/pi/
 ```
 
 Do this on the Pi:
@@ -242,7 +243,7 @@ tar zxvf bespoke-0.1.0.tar.gz
 cd bespoke-0.1.0
 make install
 
-sudo mv bespoke.service /etc/systemd/system
+sudo mv bespoke.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl start bespoke.service
 sudo systemctl enable bespoke.service
@@ -254,6 +255,8 @@ sudo udevadm trigger
 sudo mv change-ssid /etc/sudoers.d/change-ssid
 sudo chown root:root /etc/sudoers.d/change-ssid
 sudo chmod 440 /etc/sudoers.d/change-ssid
+
+sudo mv blacklist-rfkill.conf /etc/modprobe.d/
 ```
 
 Done!
