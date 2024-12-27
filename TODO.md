@@ -14,8 +14,7 @@ Caveat: It seems that Android does a http request to https://www.google.com and 
 
 * Add file sharing
 
-* Add aging of *posts*. This is done by removing *posts* when the they
-  reach a certain age (e.g. 30 days). Optional.
+* Add destructive aging of forum posts, direct messages and files
 
 * Add native WebView wrapper apps (for syncing and offline browsing)
 
