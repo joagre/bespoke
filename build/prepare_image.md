@@ -28,10 +28,6 @@ dwc2
 g_ether
 ```
 
-
-
-
-
 ## Configure ethernet over USB
 
 * Insert SD card into Pi
@@ -220,47 +216,47 @@ sudo apt install erlang-nox wamerican emacs-nox erlang-mode ntpdate
 sudo setcap cap_net_bind_service=+ep `find /usr/lib/erlang/ -name beam.smp`
 ```
 
-## Build and install Bespoke BBS
+## Build, install and config Bespoke BBS
 
 Do this on a build machine:
 
 ```
 make release
 scp build/releases/bespoke-0.1.0.tar.gz pi@bespoke.local:/home/pi/
+```
+
+Copy necessary config files to the Pi:
+
+```
 scp build/config/bespoke.service pi@bespoke.local:/home/pi/
 scp build/config/99-usb-wifi-host.rules pi@bespoke.local:/home/pi/
+scp build/config/change-ssid pi@bespoke.local:/home/pi/
 ```
 
 Do this on the Pi:
 
 ```
 sudo ntpdate pool.ntp.org
+
 tar zxvf bespoke-0.1.0.tar.gz
 cd bespoke-0.1.0
 make install
-```
 
-and activate the Bespoke start-script:
-
-```
-sudo cp bespoke.service /etc/systemd/system
+sudo mv bespoke.service /etc/systemd/system
 sudo systemctl daemon-reload
 sudo systemctl start bespoke.service
 sudo systemctl enable bespoke.service
-```
 
-Edit/create `/etc/sudoers.d/change-ssid`:
+sudo mv 99-usb-wifi-host.rules /etc/udev/rules.d/
+sudo udevadm control --reload
+sudo udevadm trigger
 
-```
-pi ALL=(ALL) NOPASSWD: /home/pi/bespoke/main/bin/change-ssid
-```
-
-Change permissions:
-
-```
+sudo mv change-ssid /etc/sudoers.d/change-ssid
 sudo chown root:root /etc/sudoers.d/change-ssid
 sudo chmod 440 /etc/sudoers.d/change-ssid
 ```
+
+Done!
 
 ## Create image
 

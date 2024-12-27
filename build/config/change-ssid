@@ -1,0 +1,1 @@
+pi ALL=(ALL) NOPASSWD: /home/pi/bespoke/main/bin/change-ssid
