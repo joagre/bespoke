@@ -254,6 +254,7 @@ scp build/config/bespoke.service pi@bespoke.local:/home/pi/
 scp build/config/99-usb-wifi-host.rules pi@bespoke.local:/home/pi/
 scp build/config/change-ssid pi@bespoke.local:/home/pi/
 scp build/config/blacklist-rfkill.conf pi@bespoke.local:/home/pi/
+scp build/config/switch-hostapd.service pi@bespoke.local:/home/pi/
 ```
 
 Do this on the Pi:
@@ -280,8 +281,10 @@ sudo chmod 440 /etc/sudoers.d/change-ssid
 
 sudo mv blacklist-rfkill.conf /etc/modprobe.d/
 
-
-
+sudo mv switch-hostapd.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl start switch-hostapd.service
+sudo systemctl enable switch-hostapd.service
 ```
 
 Done!
