@@ -156,7 +156,7 @@ Edit `/etc/hostapd/hostapd.conf`:
 interface=wlan0
 driver=nl80211
 ssid=BespokeBBS
-hw_mode=n
+hw_mode=g
 channel=1
 wmm_enabled=0
 macaddr_acl=0
@@ -170,7 +170,7 @@ Edit `/etc/hostapd/hostapd-wlan1.conf`:
 interface=wlan1
 driver=nl80211
 ssid=BespokeBBS1111
-hw_mode=n
+hw_mode=g
 channel=6
 wmm_enabled=0
 macaddr_acl=0
