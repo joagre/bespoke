@@ -4,26 +4,25 @@
 
 ## What?
 
-<b>Bespoke BBS (B3S)</b> is a <i>location-based Bulletin Board
-System</i>. It’s not meant for the Internet—instead, it lives in your
+**Bespoke BBS (B3S)** is a *location-based Bulletin Board System* and
+it include a *Forum*, end-to-end encrypted *Direct Messaging* and
+*File Sharing*.
+
+It's not meant for the Internet—instead, it lives in your
 local area as a WiFi Access Point. This is by design, encouraging
 genuine local interactions.
 
-The first version of B3S includes a <i>Forum</i> but both end-to-end
-encrypted <i>Direct Messaging</i> and <i>File Sharing</i> are in the
-pipe.
-
 The B3S client Web app will be wrapped into native Android app to make
 it effortless to sync content in the background just by passing near a
-B3S instance. You’ll also be able to interact with B3S offline, with
+B3S instance. You'll also be able to interact with B3S offline, with
 syncing handled automatically when reconnected.
 
 ## Why?
 
 Because the Internet has become a cesspool of mass surveillance,
-intrusive advertisements, manipulative algorithms, influencers,
-relentless tracking, and endless spam. Let’s strip away the noise and
-keep things <b>local</b>, <b>simple</b>, and <b>meaningful</b> instead.
+manipulative algorithms, influencers, relentless tracking, and endless
+spam. Let’s strip away the noise and keep things **local**,
+**simple**, and **meaningful** instead.
 
 ## How?
 
