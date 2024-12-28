@@ -117,6 +117,11 @@ interface wlan0
 static ip_address=192.168.4.1/24
 nohook wpa_supplicant
 nogateway
+
+interface wlan1
+static ip_address=192.168.4.1/24
+nohook wpa_supplicant
+nogateway
 ```
 
 Restart dhcpcd:
@@ -125,21 +130,19 @@ Restart dhcpcd:
 sudo service dhcpcd restart
 ```
 
-Backup dnsmasq.conf:
-
-```
-sudo cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-```
-
 Edit `/etc/dnsmasq.conf`:
 
 ```
 interface=wlan0
 dhcp-range=192.168.4.10,192.168.4.100,255.255.255.0,24h
 address=/#/192.168.4.1
+
+interface=wlan1
+dhcp-range=192.168.4.10,192.168.4.100,255.255.255.0,24h
+address=/#/192.168.4.1
 ```
 
-Start dnsmasq:
+Umask hostapd and start dnsmasq:
 
 ```
 sudo systemctl unmask hostapd
