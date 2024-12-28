@@ -2,19 +2,13 @@
 
 # Check if wlan1 is available
 if ip link show wlan1 > /dev/null 2>&1; then
-    echo "wlan1 detected. Using hostapd-wlan1.service."
-    systemctl stop hostapd.service
-    systemctl disable hostapd.service
-    systemctl enable hostapd-wlan1.service
+    echo "wlan1 detected: Using hostapd-wlan1.service"
     systemctl start hostapd-wlan1.service
     sudo iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j DNAT --to-destination 192.168.5.1:80
     sudo iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 443 -j DNAT --to-destination 192.168.5.1:443
     sudo iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
 else
-    echo "wlan1 not detected. Using hostapd.service."
-    systemctl stop hostapd-wlan1.service
-    systemctl disable hostapd-wlan1.service
-    systemctl enable hostapd.service
+    echo "wlan1 not detected: Using hostapd.service"
     systemctl start hostapd.service
     sudo iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:80
     sudo iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 443 -j DNAT --to-destination 192.168.4.1:443
