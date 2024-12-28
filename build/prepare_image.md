@@ -142,7 +142,7 @@ dhcp-range=192.168.5.10,192.168.5.100,255.255.255.0,24h
 address=/#/192.168.5.1
 ```
 
-Umask hostapd and start dnsmasq:
+Unmask hostapd and start dnsmasq:
 
 ```
 sudo systemctl unmask hostapd
@@ -169,7 +169,7 @@ Edit `/etc/hostapd/hostapd-wlan1.conf`:
 ```
 interface=wlan1
 driver=nl80211
-ssid=BespokeBBS1111
+ssid=BespokeBBS
 hw_mode=g
 channel=6
 wmm_enabled=0
