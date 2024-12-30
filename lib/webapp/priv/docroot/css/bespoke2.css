@@ -9,10 +9,13 @@
     --uk-meta: #666; /* Gray for metadata */
     /* Custom Colors */
     --uk-light: #ebebeb; /* Light Gray */
+    /* UIKit Standard Margins */
+    --uk-margin-small: 10px; /* UIKit's small margin */
 }
 
 /* Jesus wept: https://stackoverflow.com/a/58048556 */
 html, body {
+    font-family: Arial, sans-serif;
     height: 100%;
 }
 
@@ -24,10 +27,59 @@ html, body {
 
 .header {
     padding: 0.5em 0.5em 0.5em 0.5em;
-    margin-bottom: 0.75em;
+    margin-bottom: 1em;
 }
 
 .footer {
     margin-top: 0.75em;
     padding: 0.5em 0.5em 0.5em 0.5em;
+}
+
+#loading-overlay {
+    z-index: 9999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.post-meta-data {
+    margin-top: 0.25rem;
+}
+
+.post-divider,
+.parent-post-divider {
+    border-color: var(--uk-muted);
+}
+
+.underlined-link {
+    text-decoration: underline;
+}
+
+.mini-action {
+    cursor: pointer;
+}
+
+.bleeding-heart {
+    color: var(--uk-danger);
+}
+
+.bleeding-heart svg path {
+    fill: currentColor;
+    stroke: currentColor;
+}
+
+button.uk-icon-button[disabled] {
+  border: 2px dashed var(--uk-muted);
+  cursor: not-allowed;
+}
+
+p {
+    margin-top: var(--uk-margin-small);
+    margin-bottom: var(--uk-margin-small);
+}
+
+p:first-of-type {
+  margin-top: 0;
 }
