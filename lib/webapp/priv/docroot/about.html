@@ -1,52 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>About Bespoke BBS</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/uikit.min.css">
-    <link rel="stylesheet" href="css/bespoke.css">
-    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
-    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
-    <link rel="shortcut icon" href="/favicon/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
-    <link rel="manifest" href="/favicon/site.webmanifest">
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke2.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Bespoke BBS" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
     <script type="module" src="js/bespoke.js"></script>
   </head>
   <body>
-    <div class="uk-container uk-container-xsmall uk-padding-remove">
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
-      <div class="header uk-flex uk-flex-between uk-flex-middle" uk-sticky>
+      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
-        <button onclick="bespoke.gotoPage(event)" data-back-destination="" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+        <div>
+          <button onclick="bespoke.gotoPage(event)" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+        </div>
         <!-- Title -->
-        <div class="uk-flex-1 uk-flex uk-flex-center">
-          <div class="uk-text-bold">About Bespoke BBS</div>
+        <div class="uk-width-expand">
+          About Bespoke BBS
         </div>
       </div>
+      <!-- About -->
       <div class="uk-margin-small-left uk-margin-small-right">
-        <!-- Content -->
         <p>
-          <b>Bespoke BBS (B3S)</b> is a <i>location-based Bulletin
-          Board System</i> and include a <i>Forum</i>, end-to-end
-          encrypted <i>Direct Messaging</i> and <i>File Sharing</i>.
+          <b>Bespoke BBS</b> (<dfn title="Bespoke BBS">B3S</dfn>) is a
+          location-based Bulletin Board System and includes
+          a <i>Forum</i>, end-to-end encrypted <i>Direct Messaging</i>
+          and <i>File Sharing</i>.
         </p>
         <p>
-          It's not meant for the Internet—instead, it lives in your
-          local area as a WiFi Access Point. This is by design,
-          because the Internet has become a cesspool of mass
-          surveillance, manipulative algorithms, influencers,
-          relentless tracking, and endless spam. Let’s strip away the
-          noise and keep things <b>local</b>, <b>simple</b>,
-          and <b>meaningful</b> instead.
+          <dfn title="Bespoke BBS">B3S</dfn> is not meant for the
+          Internet—instead, it lives in your local area as a WiFi
+          Access Point. Internet has just become a cesspool of mass
+          surveillance, maniplative algorithms, influencers,
+          relentless tracking, and endless spam. Let's strip away the
+          noise and keep things local, simple and meaningful instead.
         </p>
         <p>
-          <span class="uk-label">Note</span> B3S is an experiment, but
+          <span class="uk-label">Note</span>
+          <dfn title="Bespoke BBS">B3S</dfn> is an experiment, but
           everything you see should work—if not, it's a bug 😇. Please
-          report any issues in the forum itself. Stay tuned.
+          report any issues in the forum. Thanks!
         </p>
         <p>Enjoy and be kind.</p>
         <p>/The team ❤️</p>
