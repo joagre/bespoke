@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Bespoke BBS</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke2.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Bespoke BBS" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
+    <script src="js/uhtml.min.js" defer></script>
+    <script type="module" src="js/bespoke.js"></script>
+  </head>
+  <body>
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
+      <!-- Header -->
+      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-padding-small">
+        <div class="uk-width-expand">
+          Bespoke BBS
+        </div>
+        <div class="uk-width-auto">
+          <!-- Dropdown menu -->
+          <button class="uk-icon-button" uk-icon="icon: menu"></button>
+          <div uk-dropdown="mode: click; pos: bottom-right" class="uk-padding-small">
+            <ul class="uk-nav uk-dropdown-nav">
+              <li><a href="switch_user.html"><span class="uk-margin-small-right" uk-icon="icon: users"></span>Switch User</a></li>
+              <li><a href="change_password.html"><span class="uk-margin-small-right" uk-icon="icon: settings"></span>Change Password</a></li>
+              <li><a href="about.html"><span class="uk-margin-small-right" uk-icon="icon: info"></span>About ❤️</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- Content -->
+      <div class="uk-flex-1 uk-flex uk-flex-center uk-flex-middle">
+        <img id="background-image" src="/images/animated-background.gif">
+      </div>
+      <!-- Footer -->
+      <div class="footer uk-margin-auto-top uk-box-shadow-small">
+        <div class="uk-flex uk-flex-center uk-flex-around uk-text-center">
+          <!-- Forum -->
+          <div>
+            <button onclick="bespoke.gotoPage(event, 'top_posts.html')" class="uk-icon-button" uk-icon="commenting"></button>
+            <div class="uk-text-small">Forum</div>
+          </div>
+          <!-- Messaging -->
+          <div>
+            <button onclick="bespoke.gotoPage(event, 'nyi.html')" class="uk-icon-button" uk-icon="mail" disabled uk-tooltip="title: Coming Soon!"></button>
+            <div class="uk-text-small">Messaging</div>
+          </div>
+          <!-- File Sharing -->
+          <div>
+            <button onclick="bespoke.gotoPage(event, 'nyi.html')" class="uk-icon-button" uk-icon="album" disabled uk-tooltip="title: Coming Soon!"></button>
+            <div class="uk-text-small">File Sharing</div>
+          </div>
+          <!-- Updates -->
+          <div>
+            <button onclick="bespoke.gotoPage(event, 'nyi.html')" class="uk-icon-button" uk-icon="bell" disabled uk-tooltip="title: Coming Soon!"></button>
+            <div class="uk-text-small">Updates</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module">
+      import bespoke from "/js/bespoke.js";
+      window.bespoke = bespoke;
+    </script>
+  </body>
+</html>

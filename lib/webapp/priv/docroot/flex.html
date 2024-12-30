@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bespoke BBS</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/uikit.min.css">
+    <link rel="stylesheet" href="css/bespoke2.css">
+    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
+    <link rel="shortcut icon" href="/favicon/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/favicon/site.webmanifest">
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
+    <script src="js/uhtml.min.js" defer></script>
+    <script type="module" src="js/bespoke.js"></script>
+  </head>
+  <body>
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
+      <!-- Header -->
+      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-padding-small">
+        <div>
+          <button onclick="bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+        </div>
+        <div>
+          Bespoke BBS
+        </div>
+        <div>
+          <button onclick="navigate('settings')" class="uk-icon-button" uk-icon="cog"></button>
+          <button onclick="navigate('logout')" class="uk-icon-button" uk-icon="sign-out"></button>
+            <button class="uk-icon-button" uk-icon="icon: menu"></button>
+            <div uk-dropdown="mode: click; pos: bottom-right">
+              <ul class="uk-nav uk-dropdown-nav">
+                <li class="uk-active"><a href="switch_user.html"><span class="uk-margin-small-right" uk-icon="icon: users"></span>Switch User</a></li>
+                <li class="uk-active"><a href="change_password.html"><span class="uk-margin-small-right" uk-icon="icon: settings"></span>Change Password</a></li>
+                <li class="uk-active"><a href="about.html"><span class="uk-margin-small-right" uk-icon="icon: info"></span>About ❤️</a></li>
+              </ul>
+            </div>
+        </div>
+      </div>
+      <!-- Content -->
+      <div class="uk-flex-1 uk-flex uk-flex-center uk-flex-middle">
+        <img id="background-image" src="/images/animated-background.gif">
+      </div>
+      <!-- Footer -->
+      <div class="footer uk-margin-auto-top uk-box-shadow-small">
+        <div class="uk-flex uk-flex-center uk-flex-around uk-text-center">
+          <!-- Forum -->
+          <div>
+            <button onclick="navigate('forum')" class="uk-icon-button" uk-icon="comments"></button>
+            <div class="uk-text-small">Forum</div>
+          </div>
+          <!-- Messaging -->
+          <div>
+            <button onclick="navigate('messaging')" class="uk-icon-button" uk-icon="mail"></button>
+            <div class="uk-text-small">Messaging</div>
+          </div>
+          <!-- File Sharing -->
+          <div>
+            <button onclick="navigate('file-sharing')" class="uk-icon-button" uk-icon="file"></button>
+            <div class="uk-text-small">File Sharing</div>
+          </div>
+          <!-- Updates -->
+          <div>
+            <button onclick="navigate('updates')" class="uk-icon-button" uk-icon="bell"></button>
+            <div class="uk-text-small">Updates</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

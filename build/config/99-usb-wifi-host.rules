@@ -1,0 +1,2 @@
+# Enable USB host mode when an external WiFi card is connected as wlan1
+ACTION=="add", SUBSYSTEM=="net", KERNEL=="wlan1", ATTR{type}=="1", RUN+="/sbin/modprobe -r g_ether"

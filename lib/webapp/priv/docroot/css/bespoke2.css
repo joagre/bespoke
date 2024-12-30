@@ -1,0 +1,19 @@
+html, body {
+    height: 100%;
+}
+
+/* Jesus wept: https://stackoverflow.com/a/58048556 */
+.top-container {
+    min-height: -webkit-fill-available;
+    height: 100%;
+}
+
+.header {
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    margin-bottom: 0.75em;
+}
+
+.footer {
+    margin-top: 0.75em;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+}
