@@ -1,32 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>Bootstrap Bespoke BBS</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/uikit.min.css">
-    <link rel="stylesheet" href="css/bespoke.css">
-    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
-    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
-    <link rel="shortcut icon" href="/favicon/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
-    <link rel="manifest" href="/favicon/site.webmanifest">
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke2.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Bespoke BBS" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
     <script type="module" src="js/bootstrap.js"></script>
   </head>
   <body>
-    <div class="uk-container uk-container-xsmall uk-padding-remove">
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
-      <div class="header uk-flex uk-flex-between uk-flex-middle" uk-sticky>
+      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle">
         <!-- Title -->
-        <div class="uk-flex-1 uk-flex uk-flex-center">
-          <div class="uk-text-bold">Bootstrap Bespoke BBS</div>
+        <div class="uk-width-expand">
+          <span class="uk-text-bold">Bootstrap Bespoke BBS</span>
+        </div>
+        <!-- Toolbar -->
+        <div>
+          <button id="bootstrap-button" onclick="bootstrap.bootstrapNow(event)" class="uk-icon-button" uk-icon="check" disabled></button>
         </div>
       </div>
+      <!-- Form -->
       <div class="uk-margin-small-left uk-margin-small-right">
-        <!-- Content -->
         <p>
           Provide a name for the Bespoke BBS SSID or it will default
           to <i>BespokeBBS</i>. The name should typically be
@@ -34,23 +39,17 @@
         </p>
         <p>
           <span class="uk-label">Warning</span> This bootstrap
-          procedure will not be shown again. Hit <i>Apply</i> and
-          then reconnect to the new SSID.
+          procedure will not be shown again. Hit the &#x2713;
+          checkmark in the upper right corner; wait a bit and then
+          reconnect to the new SSID.
         </p>
-        <!-- Form -->
-        <div class="uk-container">
-          <form class="uk-form-stacked">
-            <!-- SSID -->
-            <div class="uk-inline uk-width-1-1">
-              <input class="uk-input" value="BespokeBBS" placeholder="Enter a Bespoke SSID" id="form-ssid" type="text" required>
-            </div>
-            <span id="form-ssid-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
-            <!-- Apply button -->
-            <div class="uk-margin-top uk-text-right">
-              <button onclick="bootstrap.bootstrapNow(event)" type="submit" class="uk-button uk-button-primary" id="apply-button">Apply</button>
-            </div>
-          </form>
-        </div>
+        <form class="uk-form-stacked uk-margin-top">
+          <!-- SSID -->
+          <div class="uk-inline uk-width-1-1">
+            <input class="uk-input" value="BespokeBBS" placeholder="Enter Bespoke SSID" id="form-ssid" type="text" required>
+          </div>
+          <span id="form-ssid-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
+        </form>
       </div>
     </div>
     <!-- Make relevant ES6 modules available globally -->
