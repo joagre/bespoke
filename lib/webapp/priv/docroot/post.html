@@ -1,42 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title id="head-title"></title>
+    <title id="head-title">Forum</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/uikit.min.css">
-    <link rel="stylesheet" href="css/bespoke.css">
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke2.css" />
     <link rel="stylesheet" href="css/post.css">
-    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
-    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
-    <link rel="shortcut icon" href="/favicon/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
-    <link rel="manifest" href="/favicon/site.webmanifest">
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Bespoke BBS" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/bespoke.js"></script>
     <script type="module" src="js/post.js"></script>
   </head>
   <body hidden>
-    <div class="uk-container uk-container-xsmall uk-padding-remove">
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
-      <div class="header uk-flex uk-flex-between uk-flex-middle" uk-sticky>
+      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-background-default" uk-sticky>
         <!-- Go back -->
-        <div class="non-sticky">
-          <button onclick="bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+        <div>
+          <button  onclick="bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left"></button>
         </div>
         <!-- Title -->
-        <div class="uk-flex-1 uk-text-center">
+        <div class="uk-width-expand">
           <span id="header-title" class="uk-text-bold"></span>
           <span class="uk-text-meta">(<span id="title-username"></span>)</span>
           <span id="header-reply-level" class="uk-text-meta"></span>
         </div>
-        <div class="non-sticky">
-          <a href="#top" class="uk-icon-button" uk-icon="arrow-up" role="button" ratio="1.5" uk-scroll></a>
+        <!-- Toolbar -->
+        <div>
+          <a href="#top" class="uk-icon-button" uk-icon="arrow-up" role="button" uk-scroll></a>
         </div>
       </div>
-      <div class="uk-margin-small-left uk-margin-small-right">
+      <!-- Parent post and replies -->
+      <div class="uk-margin-small-left uk-margin-small-right uk-margin-top">
         <!-- Parent post -->
         <div id="parent-post">
           <!-- Parent title -->
