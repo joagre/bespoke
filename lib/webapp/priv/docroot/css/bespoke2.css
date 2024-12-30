@@ -1,3 +1,17 @@
+:root {
+    /* UIKit Standard Colors */
+    --uk-primary: #1e87f0; /* Blue */
+    --uk-secondary: #222; /* Dark Gray */
+    --uk-muted: #999; /* Light Gray */
+    --uk-success: #32d296; /* Green */
+    --uk-warning: #faa05a; /* Orange */
+    --uk-danger: #f0506e; /* Red */
+    --uk-meta: #666; /* Gray for metadata */
+    /* Custom Colors */
+    --uk-light: #ebebeb; /* Light Gray */
+}
+
+/* Jesus wept: https://stackoverflow.com/a/58048556 */
 html, body {
     height: 100%;
 }
