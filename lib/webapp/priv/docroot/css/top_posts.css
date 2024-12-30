@@ -1,17 +1,7 @@
+#posts {
+    margin-top: 1em;
+}
+
 .top-post {
     cursor: pointer;
-}
-
-#posts {
-    /* Prevent sticky footer from overlapping the end of the page */
-    padding-bottom: 4em;
-}
-
-.sticky-bottom {
-    position: fixed;
-    bottom: 0;
-    /* Note: Matches uk-container-xsmall */
-    max-width: 750px;
-    width: 100%;
-    z-index: 999;
 }

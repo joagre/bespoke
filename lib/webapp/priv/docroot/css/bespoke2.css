@@ -28,6 +28,7 @@ html, body {
 .header {
     padding: 0.5em 0.5em 0.5em 0.5em;
     margin-bottom: 1em;
+    opacity: 1;
 }
 
 .footer {
