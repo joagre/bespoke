@@ -31,7 +31,7 @@ body {
 }
 
 .active-footer-button {
-    background-color: var(--uk-primary);
+    background-color: var(--uk-light-primary);
     color: white;
     cursor: not-allowed;
 }

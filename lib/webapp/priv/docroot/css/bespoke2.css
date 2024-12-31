@@ -1,16 +1,24 @@
 :root {
-    /* UIKit Standard Colors */
-    --uk-primary: #1e87f0; /* Blue */
-    --uk-secondary: #222; /* Dark Gray */
-    --uk-muted: #999; /* Light Gray */
-    --uk-success: #32d296; /* Green */
-    --uk-warning: #faa05a; /* Orange */
-    --uk-danger: #f0506e; /* Red */
-    --uk-meta: #666; /* Gray for metadata */
-    /* Custom Colors */
-    --uk-light: #ebebeb; /* Light Gray */
-    /* UIKit Standard Margins */
-    --uk-margin-small: 10px; /* UIKit's small margin */
+    /* UIKit standard colors */
+    --uk-primary: #1e87f0;
+    --uk-secondary: #222;
+    --uk-muted: #999;
+    --uk-success: #32d296;
+    --uk-warning: #faa05a;
+    --uk-danger: #f0506e;
+    --uk-meta: #666;
+    /* UIKit standard margins */
+    --uk-margin-small: 10px;
+    /* Custom colors */
+    --uk-light: #ccc;
+}
+
+.underlined-link {
+    text-decoration: underline;
+}
+
+html {
+    overflow-y: scroll; /* Forces scrollbar visibility */
 }
 
 /* Jesus wept: https://stackoverflow.com/a/58048556 */
@@ -25,6 +33,8 @@ html, body {
     /* height: 100%; */
 }
 
+/* Footer and header styling */
+
 .header {
     padding: 0.5em 0.5em 0.5em 0.5em;
     margin-bottom: 1em;
@@ -36,14 +46,7 @@ html, body {
     padding: 0.5em 0.5em 0.5em 0.5em;
 }
 
-#loading-overlay {
-    z-index: 9999;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-}
+/* Post styling */
 
 .post-meta-data {
     margin-top: 0.25rem;
@@ -54,27 +57,29 @@ html, body {
     border-color: var(--uk-muted);
 }
 
-.underlined-link {
-    text-decoration: underline;
+/* Button styling */
+
+button.uk-icon-button,
+a.uk-icon-button {
+  border: 1px solid var(--uk-light);
 }
 
-.mini-action {
-    cursor: pointer;
-}
-
-.bleeding-heart {
-    color: var(--uk-danger);
-}
-
-.bleeding-heart svg path {
-    fill: currentColor;
-    stroke: currentColor;
+.uk-icon-button.liked svg path {
+    fill: var(--uk-danger) !important;
+    stroke: var(--uk-danger) !important;
 }
 
 button.uk-icon-button[disabled] {
   border: 2px dashed var(--uk-muted);
   cursor: not-allowed;
 }
+
+button.button-toggle:not([disabled]),
+a.button-toggle:not([disabled]) {
+  border: 2px solid var(--uk-primary);
+}
+
+/* Paragraph styling */
 
 p {
     margin-top: var(--uk-margin-small);
@@ -83,4 +88,15 @@ p {
 
 p:first-of-type {
   margin-top: 0;
+}
+
+/* Overlay styling */
+
+#loading-overlay {
+    z-index: 9999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }

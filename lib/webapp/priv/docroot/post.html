@@ -48,19 +48,19 @@
           <div class="uk-flex uk-flex-between uk-flex-middle">
             <!-- Parent meta-data -->
             <div class="post-meta-data uk-text-meta">
-              <span uk-icon="icon: check" class="uk-text-success"></span>
+              <span uk-icon="icon: check"></span>
               <span id="parent-author"></span> •
               <span id="parent-age"></span> •
-              <span onclick="post.toggleLike(event)" class="mini-action"><span id="parent-like-icon" uk-icon="icon: heart"></span> <span id="parent-likes-count"></span></span> •
+              <button onclick="post.toggleLike(event)" class="uk-icon-button" id="parent-like-icon" uk-icon="icon: heart"></button> <span id="parent-likes-count"></span> •
               <span uk-icon="comment"></span> <span id="parent-replies"></span>
             </div>
             <!-- Parent actions -->
             <div>
-              <span id="parent-delete" onclick="post.openDeletePostDialog(event)" data-post-id="0" class="mini-action" uk-icon="trash"></span>
-              <span onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="mini-action" uk-icon="reply"></span>
+              <button id="parent-delete" onclick="post.openDeletePostDialog(event)" data-post-id="0" class="uk-icon-button" uk-icon="trash"></button>
+              <button onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="uk-icon-button" uk-icon="reply"></button>
             </div>
           </div>
-          <hr class="parent-post-divider">
+          <hr class="uk-margin-small parent-post-divider">
         </div>
         <!-- Replies -->
         <div id="replies"></div>
