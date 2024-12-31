@@ -1,3 +1,7 @@
+.header {
+    margin-bottom: 0 !important;
+}
+
 .quote {
     cursor: pointer;
 }
