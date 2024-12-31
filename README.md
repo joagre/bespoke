@@ -8,7 +8,7 @@ Bespoke BBS (B3S) is a location-based Bulletin Board System and it
 includes a *Forum*, end-to-end encrypted *Direct Messaging* and *File
 Sharing*.
 
-B3S not meant for the Internet—instead, it lives in your local area as
+B3S is not meant for the Internet—instead, it lives in your local area as
 a WiFi Access Point.
 
 The B3S client Web app will be wrapped into native Android app to make
