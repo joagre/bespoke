@@ -11,7 +11,7 @@ Sharing*.
 B3S is not meant for the Internet—instead, it lives in your local area as
 a WiFi Access Point.
 
-The B3S client Web app will be wrapped into native Android app to make
+The B3S client Web app will be wrapped into native an Android app to make
 it effortless to sync content in the background just by passing near a
 B3S server instance. You'll also be able to interact with B3S offline,
 with syncing handled automatically when reconnected.
