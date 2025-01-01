@@ -1,37 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>Add Reply</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/uikit.min.css">
-    <link rel="stylesheet" href="css/bespoke.css">
-    <link rel="stylesheet" href="css/add_reply_post.css">
-    <link rel="icon" type="image/png" href="/favicon/favicon-48x48.png" sizes="48x48">
-    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
-    <link rel="shortcut icon" href="/favicon/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
-    <link rel="manifest" href="/favicon/site.webmanifest">
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke2.css" />
+    <link rel="stylesheet" href="css/add_reply_post.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Bespoke BBS" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-
     <script type="module" src="js/add_reply_post.js"></script>
   </head>
   <body hidden>
-    <div class="uk-container uk-container-xsmall uk-padding-remove">
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
-      <div class="header uk-flex uk-flex-between uk-flex-middle" uk-sticky>
+      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
-        <button onclick="addReplyPost.goBack(event, false)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" ratio="1.5"></button>
+        <div>
+          <button onclick="addReplyPost.goBack(event, false)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+        </div>
         <!-- Title -->
-        <div class="uk-flex-1 uk-flex uk-flex-center">
-          <div>
-            <b>Add Reply</b>
-            <span class="uk-text-meta">(<span id="title-username"></span>)</span>
-          </div>
+        <div class="uk-width-expand">
+          <span class="uk-text-bold">Add Reply</span>
+          <span class="uk-text-meta">(<span id="title-username"></span>)</span>
+        </div>
+        <!-- Toolbar -->
+        <div>
+          <button id="add-button" onclick="addReplyPost.addNow(event)" class="uk-icon-button button-toggle" uk-icon="check" disabled></button>
         </div>
       </div>
+      <!-- Form -->
       <div class="uk-margin-small-left uk-margin-small-right">
         <!-- Parent post -->
         <div id="parent-post">
@@ -47,17 +52,10 @@
             <span uk-icon="comments"></span> <span id="parent-replies"></span>
           </div>
         </div>
-        <!-- Form -->
-        <div class="uk-container uk-margin-top">
-          <form class="uk-form-stacked">
-            <!-- Body text area-->
-            <textarea class="uk-textarea" placeholder="Enter a reply" id="form-body" rows="5" required></textarea>
-            <!-- Add button -->
-            <div class="uk-margin-top uk-text-right">
-              <button onclick="addReplyPost.addNow(event)" type="submit" class="uk-button uk-button-primary" id="add-button" disabled>Add Reply</button>
-            </div>
-          </form>
-        </div>
+        <form class="uk-form-stacked uk-margin-top">
+          <!-- Body text -->
+          <textarea class="uk-textarea" placeholder="Enter body" id="form-body" rows="5" required></textarea>
+        </form>
       </div>
     </div>
     <!-- Make relevant ES6 modules available globally -->
