@@ -18,7 +18,7 @@
     <script src="js/uhtml.min.js" defer></script>
     <script type="module" src="js/attachments.js"></script>
   </head>
-  <body hidden>
+  <body>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
@@ -31,65 +31,37 @@
           <span class="uk-text-bold">Attachments</span>
           <span class="uk-text-meta">(<span id="title-username"></span>)</span>
         </div>
-      </div>
-      <!-- Attachments -->
-      <div class="uk-flex-1 uk-flex uk-flex-center uk-flex-middle">
-        <div class="uk-flex uk-flex-middle" uk-slideshow>
-          <div class="uk-slideshow-items">
-            <div class="uk-flex uk-flex-center uk-flex-middle">
-              <img src="/images/animated-background.gif" alt="">
-              <div class="uk-position-top-right uk-position-small">
-                <span class="uk-label">1 / 4</span>
-              </div>
-            </div>
-            <div class="uk-flex uk-flex-center uk-flex-middle">
-              <img src="/images/pexels-matthew-barra-178916-813011.jpg" alt="">
-              <div class="uk-position-top-right uk-position-small">
-                <span class="uk-label">2 / 4</span>
-              </div>
-            </div>
-            <div class="uk-flex uk-flex-center uk-flex-middle">
-              <img src="/favicon/web-app-manifest-512x512.png" alt="">
-              <div class="uk-position-top-right uk-position-small">
-                <span class="uk-label">3 /4</span>
-              </div>
-            </div>
-            <div class="uk-flex uk-flex-center uk-flex-middle">
-              <video src="/images/dummy.mp4" autoplay loop muted playsinline></video>
-              <div class="uk-position-top-right uk-position-small">
-                <span class="uk-label">4 / 4</span>
-              </div>
-            </div>
-          </div>
-          <a class="uk-position-center-left uk-position-small uk-hidden-hover" href uk-slidenav-previous uk-slideshow-item="previous"></a>
-          <a class="uk-position-center-right uk-position-small uk-hidden-hover" href uk-slidenav-next uk-slideshow-item="next"></a>
-        </div>
-      </div>
-      <!-- Footer -->
-      <div class="footer uk-margin-auto-top uk-box-shadow-small">
-        <div class="uk-flex uk-flex-center uk-flex-around uk-text-center">
-          <!-- Add -->
+        <!-- Toolbar -->
+        <div>
           <div class="js-upload" uk-form-custom>
             <input type="file" multiple>
             <button class="uk-icon-button" uk-icon="plus"></button>
-            <div class="uk-text-small">Add</div>
           </div>
-          <!-- Remove -->
-          <div>
-            <button id="remove-button" class="uk-icon-button button-toggle" uk-icon="trash" disabled></button>
-            <div class="uk-text-small">Remove</div>
+          <button id="remove-button" class="uk-icon-button button-toggle" uk-icon="trash" disabled></button>
+        </div>
+      </div>
+      <!-- Attachments -->
+      <!-- &lt;No attachments have been added&gt; -->
+      <div class="uk-margin-small-left uk-margin-small-right" uk-slideshow>
+        <div class="uk-slideshow-items">
+          <div class="uk-flex uk-flex-center uk-flex-middle">
+            <img src="/images/animated-background.gif" alt="">
           </div>
-          <!-- Extend/Shrink -->
-          <div>
-            <button id="extend-button" class="uk-icon-button button-toggle" uk-icon="expand" disabled></button>
-            <div class="uk-text-small">Extend</div>
+          <div class="uk-flex uk-flex-center uk-flex-middle">
+            <img src="/images/pexels-matthew-barra-178916-813011.jpg" alt="">
           </div>
-          <!-- Play/Stop -->
-          <div>
-            <button id="play-button" class="uk-icon-button button-toggle" uk-icon="play" disabled></button>
-            <div class="uk-text-small">Play</div>
+          <div class="uk-flex uk-flex-center uk-flex-middle">
+            <img src="/favicon/web-app-manifest-512x512.png" alt="">
+          </div>
+          <div class="uk-flex uk-flex-center uk-flex-middle">
+            <video src="/images/dummy.mp4" autoplay loop muted playsinline></video>
           </div>
         </div>
+        <div class="uk-flex uk-flex-center uk-margin-small-top">
+          <ul class="uk-slideshow-nav uk-dotnav"></ul>
+        </div>
+        <a class="uk-position-center-left uk-position-small uk-hidden-hover" href uk-slidenav-previous uk-slideshow-item="previous"></a>
+        <a class="uk-position-center-right uk-position-small uk-hidden-hover" href uk-slidenav-next uk-slideshow-item="next"></a>
       </div>
     </div>
     <!-- Progress bar -->
