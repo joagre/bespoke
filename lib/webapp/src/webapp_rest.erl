@@ -548,6 +548,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             rest_util:response(Socket, Request, {error, badarg})
                     end
             end;
+        ["upload_attachments"] ->
+            rest_util:response(Socket, Request, ok_204);
         _ ->
 	    ?log_error("~p not found", [Tokens]),
 	    rest_util:response(Socket, Request, {error, not_found})
