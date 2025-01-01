@@ -18,7 +18,16 @@
     <script src="js/uhtml.min.js" defer></script>
     <script type="module" src="js/attachments.js"></script>
   </head>
-  <body>
+  <body hidden>
+    <!-- Modal full screen overlay -->
+    <div id="loading-overlay" class="uk-overlay uk-overlay-default uk-position-cover uk-flex uk-flex-center uk-flex-middle" hidden>
+      <div class="uk-width-1-3">
+        <progress id="progress-bar" class="uk-progress uk-margin-remove" value="0" max="100"></progress>
+        <div class="uk-text-center">
+          <span id="progress-counter" class="uk-text-meta">0%</span>
+        </div>
+      </div>
+    </div>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
@@ -41,9 +50,11 @@
         </div>
       </div>
       <!-- Attachments -->
-      <!-- &lt;No attachments have been added&gt; -->
-      <div class="uk-margin-small-left uk-margin-small-right" uk-slideshow>
-        <div class="uk-slideshow-items">
+      <div id="have-no-attachments" class="uk-flex-1 uk-flex uk-flex-center" style="margin-top: 15%;" hidden>
+        &lt;No attachments have been added&gt;
+      </div>
+      <div id="have-attachments" class="uk-margin-small-left uk-margin-small-right" uk-slideshow>
+        <div id="attachments" class="uk-slideshow-items">
           <div class="uk-flex uk-flex-center uk-flex-middle">
             <img src="/images/animated-background.gif" alt="">
           </div>
@@ -64,8 +75,6 @@
         <a class="uk-position-center-right uk-position-small uk-hidden-hover" href uk-slidenav-next uk-slideshow-item="next"></a>
       </div>
     </div>
-    <!-- Progress bar -->
-    <progress id="progress-bar" class="uk-progress" value="0" max="100" hidden></progress>
     <script type="module">
       import bespoke from "/js/bespoke.js";
       window.bespoke = bespoke;

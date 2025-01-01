@@ -71,7 +71,7 @@ a.uk-icon-button {
 }
 
 button.uk-icon-button[disabled] {
-  border: 2px dashed var(--uk-muted);
+  border: 2px dashed var(--uk-light);
   cursor: not-allowed;
 }
 
