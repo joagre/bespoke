@@ -11,6 +11,7 @@
     --uk-margin-small: 10px;
     /* Custom colors */
     --uk-light: #ccc;
+    --uk-button-hover-bg: #ebebeb;
 }
 
 .underlined-link {

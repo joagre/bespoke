@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, maximum-scale=1.0" />
+  <!-- UIKit CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/uikit@3.15.19/dist/css/uikit.min.css"
+  />
+  <!-- UIKit JS -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/uikit@3.15.19/dist/js/uikit.min.js"
+    defer
+  ></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/uikit@3.15.19/dist/js/uikit-icons.min.js"
+    defer
+  ></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Prevent global scrolling */
+    }
+
+    /* Main viewport container dynamically resized by JS */
+    #viewport {
+      display: flex;
+      flex-direction: column;
+      height: 100%; /* Default fallback height */
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    /* Header with no growth */
+    .header {
+      flex: 0 0 auto; /* Fixed height */
+      background: #ddd;
+      padding: 0.5rem;
+      text-align: center;
+    }
+
+    /* Main content area with no scroll */
+    .main-content {
+      flex: 1 1 auto; /* Takes remaining space */
+      overflow: hidden; /* Prevent scrolling for the container */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: #f0f8ff;
+      padding: 1rem;
+    }
+
+    /* Form takes the available space */
+    .form-wrapper {
+      display: flex;
+      flex-direction: column;
+      flex: 1; /* Grow/shrink with the container */
+      width: 100%;
+      max-width: 500px;
+    }
+
+    /* Allow textarea to scroll within itself */
+    textarea {
+      flex: 1;
+      overflow: auto;
+      resize: none;
+      -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+      margin-top: 1rem;
+    }
+
+    input {
+      margin-top: 1rem;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="viewport">
+    <!-- Header -->
+    <div class="header">
+      <h3>Foo</h3>
+    </div>
+
+    <!-- Main content area -->
+    <div class="main-content">
+      <form class="form-wrapper">
+        <!-- Title -->
+        <input
+          class="uk-input"
+          type="text"
+          placeholder="Enter title"
+          required
+        />
+        <!-- Body -->
+        <textarea
+          class="uk-textarea"
+          placeholder="Enter body"
+          required
+        ></textarea>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function handleMobileKeyboard() {
+      const container = document.getElementById("viewport");
+
+      // Dynamically resize #viewport when keyboard opens or closes
+      if (window.visualViewport) {
+        visualViewport.addEventListener("resize", updateHeight);
+        visualViewport.addEventListener("scroll", updateHeight);
+        updateHeight();
+      } else {
+        window.addEventListener("resize", updateHeight);
+        updateHeight();
+      }
+
+      function updateHeight() {
+        const newHeight = window.visualViewport
+          ? window.visualViewport.height
+          : window.innerHeight;
+        container.style.height = newHeight + "px";
+      }
+
+      // Block scrolling outside <textarea>
+      document.addEventListener("touchmove", function (e) {
+        const el = e.target.closest("textarea");
+        if (!el) {
+          // Prevent all touch scroll outside textarea
+          e.preventDefault();
+          return;
+        }
+
+        // Allow scrolling within textarea if overflow exists
+        const canScrollUp = el.scrollTop > 0;
+        const canScrollDown =
+          el.scrollTop + el.clientHeight < el.scrollHeight;
+
+        if (!canScrollUp && !canScrollDown) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Attachments</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke2.css" />
+    <link rel="stylesheet" href="css/attachments.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Bespoke BBS" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
+    <script src="js/uhtml.min.js" defer></script>
+    <script type="module" src="js/attachments.js"></script>
+  </head>
+  <body hidden>
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
+      <!-- Header -->
+      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
+        <!-- Go back -->
+        <div>
+          <button onclick="bespoke.gotoPage(event)" data-back-destination="" class="uk-icon-button" uk-icon="arrow-left"></button>
+        </div>
+        <!-- Title -->
+        <div class="uk-width-expand">
+          <span class="uk-text-bold">Attachments</span>
+          <span class="uk-text-meta">(<span id="title-username"></span>)</span>
+        </div>
+      </div>
+      <!-- Attachments -->
+      <div class="uk-flex-1 uk-flex uk-flex-center uk-flex-middle">
+        <div class="uk-flex uk-flex-middle" uk-slideshow>
+          <div class="uk-slideshow-items">
+            <div class="uk-flex uk-flex-center uk-flex-middle">
+              <img src="/images/animated-background.gif" alt="">
+              <div class="uk-position-top-right uk-position-small">
+                <span class="uk-label">1 / 4</span>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-center uk-flex-middle">
+              <img src="/images/pexels-matthew-barra-178916-813011.jpg" alt="">
+              <div class="uk-position-top-right uk-position-small">
+                <span class="uk-label">2 / 4</span>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-center uk-flex-middle">
+              <img src="/favicon/web-app-manifest-512x512.png" alt="">
+              <div class="uk-position-top-right uk-position-small">
+                <span class="uk-label">3 /4</span>
+              </div>
+            </div>
+            <div class="uk-flex uk-flex-center uk-flex-middle">
+              <video src="/images/dummy.mp4" autoplay loop muted playsinline></video>
+              <div class="uk-position-top-right uk-position-small">
+                <span class="uk-label">4 / 4</span>
+              </div>
+            </div>
+          </div>
+          <a class="uk-position-center-left uk-position-small uk-hidden-hover" href uk-slidenav-previous uk-slideshow-item="previous"></a>
+          <a class="uk-position-center-right uk-position-small uk-hidden-hover" href uk-slidenav-next uk-slideshow-item="next"></a>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div class="footer uk-margin-auto-top uk-box-shadow-small">
+        <div class="uk-flex uk-flex-center uk-flex-around uk-text-center">
+          <!-- Add -->
+          <div class="js-upload" uk-form-custom>
+            <input type="file" multiple>
+            <button class="uk-icon-button" uk-icon="plus"></button>
+            <div class="uk-text-small">Add</div>
+          </div>
+          <!-- Remove -->
+          <div>
+            <button id="remove-button" class="uk-icon-button button-toggle" uk-icon="trash" disabled></button>
+            <div class="uk-text-small">Remove</div>
+          </div>
+          <!-- Extend/Shrink -->
+          <div>
+            <button id="extend-button" class="uk-icon-button button-toggle" uk-icon="expand" disabled></button>
+            <div class="uk-text-small">Extend</div>
+          </div>
+          <!-- Play/Stop -->
+          <div>
+            <button id="play-button" class="uk-icon-button button-toggle" uk-icon="play" disabled></button>
+            <div class="uk-text-small">Play</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <progress id="progress-bar" class="uk-progress" value="0" max="100" hidden></progress>
+    <script type="module">
+      import bespoke from "/js/bespoke.js";
+      window.bespoke = bespoke;
+    </script>
+  </body>
+</html>
