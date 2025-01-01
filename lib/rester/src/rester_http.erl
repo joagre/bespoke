@@ -777,11 +777,12 @@ recv_chunk_trailer(S, Acc, Timeout) ->
 	    Error
     end.
 
+reversed_chunks_to_binary({multipart_form_data, _} = Body) ->
+    {ok, Body};
 reversed_chunks_to_binary(Bin) when is_binary(Bin) -> Bin;
 reversed_chunks_to_binary([Bin]) when is_binary(Bin) -> Bin;
 reversed_chunks_to_binary(Chunks) ->
     iolist_to_binary(lists:reverse(Chunks)).
-
 
 %% See: https://tools.ietf.org/html/rfc7578
 
@@ -802,7 +803,8 @@ recv_multipart_form_data(
             case recv_multipart_headers(Socket, Timeout, RemainingBuffer, []) of
                 {ok, Headers, StillRemainingBuffer} ->
                     case lists:keysearch(<<"Content-Type">>, 1, Headers) of
-                        {value, {_, <<"application/octet-stream">>}} ->
+                        {value, _} ->
+%                        {value, {_, <<"application/octet-stream">>}} ->
                             Filename =
                                 filename:join(
                                   ["/tmp", "form-data-" ++
