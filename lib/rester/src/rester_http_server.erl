@@ -327,7 +327,6 @@ handle_request(Socket, R, State) ->
 			stop -> {stop, normal, State}
 		    end
 	    end;
-
 	{error, closed} ->
 	    ?warning("socket closed"),
 	    {stop, normal,State};

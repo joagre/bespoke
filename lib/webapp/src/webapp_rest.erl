@@ -545,11 +545,23 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                                State#state.subscriptions)},
                             {ok, UpdatedState};
                         false ->
-                            rest_util:response(Socket, Request, {error, badarg})
+                            rest_util:response(Socket, Request,
+                                               {error, badarg})
                     end
             end;
         ["upload_attachments"] ->
-            rest_util:response(Socket, Request, ok_204);
+            [PayloadJsonTerm] =
+                lists:map(fun(#{filename := Filename,
+                                unique_filename := UniqueFilename,
+                                content_type := ContentType}) ->
+                                  AbsPath = filename:join(
+                                              [<<"/tmp">>, UniqueFilename]),
+                                  #{<<"filename">> => Filename,
+                                    <<"absPath">> => AbsPath,
+                                    <<"contentType">> => ContentType}
+                          end, Body),
+            rest_util:response(Socket, Request,
+                               {ok, {format, PayloadJsonTerm}});
         _ ->
 	    ?log_error("~p not found", [Tokens]),
 	    rest_util:response(Socket, Request, {error, not_found})
