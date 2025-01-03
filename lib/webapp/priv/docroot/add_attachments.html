@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Attachments</title>
+    <title>Add Attachments</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css" />
     <link rel="stylesheet" href="css/bespoke.css" />
-    <link rel="stylesheet" href="css/attachments.css" />
+    <link rel="stylesheet" href="css/add_attachments.css" />
     <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
     <link rel="shortcut icon" href="/favicon/favicon.ico" />
@@ -16,7 +16,7 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/attachments.js"></script>
+    <script type="module" src="js/add_attachments.js"></script>
   </head>
   <body hidden>
     <!-- Modal full screen overlay -->
@@ -28,6 +28,7 @@
         </div>
       </div>
     </div>
+    <!-- Top container -->
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
@@ -37,7 +38,7 @@
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
-          <span class="uk-text-bold">Attachments</span>
+          <span class="uk-text-bold">Add Attachments</span>
           <span class="uk-text-meta">(<span id="title-username"></span>)</span>
         </div>
         <!-- Toolbar -->
@@ -49,30 +50,21 @@
           <button id="remove-button" class="uk-icon-button button-toggle" uk-icon="trash" disabled></button>
         </div>
       </div>
-      <!-- Attachments -->
-      <div id="have-no-attachments" class="uk-flex-1 uk-flex uk-flex-center" style="margin-top: 15%;" hidden>
+      <!-- Have no attachments -->
+      <div id="have-no-attachments" class="uk-flex uk-flex-center" style="margin-top: 15%;" hidden>
         &lt;No attachments have been added&gt;
       </div>
-      <div id="have-attachments" class="uk-margin-small-left uk-margin-small-right" uk-slideshow>
-        <div id="attachments" class="uk-slideshow-items">
-          <div class="uk-flex uk-flex-center uk-flex-middle">
-            <img src="/images/animated-background.gif" alt="">
-          </div>
-          <div class="uk-flex uk-flex-center uk-flex-middle">
-            <img src="/images/pexels-matthew-barra-178916-813011.jpg" alt="">
-          </div>
-          <div class="uk-flex uk-flex-center uk-flex-middle">
-            <img src="/favicon/web-app-manifest-512x512.png" alt="">
-          </div>
-          <div class="uk-flex uk-flex-center uk-flex-middle">
-            <video src="/images/dummy.mp4" autoplay loop muted playsinline></video>
-          </div>
-        </div>
-        <div class="uk-flex uk-flex-center uk-margin-small-top">
-          <ul class="uk-slideshow-nav uk-dotnav"></ul>
-        </div>
-        <a class="uk-position-center-left uk-position-small uk-hidden-hover" href uk-slidenav-previous uk-slideshow-item="previous"></a>
-        <a class="uk-position-center-right uk-position-small uk-hidden-hover" href uk-slidenav-next uk-slideshow-item="next"></a>
+      <!-- Have attachments -->
+      <!--
+      <div class="uk-flex uk-flex-between uk-margin-small-left uk-margin-small-right uk-text-meta">
+        <div>foo.sh</div>
+        <div>1(3)</div>
+      </div>
+      -->
+      <div id="have-attachments" class="uk-flex uk-flex-1 uk-margin-small-left uk-margin-small-right" uk-slideshow hidden>
+        <div id="attachments" class="uk-slideshow-items"></div>
+        <a class="uk-slidenav-large uk-position-center-left uk-position-small" href="#" uk-slidenav-previous uk-slideshow-item="previous"></a>
+        <a class="uk-slidenav-large uk-position-center-right uk-position-small" href="#" uk-slidenav-next uk-slideshow-item="next"></a>
       </div>
     </div>
     <script type="module">
