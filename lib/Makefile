@@ -1,4 +1,4 @@
-LIBS=apptools db main rester webapp
+LIBS=apptools db main webapp
 
 all:
 	for lib in $(LIBS) ; do \

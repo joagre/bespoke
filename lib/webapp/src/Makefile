@@ -1,7 +1,8 @@
 #@BEGIN-APP-DEFAULT-RULES@
 APP=$(shell basename `cd ..; pwd`)
 ERLC=$(shell which erlc)
-ERLC_FLAGS+=-MMD -MF .$<.d -W -I ../..
+EXTERNAL_DIRS=$(shell find ../../../external/ -mindepth 1 -maxdepth 1 -type d)
+ERLC_FLAGS+=-MMD -MF .$<.d -W -I ../.. $(EXTERNAL_DIRS:%=-I %)
 YRL_SRC=$(wildcard *.yrl)
 XRL_SRC=$(wildcard *.xrl)
 ERL_SOURCES=$(wildcard *.erl) $(YRL_SRC:%.yrl=%.erl) $(XRL_SRC:%.xrl=%.erl)

@@ -1,8 +1,10 @@
 all:
 	(cd lib && $(MAKE) all)
+	(cd external && $(MAKE) all)
 
 release: mrproper
 	(cd lib && $(MAKE) release)
+	(cd external && $(MAKE) release)
 	(cd build && $(MAKE) release)
 
 runtest:
@@ -13,6 +15,7 @@ setcap:
 
 clean:
 	(cd lib && $(MAKE) clean)
+	(cd external && $(MAKE) clean)
 	rm -f .dialyzer.plt
 
 mrproper: clean
@@ -29,10 +32,11 @@ distclean: mrproper
 ERL=$(shell which erl)
 ERL_TOP=$(ERL:%/bin/erl=%)
 LPATH=$(abspath $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..)
-DIALYZER_APPS=apptools db main rester webapp
+DIALYZER_APPS=apptools db main webapp
+DIALYZER_EXTERNAL_APPS=mixmesh/rester
 
 dialyzer: .dialyzer.plt all
-	dialyzer --verbose --no_check_plt --plt .dialyzer.plt -r $(DIALYZER_APPS:%=$(LPATH)/bespoke/lib/%/ebin)
+	dialyzer --verbose --no_check_plt --plt .dialyzer.plt -r $(DIALYZER_APPS:%=$(LPATH)/bespoke/lib/%/ebin) $(DIALYZER_EXTERNAL_APPS:%=$(LPATH)/external/%/ebin)
 
 .dialyzer.plt: .dialyzer_init.plt
 	rm -f $@ ; cp $< $@

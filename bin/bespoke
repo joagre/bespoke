@@ -26,7 +26,11 @@ if [ -z "${erl}" ]; then
 fi
 
 bin_dir=${0%/*}
+external_libs=`find ${bin_dir}/../external -mindepth 1 -maxdepth 1 -type d`
 erl_libs=${bin_dir}/../lib
+for lib in ${external_libs}; do
+    erl_libs="${erl_libs}:${lib}"
+done
 erl_config="-config ${bin_dir}/bespoke.config"
 shell=""
 pa="-pa ${erl_libs}/*/test"

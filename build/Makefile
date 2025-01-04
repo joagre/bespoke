@@ -1,4 +1,5 @@
-LIBS=apptools db main rester webapp
+LIBS=apptools db main webapp
+EXTERNAL_DIRS := $(shell find ../external/ -mindepth 2 -maxdepth 2 -type d)
 RELEASE_DIR="bespoke-$(shell cat ../VERSION)"
 TARGET_DIR="releases/$(RELEASE_DIR)"
 
@@ -10,6 +11,14 @@ release:
 	@for lib in $(LIBS); do \
 		mkdir -p $(TARGET_DIR)/lib/$$lib/ebin; \
 		cp -r ../lib/$$lib/ebin/*.beam ../lib/$$lib/ebin/*.app $(TARGET_DIR)/lib/$$lib/ebin; \
+	done
+	@echo "Copying external ebin files"
+	@for lib in $(EXTERNAL_DIRS); do \
+		app=$$(basename $$lib); \
+		echo "lib: $$lib"; \
+		echo "app: $$app"; \
+		mkdir -p $(TARGET_DIR)/external/$$app/ebin; \
+		cp -r $$lib/ebin/*.beam $$lib/ebin/*.app $(TARGET_DIR)/external/$$app/ebin; \
 	done
 	@echo "Copying priv files"
 	@for lib in $(LIBS); do \
