@@ -47,7 +47,7 @@
             <input type="file" multiple>
             <button class="uk-icon-button" uk-icon="plus"></button>
           </div>
-          <button id="remove-button" class="uk-icon-button button-toggle" uk-icon="trash" disabled></button>
+          <button onclick="addAttachments.removeAttachment(event)" id="remove-button" class="uk-icon-button button-toggle" uk-icon="trash" disabled></button>
         </div>
       </div>
       <!-- Have no attachments -->
@@ -59,14 +59,16 @@
         <div id="attachments" class="uk-slideshow-items"></div>
         <div id="itemFilename" class="uk-position-bottom-left uk-position-small"><span class="uk-label">foo.sh</span></div>
         <div id="itemCounter" class="uk-position-bottom-right uk-position-small"><span class="uk-label">1 / 3</span></div>
-        <a class="uk-slidenav-large uk-position-center-left uk-overlay uk-overlay-default" href="#" uk-slidenav-previous uk-slideshow-item="previous"></a>
-        <a class="uk-slidenav-large uk-position-center-right uk-overlay uk-overlay-default" href="#" uk-slidenav-next uk-slideshow-item="next"></a>
+        <a class="uk-slidenav uk-position-small uk-position-center-left uk-overlay uk-overlay-default" uk-slidenav-previous uk-slideshow-item="previous"></a>
+        <a class="uk-slidenav uk-position-small uk-position-center-right uk-overlay uk-overlay-default" uk-slidenav-next uk-slideshow-item="next"></a>
       </div>
 
     </div>
     <script type="module">
       import bespoke from "/js/bespoke.js";
+      import addAttachments from "/js/add_attachments.js";
       window.bespoke = bespoke;
+      window.addAttachments = addAttachments;
     </script>
   </body>
 </html>
