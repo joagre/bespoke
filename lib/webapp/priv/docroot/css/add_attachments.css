@@ -1,16 +1,18 @@
 .uk-slideshow {
-  border: 2px dashed red;
-  background: rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--uk-light);
+    border-radius: 10px;
 }
 
+/*
 .uk-slideshow-items {
   outline: 2px dashed red;
 }
+*/
 
 [uk-slideshow] {
-    position: relative !important; /* Ensure proper positioning */
+    position: relative !important;
 }
-
+ 
 [uk-slideshow],
 .uk-slideshow-items {
   background-color: inherit; /* Use the parent's background color */
