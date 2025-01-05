@@ -7,6 +7,8 @@ update:
 		echo "The release must be unpacked under /home/pi"; \
 		exit 1; \
 	fi
+	mkdir -p /var/tmp/bespoke/{attachment,log,db}
+	mkdir -p /var/tmp/bespoke/attachment/tmp
 	sudo systemctl stop bespoke
 	sudo chown root:root lib/main/bin/change-ssid
 	sudo chmod 700 lib/main/bin/change-ssid

@@ -13,7 +13,7 @@
 -include_lib("apptools/include/shorthand.hrl").
 -include("../include/db.hrl").
 
--define(USER_DB_FILENAME, "/var/tmp/users.db").
+-define(USER_DB_FILENAME, "/var/tmp/bespoke/db/users.db").
 -define(USER_DB, users).
 -define(WORD_LIST_PATH, "/usr/share/dict/words").
 -define(SESSION_ID_SIZE, 16).

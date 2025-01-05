@@ -228,7 +228,7 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
             rest_util:response(Socket, Request,
                                {ok, {format, PayloadJsonTerm}});
         ["auto_login"] ->
-            case filelib:is_regular("/var/tmp/bespoke.bootstrap") of
+            case filelib:is_regular("/var/tmp/bespoke/bootstrap") of
                 true ->
                     rester_http_server:response_r(
                       Socket, Request, 302, "Found", "",
@@ -302,7 +302,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 JsonTerm ->
                     case json_term_to_bootstrap(JsonTerm) of
                         {ok, SSID} ->
-                            ok = file:delete("/var/tmp/bespoke.bootstrap"),
+                            ok = file:delete("/var/tmp/bespoke/bootstrap"),
                             ok = change_ssid(SSID),
                             %% Purge the portal cache
                             true = ets:delete_all_objects(?PORTAL_CACHE),

@@ -17,9 +17,9 @@
 -include_lib("apptools/include/serv.hrl").
 -include("../include/db.hrl").
 
--define(POST_DB_FILENAME, "/var/tmp/posts.db").
+-define(POST_DB_FILENAME, "/var/tmp/bespoke/db/posts.db").
 -define(POST_DB, posts).
--define(META_DB_FILENAME, "/var/tmp/meta.db").
+-define(META_DB_FILENAME, "/var/tmp/bespoke/db/meta.db").
 -define(META_DB, meta).
 -define(SUBSCRIPTION_DB, db_serv_subscriptions).
 

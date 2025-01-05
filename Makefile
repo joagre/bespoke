@@ -1,4 +1,6 @@
 all:
+	mkdir -p /var/tmp/bespoke/{attachment,log,db}
+	mkdir -p /var/tmp/bespoke/attachment/tmp
 	(cd lib && $(MAKE) all)
 	(cd external && $(MAKE) all)
 
