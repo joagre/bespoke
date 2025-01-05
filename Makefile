@@ -2,8 +2,8 @@ all:
 	mkdir -p /var/tmp/bespoke/attachment/tmp
 	mkdir -p /var/tmp/bespoke/log
 	mkdir -p /var/tmp/bespoke/db
-	(cd lib && $(MAKE) all)
 	(cd external && $(MAKE) all)
+	(cd lib && $(MAKE) all)
 
 release: mrproper
 	(cd lib && $(MAKE) release)
