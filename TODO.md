@@ -9,10 +9,10 @@
   `http/https` requests and `dns` lookups as seen in
   [webapp_rest.erl](webapp/src/webapp_rest.erl).
   
-  `webapp_rest.erl` uses the experimental
+  `webapp_rest.erl` previously used the experimental
   [dnsmasq-tool](main/bin/dnsmasq-tool) to switch between different
-  dns lookup behaviours before and after user login. It has been
-  disabled because of the follwoing caveat:
+  dns lookup behaviours before and after user login. This is no longer
+  done because of the show-stopping caveat:
 
   Caveat: It seems that Android does a request to
   https://www.google.com and strictly verifies that the SSL cerificate
