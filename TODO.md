@@ -15,7 +15,7 @@
   done because of the show-stopping caveat:
 
   Caveat: It seems that Android does a request to
-  https://www.google.com and strictly verifies that the SSL cerificate
+  https://www.google.com and strictly verifies the SSL certificate
   is ok. Duh! will accept that Bespoke stays in the captive portal
   mini-browser for now. If this is too annoying, we can write a native
   app that listens on AP/SSID connections and raises a notification +
