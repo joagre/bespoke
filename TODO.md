@@ -10,7 +10,7 @@
   [webapp_rest.erl](webapp/src/webapp_rest.erl).
   
   `webapp_rest.erl` previously used the experimental
-  [dnsmasq-tool](main/bin/dnsmasq-tool) to switch between different
+  [dnsmasq-tool](webapp/bin/dnsmasq-tool) to switch between different
   dns lookup behaviours before and after user login. This is no longer
   done though, because of a show-stopping caveat:
 
