@@ -16,11 +16,11 @@
 
   Caveat: It seems that Android does a request to
   https://www.google.com and strictly verifies the SSL
-  certificate. Duh! will accept that Bespoke stays in the captive
-  portal mini-browser for now. If this is too annoying, we can write a
-  native app that listens on AP/SSID connections and raises a
-  notification + contains a WebView. We will build such an app later
-  on anyway.
+  certificate. Duh! For that reason we will accept that Bespoke stays
+  in the captive portal mini-browser for now. If this is too annoying,
+  we can write a native app that listens on AP/SSID connections and
+  raises a notification + contains a WebView. We will build such an
+  app later on anyway (see below).
 
 ## Web app
 
