@@ -375,7 +375,6 @@ update_parent_count(PostId, N) ->
     ok = insert_and_inform(Post#post{reply_count = Post#post.reply_count + N}),
     update_parent_count(Post#post.parent_post_id, N).
 
-
 %%
 %% Subscription handling
 %%
