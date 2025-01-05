@@ -39,7 +39,7 @@ DIALYZER_APPS=apptools db main webapp
 DIALYZER_EXTERNAL_APPS=mixmesh/rester
 
 dialyzer: .dialyzer.plt all
-	dialyzer --verbose --no_check_plt --plt .dialyzer.plt -r $(DIALYZER_APPS:%=$(LPATH)/bespoke/lib/%/ebin) $(DIALYZER_EXTERNAL_APPS:%=$(LPATH)/external/%/ebin)
+	dialyzer --verbose --no_check_plt --plt .dialyzer.plt -r $(DIALYZER_APPS:%=$(LPATH)/bespoke/lib/%/ebin) $(DIALYZER_EXTERNAL_APPS:%=$(LPATH)/bespoke/external/%/ebin)
 
 .dialyzer.plt: .dialyzer_init.plt
 	rm -f $@ ; cp $< $@

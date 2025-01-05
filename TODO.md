@@ -1,5 +1,6 @@
 # TODO
 
+* remember titile and body
 * add an attachents field to post record
 * move files on server side when creating post
 * Add attachments to add_reply + do something with parent

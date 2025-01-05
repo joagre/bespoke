@@ -1,3 +1,5 @@
+% -*- fill-column: 120; -*-
+
 -module(webapp_rest).
 -export([start_link/0]).
 %% rester_http_server callbacks
@@ -21,9 +23,7 @@
 -type(timestamp() :: integer()).
 
 -record(state, {
-                subscriptions = #{} ::
-                  #{rester_socket() =>
-                        {Request :: term(), db_serv:subscription_id()}}
+                subscriptions = #{} ::  #{rester_socket() => {Request :: term(), db_serv:subscription_id()}}
                }).
 
 -record(portal_cache_entry, {
@@ -52,15 +52,10 @@ start_link() ->
 	 {nodelay, true},
 	 {reuseaddr, true}],
     %% Create a named table for the portal cache
-    ?PORTAL_CACHE = ets:new(?PORTAL_CACHE,
-                            [{keypos, #portal_cache_entry.ip_address},
-                             public, named_table]),
-    {ok, _} = timer:apply_interval(?PORTAL_TIMEOUT * 1000,
-                                   ?MODULE, delete_all_stale_timestamps, []),
+    ?PORTAL_CACHE = ets:new(?PORTAL_CACHE, [{keypos, #portal_cache_entry.ip_address}, public, named_table]),
+    {ok, _} = timer:apply_interval(?PORTAL_TIMEOUT * 1000, ?MODULE, delete_all_stale_timestamps, []),
     %% Create a named table for the challenge cache
-    ?CHALLENGE_CACHE = ets:new(?CHALLENGE_CACHE,
-                               [{keypos, #challenge_cache_entry.username},
-                                public, named_table]),
+    ?CHALLENGE_CACHE = ets:new(?CHALLENGE_CACHE, [{keypos, #challenge_cache_entry.username}, public, named_table]),
     ?log_info("Database REST API has been started"),
     HttpPort = application:get_env(webapp, http_port, 80),
     {ok, _} = rester_http_server:start_link(HttpPort, Options),
@@ -92,14 +87,10 @@ info(Socket, {subscription_change, SubscriptionId, PostId}, State) ->
             {ok, State};
         {Request, SubscriptionId} ->
             rest_util:response(Socket, Request, {ok, {format, PostId}}),
-            UpdatedState =
-                State#state{
-                  subscriptions =
-                      maps:remove(Socket, State#state.subscriptions)},
+            UpdatedState = State#state{subscriptions = maps:remove(Socket, State#state.subscriptions)},
             {ok, UpdatedState};
         SpuriousSubscriptionId ->
-            ?log_error("Spurious subscription id ~p\n",
-                       [SpuriousSubscriptionId]),
+            ?log_error("Spurious subscription id ~p\n", [SpuriousSubscriptionId]),
             {ok, State}
     end;
 info(_Socket, Info, State) ->
@@ -128,16 +119,13 @@ error(_Socket, Error, State) ->
 
 http_request(Socket, Request, Body, State) ->
     ?log_info("Request = ~s, Headers = ~s, Body = ~p",
-              [rester_http:format_request(Request),
-               rester_http:format_hdr(Request#http_request.headers),
-               Body]),
+              [rester_http:format_request(Request), rester_http:format_hdr(Request#http_request.headers), Body]),
     try http_request_(Socket, Request, Body, State) of
 	Result ->
             Result
     catch
 	_Class:Reason:StackTrace ->
-	    ?log_error("http_request crashed: ~p\n~p\n",
-                       [Reason, StackTrace]),
+	    ?log_error("http_request crashed: ~p\n~p\n", [Reason, StackTrace]),
 	    erlang:error(Reason)
     end.
 
@@ -160,8 +148,7 @@ http_get(Socket, Request, Body, State) ->
     case string:tokens(Url#url.path, "/") of
 	["versions"] ->
 	    Object = json:encode([<<"v1">>]),
-	    rester_http_server:response_r(Socket, Request, 200, "OK", Object,
-                                          [{content_type, "application/json"}]);
+	    rester_http_server:response_r(Socket, Request, 200, "OK", Object, [{content_type, "application/json"}]);
 	["v1"|Tokens] ->
 	    http_get(Socket, Request, Url, Tokens, Body, State, v1);
 	Tokens ->
@@ -174,65 +161,52 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
         %% On Ubuntu Core, the network manager will check for connectivity
         _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
                Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
-            ?log_info("Request to ~s~s\n",
-                      [Headers#http_chdr.host, Url#url.path]),
+            ?log_info("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, ubuntu);
         %% In Firefox, the browser will check for a captive portal
         %% https://support.mozilla.org/en-US/kb/captive-portal
         ["canonical.html" = Page]
           when Headers#http_chdr.host == "detectportal.firefox.com" ->
-            ?log_info("Request to ~s~s\n",
-                      [Headers#http_chdr.host, Url#url.path]),
+            ?log_info("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, Page);
         ["success.txt" = Page]
           when Headers#http_chdr.host == "detectportal.firefox.com" ->
-            ?log_info("Request to ~s~s\n",
-                      [Headers#http_chdr.host, Url#url.path]),
+            ?log_info("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, Page);
         %% Apple devices will check for a captive portal
         ["hotspot-detect.html" = Page] ->
-            ?log_info("Request to ~s~s\n",
-                      [Headers#http_chdr.host, Url#url.path]),
+            ?log_info("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, Page);
         %% Android devices will check for a captive portal
         ["generate_204" = Page] ->
-            ?log_info("Request to ~s~s\n",
-                      [Headers#http_chdr.host, Url#url.path]),
+            ?log_info("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, Page);
         ["gen_204" = Page] ->
-            ?log_info("Request to ~s~s\n",
-                      [Headers#http_chdr.host, Url#url.path]),
+            ?log_info("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, Page);
         %% Captive portal acks are generated by loader.js
         ["captive_portal_ack"] ->
-            ?log_info("Request to ~s~s\n",
-                      [Headers#http_chdr.host, Url#url.path]),
+            ?log_info("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
             {ok, MacAddress} = get_mac_address(Socket),
             ok = webapp_dnsmasq:set_post_login_mac_address(MacAddress),
             {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
             {ok, MacAddress} = get_mac_address(Socket),
-            PortalCacheEntry =
-                #portal_cache_entry{ip_address = IpAddress,
-                                    mac_address = MacAddress,
-                                    timestamp = timestamp()},
+            PortalCacheEntry = #portal_cache_entry{ip_address = IpAddress,
+                                                   mac_address = MacAddress,
+                                                   timestamp = timestamp()},
             true = ets:insert(?PORTAL_CACHE, PortalCacheEntry),
-            rester_http_server:response_r(
-              Socket, Request, 204, "OK", "", no_cache_headers());
+            rester_http_server:response_r(Socket, Request, 204, "OK", "", no_cache_headers());
         %% Bespoke API
         ["list_top_posts"] ->
             true = update_portal_cache_entry(Socket),
             Posts = db_serv:list_top_posts(),
-            PayloadJsonTerm = lists:map(fun(Post) ->
-                                                post_to_json_term(Post)
-                                        end, Posts),
-            rest_util:response(Socket, Request,
-                               {ok, {format, PayloadJsonTerm}});
+            PayloadJsonTerm = lists:map(fun(Post) -> post_to_json_term(Post) end, Posts),
+            rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
         ["auto_login"] ->
             case filelib:is_regular("/var/tmp/bespoke/bootstrap") of
                 true ->
-                    rester_http_server:response_r(
-                      Socket, Request, 302, "Found", "",
-                      [{location, "/bootstrap.html"}|no_cache_headers()]);
+                    rester_http_server:response_r(Socket, Request, 302, "Found", "",
+                                                  [{location, "/bootstrap.html"}|no_cache_headers()]);
                 false ->
                     {ok, MacAddress} = get_mac_address(Socket),
                     User = db_user_serv:get_user_from_mac_address(MacAddress),
@@ -240,19 +214,13 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
                         #{<<"noPassword">> => true,
                           <<"userId">> => User#user.id,
                           <<"username">> => User#user.name,
-                          <<"sessionId">> =>
-                              base64:encode(User#user.session_id)},
+                          <<"sessionId">> => base64:encode(User#user.session_id)},
                     case User#user.password_hash of
                         not_set ->
-                            rest_util:response(Socket, Request,
-                                               {ok, {format, PayloadJsonTerm}});
+                            rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
                         _ ->
-                            UpdatedPayloadJsonTerm =
-                                maps:put(<<"noPassword">>, false,
-                                         PayloadJsonTerm),
-                            rest_util:response(
-                              Socket, Request,
-                              {ok, {format, UpdatedPayloadJsonTerm}})
+                            UpdatedPayloadJsonTerm = maps:put(<<"noPassword">>, false, PayloadJsonTerm),
+                            rest_util:response(Socket, Request, {ok, {format, UpdatedPayloadJsonTerm}})
                     end
             end;
         %% Act as static web server
@@ -265,15 +233,11 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
                     _ ->
                         Url#url.path
                 end,
-            AbsFilename =
-                filename:join(
-                  [filename:absname(code:priv_dir(webapp)), "docroot",
-                   tl(UriPath)]),
+            AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot", tl(UriPath)]),
             case filelib:is_regular(AbsFilename) of
                 true ->
-                    rester_http_server:response_r(
-                      Socket, Request, 200, "OK", {file, AbsFilename},
-                      [{content_type, {url, UriPath}}]);
+                    rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
+                                                  [{content_type, {url, UriPath}}]);
                 false ->
                     rest_util:response(Socket, Request, {error, not_found})
             end
@@ -320,16 +284,13 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         {ok, #user{password_salt = PasswordSalt}} ->
                             ok;
                         {error, not_found} ->
-                            PasswordSalt = crypto:strong_rand_bytes(
-                                             ?CRYPTO_PWHASH_SALTBYTES)
+                            PasswordSalt = crypto:strong_rand_bytes(?CRYPTO_PWHASH_SALTBYTES)
                     end,
                     Challenge = webapp_auth:generate_challenge(),
-                    PayloadJsonTerm =
-                        #{<<"passwordSalt">> => base64:encode(PasswordSalt),
-                          <<"challenge">> => base64:encode(Challenge)},
+                    PayloadJsonTerm = #{<<"passwordSalt">> => base64:encode(PasswordSalt),
+                                        <<"challenge">> => base64:encode(Challenge)},
                     true = add_challenge_to_cache(Username, Challenge),
-                    rest_util:response(Socket, Request,
-                                       {ok, {format, PayloadJsonTerm}});
+                    rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
                 _ ->
                     rest_util:response(Socket, Request, {error, badarg})
             end;
@@ -353,8 +314,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     case json_term_to_switch_user(JsonTerm) of
                         {ok, Username, PasswordSalt, PasswordHash,
                          ClientResponse} ->
-                            switch_user(Socket, Request, Username, PasswordSalt,
-                                        PasswordHash, ClientResponse);
+                            switch_user(Socket, Request, Username, PasswordSalt, PasswordHash, ClientResponse);
                         {error, invalid} ->
                             rest_util:response(Socket, Request, {error, badarg})
                     end
@@ -366,8 +326,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 JsonTerm ->
                     case json_term_to_change_password(JsonTerm) of
                         {ok, PasswordSalt, PasswordHash} ->
-                            change_password(Socket, Request, PasswordSalt,
-                                            PasswordHash);
+                            change_password(Socket, Request, PasswordSalt, PasswordHash);
                         {error, invalid} ->
                             rest_util:response(Socket, Request, {error, badarg})
                     end
@@ -384,12 +343,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                    end, PostIds) of
                         true ->
                             Posts = db_serv:lookup_posts(PostIds),
-                            PayloadJsonTerm =
-                                lists:map(fun(Post) ->
-                                                  post_to_json_term(Post)
-                                          end, Posts),
-                            rest_util:response(
-                              Socket, Request, {ok, {format, PayloadJsonTerm}});
+                            PayloadJsonTerm = lists:map(fun(Post) -> post_to_json_term(Post) end, Posts),
+                            rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
                         false ->
                             rest_util:response(Socket, Request, {error, badarg})
                     end;
@@ -407,14 +362,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                            false
                                    end, PostIds) of
                         true ->
-                            Posts =
-                                db_serv:lookup_posts(PostIds, recursive),
-                            PayloadJsonTerm =
-                                lists:map(fun(Post) ->
-                                                  post_to_json_term(Post)
-                                          end, Posts),
-                            rest_util:response(
-                              Socket, Request, {ok, {format, PayloadJsonTerm}});
+                            Posts = db_serv:lookup_posts(PostIds, recursive),
+                            PayloadJsonTerm = lists:map(fun(Post) -> post_to_json_term(Post) end, Posts),
+                            rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
                         false ->
                             rest_util:response(Socket, Request, {error, badarg})
                     end;
@@ -432,10 +382,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                            false
                                    end, PostIds) of
                         true ->
-                            PayloadJsonTerm =
-                                db_serv:lookup_post_ids(PostIds, recursive),
-                            rest_util:response(
-                              Socket, Request, {ok, {format, PayloadJsonTerm}});
+                            PayloadJsonTerm = db_serv:lookup_post_ids(PostIds, recursive),
+                            rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
                         false ->
                             rest_util:response(Socket, Request, {error, badarg})
                     end;
@@ -449,30 +397,23 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 JsonTerm ->
                     {ok, #{<<"sessionId">> := SessionId}} =
                         get_bespoke_cookie(Request),
-                    case db_user_serv:get_user_from_session_id(
-                           base64:decode(SessionId)) of
+                    case db_user_serv:get_user_from_session_id(base64:decode(SessionId)) of
                         {ok, #user{name = Username}} ->
                             case json_term_to_post(JsonTerm, Username) of
                                 {ok, Post} ->
                                     case db_serv:insert_post(Post) of
                                         {ok, InsertedPost} ->
                                             db_serv:insert_post(Post),
-                                            PayloadJsonTerm =
-                                                post_to_json_term(InsertedPost),
-                                            rest_util:response(
-                                              Socket, Request,
-                                              {ok, {format, PayloadJsonTerm}});
+                                            PayloadJsonTerm = post_to_json_term(InsertedPost),
+                                            rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
                                         {error, invalid_post} ->
-                                            rest_util:response(
-                                              Socket, Request, {error, badarg})
+                                            rest_util:response(Socket, Request, {error, badarg})
                                     end;
                                 {error, invalid} ->
-                                    rest_util:response(
-                                      Socket, Request, {error, badarg})
+                                    rest_util:response(Socket, Request, {error, badarg})
                             end;
                         {error, not_found} ->
-                            rest_util:response(Socket, Request,
-                                               {error, unauthorized})
+                            rest_util:response(Socket, Request, {error, unauthorized})
                     end
             end;
         ["delete_post"] ->
@@ -480,21 +421,17 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 PostId when is_binary(PostId) ->
-                    {ok, #{<<"sessionId">> := SessionId}} =
-                        get_bespoke_cookie(Request),
-                    case db_user_serv:get_user_from_session_id(
-                           base64:decode(SessionId)) of
+                    {ok, #{<<"sessionId">> := SessionId}} = get_bespoke_cookie(Request),
+                    case db_user_serv:get_user_from_session_id(base64:decode(SessionId)) of
                         {ok, _User} ->
                             case db_serv:delete_post(PostId) of
                                 ok ->
                                     rest_util:response(Socket, Request, ok_204);
                                 {error, not_found} ->
-                                    rest_util:response(Socket, Request,
-                                                       {error, not_found})
+                                    rest_util:response(Socket, Request, {error, not_found})
                             end;
                         {error, not_found} ->
-                            rest_util:response(Socket, Request,
-                                               {error, unauthorized})
+                            rest_util:response(Socket, Request, {error, unauthorized})
                     end;
                 _ ->
                     rest_util:response(Socket, Request, {error, badarg})
@@ -504,22 +441,15 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 PostId when is_binary(PostId) ->
-                    {ok, #{<<"sessionId">> := SessionId}} =
-                        get_bespoke_cookie(Request),
-                    case db_user_serv:get_user_from_session_id(
-                           base64:decode(SessionId)) of
+                    {ok, #{<<"sessionId">> := SessionId}} = get_bespoke_cookie(Request),
+                    case db_user_serv:get_user_from_session_id(base64:decode(SessionId)) of
                         {ok, User} ->
-                            {ok, Likers} =
-                                db_serv:toggle_like(PostId, User#user.id),
-                            PayloadJsonTerm =
-                                #{<<"liked">> =>
-                                      lists:member(User#user.id, Likers),
-                                  <<"likesCount">> => length(Likers)},
-                            rest_util:response(
-                              Socket, Request, {ok, {format, PayloadJsonTerm}});
+                            {ok, Likers} = db_serv:toggle_like(PostId, User#user.id),
+                            PayloadJsonTerm = #{<<"liked">> => lists:member(User#user.id, Likers),
+                                                <<"likesCount">> => length(Likers)},
+                            rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
                         {error, not_found} ->
-                            rest_util:response(
-                              Socket, Request, {error, unauthorized})
+                            rest_util:response(Socket, Request, {error, unauthorized})
                     end;
                 _ ->
                     rest_util:response(Socket, Request, {error, badarg})
@@ -535,18 +465,13 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                            false
                                    end, PostIds) of
                         true ->
-                            SubscriptionId =
-                                db_serv:subscribe_on_changes(PostIds),
+                            SubscriptionId = db_serv:subscribe_on_changes(PostIds),
                             UpdatedState =
-                                State#state{
-                                  subscriptions =
-                                      maps:put(Socket,
-                                               {Request, SubscriptionId},
-                                               State#state.subscriptions)},
+                                State#state{subscriptions =
+                                                maps:put(Socket, {Request, SubscriptionId}, State#state.subscriptions)},
                             {ok, UpdatedState};
                         false ->
-                            rest_util:response(Socket, Request,
-                                               {error, badarg})
+                            rest_util:response(Socket, Request, {error, badarg})
                     end
             end;
         ["upload_attachments"] ->
@@ -554,14 +479,12 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 lists:map(fun(#{filename := Filename,
                                 unique_filename := UniqueFilename,
                                 content_type := ContentType}) ->
-                                  AbsPath = filename:join(
-                                              [<<"/tmp">>, UniqueFilename]),
+                                  AbsPath = filename:join([<<"/tmp">>, UniqueFilename]),
                                   #{<<"filename">> => Filename,
                                     <<"absPath">> => AbsPath,
                                     <<"contentType">> => ContentType}
                           end, Body),
-            rest_util:response(Socket, Request,
-                               {ok, {format, PayloadJsonTerm}});
+            rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
         _ ->
 	    ?log_error("~p not found", [Tokens]),
 	    rest_util:response(Socket, Request, {error, not_found})
@@ -575,32 +498,22 @@ login(Socket, Request, Username, ClientResponse) ->
     case get_challenge_from_cache(Username) of
         {ok, Challenge} ->
             case db_user_serv:get_user_from_username(Username) of
-                {ok, #user{password_salt = PasswordSalt,
-                           password_hash = PasswordHash}} ->
-                    case webapp_auth:verify_client_response(
-                           ClientResponse, Challenge, PasswordHash) of
+                {ok, #user{password_salt = PasswordSalt, password_hash = PasswordHash}} ->
+                    case webapp_auth:verify_client_response(ClientResponse, Challenge, PasswordHash) of
                         true ->
                             {ok, MacAddress} = get_mac_address(Socket),
-                            case db_user_serv:login(
-                                   Username, MacAddress, PasswordSalt,
-                                   PasswordHash) of
-                                {ok, #user{id = UserId,
-                                           session_id = SessionId}} ->
+                            case db_user_serv:login(Username, MacAddress, PasswordSalt, PasswordHash) of
+                                {ok, #user{id = UserId, session_id = SessionId}} ->
                                     PayloadJsonTerm =
                                         #{<<"userId">> => UserId,
                                           <<"username">> => Username,
-                                          <<"sessionId">> =>
-                                              base64:encode(SessionId)},
-                                    rest_util:response(
-                                      Socket, Request,
-                                      {ok, {format, PayloadJsonTerm}});
+                                          <<"sessionId">> => base64:encode(SessionId)},
+                                    rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
                                 {error, failure} ->
-                                    rest_util:response(Socket, Request,
-                                                       {error, forbidden})
+                                    rest_util:response(Socket, Request, {error, forbidden})
                             end;
                         false ->
-                            rest_util:response(Socket, Request,
-                                               {error, forbidden})
+                            rest_util:response(Socket, Request, {error, forbidden})
                     end;
                 {error, not_found} ->
                     rest_util:response(Socket, Request, {error, forbidden})
@@ -609,18 +522,14 @@ login(Socket, Request, Username, ClientResponse) ->
             rest_util:response(Socket, Request, {error, forbidden})
     end.
 
-switch_user(Socket, Request, Username,
-            _PasswordSalt = not_set, _PasswordHash = not_set,
-            _ClientResponse = not_set) ->
+switch_user(Socket, Request, Username, _PasswordSalt = not_set, _PasswordHash = not_set, _ClientResponse = not_set) ->
     {ok, MacAddress} = get_mac_address(Socket),
     case db_user_serv:switch_user(Username, MacAddress) of
         {ok, #user{id = UserId, session_id = SessionId}} ->
-            PayloadJsonTerm =
-                #{<<"userId">> => UserId,
-                  <<"username">> => Username,
-                  <<"sessionId">> => base64:encode(SessionId)},
-            rest_util:response(Socket, Request,
-                               {ok, {format, PayloadJsonTerm}});
+            PayloadJsonTerm = #{<<"userId">> => UserId,
+                                <<"username">> => Username,
+                                <<"sessionId">> => base64:encode(SessionId)},
+            rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
         {error, failure} ->
             rest_util:response(Socket, Request, {error, forbidden})
     end;
@@ -630,39 +539,28 @@ switch_user(Socket, Request, Username, PasswordSalt, PasswordHash, ClientRespons
             case db_user_serv:get_user_from_username(Username) of
                 {ok, #user{password_hash = not_set}} ->
                     {ok, MacAddress} = get_mac_address(Socket),
-                    switch_user_now(
-                      Socket, Request, Username, MacAddress, PasswordSalt,
-                      PasswordHash);
-                {ok, #user{password_salt = PasswordSalt,
-                           password_hash = PasswordHash}} ->
-                    case webapp_auth:verify_client_response(
-                           ClientResponse, Challenge, PasswordHash) of
+                    switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt, PasswordHash);
+                {ok, #user{password_salt = PasswordSalt, password_hash = PasswordHash}} ->
+                    case webapp_auth:verify_client_response(ClientResponse, Challenge, PasswordHash) of
                         true ->
                             {ok, MacAddress} = get_mac_address(Socket),
-                            switch_user_now(
-                              Socket, Request, Username, MacAddress,
-                              PasswordSalt, PasswordHash);
+                            switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt, PasswordHash);
                         false ->
-                            rest_util:response(Socket, Request,
-                                               {error, forbidden})
+                            rest_util:response(Socket, Request, {error, forbidden})
                     end;
                 {ok, _} ->
                     rest_util:response(Socket, Request, {error, forbidden});
                 {error, not_found} ->
                     {ok, MacAddress} = get_mac_address(Socket),
-                    switch_user_now(
-                      Socket, Request, Username, MacAddress, PasswordSalt,
-                      PasswordHash)
+                    switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt, PasswordHash)
             end;
         {error, not_found} ->
             rest_util:response(Socket, Request, {error, forbidden})
     end.
 
-switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt,
-                PasswordHash) ->
+switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt, PasswordHash) ->
     #user{id = UserId, session_id = SessionId} =
-        db_user_serv:switch_user(Username, MacAddress, PasswordSalt,
-                                 PasswordHash),
+        db_user_serv:switch_user(Username, MacAddress, PasswordSalt, PasswordHash),
     PayloadJsonTerm =
         #{<<"userId">> => UserId,
           <<"username">> => Username,
@@ -674,8 +572,7 @@ change_password(Socket, Request, PasswordSalt, PasswordHash) ->
     {ok, #{<<"sessionId">> := SessionId}} = get_bespoke_cookie(Request),
     case db_user_serv:get_user_from_session_id(base64:decode(SessionId)) of
         {ok, #user{name = Username}} ->
-            case db_user_serv:change_password(
-                   Username, MacAddress, PasswordSalt, PasswordHash) of
+            case db_user_serv:change_password(Username, MacAddress, PasswordSalt, PasswordHash) of
                 ok ->
                     rest_util:response(Socket, Request, ok_204);
                 {error, failure} ->
@@ -694,44 +591,37 @@ redirect_or_ack(Socket, Request, Page) ->
     case ets:lookup(?PORTAL_CACHE, IpAddress) of
         [] ->
             ?log_info("Captive portal redirect"),
-            rester_http_server:response_r(
-              Socket, Request, 302, "Found", "",
-              [{location, "http://bespoke.local/loader.html"}|
-               no_cache_headers()]);
+            rester_http_server:response_r(Socket, Request, 302, "Found", "",
+                                          [{location, "http://bespoke.local/loader.html"}|
+                                           no_cache_headers()]);
         [#portal_cache_entry{timestamp = Timestamp}] ->
             case timestamp() - Timestamp > ?PORTAL_TIMEOUT of
                 true ->
                     ?log_info("Captive portal redirect (timeout)"),
-                    rester_http_server:response_r(
-                      Socket, Request, 302, "Found", "",
-                      [{location, "http://bespoke.local/loader.html"}|
-                       no_cache_headers()]);
+                    rester_http_server:response_r(Socket, Request, 302, "Found", "",
+                                                  [{location, "http://bespoke.local/loader.html"}|
+                                                   no_cache_headers()]);
                 false ->
                     case Page of
                         "hotspot-detect.html" ->
                             ?log_info("Returning 200 OK (Apple mode)\n"),
-                            rester_http_server:response_r(
-                              Socket, Request, 200, "OK",
-                              "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
-                              [{content_type, "text/html"}|no_cache_headers()]);
+                            rester_http_server:response_r(Socket, Request, 200, "OK",
+                                                          "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
+                                                          [{content_type, "text/html"}|no_cache_headers()]);
                         "canonical.html" ->
                             ?log_info("Returning 200 OK (/canonical.html)\n"),
-                            rester_http_server:response_r(
-                              Socket, Request, 200, "OK",
-                              "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
-                              [{content_type, "text/html"},
-                               no_cache_headers()]);
+                            rester_http_server:response_r(Socket, Request, 200, "OK",
+                                                          "<HTML><HEAD></HEAD><BODY>Success</BODY></HTML>",
+                                                          [{content_type, "text/html"},
+                                                           no_cache_headers()]);
                         "success.txt" ->
                             ?log_info("Returning 200 OK (/success.txt)\n"),
-                            rester_http_server:response_r(
-                              Socket, Request, 200, "OK", "success",
-                              [{content_type, "text/plain"},
-                               no_cache_headers()]);
+                            rester_http_server:response_r(Socket, Request, 200, "OK", "success",
+                                                          [{content_type, "text/plain"},
+                                                           no_cache_headers()]);
                         _ ->
                             ?log_info("Returning 204 No Content (generic)\n"),
-                            rester_http_server:response_r(
-                              Socket, Request, 204, "OK", "",
-                              no_cache_headers())
+                            rester_http_server:response_r( Socket, Request, 204, "OK", "", no_cache_headers())
                     end
             end
     end.
@@ -739,19 +629,15 @@ redirect_or_ack(Socket, Request, Page) ->
 delete_all_stale_timestamps() ->
     ?log_info("Purging the captive portal"),
     Threshold = timestamp() - ?PORTAL_TIMEOUT,
-    StalePortalCacheEntries =
-        ets:foldr(fun(#portal_cache_entry{
-                         timestamp = Timestamp} = PortalCacheEntry, Acc)
-                        when Timestamp < Threshold ->
-                          [PortalCacheEntry|Acc];
-                     (_, Acc) ->
-                          Acc
-                  end, [], ?PORTAL_CACHE),
+    StalePortalCacheEntries = ets:foldr(fun(#portal_cache_entry{timestamp = Timestamp} = PortalCacheEntry, Acc)
+                                              when Timestamp < Threshold ->
+                                                [PortalCacheEntry|Acc];
+                                           (_, Acc) ->
+                                                Acc
+                                        end, [], ?PORTAL_CACHE),
     %% Clear the MAC addresses
     StaleMacAddresses =
-        lists:map(fun(#portal_cache_entry{mac_address = MacAddress}) ->
-                          MacAddress
-                  end, StalePortalCacheEntries),
+        lists:map(fun(#portal_cache_entry{mac_address = MacAddress}) -> MacAddress end, StalePortalCacheEntries),
     ok = webapp_dnsmasq:clear_mac_addresses(StaleMacAddresses),
     %% Clear the portal cache
     lists:foreach(fun(#portal_cache_entry{ip_address = IpAddress}) ->
@@ -766,9 +652,7 @@ update_portal_cache_entry(Socket) ->
             true;
         [PortalCacheEntry] ->
             %% Update the timestamp
-            true = ets:insert(?PORTAL_CACHE,
-                              PortalCacheEntry#portal_cache_entry{
-                                timestamp = timestamp()})
+            true = ets:insert(?PORTAL_CACHE, PortalCacheEntry#portal_cache_entry{timestamp = timestamp()})
     end.
 
 %%
@@ -776,10 +660,9 @@ update_portal_cache_entry(Socket) ->
 %%
 
 add_challenge_to_cache(UserId, Challenge) ->
-    ets:insert(?CHALLENGE_CACHE,
-               #challenge_cache_entry{username = UserId,
-                                      challenge = Challenge,
-                                      timestamp = timestamp()}).
+    ets:insert(?CHALLENGE_CACHE, #challenge_cache_entry{username = UserId,
+                                                        challenge = Challenge,
+                                                        timestamp = timestamp()}).
 
 get_challenge_from_cache(Username) ->
     true = purge_challenge_cache(),
@@ -793,9 +676,7 @@ get_challenge_from_cache(Username) ->
 purge_challenge_cache() ->
     Threshold = timestamp() - ?CHALLENGE_TIMEOUT,
     ets:foldl(
-      fun(#challenge_cache_entry{username = Username,
-                                 timestamp = Timestamp}, _Acc)
-            when Timestamp < Threshold ->
+      fun(#challenge_cache_entry{username = Username, timestamp = Timestamp}, _Acc) when Timestamp < Threshold ->
               ets:delete(?CHALLENGE_CACHE, Username);
          (_, Acc) ->
               Acc
@@ -838,8 +719,7 @@ json_term_to_bootstrap(#{<<"ssid">> := SSID}) when is_binary(SSID) ->
 json_term_to_bootstrap(_) ->
     {error, invalid}.
 
-json_term_to_login(#{<<"username">> := Username,
-                     <<"clientResponse">> := ClientResponse} = JsonTerm)
+json_term_to_login(#{<<"username">> := Username, <<"clientResponse">> := ClientResponse} = JsonTerm)
   when is_binary(Username) andalso is_binary(ClientResponse) ->
     case no_more_keys([<<"username">>, <<"clientResponse">>], JsonTerm) of
         true ->
@@ -863,8 +743,7 @@ json_term_to_switch_user(#{<<"username">> := Username,
                        <<"passwordHash">>,
                        <<"clientResponse">>], JsonTerm) of
         true ->
-            {ok, Username, base64decode(PasswordSalt),
-             base64decode(PasswordHash), base64decode(ClientResponse)};
+            {ok, Username, base64decode(PasswordSalt), base64decode(PasswordHash), base64decode(ClientResponse)};
         false ->
             {error, invalid}
     end;
@@ -876,8 +755,7 @@ base64decode(null) ->
 base64decode(Value) ->
     base64:decode(Value).
 
-json_term_to_change_password(#{<<"passwordSalt">> := PasswordSalt,
-                               <<"passwordHash">> := PasswordHash} = JsonTerm)
+json_term_to_change_password(#{<<"passwordSalt">> := PasswordSalt, <<"passwordHash">> := PasswordHash} = JsonTerm)
   when is_binary(PasswordHash) andalso is_binary(PasswordSalt) ->
     case no_more_keys([<<"passwordSalt">>, <<"passwordHash">>], JsonTerm) of
         true ->
@@ -889,13 +767,13 @@ json_term_to_change_password(_) ->
     {error, invalid}.
 
 %% Top post
-json_term_to_post(#{<<"title">> := Title,
-                    <<"body">> := Body} = PostJsonTerm, Username)
+json_term_to_post(#{<<"title">> := Title, <<"body">> := Body} = PostJsonTerm, Username)
   when is_binary(Title) andalso is_binary(Body) ->
-    case no_more_keys([<<"title">>, <<"body">>],
-                      PostJsonTerm) of
+    case no_more_keys([<<"title">>, <<"body">>], PostJsonTerm) of
         true ->
-            {ok, #post{title = Title, body = Body, author = Username}};
+            {ok, #post{title = Title,
+                       body = Body,
+                       author = Username}};
         false ->
             {error, invalid}
     end;
@@ -936,8 +814,7 @@ get_mac_address(Socket) ->
     end.
 
 get_mac_address_for_ip_address(IpAddress) ->
-    Command = "ip neigh show | awk '/" ++
-        inet:ntoa(IpAddress) ++ "/ {print $5}'",
+    Command = "ip neigh show | awk '/" ++ inet:ntoa(IpAddress) ++ "/ {print $5}'",
     case string:trim(os:cmd(Command)) of
         "" ->
             {error, not_found};
@@ -966,25 +843,20 @@ no_cache_headers() ->
 parse_body(Socket, Request, Body) ->
     case rest_util:parse_body(Request, Body) of
         {error, _Reason} ->
-            {return, rest_util:response(
-                       Socket, Request,
-                       {error, bad_request, "Invalid JSON syntax"})};
+            {return, rest_util:response(Socket, Request, {error, bad_request, "Invalid JSON syntax"})};
         JsonTerm ->
             JsonTerm
     end.
 
 change_ssid(SSID) ->
-    ScriptPath =
-        filename:absname(
-          filename:join([code:lib_dir(main), "bin", "change-ssid"])),
+    ScriptPath = filename:absname(filename:join([code:lib_dir(main), "bin", "change-ssid"])),
     Command = ["sudo bash ", ScriptPath, " ", ?b2l(SSID), " 2>&1; echo $?"],
     ?log_info("Calling: ~s\n", [Command]),
     case string:trim(os:cmd(Command)) of
         "0" ->
             ok;
         UnexpectedOutput ->
-            ?log_error("Unexpected output from dnsmasq-tool: ~s",
-                       [UnexpectedOutput]),
+            ?log_error("Unexpected output from dnsmasq-tool: ~s", [UnexpectedOutput]),
             {error, UnexpectedOutput}
     end.
 
