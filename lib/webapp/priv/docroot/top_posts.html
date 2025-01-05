@@ -36,8 +36,12 @@
           <button onclick="bespoke.gotoPage(event, 'add_top_post.html')" class="uk-icon-button" uk-icon="plus"></button>
         </div>
       </div>
-      <!-- Posts -->
-      <div class="uk-margin-small-left uk-margin-small-right">
+      <!-- Have no posts -->
+      <div id="have-no-posts" class="uk-flex uk-flex-1 uk-flex-center uk-flex-middle" hidden>
+        &lt;No posts have been created&gt;
+      </div>
+      <!-- Have posts -->
+      <div id="have-posts" class="uk-margin-small-left uk-margin-small-right" hidden>
         <div id="posts"></div>
       </div>
     </div>
