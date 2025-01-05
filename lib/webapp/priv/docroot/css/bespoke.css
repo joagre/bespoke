@@ -19,7 +19,7 @@
 }
 
 html {
-    overflow-y: scroll; /* Forces scrollbar visibility */
+    overflow-y: scroll;
 }
 
 /* Jesus wept: https://stackoverflow.com/a/58048556 */
