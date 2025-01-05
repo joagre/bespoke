@@ -36,8 +36,8 @@
         </div>
       </div>
       <!-- Form -->
-      <div class="uk-margin-small-left uk-margin-small-right">
-        <form class="uk-margin-small-top">
+      <div class="uk-flex uk-flex-1 uk-margin-small-left uk-margin-small-right">
+        <form class="uk-flex uk-flex-1 uk-flex-column uk-margin-small-top">
           <!-- Title text -->
           <div class="uk-flex uk-flex-middle">
             <input class="uk-input" placeholder="Enter title" id="form-title" type="text" required>
@@ -45,7 +45,8 @@
             <span id="form-attachment-counter" class="uk-margin-small-left uk-margin-small-right"></span>
           </div>
           <!-- Body text -->
-          <textarea class="uk-margin-top uk-textarea" placeholder="Enter body" id="form-body" rows="5" required></textarea>
+          <textarea class="uk-flex-1 uk-margin-top uk-textarea uk-margin-small-bottom" placeholder="Enter body" id="form-body" style="flex-grow: 1; min-height: 0;"
+                    required></textarea>
         </form>
       </div>
     </div>

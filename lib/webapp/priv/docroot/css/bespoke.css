@@ -31,7 +31,6 @@ html, body {
 /* Jesus wept: https://stackoverflow.com/a/58048556 */
 .top-container {
     min-height: -webkit-fill-available;
-    /* height: 100%; */
 }
 
 /* Footer and header styling */
