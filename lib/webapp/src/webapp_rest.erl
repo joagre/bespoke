@@ -165,12 +165,10 @@ http_get(Socket, Request, Url, Tokens, _Body, _State, v1) ->
             redirect_or_ack(Socket, Request, ubuntu);
         %% In Firefox, the browser will check for a captive portal
         %% https://support.mozilla.org/en-US/kb/captive-portal
-        ["canonical.html" = Page]
-          when Headers#http_chdr.host == "detectportal.firefox.com" ->
+        ["canonical.html" = Page] when Headers#http_chdr.host == "detectportal.firefox.com" ->
             ?log_info("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, Page);
-        ["success.txt" = Page]
-          when Headers#http_chdr.host == "detectportal.firefox.com" ->
+        ["success.txt" = Page] when Headers#http_chdr.host == "detectportal.firefox.com" ->
             ?log_info("Request to ~s~s\n", [Headers#http_chdr.host, Url#url.path]),
             redirect_or_ack(Socket, Request, Page);
         %% Apple devices will check for a captive portal
@@ -780,10 +778,9 @@ json_term_to_post(#{<<"title">> := Title, <<"body">> := Body} = PostJsonTerm, Us
 %% Reply post
 json_term_to_post(#{<<"parentPostId">> := ParentPostId,
                     <<"topPostId">> := TopPostId,
-                    <<"body">> := Body} = JsonTerm, Username)
-  when is_binary(ParentPostId) andalso
-       is_binary(TopPostId) andalso
-       is_binary(Body) ->
+                    <<"body">> := Body} = JsonTerm, Username) when is_binary(ParentPostId) andalso
+                                                                   is_binary(TopPostId) andalso
+                                                                   is_binary(Body) ->
     case no_more_keys([<<"parentPostId">>,
                        <<"topPostId">>,
                        <<"body">>], JsonTerm) of
