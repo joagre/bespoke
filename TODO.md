@@ -12,7 +12,7 @@
   `webapp_rest.erl` previously used the experimental
   [dnsmasq-tool](main/bin/dnsmasq-tool) to switch between different
   dns lookup behaviours before and after user login. This is no longer
-  done because of the show-stopping caveat:
+  done though, because of a show-stopping caveat:
 
   Caveat: It seems that Android does a request to
   https://www.google.com and strictly verifies the SSL certificate
