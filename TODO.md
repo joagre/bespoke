@@ -1,6 +1,5 @@
 # TODO
 
-* remember titile and body
 * add an attachents field to post record
 * move files on server side when creating post
 * Add attachments to add_reply + do something with parent
@@ -14,7 +13,7 @@
   login phase. Work has already been been started to solve the
   `http/https` requests and `dns` lookups as seen in
   [webapp_rest.erl](lib/webapp/src/webapp_rest.erl).
-  
+
   `webapp_rest.erl` previously used the experimental
   [dnsmasq-tool](lib/main/bin/dnsmasq-tool) to switch between different
   dns lookup behaviours before and after user login. This is no longer
