@@ -1,6 +1,6 @@
 .uk-slideshow {
     border: 1px solid var(--uk-light);
-    border-radius: 10px;
+    border-radius: 0.25em;
 }
 
 /*
@@ -12,7 +12,7 @@
 [uk-slideshow] {
     position: relative !important;
 }
- 
+
 [uk-slideshow],
 .uk-slideshow-items {
   background-color: inherit;

@@ -23,7 +23,7 @@
 -type(timestamp() :: integer()).
 
 -record(state, {
-                subscriptions = #{} ::  #{rester_socket() => {Request :: term(), db_serv:subscription_id()}}
+                subscriptions = #{} :: #{rester_socket() => {Request :: term(), db_serv:subscription_id()}}
                }).
 
 -record(portal_cache_entry, {
@@ -334,11 +334,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 PostIds when is_list(PostIds) ->
-                    case lists:all(fun(PostId) when is_binary(PostId) ->
-                                           true;
-                                      (_) ->
-                                           false
-                                   end, PostIds) of
+                    case lists:all(fun(PostId) when is_binary(PostId) -> true; (_) -> false end, PostIds) of
                         true ->
                             Posts = db_serv:lookup_posts(PostIds),
                             PayloadJsonTerm = lists:map(fun(Post) -> post_to_json_term(Post) end, Posts),
@@ -354,11 +350,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 PostIds when is_list(PostIds) ->
-                    case lists:all(fun(PostId) when is_binary(PostId) ->
-                                           true;
-                                      (_) ->
-                                           false
-                                   end, PostIds) of
+                    case lists:all(fun(PostId) when is_binary(PostId) -> true; (_) -> false end, PostIds) of
                         true ->
                             Posts = db_serv:lookup_posts(PostIds, recursive),
                             PayloadJsonTerm = lists:map(fun(Post) -> post_to_json_term(Post) end, Posts),
@@ -374,11 +366,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 PostIds when is_list(PostIds) ->
-                    case lists:all(fun(PostId) when is_binary(PostId) ->
-                                           true;
-                                      (_) ->
-                                           false
-                                   end, PostIds) of
+                    case lists:all(fun(PostId) when is_binary(PostId) -> true; (_) -> false end, PostIds) of
                         true ->
                             PayloadJsonTerm = db_serv:lookup_post_ids(PostIds, recursive),
                             rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
@@ -455,11 +443,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 PostIds ->
-                    case lists:all(fun(PostId) when is_binary(PostId) ->
-                                           true;
-                                      (_) ->
-                                           false
-                                   end, PostIds) of
+                    case lists:all(fun(PostId) when is_binary(PostId) -> true; (_) -> false end, PostIds) of
                         true ->
                             SubscriptionId = db_serv:subscribe_on_changes(PostIds),
                             UpdatedState =
@@ -691,17 +675,28 @@ post_to_json_term(#post{id = Id,
                         created = Created,
                         reply_count = ReplyCount,
                         replies = Replies,
-                        likers = Likers}) ->
+                        likers = Likers,
+                        attachments = AttachmentsJsonTerm}) ->
     JsonTerm = #{<<"id">> => Id,
                  <<"body">> => Body,
                  <<"author">> => Author,
                  <<"created">> => Created,
                  <<"replyCount">> => ReplyCount,
                  <<"replies">> => Replies,
-                 <<"likers">> => Likers},
+                 <<"likers">> => Likers,
+                 <<"attachments">> => attachments_to_json_term(AttachmentsJsonTerm)},
     add_optional_members([{<<"title">>, Title},
                           {<<"parentPostId">>, ParentPostId},
                           {<<"topPostId">>, TopPostId}], JsonTerm).
+
+attachments_to_json_term([]) ->
+    [];
+attachments_to_json_term([Attachment|Rest]) ->
+    [attachment_to_json_term(Attachment)|attachments_to_json_term(Rest)].
+
+attachment_to_json_term({Filename, ContentType}) ->
+    #{<<"filename">> => Filename,
+      <<"contentType">> => ContentType}.
 
 add_optional_members([], JsonTerm) ->
     JsonTerm;
@@ -765,18 +760,23 @@ json_term_to_change_password(_) ->
 %% Top post
 json_term_to_post(#{<<"title">> := Title,
                     <<"body">> := Body,
-                    <<"attachments">> := Attachments} = PostJsonTerm, Username)
+                    <<"attachments">> := JsonTermAttachments} = PostJsonTerm, Username)
   when is_binary(Title) andalso
        is_binary(Body) andalso
-       is_list(Attachments) ->
+       is_list(JsonTermAttachments) ->
     case no_more_keys([<<"title">>,
                        <<"body">>,
                        <<"attachments">>], PostJsonTerm) of
         true ->
-            {ok, #post{title = Title,
-                       body = Body,
-                       author = Username,
-                       attachments = Attachments}};
+            case json_term_to_attachments(JsonTermAttachments) of
+                {ok, Attachments} ->
+                    {ok, #post{title = Title,
+                               body = Body,
+                               author = Username,
+                               attachments = Attachments}};
+                {error, invalid} ->
+                    {error, invalid}
+            end;
         false ->
             {error, invalid}
     end;
@@ -794,15 +794,45 @@ json_term_to_post(#{<<"parentPostId">> := ParentPostId,
                        <<"body">>,
                        <<"attachments">>], JsonTerm) of
         true ->
-            {ok, #post{parent_post_id = ParentPostId,
-                       top_post_id = TopPostId,
-                       body = Body,
-                       author = Username,
-                       attachments = Attachments}};
+            case json_term_to_attachments(Attachments) of
+                {ok, Attachments} ->
+                    {ok, #post{parent_post_id = ParentPostId,
+                               top_post_id = TopPostId,
+                               body = Body,
+                               author = Username,
+                               attachments = Attachments}};
+                {error, invalid} ->
+                    {error, invalid}
+            end;
         false ->
             {error, invalid}
     end;
 json_term_to_post(_, _) ->
+    {error, invalid}.
+
+json_term_to_attachments(Attachments) ->
+    json_term_to_attachments(Attachments, []).
+
+json_term_to_attachments([], Acc) ->
+    {ok, lists:reverse(Acc)};
+json_term_to_attachments([JsonTermAttachment|Rest], Acc) ->
+    case json_term_to_attachment(JsonTermAttachment) of
+        {ok, Attachment} ->
+            json_term_to_attachments(Rest, [Attachment|Acc]);
+        {error, invalid} ->
+            {error, invalid}
+    end.
+
+json_term_to_attachment(#{<<"filename">> := Filename,
+                          <<"contentType">> := ContentType} = Attachment)
+  when is_binary(Filename) andalso is_binary(ContentType) ->
+    case no_more_keys([<<"filename">>, <<"contentType">>], Attachment) of
+        true ->
+            {ok, {Filename, ContentType}};
+        false ->
+            {error, invalid}
+    end;
+json_term_to_attachment(_) ->
     {error, invalid}.
 
 %%

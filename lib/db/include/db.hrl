@@ -16,7 +16,8 @@
          reply_count = 0 :: integer() | '_',
          replies = [] :: [db_serv:post_id()] | '_',
          likers = [] :: [db_serv:user_id()] | '_',
-         attachments = [] :: [db_serv:attachment_path()] | '_'
+         attachments = [] :: [{db_serv:attachment_path(),
+                               db_serv:content_type()}] | '_'
         }).
 
 -record(meta,

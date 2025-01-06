@@ -10,7 +10,8 @@
 -export([sync/0]).
 -export([message_handler/1]).
 -export_type([user_id/0, post_id/0, title/0, body/0, author/0,
-              seconds_since_epoch/0, attachment_path/0, subscription_id/0]).
+              seconds_since_epoch/0, attachment_path/0, content_type/0,
+              subscription_id/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -32,6 +33,7 @@
 -type author() :: binary().
 -type seconds_since_epoch() :: integer().
 -type attachment_path() :: binary().
+-type content_type() :: binary().
 -type monitor_ref() :: reference().
 -type subscription_id() :: reference().
 
@@ -371,13 +373,13 @@ move_tmp_attachments(TmpAttachments, NewPostId) ->
     ok = file:make_dir(NewPath),
     TmpPath = ?BESPOKE_ATTACHMENTS_TMP_PATH,
     lists:map(
-      fun(TmpAttachment) ->
+      fun({TmpAttachment, ContentType}) ->
               TmpFilePath = filename:join([TmpPath, TmpAttachment]),
               NewAttachment = string:trim(TmpAttachment, leading, "0123456789-"),
               NewFilePath = filename:join([NewPath, NewAttachment]),
               ?log_info("Moving ~s to ~s", [TmpFilePath, NewFilePath]),
               ok = file:rename(TmpFilePath, NewFilePath),
-              NewAttachment
+              {NewAttachment, ContentType}
       end, TmpAttachments).
 
 update_parent_count(not_set, _N) ->
