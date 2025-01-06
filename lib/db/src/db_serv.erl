@@ -10,7 +10,7 @@
 -export([sync/0]).
 -export([message_handler/1]).
 -export_type([user_id/0, post_id/0, title/0, body/0, author/0,
-              seconds_since_epoch/0, subscription_id/0]).
+              seconds_since_epoch/0, attachment_path/0, subscription_id/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -22,6 +22,8 @@
 -define(META_DB_FILENAME, "/var/tmp/bespoke/db/meta.db").
 -define(META_DB, meta).
 -define(SUBSCRIPTION_DB, db_serv_subscriptions).
+-define(BESPOKE_ATTACHMENTS_PATH, "/var/tmp/bespoke/attachment").
+-define(BESPOKE_ATTACHMENTS_TMP_PATH, "/var/tmp/bespoke/attachment/tmp").
 
 -type user_id() :: integer().
 -type post_id() :: binary().
@@ -29,6 +31,7 @@
 -type body() :: binary().
 -type author() :: binary().
 -type seconds_since_epoch() :: integer().
+-type attachment_path() :: binary().
 -type monitor_ref() :: reference().
 -type subscription_id() :: reference().
 
@@ -115,13 +118,6 @@ lookup_post_ids(PostIds, Mode) ->
 insert_post(Post) ->
     serv:call(?MODULE, {insert_post, Post}).
 
-
-
-
-
-
-
-
 %%
 %% delete_post
 %%
@@ -180,7 +176,6 @@ init(Parent) ->
     ?SUBSCRIPTION_DB =
         ets:new(?SUBSCRIPTION_DB, [{keypos, #subscription.id}, named_table]),
     ?log_info("Database server has been started"),
-    io:format("Database server has been started"),
     {ok, #state{parent = Parent,
                 next_user_id = Meta#meta.next_user_id,
                 next_post_id = Meta#meta.next_post_id}}.
@@ -310,10 +305,13 @@ do_insert_post(NextPostId, Post) ->
                     NewPostId = PostId,
                     NextUpcomingPostId = NextPostId
             end,
+            UpdatedAttachments =
+                move_tmp_attachments(Post#post.attachments, NewPostId),
             UpdatedPost =
                 Post#post{
                   id = NewPostId,
-                  created = seconds_since_epoch(Post#post.created)},
+                  created = seconds_since_epoch(Post#post.created),
+                  attachments = UpdatedAttachments},
             ok = insert_and_inform(UpdatedPost),
             case ParentPost of
                 not_set ->
@@ -367,6 +365,20 @@ check_insert_post(#post{title = not_set,
     end;
 check_insert_post(_) ->
     false.
+
+move_tmp_attachments(TmpAttachments, NewPostId) ->
+    NewPath = filename:join([?BESPOKE_ATTACHMENTS_PATH, NewPostId]),
+    ok = file:make_dir(NewPath),
+    TmpPath = ?BESPOKE_ATTACHMENTS_TMP_PATH,
+    lists:map(
+      fun(TmpAttachment) ->
+              TmpFilePath = filename:join([TmpPath, TmpAttachment]),
+              NewAttachment = string:trim(TmpAttachment, leading, "0123456789-"),
+              NewFilePath = filename:join([NewPath, NewAttachment]),
+              ?log_info("Moving ~s to ~s", [TmpFilePath, NewFilePath]),
+              ok = file:rename(TmpFilePath, NewFilePath),
+              NewAttachment
+      end, TmpAttachments).
 
 update_parent_count(not_set, _N) ->
     ok;

@@ -393,15 +393,13 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 JsonTerm ->
-                    {ok, #{<<"sessionId">> := SessionId}} =
-                        get_bespoke_cookie(Request),
+                    {ok, #{<<"sessionId">> := SessionId}} = get_bespoke_cookie(Request),
                     case db_user_serv:get_user_from_session_id(base64:decode(SessionId)) of
                         {ok, #user{name = Username}} ->
                             case json_term_to_post(JsonTerm, Username) of
                                 {ok, Post} ->
                                     case db_serv:insert_post(Post) of
                                         {ok, InsertedPost} ->
-                                            db_serv:insert_post(Post),
                                             PayloadJsonTerm = post_to_json_term(InsertedPost),
                                             rest_util:response(Socket, Request, {ok, {format, PayloadJsonTerm}});
                                         {error, invalid_post} ->
@@ -765,30 +763,42 @@ json_term_to_change_password(_) ->
     {error, invalid}.
 
 %% Top post
-json_term_to_post(#{<<"title">> := Title, <<"body">> := Body} = PostJsonTerm, Username)
-  when is_binary(Title) andalso is_binary(Body) ->
-    case no_more_keys([<<"title">>, <<"body">>], PostJsonTerm) of
+json_term_to_post(#{<<"title">> := Title,
+                    <<"body">> := Body,
+                    <<"attachments">> := Attachments} = PostJsonTerm, Username)
+  when is_binary(Title) andalso
+       is_binary(Body) andalso
+       is_list(Attachments) ->
+    case no_more_keys([<<"title">>,
+                       <<"body">>,
+                       <<"attachments">>], PostJsonTerm) of
         true ->
             {ok, #post{title = Title,
                        body = Body,
-                       author = Username}};
+                       author = Username,
+                       attachments = Attachments}};
         false ->
             {error, invalid}
     end;
 %% Reply post
 json_term_to_post(#{<<"parentPostId">> := ParentPostId,
                     <<"topPostId">> := TopPostId,
-                    <<"body">> := Body} = JsonTerm, Username) when is_binary(ParentPostId) andalso
-                                                                   is_binary(TopPostId) andalso
-                                                                   is_binary(Body) ->
+                    <<"body">> := Body,
+                    <<"attachments">> := Attachments} = JsonTerm, Username)
+  when is_binary(ParentPostId) andalso
+       is_binary(TopPostId) andalso
+       is_binary(Body),
+       is_list(Attachments) ->
     case no_more_keys([<<"parentPostId">>,
                        <<"topPostId">>,
-                       <<"body">>], JsonTerm) of
+                       <<"body">>,
+                       <<"attachments">>], JsonTerm) of
         true ->
             {ok, #post{parent_post_id = ParentPostId,
                        top_post_id = TopPostId,
                        body = Body,
-                       author = Username}};
+                       author = Username,
+                       attachments = Attachments}};
         false ->
             {error, invalid}
     end;

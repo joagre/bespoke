@@ -15,7 +15,8 @@
          created = not_set :: db_serv:seconds_since_epoch() | not_set | '_',
          reply_count = 0 :: integer() | '_',
          replies = [] :: [db_serv:post_id()] | '_',
-         likers = [] :: [db_serv:user_id()] | '_'
+         likers = [] :: [db_serv:user_id()] | '_',
+         attachments = [] :: [db_serv:attachment_path()] | '_'
         }).
 
 -record(meta,

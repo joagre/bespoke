@@ -1,9 +1,7 @@
 # TODO
 
-* add an attachents field to post record
-* move files on server side when creating post
-* Add attachments to add_reply + do something with parent
 * show a slidenav for top pasts and replies oif their are attachments
+* Add attachments to add_reply + do something with parent
 
 ## Captive portal mechanics
 
