@@ -16,6 +16,7 @@
 -define(USER_DB_FILENAME, "/var/tmp/bespoke/db/users.db").
 -define(USER_DB, users).
 -define(WORD_LIST_PATH, "/usr/share/dict/words").
+-define(MAX_USERNAME_LENGTH, 12).
 -define(SESSION_ID_SIZE, 16).
 
 -type username() :: binary().
@@ -310,11 +311,16 @@ message_handler(S) ->
 
 generate_username(WordList) ->
     Username = ?l2b([random_word(WordList), random_word(WordList)]),
-    case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
-        [] ->
-            Username;
+    case string:length(Username) of
+        N when N > ?MAX_USERNAME_LENGTH ->
+            generate_username(WordList);
         _ ->
-            generate_username(WordList)
+            case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
+                [] ->
+                    Username;
+                _ ->
+                    generate_username(WordList)
+            end
     end.
 
 random_word(Words) ->
