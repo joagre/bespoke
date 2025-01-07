@@ -53,6 +53,10 @@ textarea {
 
 /* Post styling */
 
+.post-title {
+    cursor: pointer;
+}
+
 .post-meta-data {
     margin-top: 0.25rem;
 }
