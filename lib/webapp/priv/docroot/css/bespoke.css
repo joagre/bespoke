@@ -132,6 +132,13 @@ p:first-of-type {
   margin-top: 0;
 }
 
+/* Notification styling */
+
+.notification-content {
+    border: 1px solid var(--uk-secondary);
+    border-radius: 0.25em;
+}
+
 /* Overlay styling */
 
 #loading-overlay {
