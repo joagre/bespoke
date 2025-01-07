@@ -10,8 +10,8 @@
     /* UIKit standard margins */
     --uk-margin-small: 10px;
     /* Custom colors */
-    --uk-light: #ccc;
-    --uk-button-hover-bg: #ebebeb;
+    --uk-light-primary: #70BAF3;
+    --uk-light-muted: #ccc;
 }
 
 .underlined-link {
@@ -75,7 +75,7 @@ textarea {
 }
 
 .attachment-item {
-    border: 1px solid var(--uk-light);
+    border: 1px solid var(--uk-light-muted);
     border-radius: 0.25em;
      margin: 0.25em 0 0.25em 0.25em;
 }
@@ -98,22 +98,27 @@ textarea {
 
 button.uk-icon-button,
 a.uk-icon-button {
-  border: 1px solid var(--uk-light);
-}
-
-.uk-icon-button.liked svg path {
-    fill: var(--uk-danger) !important;
-    stroke: var(--uk-danger) !important;
+  border: 1px solid var(--uk-light-primary);
 }
 
 button.uk-icon-button[disabled] {
-  border: 2px dashed var(--uk-light);
+  border: 2px dashed var(--uk-light-muted);
   cursor: not-allowed;
 }
 
 button.button-toggle:not([disabled]),
 a.button-toggle:not([disabled]) {
-  border: 2px solid var(--uk-primary);
+  border: 1px solid var(--uk-light-primary);
+}
+
+.toolbar-button {
+    color: var(--uk-light-primary);
+    cursor: pointer;
+}
+
+.toolbar-button.liked svg path {
+    fill: var(--uk-danger) !important;
+    stroke: var(--uk-danger) !important;
 }
 
 /* Paragraph styling */

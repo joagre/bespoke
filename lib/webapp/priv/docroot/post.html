@@ -51,13 +51,13 @@
               <span uk-icon="icon: check"></span>
               <span id="parent-author"></span> •
               <span id="parent-age"></span> •
-              <button onclick="post.toggleLike(event)" class="uk-text-primary" id="parent-like-icon" uk-icon="icon: heart"></button> <span id="parent-likes-count"></span> •
+              <button onclick="post.toggleLike(event)" class="toolbar-button" id="parent-like-icon" uk-icon="icon: heart"></button> <span id="parent-likes-count"></span> •
               <span uk-icon="comment"></span> <span id="parent-replies"></span>
             </div>
             <!-- Parent actions -->
             <div>
-              <button id="parent-delete" onclick="post.openDeletePostDialog(event)" data-post-id="0" class="uk-text-primary" uk-icon="trash"></button>
-              <button onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="uk-text-primary" uk-icon="reply"></button>
+              <button id="parent-delete" onclick="post.openDeletePostDialog(event)" data-post-id="0" class="toolbar-button" uk-icon="trash"></button>
+              <button onclick="bespoke.gotoPage(event, 'add_reply_post.html')" class="toolbar-button" uk-icon="reply"></button>
             </div>
           </div>
           <hr class="uk-margin-small parent-post-divider">
