@@ -7,8 +7,6 @@
     --uk-warning: #faa05a;
     --uk-danger: #f0506e;
     --uk-meta: #666;
-    /* UIKit standard margins */
-    --uk-margin-small: 10px;
     /* Custom colors */
     --uk-light-primary: #70BAF3;
     --uk-light-muted: #ccc;
@@ -65,13 +63,47 @@ textarea {
     cursor: pointer;
 }
 
+.quote {
+    cursor: pointer;
+}
+
+.quote-card {
+    padding: 0.5em !important;
+    max-height: 10em;
+    overflow-y: hidden;
+}
+
+.quote-card:hover {
+    overscroll-behavior: contain;
+    overflow-y: scroll;
+}
+
 .post-meta-data {
     margin-top: 0.25rem;
 }
 
 .post-divider,
 .parent-post-divider {
-    border-color: var(--uk-muted);
+    border-color: var(--uk-light-muted);
+}
+
+#parent-body p,
+.quote-body p,
+.reply-body p {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+}
+
+#parent-body p:first-child,
+.quote-body p:first-child,
+.reply-body p:first-child,
+    margin-top: 0;
+}
+
+#parent-body p:last-child,
+.quote-body p:last-child,
+.reply-body p:last-child {
+    margin-bottom: 0;
 }
 
 .attachment-item {
@@ -124,8 +156,8 @@ a.button-toggle:not([disabled]) {
 /* Paragraph styling */
 
 p {
-    margin-top: var(--uk-margin-small);
-    margin-bottom: var(--uk-margin-small);
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
 }
 
 p:first-of-type {
@@ -144,8 +176,5 @@ p:first-of-type {
 #loading-overlay {
     z-index: 9999;
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
 }
