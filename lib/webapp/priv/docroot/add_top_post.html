@@ -32,6 +32,8 @@
         </div>
         <!-- Toolbar -->
         <div>
+          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="addTopPost.gotoAddAttachments(event)"></button>
+          <span id="form-attachment-counter" class="uk-text-meta uk-margin-small-right"></span>
           <button id="add-button" onclick="addTopPost.addNow(event)" class="uk-icon-button button-toggle" uk-icon="check" disabled></button>
         </div>
       </div>
@@ -39,11 +41,7 @@
       <div class="uk-flex uk-flex-1 uk-margin-small-left uk-margin-small-right">
         <form class="uk-flex uk-flex-1 uk-flex-column uk-margin-small-top">
           <!-- Title text -->
-          <div class="uk-flex uk-flex-middle">
-            <input class="uk-input uk-width-expand" placeholder="Enter title" id="form-title" type="text">
-            <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="addTopPost.gotoAddAttachments(event)"></button>
-            <span id="form-attachment-counter" class="uk-margin-small-left uk-margin-small-right"></span>
-          </div>
+          <input class="uk-input" placeholder="Enter title" id="form-title" type="text">
           <!-- Body text -->
           <textarea class="uk-flex-1 uk-margin-top uk-textarea uk-margin-small-bottom" placeholder="Enter body" id="form-body" style="flex-grow: 1; min-height: 0;"></textarea>
         </form>
