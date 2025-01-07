@@ -62,16 +62,24 @@ textarea {
     border-color: var(--uk-muted);
 }
 
-.attachment {
-    height: 5em;
+.attachment-item {
     border: 1px solid var(--uk-light);
     border-radius: 0.25em;
-    padding: 0.25em;
-    margin: 0.25em 0 0.25em 0.25em;
+     margin: 0.25em 0 0.25em 0.25em;
 }
 
-.attachment:last-child {
-    margin: 0.25em 0.25 0.25em 0.25em;
+.attachment-item:first-child {
+    margin: 0.25em 0 0.25em 0;
+}
+
+.attachment-content {
+    height: 5em;
+    padding: 0.25em;
+}
+
+.attachment-misc {
+    padding: 0.25em;
+    font-size: 0.75em;
 }
 
 /* Button styling */
