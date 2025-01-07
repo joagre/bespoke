@@ -21,7 +21,7 @@
   <body hidden>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
-      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-background-default" uk-sticky>
+      <div class="sticky-header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-background-default">
         <!-- Go back -->
         <div>
           <button onclick="bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left"></button>
@@ -36,12 +36,14 @@
           <button onclick="bespoke.gotoPage(event, 'add_top_post.html')" class="uk-icon-button" uk-icon="plus"></button>
         </div>
       </div>
-      <div id="have-no-posts" class="uk-flex uk-flex-1 uk-flex-center" style="margin-top: 25%;" hidden>
-        &lt;No posts have been created&gt;
-      </div>
-      <!-- Have posts -->
-      <div id="have-posts" class="uk-margin-small-left uk-margin-small-right" hidden>
-        <div id="posts"></div>
+      <div id="main-content">
+        <div id="have-no-posts" class="uk-flex uk-flex-1 uk-flex-center" style="margin-top: 25%;" hidden>
+          &lt;No posts have been created&gt;
+        </div>
+        <!-- Have posts -->
+        <div id="have-posts" class="uk-margin-small-left uk-margin-small-right" hidden>
+          <div id="posts"></div>
+        </div>
       </div>
     </div>
     <!-- Make relevant ES6 modules available globally -->

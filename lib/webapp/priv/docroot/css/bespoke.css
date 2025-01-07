@@ -46,6 +46,14 @@ textarea {
     opacity: 1;
 }
 
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    opacity: 1;
+}
+
 .footer {
     margin-top: 0.75em;
     padding: 0.5em 0.5em 0.5em 0.5em;
