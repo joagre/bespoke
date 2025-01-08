@@ -12,28 +12,43 @@
     --uk-light-muted: #ccc;
 }
 
-.underlined-link {
-    text-decoration: underline;
-}
-
 html {
     overflow-y: scroll;
 }
 
-/* Jesus wept: https://stackoverflow.com/a/58048556 */
 html, body {
-    font-family: Arial, sans-serif;
+    font-family: "Gill Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* font-family: "Courier New", Courier, monospace; */
+    /* Jesus wept: https://stackoverflow.com/a/58048556 */
     height: 100%;
+}
+
+.top-container {
+    /* Jesus wept: https://stackoverflow.com/a/58048556 */
+    min-height: -webkit-fill-available;
+    height: 100%;
+}
+
+p {
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+}
+
+p:first-of-type {
+  margin-top: 0;
 }
 
 textarea {
+    font-family: inherit;
     overscroll-behavior: contain;
 }
 
-/* Jesus wept: https://stackoverflow.com/a/58048556 */
-.top-container {
-    min-height: -webkit-fill-available;
-    height: 100%;
+input {
+    font-family: inherit;
+}
+
+.underlined-link {
+    text-decoration: underline;
 }
 
 /* Footer and header styling */
@@ -151,17 +166,6 @@ a.button-toggle:not([disabled]) {
 .toolbar-button.liked svg path {
     fill: var(--uk-danger) !important;
     stroke: var(--uk-danger) !important;
-}
-
-/* Paragraph styling */
-
-p {
-    margin-top: 0.75em;
-    margin-bottom: 0.75em;
-}
-
-p:first-of-type {
-  margin-top: 0;
 }
 
 /* Notification styling */

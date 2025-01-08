@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css" />
     <link rel="stylesheet" href="css/bespoke.css" />
-    <link rel="stylesheet" href="css/add_reply_post.css" />
     <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
     <link rel="shortcut icon" href="/favicon/favicon.ico" />
@@ -33,28 +32,29 @@
         </div>
         <!-- Toolbar -->
         <div>
+          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="addReplyPost.gotoAddAttachments(event)"></button>
+          <span id="attachment-counter" class="uk-text-meta uk-margin-small-right"></span>
           <button id="add-button" onclick="addReplyPost.addNow(event)" class="uk-icon-button button-toggle" uk-icon="check" disabled></button>
         </div>
       </div>
-      <!-- Form -->
-      <div class="uk-margin-small-left uk-margin-small-right">
-        <!-- Parent post -->
-        <div id="parent-post">
-          <!-- Parent title -->
-          <div id="parent-title"></div>
-          <!-- Parent body -->
-          <div id="parent-body"></div>
-          <!-- Parent meta-data -->
-          <div class="post-meta-data uk-text-meta">
-            <span id="parent-author"></span> •
-            <span id="parent-age"></span> •
-            <span onclick="post.toggleLike(event)" class="mini-action"><span id="parent-like-icon" uk-icon="icon: heart"></span> <span id="parent-likes-count"></span></span> •
-            <span uk-icon="comments"></span> <span id="parent-replies"></span>
+      <div class="uk-flex uk-flex-1 uk-flex-column uk-margin-small-left uk-margin-small-right">
+        <!-- Parent title -->
+        <div id="parent-title" class="uk-text-bold"></div>
+        <!-- Parent quote -->
+        <div class="uk-text-meta">
+          <div class="quote" onclick="addReplyPost.toggleQuote(event)">
+            <span id="quote-action" class="uk-icon-link" uk-icon="chevron-down"></span>
+            In reply to <span id="parent-author"></span>
+          </div>
+          <div class="uk-card uk-card-body uk-card-default uk-card-small uk-text-meta uk-margin-small-bottom quote-card" hidden>
+            <!-- Parent body -->
+            <div id="parent-body"></div>
           </div>
         </div>
-        <form class="uk-margin-top">
+        <!-- Form -->
+        <form class="uk-flex uk-flex-1 uk-flex-column">
           <!-- Body text -->
-          <textarea class="uk-textarea" placeholder="Enter body" id="form-body" rows="5"></textarea>
+          <textarea class="uk-flex-1 uk-margin-small-top uk-textarea uk-margin-small-bottom" placeholder="Enter body" id="form-body" style="flex-grow: 1; min-height: 0;"></textarea>
         </form>
       </div>
     </div>
@@ -62,10 +62,8 @@
     <script type="module">
       import bespoke from "/js/bespoke.js";
       import addReplyPost from "/js/add_reply_post.js";
-      import post from "/js/post.js";
       window.bespoke = bespoke;
       window.addReplyPost = addReplyPost;
-      window.post = post;
     </script>
   </body>
 </html>
