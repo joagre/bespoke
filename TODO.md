@@ -1,8 +1,5 @@
 # TODO
 
-* show a slidenav for top pasts and replies oif their are attachments
-* Add attachments to add_reply + do something with parent
-
 ## Captive portal mechanics
 
 * Make the captive portal mechanics work flawlessly. Study more
