@@ -8,6 +8,7 @@
 
 ### Added [0.2.0]
 
+- Coplete overhaul of the look and feel,
 - If an USB WiFi adapter is connected during boot it will be used
   instead of the built-in WiFi card
 - Forum posts can now have attachments
