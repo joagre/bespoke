@@ -1,3 +1,7 @@
 #posts {
     margin-top: 1em;
 }
+
+.unread-replies {
+    color: var(--uk-light-danger);
+}

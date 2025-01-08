@@ -9,6 +9,7 @@
     --uk-meta: #666;
     /* Custom colors */
     --uk-light-primary: #70BAF3;
+    --uk-light-danger: #f58a9a;
     --uk-light-muted: #ccc;
 }
 
@@ -19,6 +20,9 @@ html {
 html, body {
     font-family: "Gill Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     /* font-family: "Courier New", Courier, monospace; */
+    /* font-family: "Andale Mono", monospace; */
+    /* font-family: "Lucida Console", Monaco, monospace; */
+    /* font-family: Monaco, "Lucida Console", monospace; */
     /* Jesus wept: https://stackoverflow.com/a/58048556 */
     height: 100%;
 }
