@@ -5,7 +5,7 @@ start() ->
     init_httpc(),
     %% Auto login
     {ok,#{<<"noPassword">> := _NoPassword,
-          <<"sessionId">> := SessionId,
+          <<"sessionId">> := _SessionId,
           <<"userId">> := _UserId,
           <<"username">> := _Username}} =
         http_get("http://localhost/auto_login"),
