@@ -58,7 +58,6 @@ bespoke_cookie(SessionId) ->
         "bespoke=~s",
         [http_uri:encode(json:encode(#{<<"sessionId">> => SessionId}))])).
 
-
 make_attachment(#{<<"absPath">> := AbsPath,
                   <<"contentType">> := ContentType}) ->
     <<"/tmp/", TmpFilename/binary>> = AbsPath,
