@@ -16,7 +16,7 @@ start() ->
     {ok,[#{<<"id">> := PostId}]} =
         http_post("http://localhost/lookup_posts", [PostId]),
     %% Fetch specific post(s) recursively (include all nested replies)
-    {ok,[#{<<"id">> := PostId}|_]} =
+    {ok,[#{<<"id">> := _PostId2}|_]} =
         http_post("http://localhost/lookup_recursive_posts", [PostId]),
     %% Switch user
     {ok, #{<<"sessionId">> := NewSessionId,
@@ -32,18 +32,31 @@ start() ->
     {ok, #{<<"id">> := TopPostId}} =
         http_post("http://localhost/insert_post",
                   #{<<"title">> => <<"A new title for a top post">>,
-                    <<"body">> => <<"A body">>,
-                    <<"attachments">> => []},
+                    <<"body">> => <<"A body">>},
                   Headers),
-    %% Insert a reply post to the top post
+    %% Insert a reply post to the top post (including one attachment)
+    FilePath =
+        filename:join(
+          [code:priv_dir(webapp), "docroot/images/animated-background.gif"]),
+    UploadedFile =
+        http_multipart_post("http://localhost/upload_attachments", FilePath),
     {ok, #{<<"id">> := _ReplyPostId}} =
         http_post("http://localhost/insert_post",
                   #{<<"parentPostId">> => TopPostId,
                     %% The top post is the parent post in this case
                     <<"topPostId">> => TopPostId,
+                    %% One hour back in time
+                    <<"created">> => os:system_time(second) - 3600,
                     <<"body">> => <<"A reply body">>,
-                    <<"attachments">> => []},
+                    %% One attachment
+                    <<"attachments">> => [make_attachment(UploadedFile)]},
                   Headers).
+
+make_attachment(#{<<"absPath">> := AbsPath,
+                  <<"contentType">> := ContentType}) ->
+    <<"/tmp/", TmpFilename/binary>> = AbsPath,
+    #{<<"filename">> => TmpFilename,
+      <<"contentType">> => ContentType}.
 
 %%
 %% Utilities
@@ -57,39 +70,34 @@ http_get(Url) ->
     http_get(Url, []).
 
 http_get(Url, Headers) ->
-    case httpc:request(get, {Url, [{"connection", "close"}|Headers]}, [], []) of
-        {ok, {{"HTTP/1.1", 200, "OK"}, ResponseHeaders, Body}} ->
-            case lists:keyfind("content-type", 1, ResponseHeaders) of
-                {_, "application/json"} ->
-                    {ok, json:decode(iolist_to_binary(Body))};
-                _ ->
-                    {ok, Body}
-            end;
-        {ok, {{"HTTP/1.1", StatusCode, ReasonPhrase}}, ResponseHeaders, Body} ->
-            {unexpected, StatusCode, ReasonPhrase, ResponseHeaders, Body};
-        {error, Reason} ->
-            {error, Reason}
-    end.
+    handle_response(
+      httpc:request(get, {Url, [{"connection", "close"}|Headers]}, [], [])).
 
 http_post(Url, Data) ->
     http_post(Url, Data, []).
 
 http_post(Url, Data, Headers) ->
-    case httpc:request(
-           post, {Url, [{"connection", "close"}|Headers],
-                  "application/json", json:encode(Data)}, [], []) of
-        {ok, {{"HTTP/1.1", 200, "OK"}, ResponseHeaders, Body}} ->
-            case lists:keyfind("content-type", 1, ResponseHeaders) of
-                {_, "application/json"} ->
-                    {ok, json:decode(iolist_to_binary(Body))};
-                _ ->
-                    {ok, Body}
-            end;
-        {ok, {{"HTTP/1.1", StatusCode, ReasonPhrase}}, ResponseHeaders, Body} ->
-            {unexpected, StatusCode, ReasonPhrase, ResponseHeaders, Body};
-        {error, Reason} ->
-            {error, Reason}
-    end.
+    handle_response(
+      httpc:request(post, {Url, [{"connection", "close"}|Headers],
+                           "application/json", json:encode(Data)}, [], [])).
+handle_response({ok, {{"HTTP/1.1", 200, "OK"},
+                      ResponseHeaders, Body}}) ->
+    case lists:keyfind("content-type", 1, ResponseHeaders) of
+        {_, "application/json"} ->
+            {ok, json:decode(iolist_to_binary(Body))};
+        _ ->
+            {ok, Body}
+    end;
+handle_response({ok, {{"HTTP/1.1", StatusCode, ReasonPhrase}},
+                 ResponseHeaders, Body}) ->
+    {unexpected, StatusCode, ReasonPhrase, ResponseHeaders, Body};
+handle_response({error, Reason}) ->
+    {error, Reason}.
+
+http_multipart_post(Url, FilePath) ->
+    %% httpc does not support multipart/form-data
+    Result = os:cmd("curl -s -X POST -F 'filename=@" ++ FilePath ++ "' " ++ Url),
+    json:decode(list_to_binary(Result)).
 
 bespoke_cookie(SessionId) ->
     lists:flatten(

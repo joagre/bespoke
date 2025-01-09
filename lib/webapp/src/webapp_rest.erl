@@ -760,7 +760,7 @@ json_term_to_bootstrap(_) ->
 
 json_term_to_login(#{<<"username">> := Username, <<"clientResponse">> := ClientResponse} = JsonTerm)
   when is_binary(Username) andalso is_binary(ClientResponse) ->
-    case no_more_keys([<<"username">>, <<"clientResponse">>], JsonTerm) of
+    case has_valid_keys([<<"username">>, <<"clientResponse">>], JsonTerm) of
         true ->
             {ok, Username, base64:decode(ClientResponse)};
         false ->
@@ -777,7 +777,7 @@ json_term_to_switch_user(#{<<"username">> := Username,
        (PasswordSalt == null orelse is_binary(PasswordSalt)) andalso
        (PasswordHash == null orelse is_binary(PasswordHash)) andalso
        (ClientResponse == null orelse is_binary(ClientResponse)) ->
-    case no_more_keys([<<"username">>,
+    case has_valid_keys([<<"username">>,
                        <<"passwordSalt">>,
                        <<"passwordHash">>,
                        <<"clientResponse">>], JsonTerm) of
@@ -798,7 +798,7 @@ base64decode(Value) ->
 json_term_to_change_password(#{<<"passwordSalt">> := PasswordSalt,
                                <<"passwordHash">> := PasswordHash} = JsonTerm)
   when is_binary(PasswordHash) andalso is_binary(PasswordSalt) ->
-    case no_more_keys([<<"passwordSalt">>, <<"passwordHash">>], JsonTerm) of
+    case has_valid_keys([<<"passwordSalt">>, <<"passwordHash">>], JsonTerm) of
         true ->
             {ok, base64:decode(PasswordSalt), base64:decode(PasswordHash)};
         false ->
@@ -808,23 +808,29 @@ json_term_to_change_password(_) ->
     {error, invalid}.
 
 %% Top post
-json_term_to_post(#{<<"title">> := Title,
-                    <<"body">> := Body,
-                    <<"attachments">> := JsonTermAttachments} = PostJsonTerm, Username)
-  when is_binary(Title) andalso
-       is_binary(Body) andalso
-       is_list(JsonTermAttachments) ->
-    case no_more_keys([<<"title">>,
+json_term_to_post(#{<<"title">> := Title, <<"body">> := Body} = PostJsonTerm, Username)
+  when is_binary(Title) andalso is_binary(Body) ->
+    case has_valid_keys([<<"title">>,
                        <<"body">>,
+                       <<"created">>,
                        <<"attachments">>], PostJsonTerm) of
         true ->
-            case json_term_to_attachments(JsonTermAttachments) of
-                {ok, Attachments} ->
-                    {ok, #post{title = Title,
-                               body = Body,
-                               author = Username,
-                               attachments = Attachments}};
-                {error, invalid} ->
+            case {maps:get(<<"created">>, PostJsonTerm, not_set),
+                  maps:get(<<"attachments">>, PostJsonTerm, [])} of
+                {Created, AttachmentsJsonTerm}
+                  when (Created == not_set orelse is_integer(Created)) andalso
+                       (AttachmentsJsonTerm == [] orelse is_list(AttachmentsJsonTerm)) ->
+                    case json_term_to_attachments(AttachmentsJsonTerm) of
+                        {ok, Attachments} ->
+                            {ok, #post{title = Title,
+                                       body = Body,
+                                       author = Username,
+                                       created = Created,
+                                       attachments = Attachments}};
+                        {error, invalid} ->
+                            {error, invalid}
+                    end;
+                _ ->
                     {error, invalid}
             end;
         false ->
@@ -833,40 +839,49 @@ json_term_to_post(#{<<"title">> := Title,
 %% Reply post
 json_term_to_post(#{<<"parentPostId">> := ParentPostId,
                     <<"topPostId">> := TopPostId,
-                    <<"body">> := Body,
-                    <<"attachments">> := JsonTermAttachments} = JsonTerm, Username)
+                    <<"body">> := Body} = PostJsonTerm, Username)
   when is_binary(ParentPostId) andalso
        is_binary(TopPostId) andalso
-       is_binary(Body),
-       is_list(JsonTermAttachments) ->
-    case no_more_keys([<<"parentPostId">>,
+       is_binary(Body) ->
+    case has_valid_keys([<<"parentPostId">>,
                        <<"topPostId">>,
                        <<"body">>,
-                       <<"attachments">>], JsonTerm) of
+                       <<"created">>,
+                       <<"attachments">>], PostJsonTerm) of
         true ->
-            case json_term_to_attachments(JsonTermAttachments) of
-                {ok, Attachments} ->
-                    {ok, #post{parent_post_id = ParentPostId,
-                               top_post_id = TopPostId,
-                               body = Body,
-                               author = Username,
-                               attachments = Attachments}};
-                {error, invalid} ->
+            case {maps:get(<<"created">>, PostJsonTerm, not_set),
+                  maps:get(<<"attachments">>, PostJsonTerm, [])} of
+                {Created, AttachmentsJsonTerm}
+                  when (Created == not_set orelse is_integer(Created)) andalso
+                       (AttachmentsJsonTerm == [] orelse is_list(AttachmentsJsonTerm)) ->
+                    case json_term_to_attachments(AttachmentsJsonTerm) of
+                        {ok, Attachments} ->
+                            {ok, #post{parent_post_id = ParentPostId,
+                                       top_post_id = TopPostId,
+                                       body = Body,
+                                       author = Username,
+                                       created = Created,
+                                       attachments = Attachments}};
+                        {error, invalid} ->
+                            {error, invalid}
+                    end;
+
+                _ ->
                     {error, invalid}
             end;
         false ->
             {error, invalid}
     end;
-json_term_to_post(_, _) ->
+json_term_to_post(_A, _B) ->
     {error, invalid}.
 
-json_term_to_attachments(JsonTermAttachments) ->
-    json_term_to_attachments(JsonTermAttachments, []).
+json_term_to_attachments(AttachmentsJsonTerm) ->
+    json_term_to_attachments(AttachmentsJsonTerm, []).
 
 json_term_to_attachments([], Acc) ->
     {ok, lists:reverse(Acc)};
-json_term_to_attachments([JsonTermAttachment|Rest], Acc) ->
-    case json_term_to_attachment(JsonTermAttachment) of
+json_term_to_attachments([AttachmentJsonTerm|Rest], Acc) ->
+    case json_term_to_attachment(AttachmentJsonTerm) of
         {ok, Attachment} ->
             json_term_to_attachments(Rest, [Attachment|Acc]);
         {error, invalid} ->
@@ -876,7 +891,7 @@ json_term_to_attachments([JsonTermAttachment|Rest], Acc) ->
 json_term_to_attachment(#{<<"filename">> := Filename,
                           <<"contentType">> := ContentType} = Attachment)
   when is_binary(Filename) andalso is_binary(ContentType) ->
-    case no_more_keys([<<"filename">>, <<"contentType">>], Attachment) of
+    case has_valid_keys([<<"filename">>, <<"contentType">>], Attachment) of
         true ->
             {ok, {Filename, ContentType}};
         false ->
@@ -948,5 +963,5 @@ change_ssid(SSID) ->
             {error, UnexpectedOutput}
     end.
 
-no_more_keys(RequiredKeys, Map) ->
-    lists:sort(maps:keys(Map)) =:= lists:sort(RequiredKeys).
+has_valid_keys(PossibleKeys, Map) ->
+    lists:all(fun(Key) -> lists:member(Key, PossibleKeys) end, maps:keys(Map)).
