@@ -87,6 +87,11 @@ http_post(Url, Data, Headers) ->
       httpc:request(post, {Url, [{"connection", "close"}|Headers],
                            "application/json", json:encode(Data)}, [], [])).
 
+http_multipart_post(Url, FilePath) ->
+    %% httpc does not support multipart/form-data
+    Result = os:cmd("curl -s -X POST -F 'filename=@" ++ FilePath ++ "' " ++ Url),
+    json:decode(list_to_binary(Result)).
+
 handle_response({ok, {{"HTTP/1.1", 200, "OK"},
                       ResponseHeaders, Body}}) ->
     case lists:keyfind("content-type", 1, ResponseHeaders) of
@@ -100,8 +105,3 @@ handle_response({ok, {{"HTTP/1.1", StatusCode, ReasonPhrase}},
     {unexpected, StatusCode, ReasonPhrase, ResponseHeaders, Body};
 handle_response({error, Reason}) ->
     {error, Reason}.
-
-http_multipart_post(Url, FilePath) ->
-    %% httpc does not support multipart/form-data
-    Result = os:cmd("curl -s -X POST -F 'filename=@" ++ FilePath ++ "' " ++ Url),
-    json:decode(list_to_binary(Result)).
