@@ -52,6 +52,13 @@ start() ->
                     <<"attachments">> => [make_attachment(UploadedFile)]},
                   Headers).
 
+bespoke_cookie(SessionId) ->
+    lists:flatten(
+      io_lib:format(
+        "bespoke=~s",
+        [http_uri:encode(json:encode(#{<<"sessionId">> => SessionId}))])).
+
+
 make_attachment(#{<<"absPath">> := AbsPath,
                   <<"contentType">> := ContentType}) ->
     <<"/tmp/", TmpFilename/binary>> = AbsPath,
@@ -59,7 +66,7 @@ make_attachment(#{<<"absPath">> := AbsPath,
       <<"contentType">> => ContentType}.
 
 %%
-%% Utilities
+%% HTTP Utilities
 %%
 
 init_httpc() ->
@@ -99,9 +106,3 @@ http_multipart_post(Url, FilePath) ->
     %% httpc does not support multipart/form-data
     Result = os:cmd("curl -s -X POST -F 'filename=@" ++ FilePath ++ "' " ++ Url),
     json:decode(list_to_binary(Result)).
-
-bespoke_cookie(SessionId) ->
-    lists:flatten(
-      io_lib:format(
-        "bespoke=~s",
-        [http_uri:encode(json:encode(#{<<"sessionId">> => SessionId}))])).
