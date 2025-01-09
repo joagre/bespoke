@@ -80,6 +80,7 @@ http_post(Url, Data, Headers) ->
     handle_response(
       httpc:request(post, {Url, [{"connection", "close"}|Headers],
                            "application/json", json:encode(Data)}, [], [])).
+
 handle_response({ok, {{"HTTP/1.1", 200, "OK"},
                       ResponseHeaders, Body}}) ->
     case lists:keyfind("content-type", 1, ResponseHeaders) of
