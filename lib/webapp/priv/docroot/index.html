@@ -49,7 +49,9 @@
           <!-- Forum -->
           <div>
             <button onclick="bespoke.gotoPage(event, 'top_posts.html')" class="uk-icon-button" uk-icon="commenting"></button>
-            <div class="uk-text-small">Forum</div>
+            <div class="uk-text-small">
+              Forum <span id="unread-posts" hidden>(<span id="unread-posts-counter">12</span>) </span>
+            </div>
           </div>
           <!-- Messaging -->
           <div>
@@ -60,11 +62,6 @@
           <div>
             <button class="uk-icon-button" uk-icon="album" disabled uk-tooltip="title: Coming Soon!"></button>
             <div class="uk-text-small">File Sharing</div>
-          </div>
-          <!-- Updates -->
-          <div>
-            <button class="uk-icon-button" uk-icon="bell" disabled uk-tooltip="title: Coming Soon!"></button>
-            <div class="uk-text-small">Updates</div>
           </div>
         </div>
       </div>

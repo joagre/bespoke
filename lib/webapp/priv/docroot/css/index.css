@@ -1,3 +1,7 @@
 #background-image {
-  opacity: 0.5;
+    opacity: 0.5;
+}
+
+#unread-posts-counter {
+    color: var(--uk-light-danger);
 }
