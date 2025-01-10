@@ -280,6 +280,7 @@ Shrink partition:
 sudo dd if=/dev/mmcblk0 of=/media/jocke/EXTERNSL/bespoke-0.1.0-32GB.img bs=4M status=progress
 sync
 sudo apt update && sudo apt install -y wget parted gzip pigz xz-utils udev e2fsprogs
+cd /media/jocke/EXTERNSL
 wget https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
 ./pishrink.sh bespoke-0.1.0-32GB.img bespoke-0.1.0-pishrinked.img
 sync
