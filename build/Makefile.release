@@ -18,4 +18,4 @@ update:
 	sudo systemctl start bespoke
 
 install: update
-	touch /var/tmp/bespoke.bootstrap
+	touch /var/tmp/bespoke/bootstrap
