@@ -4,20 +4,20 @@
 start() ->
     init_httpc(),
     %% Auto login
-    {ok,#{<<"noPassword">> := _NoPassword,
-          <<"sessionId">> := SessionId,
-          <<"userId">> := _UserId,
-          <<"username">> := _Username}} =
+    {ok, #{<<"noPassword">> := _NoPassword,
+           <<"sessionId">> := SessionId,
+           <<"userId">> := _UserId,
+           <<"username">> := _Username}} =
         http_get("http://localhost/api/auto_login"),
     %% Fetch all top posts
     Headers = [{"Cookie", bespoke_cookie(SessionId)}],
     {ok, [#{<<"id">> := PostId}|_]} =
         http_get("http://localhost/api/list_top_posts", Headers),
     %% Fetch specific post(s)
-    {ok,[#{<<"id">> := PostId}]} =
+    {ok, [#{<<"id">> := PostId}]} =
         http_post("http://localhost/api/lookup_posts", [PostId], Headers),
     %% Fetch specific post(s) recursively (include all nested replies)
-    {ok,[#{<<"id">> := _PostId2}|_]} =
+    {ok, [#{<<"id">> := _PostId2}|_]} =
         http_post("http://localhost/api/lookup_recursive_posts", [PostId],
                   Headers),
     %% Switch user
@@ -94,7 +94,8 @@ http_post(Url, Data, Headers) ->
 
 http_multipart_post(Url, FilePath) ->
     %% httpc does not support multipart/form-data
-    Result = os:cmd("curl -s -X POST -F 'filename=@" ++ FilePath ++ "' " ++ Url),
+    Result =
+        os:cmd("curl -s -X POST -F 'filename=@" ++ FilePath ++ "' " ++ Url),
     json:decode(list_to_binary(Result)).
 
 handle_response({ok, {{"HTTP/1.1", 200, "OK"},
