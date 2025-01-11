@@ -40,14 +40,15 @@ start() ->
     %% Insert a reply post to the top post (including one attachment)
     FilePath =
         filename:join(
-
           [code:priv_dir(webapp), "docroot/images/animated-background.gif"]),
     UploadedFile =
-        http_multipart_post("http://localhost/api/upload_attachments", FilePath),
+        http_multipart_post("http://localhost/api/upload_attachments",
+                            FilePath),
     {ok, #{<<"id">> := _ReplyPostId}} =
         http_post("http://localhost/api/insert_post",
                   #{<<"parentPostId">> => TopPostId,
                     %% The top post is the parent post in this case
+
                     <<"topPostId">> => TopPostId,
                     %% One hour back in time
                     <<"created">> => os:system_time(second) - 3600,
