@@ -450,9 +450,6 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
 	    rest_util:response(Socket, Request, {error, not_found})
     end.
 
-
-
-
 %%
 %% Authentication
 %%
