@@ -18,11 +18,11 @@
 -include_lib("apptools/include/serv.hrl").
 -include("../include/db.hrl").
 
--define(POST_DB_FILENAME, "/var/tmp/bespoke/db/posts.db").
--define(POST_DB, posts).
+-define(POST_DB_FILENAME, "/var/tmp/bespoke/db/post.db").
+-define(POST_DB, post).
 -define(META_DB_FILENAME, "/var/tmp/bespoke/db/meta.db").
 -define(META_DB, meta).
--define(SUBSCRIPTION_DB, db_serv_subscriptions).
+-define(SUBSCRIPTION_DB, db_serv_subscription).
 -define(BESPOKE_ATTACHMENTS_PATH, "/var/tmp/bespoke/attachment").
 -define(BESPOKE_ATTACHMENTS_TMP_PATH, "/var/tmp/bespoke/attachment/tmp").
 
@@ -186,8 +186,8 @@ message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            ok = dets:close(?META_DB),
-            ok = dets:close(?POST_DB),
+            _ = dets:close(?META_DB),
+            _ = dets:close(?POST_DB),
             {reply, From, ok};
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),

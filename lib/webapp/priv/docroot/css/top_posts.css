@@ -1,3 +1,7 @@
+.top-post {
+    cursor: pointer;
+}
+
 #posts {
     margin-top: 1em;
 }

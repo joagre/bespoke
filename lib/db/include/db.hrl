@@ -11,13 +11,19 @@
          %% Note: Disallowed for top posts and mandatory for reply posts
          top_post_id = not_set :: db_serv:post_id() | not_set,
          body :: db_serv:body() | '_',
-         author :: db_serv:author() | '_',
+         author = not_set :: db_serv:author() | not_set | '_',
          created = not_set :: db_serv:seconds_since_epoch() | not_set | '_',
          reply_count = 0 :: integer() | '_',
          replies = [] :: [db_serv:post_id()] | '_',
          likers = [] :: [db_serv:user_id()] | '_',
          attachments = [] :: [{db_serv:attachment_path(),
                                db_serv:content_type()}] | '_'
+        }).
+
+-record(read_cache,
+        {
+         user_id :: db_serv:user_id(),
+         post_ids = [] :: [db_serv:post_id()]
         }).
 
 -record(meta,
