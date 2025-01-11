@@ -5,43 +5,47 @@ start() ->
     init_httpc(),
     %% Auto login
     {ok,#{<<"noPassword">> := _NoPassword,
-          <<"sessionId">> := _SessionId,
+          <<"sessionId">> := SessionId,
           <<"userId">> := _UserId,
           <<"username">> := _Username}} =
-        http_get("http://localhost/auto_login"),
+        http_get("http://localhost/api/auto_login"),
     %% Fetch all top posts
+    Headers = [{"Cookie", bespoke_cookie(SessionId)}],
     {ok, [#{<<"id">> := PostId}|_]} =
-        http_get("http://localhost/list_top_posts"),
+        http_get("http://localhost/api/list_top_posts", Headers),
     %% Fetch specific post(s)
     {ok,[#{<<"id">> := PostId}]} =
-        http_post("http://localhost/lookup_posts", [PostId]),
+        http_post("http://localhost/api/lookup_posts", [PostId], Headers),
     %% Fetch specific post(s) recursively (include all nested replies)
     {ok,[#{<<"id">> := _PostId2}|_]} =
-        http_post("http://localhost/lookup_recursive_posts", [PostId]),
+        http_post("http://localhost/api/lookup_recursive_posts", [PostId],
+                  Headers),
     %% Switch user
     {ok, #{<<"sessionId">> := NewSessionId,
            <<"userId">> := _NewUserId,
            <<"username">> := <<"foo">>}} =
-        http_post("http://localhost/switch_user",
+        http_post("http://localhost/api/switch_user",
                   #{<<"username">> => <<"foo">>,
                     <<"passwordSalt">> => null,
                     <<"passwordHash">> => null,
-                    <<"clientResponse">> => null}),
+                    <<"clientResponse">> => null},
+                  Headers),
     %% Insert a top post
-    Headers = [{"Cookie", bespoke_cookie(NewSessionId)}],
+    NewHeaders = [{"Cookie", bespoke_cookie(NewSessionId)}],
     {ok, #{<<"id">> := TopPostId}} =
-        http_post("http://localhost/insert_post",
+        http_post("http://localhost/api/insert_post",
                   #{<<"title">> => <<"A new title for a top post">>,
                     <<"body">> => <<"A body">>},
-                  Headers),
+                  NewHeaders),
     %% Insert a reply post to the top post (including one attachment)
     FilePath =
         filename:join(
+
           [code:priv_dir(webapp), "docroot/images/animated-background.gif"]),
     UploadedFile =
-        http_multipart_post("http://localhost/upload_attachments", FilePath),
+        http_multipart_post("http://localhost/api/upload_attachments", FilePath),
     {ok, #{<<"id">> := _ReplyPostId}} =
-        http_post("http://localhost/insert_post",
+        http_post("http://localhost/api/insert_post",
                   #{<<"parentPostId">> => TopPostId,
                     %% The top post is the parent post in this case
                     <<"topPostId">> => TopPostId,
@@ -50,7 +54,7 @@ start() ->
                     <<"body">> => <<"A reply body">>,
                     %% One attachment
                     <<"attachments">> => [make_attachment(UploadedFile)]},
-                  Headers).
+                  NewHeaders).
 
 bespoke_cookie(SessionId) ->
     lists:flatten(
