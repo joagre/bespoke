@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.1]
+
+### Added [0.2.1]
+
+- Complete overhaul of posts counting in the UI
+
 ## [0.2.0]
 
 ### Fixed [0.2.0]

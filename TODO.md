@@ -24,8 +24,6 @@
 
 ## Web app
 
-* Add attachment support for forum posts
-
 * Add end-to-end encrypted direct messaging
 
 * Add file sharing
