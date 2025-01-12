@@ -24,6 +24,8 @@ html, body {
     /* font-family: "Lucida Console", Monaco, monospace; */
     /* font-family: Monaco, "Lucida Console", monospace; */
     /* Jesus wept: https://stackoverflow.com/a/58048556 */
+    margin: 0;
+    padding: 0;
     height: 100%;
 }
 
@@ -63,10 +65,15 @@ input {
     opacity: 1;
 }
 
-.sticky-header {
-    position: sticky;
+.sticky-header-container {
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 1000;
+}
+
+.sticky-header {
     padding: 0.5em 0.5em 0.5em 0.5em;
     opacity: 1;
 }

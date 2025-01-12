@@ -19,26 +19,31 @@
     <script type="module" src="js/post.js"></script>
   </head>
   <body hidden>
-    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
-      <!-- Header -->
-      <div class="sticky-header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-background-default">
-        <!-- Go back -->
-        <div>
-          <button  onclick="bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left"></button>
-        </div>
-        <!-- Title -->
-        <div class="uk-width-expand">
-          <span id="header-title" class="uk-text-bold"></span>
-          <span class="uk-text-meta">(<span id="title-username"></span>)</span>
-          <span id="header-reply-level" class="uk-text-meta"></span>
-        </div>
-        <!-- Toolbar -->
-        <div>
-          <a href="#top" class="uk-icon-button" uk-icon="arrow-up" role="button" uk-scroll></a>
+    <!-- Header -->
+    <div class="sticky-header-container">
+      <div class="uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
+        <div class="sticky-header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-background-default">
+          <!-- Go back -->
+          <div>
+            <button  onclick="bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+          </div>
+          <!-- Title -->
+          <div class="uk-width-expand">
+            <span id="header-title" class="uk-text-bold"></span>
+            <span class="uk-text-meta">(<span id="title-username"></span>)</span>
+            <span id="header-reply-level" class="uk-text-meta"></span>
+          </div>
+          <!-- Toolbar -->
+          <div>
+            <a href="#top" class="uk-icon-button" uk-icon="arrow-up" role="button" uk-scroll></a>
+          </div>
         </div>
       </div>
+    </div>
+    <!-- Top container -->
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Parent post and replies -->
-      <div class="uk-margin-small-left uk-margin-small-right uk-margin-top">
+      <div id="main-content" class="uk-margin-small-left uk-margin-small-right uk-margin-top">
         <!-- Parent post -->
         <div id="parent-post">
           <!-- Parent title -->
