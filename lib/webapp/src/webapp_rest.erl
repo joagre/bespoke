@@ -441,7 +441,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             ok = dets:insert(?READ_CACHE_DB,
                                              ReadCache#read_cache{
                                                user_id = UserId,
-                                               post_ids = PostIds ++ ExistingPostIds})
+                                               post_ids = lists:usort(PostIds ++ ExistingPostIds)})
                     end,
                     rest_util:response(Socket, Request, ok_204)
             end;
