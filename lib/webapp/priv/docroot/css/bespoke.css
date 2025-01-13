@@ -150,6 +150,7 @@ input {
 
 /* Button styling */
 
+label.uk-icon-button,
 button.uk-icon-button,
 a.uk-icon-button {
   border: 1px solid var(--uk-light-primary);
