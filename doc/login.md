@@ -1,11 +1,10 @@
 # Password hashing
 
-`->` is a REST request
-`<-` is a REST response
+`->` is a REST request and `<-` is a REST response
 
 ## Create password
 
-A user has no password but creates one.
+A user has no password but creates one
 
 ```
 Client                                                                     Server
@@ -20,7 +19,7 @@ hash = mk_argon2_hash(salt, password)
 
 ## Login
 
-A user provides a username and password in order to login.
+A user provides a username and password in order to login
 
 ```
 Client                                                                     Server
