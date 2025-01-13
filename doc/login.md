@@ -28,7 +28,7 @@ Client                                                                     Serve
 
                                                     challenge = mk_rand_bytes(32)
                                               salt = passwd_lookup_salt(username)
-                                        [Remember challenge + salt for 5 minutes]
+                                               [Remember challenge for 5 minutes]
                                                                <- challenge, salt
 
 hash = mk_argon2_hash(salt, password)
