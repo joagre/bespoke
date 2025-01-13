@@ -27,13 +27,13 @@ Client                                                                     Serve
 /api/generate_challenge(username) ->
 
                                                     challenge = mk_rand_bytes(32)
-                                                                [valid 5 minutes]
                                               salt = passwd_lookup_salt(username)
+                                        [Remember challenge + salt for 5 minutes]
                                                                <- challenge, salt
 
 hash = mk_argon2_hash(salt, password)
 client_response = mk_sha256_hmac(challenge, hash)
-/api/login(username, client_response) ->
+/api/login(client_response) ->
 
                                        response = mk_sha256_hmac(challenge, hash)
                                                    <- response == client_repsonse
