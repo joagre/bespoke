@@ -17,3 +17,8 @@
 .uk-slideshow-items {
   background-color: inherit;
 }
+
+.js-upload button,
+.js-upload label {
+    position: static;
+}
