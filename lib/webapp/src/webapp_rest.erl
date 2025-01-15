@@ -255,7 +255,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             UriPath =
                 case Tokens of
                     [] ->
-                        "loader.html";
+                        "/loader.html";
                     _ ->
                         Url#url.path
                 end,
@@ -271,8 +271,9 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
         _ ->
             ?log_info("Redirecting " ++ Headers#http_chdr.host ++ Url#url.path ++
                           " to /loader.html"),
-            rester_http_server:response_r(
-              Socket, Request, 302, "Found", "", [{location, "/loader.html"}|no_cache_headers()])
+            rester_http_server:response_r(Socket, Request, 302, "Found", "",
+                                          [{location, "http://bespoke.local/loader.html"}|
+                                           no_cache_headers()])
     end.
 
 %%
