@@ -227,9 +227,10 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
         ["api", "auto_login"] ->
             case filelib:is_regular("/var/tmp/bespoke/bootstrap") of
                 true ->
-                    rester_http_server:response_r(Socket, Request, 302, "Found", "",
-                                                  [{location, "/bootstrap.html"}|
-                                                   no_cache_headers()]);
+                    rester_http_server:response_r(
+                      Socket, Request, 302, "Found", "",
+                      [{location, "http://b3s.f0ff/bootstrap.html"}|
+                       no_cache_headers()]);
                 false ->
                     {ok, MacAddress} = get_mac_address(Socket),
                     User = db_user_serv:get_user_from_mac_address(MacAddress),
@@ -271,7 +272,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             end;
         _ ->
             ?log_info("Redirecting " ++ Headers#http_chdr.host ++ Url#url.path ++
-                          " to /loader.html"),
+                          " to http://b3s.f0ff/loader.html"),
             rester_http_server:response_r(Socket, Request, 302, "Found", "",
                                           [{location, "http://b3s.f0ff/loader.html"}|
                                            no_cache_headers()])
