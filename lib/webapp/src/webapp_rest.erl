@@ -248,8 +248,9 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                                                {ok, {format, UpdatedPayloadJsonTerm}})
                     end
             end;
-        %% Act as static web server for bespoke.local and localhost
-	Tokens when Headers#http_chdr.host == "bespoke.local" orelse
+        %% Act as static web server for b3s web server
+	Tokens when Headers#http_chdr.host == "b3s.f0ff" orelse
+                    Headers#http_chdr.host == "www.b3s.f0ff" orelse
                     Headers#http_chdr.host == "localhost" ->
             true = update_portal_cache_entry(Socket),
             UriPath =
@@ -272,7 +273,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             ?log_info("Redirecting " ++ Headers#http_chdr.host ++ Url#url.path ++
                           " to /loader.html"),
             rester_http_server:response_r(Socket, Request, 302, "Found", "",
-                                          [{location, "http://bespoke.local/loader.html"}|
+                                          [{location, "http://b3s.f0ff/loader.html"}|
                                            no_cache_headers()])
     end.
 
@@ -579,14 +580,14 @@ redirect_or_ack(Socket, Request, Page) ->
         [] ->
             ?log_info("Captive portal redirect"),
             rester_http_server:response_r(Socket, Request, 302, "Found", "",
-                                          [{location, "http://bespoke.local/loader.html"}|
+                                          [{location, "http://b3s.f0ff/loader.html"}|
                                            no_cache_headers()]);
         [#portal_cache_entry{timestamp = Timestamp}] ->
             case timestamp() - Timestamp > ?PORTAL_TIMEOUT of
                 true ->
                     ?log_info("Captive portal redirect (timeout)"),
                     rester_http_server:response_r(Socket, Request, 302, "Found", "",
-                                                  [{location, "http://bespoke.local/loader.html"}|
+                                                  [{location, "http://b3s.f0ff/loader.html"}|
                                                    no_cache_headers()]);
                 false ->
                     case Page of
