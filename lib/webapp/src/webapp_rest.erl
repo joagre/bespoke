@@ -271,8 +271,8 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     rest_util:response(Socket, Request, {error, not_found})
             end;
         _ ->
-            ?log_info("Redirecting " ++ Headers#http_chdr.host ++ Url#url.path ++
-                          " to http://b3s.f0ff/loader.html"),
+            ?log_info("Highjack redirect 302 from http://" ++ Headers#http_chdr.host ++
+                          Url#url.path ++ " to http://b3s.f0ff/loader.html"),
             rester_http_server:response_r(Socket, Request, 302, "Found", "",
                                           [{location, "http://b3s.f0ff/loader.html"}|
                                            no_cache_headers()])
@@ -579,14 +579,15 @@ redirect_or_ack(Socket, Request, Page) ->
     {ok, {IpAddress, _Port}} = rester_socket:peername(Socket),
     case ets:lookup(?PORTAL_CACHE, IpAddress) of
         [] ->
-            ?log_info("Captive portal redirect"),
+            ?log_info("Captive portal 302 redirect to http://b3s.f0ff/loader.html"),
             rester_http_server:response_r(Socket, Request, 302, "Found", "",
                                           [{location, "http://b3s.f0ff/loader.html"}|
                                            no_cache_headers()]);
         [#portal_cache_entry{timestamp = Timestamp}] ->
             case timestamp() - Timestamp > ?PORTAL_TIMEOUT of
                 true ->
-                    ?log_info("Captive portal redirect (timeout)"),
+                    ?log_info(
+                       "Captive portal 302 redirect (timeout) to http://b3s.f0ff/loader.html"),
                     rester_http_server:response_r(Socket, Request, 302, "Found", "",
                                                   [{location, "http://b3s.f0ff/loader.html"}|
                                                    no_cache_headers()]);
