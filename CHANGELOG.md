@@ -2,9 +2,10 @@
 
 ## [0.2.1]
 
-### Added [0.2.1]
+### Fixed [0.2.1]
 
-- Complete overhaul of posts counting in the UI
+- Complete overhaul of the captive portal logic
+- Complete overhaul of read/unread handling of posts in the forum
 
 ## [0.2.0]
 

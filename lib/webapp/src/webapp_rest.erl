@@ -232,9 +232,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                             end
                     end;
                 %% Act as static web server for b3s web server
-                Tokens when Headers#http_chdr.host == "b3s.f0ff" orelse
-                            Headers#http_chdr.host == "www.b3s.f0ff" orelse
-                            Headers#http_chdr.host == "localhost" ->
+                Tokens ->
                     true = update_portal_cache_entry(Socket),
                     UriPath =
                         case Tokens of
@@ -252,18 +250,9 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                               [{content_type, {url, UriPath}}]);
                         false ->
                             rest_util:response(Socket, Request, {error, not_found})
-                    end;
-                _ ->
-                    ?log_info("Captive portal highjacks http://" ++ Headers#http_chdr.host ++
-                                  Url#url.path ++ ": Replies 200 OK + /loader.html body"),
-                    send_loader_page(Socket, Request)
+                    end
             end
     end.
-
-send_loader_page(Socket, Request) ->
-    AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot/loader.html"]),
-    rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
-                                  [{content_type, {url, "/loader.html"}}|no_cache_headers()]).
 
 %%
 %% HTTP POST
@@ -643,6 +632,11 @@ is_captive_portal(Request, Page) ->
         _ ->
             false
     end.
+
+send_loader_page(Socket, Request) ->
+    AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot/loader.html"]),
+    rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
+                                  [{content_type, {url, "/loader.html"}}|no_cache_headers()]).
 
 delete_all_stale_timestamps() ->
     ?log_info("Deleting stale the captive portal entries"),
