@@ -248,8 +248,9 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                                                {ok, {format, UpdatedPayloadJsonTerm}})
                     end
             end;
-        %% Act as static web server
-	Tokens ->
+        %% Act as static web server for bespoke.local and localhost
+	Tokens when Headers#http_chdr.host == "bespoke.local" orelse
+                    Headers#http_chdr.host == "localhost" ->
             true = update_portal_cache_entry(Socket),
             UriPath =
                 case Tokens of
@@ -266,7 +267,12 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                                                   [{content_type, {url, UriPath}}]);
                 false ->
                     rest_util:response(Socket, Request, {error, not_found})
-            end
+            end;
+        _ ->
+            ?log_info("Redirecting " ++ Headers#http_chdr.host ++ Url#url.path ++
+                          " to /loader.html"),
+            rester_http_server:response_r(
+              Socket, Request, 302, "Found", "", [{location, "/loader.html"}|no_cache_headers()])
     end.
 
 %%
