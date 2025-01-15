@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Loading Bespoke BBS</title>
+    <title>Bespoke BBS</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css" />
     <link rel="stylesheet" href="css/bespoke.css" />
-    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="css/loader.css" />
     <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
     <link rel="shortcut icon" href="/favicon/favicon.ico" />
@@ -22,18 +22,23 @@
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle">
-        <!-- Title -->
         <div class="uk-width-expand">
-          <span class="uk-text-bold">Loading Bespoke BBS</span>
+          <span class="uk-text-bold">Bespoke BBS</span>
         </div>
       </div>
-      <!-- Ticker -->
-      <div class="uk-flex uk-flex-1 uk-flex-center uk-flex-middle">
+      <div class="uk-section uk-flex uk-flex-column uk-flex-center uk-margin-top">
         <div class="uk-text-center">
-          <div uk-spinner="ratio: 3"></div>
-          <div class="uk-text-center uk-margin-small-top">Loading...</div>
+          <div class="uk-text-large uk-margin-bottom">Ready?</div>
+          <button class="uk-button uk-button-default uk-border-circle uk-overflow-hidden button-wrapper uk-box-shadow-large" onclick="loader.enter()">
+            <img id="vortex-image" src="/images/animated-background.gif" alt="Enter">
+          </button>
+          <div class="uk-margin-top">Tap the vortex</div>
         </div>
       </div>
     </div>
+    <script type="module">
+      import loader from "/js/loader.js";
+      window.loader = loader;
+    </script>
   </body>
 </html>

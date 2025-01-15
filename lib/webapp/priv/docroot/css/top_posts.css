@@ -2,6 +2,10 @@
     cursor: pointer;
 }
 
+#have-no-attachments {
+    margin-top: 25%;
+}
+
 #posts {
     margin-top: 1em;
 }

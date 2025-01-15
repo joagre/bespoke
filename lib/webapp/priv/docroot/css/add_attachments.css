@@ -3,6 +3,10 @@
     border-radius: 0.25em;
 }
 
+#have-no-attachments {
+    margin-top: 25%;
+}
+
 /*
 .uk-slideshow-items {
   outline: 2px dashed red;
