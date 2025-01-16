@@ -1,44 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Bespoke BBS</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/uikit.min.css" />
-    <link rel="stylesheet" href="css/bespoke.css" />
-    <link rel="stylesheet" href="css/loader.css" />
-    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-title" content="Bespoke BBS" />
-    <link rel="manifest" href="/favicon/site.webmanifest" />
-    <script src="js/uikit.min.js" defer></script>
-    <script src="js/uikit-icons.min.js" defer></script>
-    <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/loader.js"></script>
-  </head>
-  <body>
-    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
-      <!-- Header -->
-      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle">
-        <div class="uk-width-expand">
-          <span class="uk-text-bold">Bespoke BBS</span>
-        </div>
-      </div>
-      <div class="uk-section uk-flex uk-flex-column uk-flex-center uk-margin-top">
-        <div class="uk-text-center">
-          <div class="uk-text-large uk-margin-bottom">Ready?</div>
-          <button class="uk-button uk-button-default uk-border-circle uk-overflow-hidden button-wrapper uk-box-shadow-large" onclick="loader.enter()">
-            <img id="vortex-image" src="/images/animated-background.gif" alt="Enter">
-          </button>
-          <div class="uk-margin-top">Tap the vortex</div>
-        </div>
-      </div>
-    </div>
-    <script type="module">
-      import loader from "/js/loader.js";
-      window.loader = loader;
-    </script>
-  </body>
+<head>
+  <title>Loader</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Detect Android and apply the appropriate meta-refresh -->
+  <script>
+
+
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+    if (window.location.hostname !== "localhost" &&
+        window.location.hostname !== "b3s.f0ff") {
+      const targetUrl = `http://b3s.f0ff${window.location.pathname}`;
+      window.location.href = targetUrl;
+    }
+
+
+
+      const isAndroid = /Android/i.test(navigator.userAgent);
+
+      if (isAndroid) {
+        // Redirect to the system browser using an intent-based link
+        const intentUrl = `intent://${window.location.hostname}/index.html#Intent;scheme=http;end`;
+        console.log("Redirecting to intent URL:", intentUrl);
+        document.getElementById("meta-refresh").setAttribute("content", `0;url=${intentUrl}`);
+      } else {
+        // For non-Android, redirect directly to /index.html
+        document.getElementById("meta-refresh").setAttribute("content", "0;url=/index.html");
+      }
+    });
+  </script>
+
+  <!-- Placeholder meta-refresh, will be updated dynamically -->
+  <meta id="meta-refresh" http-equiv="refresh" content="">
+</head>
+<body>
+  <h1>Loading...</h1>
+  <p>If the page does not redirect automatically, <a href="/index.html">click here</a>.</p>
+</body>
 </html>
