@@ -541,7 +541,8 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 send_loader_page(Socket, Request) ->
     AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot/loader.html"]),
     rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
-                                  [{content_type, {url, "/loader.html"}}|no_cache_headers()]).
+                                  [{content_type, {url, "/loader.html"}},
+                                   {connection, "keep-alive"}|no_cache_headers()]).
 
 %%
 %% Read cache
