@@ -136,10 +136,14 @@ Edit `/etc/dnsmasq.conf`:
 interface=wlan0
 dhcp-range=192.168.4.10,192.168.4.100,255.255.255.0,24h
 address=/#/192.168.4.1
+no-resolv
+no-poll
 
 interface=wlan1
 dhcp-range=192.168.5.10,192.168.5.100,255.255.255.0,24h
 address=/#/192.168.5.1
+no-resolv
+no-poll
 ```
 
 Unmask hostapd and start dnsmasq:
