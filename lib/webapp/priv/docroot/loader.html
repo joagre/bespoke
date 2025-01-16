@@ -2,10 +2,43 @@
 <html lang="en">
   <head>
     <title>Bespoke Loader</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke.css" />
+    <link rel="stylesheet" href="css/loader.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Bespoke BBS" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="/js/loader.js"></script>
+    <script type="module" src="js/loader.js"></script>
   </head>
   <body>
-    <!-- Nothing -->
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
+      <!-- Header -->
+      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle">
+        <div class="uk-width-expand">
+          <span class="uk-text-bold">Bespoke BBS</span>
+        </div>
+      </div>
+      <div class="uk-section uk-flex uk-flex-column uk-flex-center uk-margin-top">
+        <div class="uk-text-center">
+          <div class="uk-text-large uk-margin-bottom">Ready?</div>
+          <button class="uk-button uk-button-default uk-border-circle uk-overflow-hidden button-wrapper uk-box-shadow-large" onclick="loader.loadNow()">
+            <img id="vortex-image" src="/images/animated-background.gif" alt="Enter">
+          </button>
+          <div class="uk-margin-top">Tap the vortex</div>
+        </div>
+      </div>
+    </div>
+    <script type="module">
+      import loader from "/js/loader.js";
+      window.loader = loader;
+    </script>
   </body>
 </html>
