@@ -175,6 +175,10 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             send_loader_page(Socket, Request);
         ["gen_204"] ->
             send_loader_page(Socket, Request);
+        %% Android Samsung captive portal
+        [_] when Headers#http_chdr.host == "connectivitycheck.gstatic.com" orelse
+                 Headers#http_chdr.host == "www.google.com" ->
+            send_loader_page(Socket, Request);
         %% Ubuntu captive portal
         ["canonical.html"] ->
             send_loader_page(Socket, Request);
@@ -539,10 +543,13 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 %%
 
 send_loader_page(Socket, Request) ->
-    AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot/loader.html"]),
-    rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
-                                  [{content_type, {url, "/loader.html"}}|
-                                   no_cache_headers()]).
+    rest_util:response(Socket, Request, ok).
+
+%send_loader_page2(Socket, Request) ->
+%    AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot/loader.html"]),
+%    rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
+%                                  [{content_type, {url, "/loader.html"}}|
+%                                   no_cache_headers()]).
 
 %%
 %% Read cache
