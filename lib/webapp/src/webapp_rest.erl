@@ -539,17 +539,10 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 %%
 
 send_loader_page(Socket, Request) ->
-    _AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot/loader.html"]),
-
-    rester_http_server:response_r(Socket, Request, 302, "Found", "",
-                                  [{location, "http://b3s.f0ff/loader.html"}|
+    AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot/loader.html"]),
+    rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
+                                  [{content_type, {url, "/loader.html"}}|
                                    no_cache_headers()]).
-
-
-
-%    rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
-%                                  [{content_type, {url, "/loader.html"}}|
-%                                   no_cache_headers()]).
 
 %%
 %% Read cache
