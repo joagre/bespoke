@@ -1,45 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <title>Loader</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Detect Android and apply the appropriate meta-refresh -->
-  <script>
-
-
-
-
-    document.addEventListener("DOMContentLoaded", () => {
-
-    if (window.location.hostname !== "localhost" &&
-        window.location.hostname !== "b3s.f0ff") {
-      const targetUrl = `http://b3s.f0ff${window.location.pathname}`;
-      window.location.href = targetUrl;
-    }
-
-
-
-      const isAndroid = /Android/i.test(navigator.userAgent);
-
-      if (isAndroid) {
-        // Redirect to the system browser using an intent-based link
-        const intentUrl = `intent://${window.location.hostname}/index.html#Intent;scheme=http;end`;
-        console.log("Redirecting to intent URL:", intentUrl);
-        document.getElementById("meta-refresh").setAttribute("content", `0;url=${intentUrl}`);
-      } else {
-        // For non-Android, redirect directly to /index.html
-        document.getElementById("meta-refresh").setAttribute("content", "0;url=/index.html");
-      }
-    });
-  </script>
-
-  <!-- Placeholder meta-refresh, will be updated dynamically -->
-  <meta id="meta-refresh" http-equiv="refresh" content="">
-</head>
-<body>
-  <h1>Loading...</h1>
-  <p>If the page does not redirect automatically, <a href="/index.html">click here</a>.</p>
-</body>
+  <head>
+    <title>Bespoke Loader</title>
+    <script src="js/uhtml.min.js" defer></script>
+    <script type="module" src="/js/loader.js"></script>
+  </head>
+  <body>
+    <!-- Nothing -->
+  </body>
 </html>
