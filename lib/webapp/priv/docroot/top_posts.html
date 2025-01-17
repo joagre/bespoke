@@ -34,7 +34,7 @@
           </div>
           <!-- Toolbar -->
           <div>
-            <button onclick="bespoke.gotoPage(event, 'add_top_post.html')" class="uk-icon-button" uk-icon="plus"></button>
+            <button onclick="topPosts.clearScrollPosition(); bespoke.gotoPage(event, 'add_top_post.html')" class="uk-icon-button" uk-icon="plus"></button>
           </div>
         </div>
       </div>
@@ -54,7 +54,9 @@
     <!-- Make relevant ES6 modules available globally -->
     <script type="module">
       import bespoke from "/js/bespoke.js";
+      import topPosts from "/js/top_posts.js";
       window.bespoke = bespoke;
+      window.topPosts = topPosts;
     </script>
   </body>
 </html>
