@@ -157,7 +157,7 @@ input {
 label.uk-icon-button,
 button.uk-icon-button,
 a.uk-icon-button {
-  border: 2px solid var(--uk-light-primary);
+  border: 1px solid var(--uk-primary);
 }
 
 button.uk-icon-button[disabled] {
@@ -167,7 +167,7 @@ button.uk-icon-button[disabled] {
 
 button.button-toggle:not([disabled]),
 a.button-toggle:not([disabled]) {
-  border: 2px solid var(--uk-light-primary);
+  border: 1px solid var(--uk-primary);
 }
 
 .toolbar-button {
