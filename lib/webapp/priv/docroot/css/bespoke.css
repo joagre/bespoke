@@ -85,6 +85,10 @@ input {
 
 /* Post styling */
 
+.unread {
+    color: var(--uk-light-danger);
+}
+
 .quote {
     cursor: pointer;
 }
@@ -153,7 +157,7 @@ input {
 label.uk-icon-button,
 button.uk-icon-button,
 a.uk-icon-button {
-  border: 1px solid var(--uk-light-primary);
+  border: 2px solid var(--uk-light-primary);
 }
 
 button.uk-icon-button[disabled] {
@@ -163,7 +167,7 @@ button.uk-icon-button[disabled] {
 
 button.button-toggle:not([disabled]),
 a.button-toggle:not([disabled]) {
-  border: 1px solid var(--uk-light-primary);
+  border: 2px solid var(--uk-light-primary);
 }
 
 .toolbar-button {
