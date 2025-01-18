@@ -1,8 +1,14 @@
 RUNTIME_DIR = /var/tmp/bespoke
 
-.PHONY: install create-dirs ensure-bootstrap install-toggle-interface clean
+.PHONY: install check-platform create-dirs ensure-bootstrap install-toggle-interface clean
 
-install: create-dirs ensure-bootstrap install-toggle-interface
+install: check-platform create-dirs ensure-bootstrap install-toggle-interface
+
+check-platform:
+	if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then \
+		echo "Error: This must be run on a Raspberry Pi"; \
+		exit 1; \
+	fi
 
 create-dirs:
 	mkdir -p $(RUNTIME_DIR)/attachment/tmp && \
