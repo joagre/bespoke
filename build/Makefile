@@ -27,14 +27,14 @@ release:
 			cp -r ../lib/$$lib/priv $(TARGET_DIR)/lib/$$lib; \
 		fi; \
 	done
-	@echo "Copying bin files"
+	@echo "Copying bin files REMOVE"
 	@for lib in $(LIBS); do \
 		if [ -d ../lib/$$lib/bin ]; then \
 			mkdir -p $(TARGET_DIR)/lib/$$lib; \
 			cp -r ../lib/$$lib/bin $(TARGET_DIR)/lib/$$lib; \
 		fi; \
 	done
-	@echo "Copying bin files"
+	@echo "Copying bin files JUST BESPOKE and sys.config files"
 	@cp -r ../bin $(TARGET_DIR)
 	@echo "Copying top Makefile"
 	@cp Makefile.release $(TARGET_DIR)/Makefile
