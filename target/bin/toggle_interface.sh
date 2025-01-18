@@ -18,7 +18,7 @@ run_cmd() {
   local timestamp
   timestamp=$(date "+%Y-%m-%d %H:%M:%S")
 
-  echo -n "[$timestamp] ** $0: $*: " >> "$LOG_FILE"
+  echo -n "[$timestamp] $0: $*: " >> "$LOG_FILE"
   if ! output=$("${@}" 2>&1); then
     echo "FAILED - $output" >> "$LOG_FILE"
     exit 1
