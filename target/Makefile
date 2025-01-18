@@ -20,8 +20,7 @@ install-toggle-interface:
 	sudo install -m 644 etc/systemd/system/bespoke-toggle-interface.service /etc/systemd/system/ && \
 	sudo systemctl daemon-reload && \
 	sudo systemctl restart bespoke-toggle-interface && \
-	sudo systemctl enable bespoke-toggle-interface && \
-	sudo systemctl is-active bespoke-toggle-interface
+	sudo systemctl enable bespoke-toggle-interface
 
 clean:
 	rm -rf $(RUNTIME_DIR)
