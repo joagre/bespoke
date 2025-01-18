@@ -1,5 +1,3 @@
-I have the follwing system service. Can I be sure that toffle_interface.sh will be run as root bu default?
-
 [Unit]
 Description=Prepare Bespoke to run on wlan0 or wlan1
 After=network-online.target
