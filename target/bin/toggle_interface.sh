@@ -15,7 +15,10 @@ DNSMASQ_CONF=/etc/dnsmasq.conf
 
 run_cmd() {
   local output
-  echo -n "** $0: $*: " >> "$LOG_FILE"
+  local timestamp
+  timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+
+  echo -n "[$timestamp] ** $0: $*: " >> "$LOG_FILE"
   if ! output=$("${@}" 2>&1); then
     echo "FAILED - $output" >> "$LOG_FILE"
     exit 1
