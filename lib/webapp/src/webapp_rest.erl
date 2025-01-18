@@ -877,7 +877,9 @@ authenticate(Request, true) ->
     db_user_serv:get_user_from_session_id(base64:decode(SessionId)).
 
 change_ssid(SSID) ->
-    ScriptPath = filename:absname(filename:join([code:lib_dir(main), "bin", "change-ssid"])),
+    BaseDir = filename:join([code:lib_dir(main), "../.."]),
+    TargetBinDir = filename:join([BaseDir, "target/bin"]),
+    ScriptPath = filename:absname(filename:join([TargetBinDir, "change_ssid.sh"])),
     Command = ["sudo bash ", ScriptPath, " ", ?b2l(SSID), " 2>&1; echo $?"],
     ?log_info("Calling: ~s\n", [Command]),
     case string:trim(os:cmd(Command)) of

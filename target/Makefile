@@ -1,8 +1,8 @@
 RUNTIME_DIR = /var/tmp/bespoke
 
-.PHONY: install check-platform create-dirs ensure-bootstrap install-toggle-interface clean
+.PHONY: install check-platform create-dirs ensure-bootstrap prepare-change-ssid install-toggle-interface clean
 
-install: check-platform create-dirs ensure-bootstrap install-toggle-interface
+install: check-platform create-dirs ensure-bootstrap prepare-change-ssid install-toggle-interface
 
 check-platform:
 	if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then \
@@ -17,6 +17,10 @@ create-dirs:
 
 ensure-bootstrap:
 	touch $(RUNTIME_DIR)/bootstrap
+
+prepare-change-ssid:
+	sudo chown root:root bin/change_ssid.sh
+	sudo chmod 700 bin/change_ssid.sh
 
 install-toggle-interface:
 	sudo install -m 644 etc/hostapd/hostapd-wlan0.conf /etc/hostapd/ && \

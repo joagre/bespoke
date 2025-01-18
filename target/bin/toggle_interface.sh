@@ -1,11 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail
-
-if ! grep -q "Raspberry Pi" /proc/device-tree/model; then
-    echo "Exiting: Must run on a Raspberry Pi"
-    exit 1
-fi
+grep -q "Raspberry Pi" /proc/cpuinfo || exit 255
 
 BASE_DIR=/home/pi/bespoke
 TARGET_DIR=${BASE_DIR}/target
