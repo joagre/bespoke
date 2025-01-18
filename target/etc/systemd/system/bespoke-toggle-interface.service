@@ -1,0 +1,11 @@
+[Unit]
+Description=Prepare Bespoke to run on wlan0 or wlan1
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/pi/bespoke/target/bin/toggle_interface.sh
+
+[Install]
+WantedBy=multi-user.target

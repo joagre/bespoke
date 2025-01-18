@@ -24,12 +24,15 @@ fi
 
 echo -n "** $0: Starting hostapd-${interface}: " >> $LOG_FILE
 systemctl start hostapd-${interface}
-sudo iptables -t nat -A PREROUTING -i ${interface} -p tcp --dport 80 -j DNAT --to-destination ${ip_address}:80
-sudo iptables -t nat -A PREROUTING -i ${interface} -p tcp --dport 443 -j DNAT --to-destination ${ip_address}:443
-sudo iptables -t nat -A POSTROUTING -o ${interface} -j MASQUERADE
 echo "DONE" >> $LOG_FILE
 
-echo "** $0: Restarting dnsmasq: " >> $LOG_FILE
-sudo cp ${TARGET_DIR}/etc/dnsmasq-${interface}.conf /etc/dnsmasq.conf
-sudo systemctl restart dnsmasq
+echo -n "** $0: Add packet filter rules: " >> $LOG_FILE
+echo sudo iptables -t nat -A PREROUTING -i ${interface} -p tcp --dport 80 -j DNAT --to-destination ${ip_address}:80
+echo sudo iptables -t nat -A PREROUTING -i ${interface} -p tcp --dport 443 -j DNAT --to-destination ${ip_address}:443
+echo sudo iptables -t nat -A POSTROUTING -o ${interface} -j MASQUERADE
+echo "DONE" >> $LOG_FILE
+
+echo -n "** $0: Restarting dnsmasq: " >> $LOG_FILE
+echo sudo cp ${TARGET_DIR}/etc/dnsmasq-${interface}.conf /etc/dnsmasq.conf
+echo sudo systemctl restart dnsmasq
 echo "DONE" >> $LOG_FILE
