@@ -1,8 +1,8 @@
 RUNTIME_DIR = /var/tmp/bespoke
 
-.PHONY: install check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service clean-runtime-dir
+.PHONY: install check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill clean-runtime-dir
 
-install: check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service
+install: check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill
 
 check-target:
 	if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then \
@@ -44,6 +44,14 @@ install-bespoke-service:
 	sudo systemctl restart bespoke && \
 	sudo systemctl enable bespoke && \
 	sudo sysemctl is-active bespoke
+
+install-wlan1-udev-rule:
+	sudo install -m 644 etc/udev/rules.d/99-wlan1.rules /etc/udev/rules.d/ && \
+	sudo udevadm control --reload-rules && \
+	sudo udevadm trigger
+
+blacklist-rfkill:
+	sudo install -m 644 etc/modprobe.d/blacklist-rfkill.conf /etc/modprobe.d/
 
 clean-runtime-dir:
 	rm -rf $(RUNTIME_DIR)
