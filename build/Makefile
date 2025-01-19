@@ -27,12 +27,14 @@ release:
 			cp -r ../lib/$$lib/priv $(TARGET_DIR)/lib/$$lib; \
 		fi; \
 	done
+	@echo "Copying target files"
+	@cp -r ../target $(TARGET_DIR)
 	@echo "Copying bin files"
 	@cp -r ../bin $(TARGET_DIR)
-	@rm -f $(TARGET_DIR)/bin/run_test.sh
 	@echo "Copying top Makefile"
 	@cp Makefile.release $(TARGET_DIR)/Makefile
 	@echo "Removing spurious files"
+	@rm -f $(TARGET_DIR)/bin/run_test.sh
 	@find $(TARGET_DIR) -name "*.dump" -exec rm {} \;
 	@find $(TARGET_DIR) -name ".gitignore" -exec rm {} \;
 	@echo "Building release"
