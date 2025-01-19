@@ -48,9 +48,9 @@ dnsmasq_tool(_Parameters) ->
     ok.
 
 %% dnsmasq_tool(Parameters) ->
-%%     ScriptPath =
-%%         filename:absname(
-%%           filename:join([code:lib_dir(main), "bin", "dnsmasq-tool"])),
+%%     BaseDir = filename:join([code:lib_dir(main), "../.."]),
+%%     TargetBinDir = filename:join([BaseDir, "target/bin"]),
+%%     ScriptPath = filename:join([TargetBinDir, "dnsmasq_tool.sh"]),
 %%     Command = ["sudo ", ScriptPath, " /etc/dnsmasq.conf",
 %%                " --restart-dnsmasq", Parameters, " 2>&1; echo $?"],
 %%     ?log_info("Calling: ~s\n", [Command]),

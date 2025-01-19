@@ -886,7 +886,7 @@ change_ssid(SSID) ->
         "0" ->
             ok;
         UnexpectedOutput ->
-            ?log_error("Unexpected output from dnsmasq-tool: ~s", [UnexpectedOutput]),
+            ?log_error("Unexpected output from dnsmasq_tool.sh: ~s", [UnexpectedOutput]),
             {error, UnexpectedOutput}
     end.
 
