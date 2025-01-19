@@ -95,7 +95,7 @@ sudo iptables -A FORWARD -i enxdecde80060f0 -o wlp2s0 -j ACCEPT
 
 If you update the host with a udev rule that always renames
 usb-over-ethernet (enXXX) devices to `usbeth`, i.e `SUBSYSTEM=="net", ACTION=="add", DRIVERS=="usb", NAME="usbeth", ENV{NM_UNMANAGED}="1"`, then you can use the
-script `./bin/usbeth-setup.sh` to assign an ip address and link to
+script `./bin/usbeth_setup.sh` to assign an ip address and link to
 `usbeth`, as well as create the network config needed for the default
 gateway on the Pi to work. Look in the script for details.
 
@@ -234,44 +234,13 @@ make release
 scp build/releases/bespoke-0.1.0.tar.gz pi@bespoke.local:/home/pi/
 ```
 
-Copy necessary config files to the Pi:
-
-```
-scp build/config/bespoke.service pi@bespoke.local:/home/pi/
-scp build/config/99-usb-wifi-host.rules pi@bespoke.local:/home/pi/
-scp build/config/change-ssid pi@bespoke.local:/home/pi/
-scp build/config/blacklist-rfkill.conf pi@bespoke.local:/home/pi/
-scp build/config/switch-hostapd.service pi@bespoke.local:/home/pi/
-```
-
 Do this on the Pi:
 
 ```
 sudo ntpdate pool.ntp.org
-
 tar zxvf bespoke-0.1.0.tar.gz
 cd bespoke-0.1.0
 make install
-
-sudo mv bespoke.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl start bespoke.service
-sudo systemctl enable bespoke.service
-
-sudo mv 99-usb-wifi-host.rules /etc/udev/rules.d/
-sudo udevadm control --reload
-sudo udevadm trigger
-
-sudo mv change-ssid /etc/sudoers.d/change-ssid
-sudo chown root:root /etc/sudoers.d/change-ssid
-sudo chmod 440 /etc/sudoers.d/change-ssid
-
-sudo mv blacklist-rfkill.conf /etc/modprobe.d/
-
-sudo mv switch-hostapd.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl start switch-hostapd.service
-sudo systemctl enable switch-hostapd.service
 ```
 
 Done!
