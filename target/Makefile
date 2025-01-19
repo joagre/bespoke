@@ -1,10 +1,10 @@
 RUNTIME_DIR = /var/tmp/bespoke
 
-.PHONY: install check-platform create-dirs ensure-bootstrap prepare-change-ssid install-toggle-interface clean
+.PHONY: install check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service clean-runtime-dir
 
-install: check-platform create-dirs ensure-bootstrap prepare-change-ssid install-toggle-interface
+install: check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service
 
-check-platform:
+check-target:
 	if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then \
 		echo "Error: This must be run on a Raspberry Pi"; \
 		exit 1; \
@@ -15,14 +15,18 @@ create-dirs:
 	mkdir -p $(RUNTIME_DIR)/log && \
 	mkdir -p $(RUNTIME_DIR)/db
 
-ensure-bootstrap:
+enable-bootstrap:
 	touch $(RUNTIME_DIR)/bootstrap
 
-prepare-change-ssid:
+setup-change-ssid:
 	sudo install -m 440 etc/sudoers.d/change-ssid /etc/sudoers.d/ && \
 	sudo chown root:root /etc/sudoers.d/change-ssid && \
 	sudo chown root:root bin/change_ssid.sh && \
 	sudo chmod 700 bin/change_ssid.sh
+
+setup-dhcp:
+	sudo install -m 644 etc/dhcpcd.conf /etc/ && \
+	sudo systemctl restart dhcpcd
 
 install-toggle-interface:
 	sudo install -m 644 etc/hostapd/hostapd-wlan0.conf /etc/hostapd/ && \
@@ -34,5 +38,12 @@ install-toggle-interface:
 	sudo systemctl restart bespoke-toggle-interface && \
 	sudo systemctl enable bespoke-toggle-interface
 
-clean:
+install-bespoke-service:
+	sudo install -m 644 etc/systemd/system/bespoke.service /etc/systemd/system/ && \
+	sudo systemctl daemon-reload && \
+	sudo systemctl restart bespoke && \
+	sudo systemctl enable bespoke && \
+	sudo sysemctl is-active bespoke
+
+clean-runtime-dir:
 	rm -rf $(RUNTIME_DIR)
