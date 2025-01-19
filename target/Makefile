@@ -41,9 +41,7 @@ install-toggle-interface:
 install-bespoke-service:
 	sudo install -m 644 etc/systemd/system/bespoke.service /etc/systemd/system/ && \
 	sudo systemctl daemon-reload && \
-	sudo systemctl restart bespoke && \
-	sudo systemctl enable bespoke && \
-	sudo sysemctl is-active bespoke
+	sudo systemctl enable bespoke
 
 install-wlan1-udev-rule:
 	sudo install -m 644 etc/udev/rules.d/99-wlan1.rules /etc/udev/rules.d/ && \

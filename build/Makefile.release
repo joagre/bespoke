@@ -16,6 +16,7 @@ restart:
 	ln -sf "$(CURRENT_DIR)" "$(BASE_DIR)"
 	@echo "Starting bespoke service..."
 	sudo systemctl start bespoke
+	sudo systemctl is-active bespoke
 	@echo "Restart completed"
 
 install:
