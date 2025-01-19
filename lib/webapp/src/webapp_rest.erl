@@ -880,7 +880,7 @@ change_ssid(SSID) ->
     BaseDir = filename:join([code:lib_dir(main), "../.."]),
     TargetBinDir = filename:join([BaseDir, "target/bin"]),
     ScriptPath = filename:join([TargetBinDir, "change_ssid.sh"]),
-    Command = ["sudo bash ", ScriptPath, " ", ?b2l(SSID), " 2>&1; echo $?"],
+    Command = ["sudo bash ", ScriptPath, " \"", ?b2l(SSID), "\" 2>&1; echo $?"],
     ?log_info("Calling: ~s\n", [Command]),
     case string:trim(os:cmd(Command)) of
         "0" ->
