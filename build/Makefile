@@ -35,6 +35,7 @@ release:
 	@cp Makefile.release $(TARGET_DIR)/Makefile
 	@echo "Removing spurious files"
 	@rm -f $(TARGET_DIR)/bin/run_test.sh
+	@rm -f $(TARGET_DIR)/bin/usbeth_setup.sh
 	@find $(TARGET_DIR) -name "*.dump" -exec rm {} \;
 	@find $(TARGET_DIR) -name ".gitignore" -exec rm {} \;
 	@echo "Building release"
