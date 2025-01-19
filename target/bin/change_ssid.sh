@@ -1,6 +1,6 @@
 #!/bin/bash
 
-grep -q "^Hardware\s*:.*Raspberry Pi" /proc/cpuinfo || exit 255
+grep -q "Raspberry Pi" /proc/cpuinfo || exit 255
 
 usage () {
     >&2 echo "Usage: change_ssid.sh <SSID>"
