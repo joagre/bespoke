@@ -1,16 +1,25 @@
 # -*- mode: makefile -*-
-CURRENT_DIR=$(shell pwd)
-RELEASE_DIR=$(shell basename `pwd`)
+BASE_DIR := /home/pi/bespoke
+CURRENT_DIR := $(shell pwd)
+RELEASE_DIR := $(shell basename $(CURRENT_DIR))
 
 restart:
-	@if [ "$$(cd .. && pwd)" != "/home/pi" ]; then \
-		echo "The release must be unpacked under /home/pi"; \
+restart:
+	@if [ "$(CURRENT_DIR)" != "$(BASE_DIR)" ]; then \
+		echo "Error: The release must be unpacked at $(BASE_DIR). Current location: $(CURRENT_DIR)"; \
 		exit 1; \
 	fi
-	sudo systemctl stop bespoke && \
-	rm -f ../bespoke && \
-	ln -sf $(CURDIR) $(CURDIR)/../bespoke && \
+	@echo "Stopping bespoke service..."
+	sudo systemctl stop bespoke
+	@echo "Updating symlink..."
+	rm -f $(BASE_DIR)
+	ln -sf "$(CURRENT_DIR)" "$(BASE_DIR)"
+	@echo "Starting bespoke service..."
 	sudo systemctl start bespoke
+	@echo "Restart completed"
 
 install:
-	(cd target && $(MAKE) install && cd .. && $(MAKE) restart)
+	@echo "Running target installation..."
+	$(MAKE) -C target install
+	@echo "Installation completed. Restarting service..."
+	$(MAKE) restart
