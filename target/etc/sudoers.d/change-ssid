@@ -1,0 +1,1 @@
+pi ALL=(ALL) NOPASSWD: /home/pi/bespoke/target/bin/change_ssid.sh

@@ -19,7 +19,9 @@ ensure-bootstrap:
 	touch $(RUNTIME_DIR)/bootstrap
 
 prepare-change-ssid:
-	sudo chown root:root bin/change_ssid.sh
+	sudo install -m 440 etc/sudoers.d/change-ssid /etc/sudoers.d/ && \
+	sudo chown root:root /etc/sudoers.d/change-ssid && \
+	sudo chown root:root bin/change_ssid.sh && \
 	sudo chmod 700 bin/change_ssid.sh
 
 install-toggle-interface:
