@@ -2,20 +2,15 @@
 CURRENT_DIR=$(shell pwd)
 RELEASE_DIR=$(shell basename `pwd`)
 
-update:
+restart:
 	@if [ "$$(cd .. && pwd)" != "/home/pi" ]; then \
 		echo "The release must be unpacked under /home/pi"; \
 		exit 1; \
 	fi
-	mkdir -p /var/tmp/bespoke/attachment/tmp
-	mkdir -p /var/tmp/bespoke/log
-	mkdir -p /var/tmp/bespoke/db
-	sudo systemctl stop bespoke
-	sudo chown root:root lib/main/bin/change-ssid
-	sudo chmod 700 lib/main/bin/change-ssid
-	rm -f ../bespoke
-	ln -sf $(CURDIR) $(CURDIR)/../bespoke
+	sudo systemctl stop bespoke && \
+	rm -f ../bespoke && \
+	ln -sf $(CURDIR) $(CURDIR)/../bespoke && \
 	sudo systemctl start bespoke
 
-install: update
-	touch /var/tmp/bespoke/bootstrap
+install:
+	(cd target && $(MAKE) install && cd .. && $(MAKE) restart)
