@@ -18,4 +18,4 @@ clean:
 #@END-TEST-DEFAULT-RULES@
 
 runtest: all
-	../../mixmesh/bin/run_test --config ../../mixmesh/etc/mixmesh-do-nothing.conf .
+	../../../bin/run_test.sh --config ../../mixmesh/etc/mixmesh-do-nothing.conf .

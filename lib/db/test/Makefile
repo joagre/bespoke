@@ -23,5 +23,5 @@ create_dummy_db:
 ERLC_FLAGS=-I ../.. +debug_info -Ddebug
 
 runtest: all
-	rm -f ../priv/*.db; ../../main/bin/run_test db
-	rm -f ../priv/*.db; ../../main/bin/run_test rest
+	rm -f ../priv/*.db; ../../../bin/run_test.sh db
+	rm -f ../priv/*.db; ../../../bin/run_test.sh rest
