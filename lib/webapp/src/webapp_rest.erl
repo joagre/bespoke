@@ -245,7 +245,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
 http_post(Socket, Request, Body, State) ->
     Url = Request#http_request.uri,
     case string:tokens(Url#url.path, "/") of
-	["v1" | Tokens] ->
+	["v1"|Tokens] ->
 	    http_post(Socket, Request, Url, Tokens, Body, State, v1);
 	Tokens ->
 	    http_post(Socket, Request, Url, Tokens, Body, State, v1)
