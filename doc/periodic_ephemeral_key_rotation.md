@@ -27,7 +27,7 @@ Create new ephemerel_key DETS table:
          signature  :: db_serv:ephemeral_pub_key_signature(),
          valid_from :: db_serv:seconds_since_epoch(),
          valid_to   :: db_serv:seconds_since_epoch(),
-         active     :: boolean()
+         active     :: yes | no | expiring
         }).
 ```
 
@@ -40,8 +40,8 @@ Client                                                                          
 
      valid = crypto_verify_detached(signature, pub_key, crypto_box_PUBLICKEYBYTES, pub_identity_key)
                                                                                             <- valid
-                                        [Store in ephemeral_key table if valid and set it to active]
-                                                 [After valid_to the ephemeral key is made inactive]
+                                       [Store in ephemeral_key table if valid and set active to yes]
+                                                     [After valid_to the ephemeral key is set to no]
 ```
 
 Alice uses this REST resource to ask for Bob's ephemeral public key:
@@ -51,5 +51,17 @@ Alice uses this REST resource to ask for Bob's ephemeral public key:
 
                                                        <- {pub_key, valid_from, valid_to, signature}
 
-[Alice verifies the signature using Bob's public identity key]
+[Alice verifies the signature (see above) using Bob's public identity key]
+```
+
+## Client setup
+
+Clients generate and store a unique identity keypair for each user account. For now the local
+storage in the Web browser is used for this. This can indeed be made better.
+
+``
+const unsigned char pub_identity_key[crypto_sign_PUBLICKEYBYTES];
+unsigned char sec_identity_key[crypto_sign_SECRETKEYBYTES];
+const userId = bespoke.getCookieValue("userId");
+bespoke.setLocalItem(`pubIdentityKey-${userId}`, pub_identity_key);
 ```

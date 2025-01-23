@@ -11,7 +11,7 @@
 -include_lib("rester/include/rester_http.hrl").
 -include_lib("rester/include/rester_socket.hrl").
 -include_lib("db/include/db.hrl").
--include("webapp_auth.hrl").
+-include("webapp_crypto.hrl").
 
 -define(READ_CACHE_DB_FILENAME, "/var/tmp/bespoke/db/readCache.db").
 -define(READ_CACHE_DB, read_cache).
@@ -27,7 +27,7 @@
 
 -record(challenge_cache_entry, {
                                 username :: db_user_serv:username(),
-                                challenge :: webapp_auth:challenge(),
+                                challenge :: webapp_crypto:challenge(),
                                 timestamp :: timestamp()
                                }).
 
@@ -273,7 +273,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         {error, not_found} ->
                             PasswordSalt = crypto:strong_rand_bytes(?CRYPTO_PWHASH_SALTBYTES)
                     end,
-                    Challenge = webapp_auth:generate_challenge(),
+                    Challenge = webapp_crypto:generate_challenge(),
                     PayloadJsonTerm = #{<<"passwordSalt">> => base64:encode(PasswordSalt),
                                         <<"challenge">> => base64:encode(Challenge)},
                     true = add_challenge_to_cache(Username, Challenge),
@@ -425,7 +425,7 @@ login(Socket, Request, Username, ClientResponse) ->
         {ok, Challenge} ?= get_challenge_from_cache(Username),
         {ok, #user{password_salt = PasswordSalt, password_hash = PasswordHash}} ?=
             db_user_serv:get_user_from_username(Username),
-        true ?= webapp_auth:verify_client_response(ClientResponse, Challenge, PasswordHash),
+        true ?= webapp_crypto:verify_client_response(ClientResponse, Challenge, PasswordHash),
         {ok, MacAddress} = get_mac_address(Socket),
         {ok, #user{id = UserId, session_id = SessionId}} ?=
             db_user_serv:login(Username, MacAddress, PasswordSalt, PasswordHash),
@@ -437,37 +437,6 @@ login(Socket, Request, Username, ClientResponse) ->
         _ ->
             rest_util:response(Socket, Request, {error, forbidden})
     end.
-
-%% login(Socket, Request, Username, ClientResponse) ->
-%%     case get_challenge_from_cache(Username) of
-%%         {ok, Challenge} ->
-%%             case db_user_serv:get_user_from_username(Username) of
-%%                 {ok, #user{password_salt = PasswordSalt, password_hash = PasswordHash}} ->
-%%                     case webapp_auth:verify_client_response(ClientResponse, Challenge,
-%%                                                             PasswordHash) of
-%%                         true ->
-%%                             {ok, MacAddress} = get_mac_address(Socket),
-%%                             case db_user_serv:login(Username, MacAddress, PasswordSalt,
-%%                                                     PasswordHash) of
-%%                                 {ok, #user{id = UserId, session_id = SessionId}} ->
-%%                                     PayloadJsonTerm =
-%%                                         #{<<"userId">> => UserId,
-%%                                           <<"username">> => Username,
-%%                                           <<"sessionId">> => base64:encode(SessionId)},
-%%                                     rest_util:response(Socket, Request,
-%%                                                        {ok, {format, PayloadJsonTerm}});
-%%                                 {error, failure} ->
-%%                                     rest_util:response(Socket, Request, {error, forbidden})
-%%                             end;
-%%                         false ->
-%%                             rest_util:response(Socket, Request, {error, forbidden})
-%%                     end;
-%%                 {error, not_found} ->
-%%                     rest_util:response(Socket, Request, {error, forbidden})
-%%             end;
-%%         {error, not_found} ->
-%%             rest_util:response(Socket, Request, {error, forbidden})
-%%     end.
 
 switch_user(Socket, Request, Username, _PasswordSalt = not_set, _PasswordHash = not_set,
             _ClientResponse = not_set) ->
@@ -490,8 +459,8 @@ switch_user(Socket, Request, Username, PasswordSalt, PasswordHash, ClientRespons
                     switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt,
                                     PasswordHash);
                 {ok, #user{password_salt = PasswordSalt, password_hash = PasswordHash}} ->
-                    case webapp_auth:verify_client_response(ClientResponse, Challenge,
-                                                            PasswordHash) of
+                    case webapp_crypto:verify_client_response(ClientResponse, Challenge,
+                                                              PasswordHash) of
                         true ->
                             {ok, MacAddress} = get_mac_address(Socket),
                             switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt,
