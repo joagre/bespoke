@@ -1,5 +1,13 @@
+JS_DIR=priv/docroot/js
+
 all: priv/cert.pem
 	(cd src && $(MAKE) all)
+	gzip -k -f -c $(JS_DIR)/uikit.js > $(JS_DIR)/uikit.js.gz
+	gzip -k -f -c $(JS_DIR)/uikit.min.js > $(JS_DIR)/uikit.min.js.gz
+	gzip -k -f -c $(JS_DIR)/uikit-icons.js > $(JS_DIR)/uikit-icons.js.gz
+	gzip -k -f -c $(JS_DIR)/uikit-icons.min.js > $(JS_DIR)/uikit-icons.min.js.gz
+	gzip -k -f -c $(JS_DIR)/uhtml.min.js > $(JS_DIR)/uhtml.min.js.gz
+	gzip -k -f -c $(JS_DIR)/sodium.js > $(JS_DIR)/sodium.js.gz
 
 release: all
 

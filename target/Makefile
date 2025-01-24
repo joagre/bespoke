@@ -1,8 +1,10 @@
-RUNTIME_DIR = /var/tmp/bespoke
+BASE_DIR=/home/pi/bespoke
+JS_DIR=$(BASE_DIR)/lib/webapp/priv/docroot/js
+RUNTIME_DIR=/var/tmp/bespoke
 
-.PHONY: install check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill clean-runtime-dir
+.PHONY: install check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill gzip-js clean-runtime-dir
 
-install: check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill
+install: check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill gzip-js
 
 check-target:
 	if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then \
@@ -50,6 +52,14 @@ install-wlan1-udev-rule:
 
 blacklist-rfkill:
 	sudo install -m 644 etc/modprobe.d/blacklist-rfkill.conf /etc/modprobe.d/
+
+gzip-js:
+	gzip -k -f -c $(JS_DIR)/uikit.js > $(JS_DIR)/uikit.js.gz
+	gzip -k -f -c $(JS_DIR)/uikit.min.js > $(JS_DIR)/uikit.min.js.gz
+	gzip -k -f -c $(JS_DIR)/uikit-icons.js > $(JS_DIR)/uikit-icons.js.gz
+	gzip -k -f -c $(JS_DIR)/uikit-icons.min.js > $(JS_DIR)/uikit-icons.min.js.gz
+	gzip -k -f -c $(JS_DIR)/uhtml.min.js > $(JS_DIR)/uhtml.min.js.gz
+	gzip -k -f -c $(JS_DIR)/sodium.js > $(JS_DIR)/sodium.js.gz
 
 clean-runtime-dir:
 	rm -rf $(RUNTIME_DIR)
