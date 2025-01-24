@@ -4,7 +4,7 @@
 usage () {
     >&2 echo "bespoke --help | -h"
     >&2 echo "    Display available options"
-    >&2 echo "bespoke [--sname <NODE-NAME>] [--]"
+    >&2 echo "bespoke [--sname <NODE-NAME>] [--release] [--clean] [--sname <NAME>] [--]"
     >&2 echo "    Start Bespoke (put erl options after --)"
     exit 100
 }
@@ -54,6 +54,10 @@ while :; do
             is_param $2
 	    sname="-sname $2"
             shift
+            ;;
+        --clean)
+            erl_config="-config ${bin_dir}/bespoke-clean.config"
+            perform=""
             ;;
         --)
             shift
