@@ -15,6 +15,8 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
+    <script src="js/marked.min.js" defer></script>
+    <script src="js/bespoke.js" defer></script>
   </head>
   <body>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
@@ -22,7 +24,7 @@
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
         <div>
-          <button onclick="bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+          <button onclick="Bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left"></button>
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
@@ -55,10 +57,5 @@
         <p>/The team ❤️</p>
       </div>
     </div>
-    <!-- Make relevant ES6 modules available globally -->
-    <script type="module">
-      import bespoke from "/js/bespoke.js";
-      window.bespoke = bespoke;
-    </script>
   </body>
 </html>

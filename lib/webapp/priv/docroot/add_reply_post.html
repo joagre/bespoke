@@ -15,7 +15,10 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/add_reply_post.js"></script>
+    <script src="js/marked.min.js" defer></script>
+    <script src="js/bespoke.js" defer></script>
+    <script src="js/add_attachments.js" defer></script>
+    <script src="js/add_reply_post.js" defer></script>
   </head>
   <body hidden>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
@@ -23,7 +26,7 @@
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
         <div>
-          <button onclick="addReplyPost.goBack(event, false)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+          <button onclick="AddReplyPost.goBack(event, false)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left"></button>
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
@@ -32,9 +35,9 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="addReplyPost.gotoAddAttachments(event)"></button>
+          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="AddReplyPost.gotoAddAttachments(event)"></button>
           <span id="attachment-counter" class="uk-text-meta uk-margin-small-right"></span>
-          <button id="add-button" onclick="addReplyPost.addNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" disabled></button>
+          <button id="add-button" onclick="AddReplyPost.addNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" disabled></button>
         </div>
       </div>
       <div class="uk-flex uk-flex-1 uk-flex-column uk-margin-small-left uk-margin-small-right">
@@ -42,7 +45,7 @@
         <div id="parent-title" class="uk-text-bold"></div>
         <!-- Parent quote -->
         <div class="uk-text-meta">
-          <div class="quote" onclick="addReplyPost.toggleQuote(event)">
+          <div class="quote" onclick="AddReplyPost.toggleQuote(event)">
             <span id="quote-action" class="uk-icon-link" uk-icon="chevron-down"></span>
             In reply to <span id="parent-author"></span>
           </div>
@@ -58,12 +61,5 @@
         </form>
       </div>
     </div>
-    <!-- Make relevant ES6 modules available globally -->
-    <script type="module">
-      import bespoke from "/js/bespoke.js";
-      import addReplyPost from "/js/add_reply_post.js";
-      window.bespoke = bespoke;
-      window.addReplyPost = addReplyPost;
-    </script>
   </body>
 </html>

@@ -218,7 +218,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                                                {ok, {format, UpdatedPayloadJsonTerm}})
                     end
             end;
-        %% Act as static web server for b3s web server
+        %% Act as static web server
         Tokens ->
             UriPath =
                 case Tokens of
@@ -227,14 +227,37 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     _ ->
                         Url#url.path
                 end,
-            AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot",
-                                         tl(UriPath)]),
-            case filelib:is_regular(AbsFilename) of
-                true ->
-                    rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
-                                                  [{content_type, {url, UriPath}}]);
-                false ->
-                    rest_util:response(Socket, Request, {error, not_found})
+            AbsFilename =
+                filename:join([filename:absname(code:priv_dir(webapp)), "docroot", tl(UriPath)]),
+            AcceptEncoding = proplists:get_value('Accept-Encoding', Headers#http_chdr.other, ""),
+            case string:str(AcceptEncoding, "gzip") of
+                0 ->
+                    case filelib:is_regular(AbsFilename) of
+                        true ->
+                            rester_http_server:response_r(
+                              Socket, Request, 200, "OK", {file, AbsFilename},
+                              [{content_type, {url, UriPath}}]);
+                        false ->
+                            rest_util:response(Socket, Request, {error, not_found})
+                    end;
+                _ ->
+                    GzippedAbsFilename = AbsFilename ++ ".gz",
+                    case filelib:is_regular(GzippedAbsFilename) of
+                        true ->
+                            rester_http_server:response_r(
+                              Socket, Request, 200, "OK", {file, GzippedAbsFilename},
+                              [{content_type, {url, UriPath}},
+                               {"Content-Encoding", "gzip"}]);
+                        false ->
+                            case filelib:is_regular(AbsFilename) of
+                                true ->
+                                    rester_http_server:response_r(
+                                      Socket, Request, 200, "OK", {file, AbsFilename},
+                                      [{content_type, {url, UriPath}}]);
+                                false ->
+                                    rest_util:response(Socket, Request, {error, not_found})
+                            end
+                    end
             end
     end.
 

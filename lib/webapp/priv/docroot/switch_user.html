@@ -15,7 +15,10 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/switch_user.js"></script>
+    <script src="js/marked.min.js" defer></script>
+    <script src="js/bespoke.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/switch_user.js" defer></script>
   </head>
   <body hidden>
     <!-- Modal full screen overlay -->
@@ -31,7 +34,7 @@
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
         <div>
-          <button onclick="bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+          <button onclick="Bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left"></button>
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
@@ -40,7 +43,7 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button id="switch-button" onclick="switchUser.switchNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" disabled></button>
+          <button id="switch-button" onclick="SwitchUser.switchNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" disabled></button>
         </div>
       </div>
       <!-- Form -->
@@ -61,18 +64,11 @@
           <span id="form-username-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
           <!-- Password -->
           <div class="uk-margin-top uk-inline uk-width-1-1">
-            <a onclick="switchUser.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password" role="button"></a>
+            <a onclick="SwitchUser.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password" role="button"></a>
             <input class="uk-input" placeholder="Enter password" id="form-password" type="text">
           </div>
-          <span class="uk-text-meta">Use a <a href="javascript:void(0)" class="underlined-link" onclick="switchUser.generateStrongPassword(event)">strong</a> password with 12+ characters</span>
+          <span class="uk-text-meta">Use a <a href="javascript:void(0)" class="underlined-link" onclick="SwitchUser.generateStrongPassword(event)">strong</a> password with 12+ characters</span>
       </div>
     </div>
-    <!-- Make relevant ES6 modules available globally -->
-    <script type="module">
-      import bespoke from  "/js/bespoke.js";
-      import switchUser from "/js/switch_user.js";
-      window.bespoke = bespoke;
-      window.switchUser = switchUser;
-    </script>
   </body>
 </html>

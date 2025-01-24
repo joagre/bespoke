@@ -15,7 +15,9 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/bootstrap.js"></script>
+    <script src="js/marked.min.js" defer></script>
+    <script src="js/bespoke.js" defer></script>
+    <script src="js/bootstrap.js" defer></script>
   </head>
   <body>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
@@ -27,7 +29,7 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button id="bootstrap-button" onclick="bootstrap.bootstrapNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" disabled></button>
+          <button id="bootstrap-button" onclick="Bootstrap.bootstrapNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" disabled></button>
         </div>
       </div>
       <!-- Form -->
@@ -50,12 +52,5 @@
         </form>
       </div>
     </div>
-    <!-- Make relevant ES6 modules available globally -->
-    <script type="module">
-      import bespoke from  "/js/bespoke.js";
-      import bootstrap from "/js/bootstrap.js";
-      window.bespoke = bespoke;
-      window.bootstrap = bootstrap;
-    </script>
   </body>
 </html>

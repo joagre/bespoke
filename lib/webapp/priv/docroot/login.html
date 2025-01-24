@@ -16,7 +16,10 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/login.js"></script>
+    <script src="js/marked.min.js" defer></script>
+    <script src="js/bespoke.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/login.js" defer></script>
   </head>
   <body>
     <!-- Modal full screen overlay -->
@@ -36,7 +39,7 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button id="login-button" onclick="login.loginNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" disabled></button>
+          <button id="login-button" onclick="Login.loginNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" disabled></button>
         </div>
       </div>
       <!-- Form -->
@@ -47,16 +50,11 @@
           <span id="form-username-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
           <!-- Password -->
           <div class="uk-margin-top uk-inline uk-width-1-1">
-            <a onclick="login.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password" role="button"></a>
+            <a onclick="Login.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password" role="button"></a>
             <input class="uk-input" placeholder="Enter password" id="form-password" type="text" required>
           </div>
         </form>
       </div>
     </div>
-    <!-- Make relevant ES6 modules available globally -->
-    <script type="module">
-      import login from "/js/login.js";
-      window.login = login;
-    </script>
   </body>
 </html>

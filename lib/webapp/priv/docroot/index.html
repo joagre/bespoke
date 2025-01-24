@@ -16,7 +16,9 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/index.js"></script>
+    <script src="js/marked.min.js" defer></script>
+    <script src="js/bespoke.js" defer></script>
+    <script src="js/index.js" defer></script>
   </head>
   <body hidden>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
@@ -32,9 +34,9 @@
           <button class="uk-icon-button" uk-icon="icon: menu"></button>
           <div uk-dropdown="mode: click; pos: bottom-right" class="uk-padding-small">
             <ul class="uk-nav uk-dropdown-nav">
-              <li><a href="javascript:bespoke.gotoPage(event, 'switch_user.html')"><span class="uk-margin-small-right" uk-icon="icon: users"></span>Switch User</a></li>
-              <li><a href="javascript:bespoke.gotoPage(event, 'change_password.html')"><span class="uk-margin-small-right" uk-icon="icon: settings"></span>Change Password</a></li>
-              <li><a href="javascript:bespoke.gotoPage(event, 'about.html')"><span class="uk-margin-small-right" uk-icon="icon: info"></span>About ❤️</a></li>
+              <li><a href="javascript:Bespoke.gotoPage(event, 'switch_user.html')"><span class="uk-margin-small-right" uk-icon="icon: users"></span>Switch User</a></li>
+              <li><a href="javascript:Bespoke.gotoPage(event, 'change_password.html')"><span class="uk-margin-small-right" uk-icon="icon: settings"></span>Change Password</a></li>
+              <li><a href="javascript:Bespoke.gotoPage(event, 'about.html')"><span class="uk-margin-small-right" uk-icon="icon: info"></span>About ❤️</a></li>
             </ul>
           </div>
         </div>
@@ -48,7 +50,7 @@
         <div class="uk-flex uk-flex-center uk-flex-around uk-text-center">
           <!-- Forum -->
           <div>
-            <button onclick="bespoke.gotoPage(event, 'top_posts.html')" class="uk-icon-button" uk-icon="commenting"></button>
+            <button onclick="Bespoke.gotoPage(event, 'top_posts.html')" class="uk-icon-button" uk-icon="commenting"></button>
             <div class="uk-text-small">
               Forum <span id="unread-posts">(<span id="unread-posts-counter"></span>) </span>
             </div>
@@ -66,9 +68,5 @@
         </div>
       </div>
     </div>
-    <script type="module">
-      import bespoke from "/js/bespoke.js";
-      window.bespoke = bespoke;
-    </script>
   </body>
 </html>

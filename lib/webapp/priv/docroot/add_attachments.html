@@ -16,7 +16,9 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
-    <script type="module" src="js/add_attachments.js"></script>
+    <script src="js/marked.min.js" defer></script>
+    <script src="js/bespoke.js" defer></script>
+    <script src="js/add_attachments.js" defer></script>
   </head>
   <body hidden>
     <!-- Modal full screen overlay -->
@@ -33,7 +35,7 @@
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
         <div>
-          <button onclick="bespoke.gotoPage(event)" data-back-destination="" class="uk-icon-button" uk-icon="arrow-left"></button>
+          <button onclick="Bespoke.gotoPage(event)" data-back-destination="" class="uk-icon-button" uk-icon="arrow-left"></button>
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
@@ -46,7 +48,7 @@
             <input type="file" id="file-type" multiple>
             <label for="file-type" class="uk-icon-button" uk-icon="plus"></label>
           </div>
-          <button onclick="addAttachments.removeAttachment(event)" id="remove-button" class="uk-icon-button button-toggle" uk-icon="trash" disabled></button>
+          <button onclick="AddAttachments.removeAttachment(event)" id="remove-button" class="uk-icon-button button-toggle" uk-icon="trash" disabled></button>
         </div>
       </div>
       <!-- Have no attachments -->
@@ -62,11 +64,5 @@
         <a class="uk-slidenav uk-position-small uk-position-center-right uk-overlay uk-overlay-default" uk-slidenav-next uk-slideshow-item="next"></a>
       </div>
     </div>
-    <script type="module">
-      import bespoke from "/js/bespoke.js";
-      import addAttachments from "/js/add_attachments.js";
-      window.bespoke = bespoke;
-      window.addAttachments = addAttachments;
-    </script>
   </body>
 </html>
