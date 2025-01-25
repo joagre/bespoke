@@ -198,7 +198,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             case filelib:is_regular("/var/tmp/bespoke/bootstrap") of
                 true ->
                     rester_http_server:response_r(Socket, Request, 302, "Found", "",
-                                                  [{location, "http://b3s.f0ff/bootstrap.html"}|
+                                                  [{location, "http://b3s.zone/bootstrap.html"}|
                                                    no_cache_headers()]);
                 false ->
                     {ok, MacAddress} = get_mac_address(Socket),
