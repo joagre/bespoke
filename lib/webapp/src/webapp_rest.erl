@@ -41,7 +41,7 @@ start_link() ->
 	[{request_module, ?MODULE},
          {verify, verify_none},
          {cacerts, []},
-         {certfile, filename:join([code:priv_dir(webapp), "cert.pem"])},
+         {certfile, filename:join([code:priv_dir(webapp), "server-cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
     {ok, ?READ_CACHE_DB} =
