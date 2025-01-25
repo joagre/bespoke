@@ -28,7 +28,7 @@ $(SAN_FILE):
 	@echo "distinguished_name = req_distinguished_name" >> $(SAN_FILE)
 	@echo "x509_extensions = v3_req" >> $(SAN_FILE)
 	@echo "[ req_distinguished_name ]" >> $(SAN_FILE)
-	@echo "" >> $(SAN_FILE) # This can stay empty if not needed
+	@echo "" >> $(SAN_FILE)
 	@echo "[ v3_req ]" >> $(SAN_FILE)
 	@echo "keyUsage = keyEncipherment, dataEncipherment" >> $(SAN_FILE)
 	@echo "extendedKeyUsage = serverAuth" >> $(SAN_FILE)
