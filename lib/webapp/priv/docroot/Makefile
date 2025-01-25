@@ -2,7 +2,7 @@ HTML_FILES := $(wildcard *.html)
 HTML_SIGNATURE_FILES := $(patsubst %.html,signatures/%.html.sig,$(HTML_FILES))
 
 all: sign
-	(cd js; $(MAKE) all)
+	(cd js; $(MAKE) sign gzip)
 
 sign: $(HTML_SIGNATURE_FILES) signatures/sw.js.sig
 
