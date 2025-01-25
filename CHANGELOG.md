@@ -21,7 +21,7 @@
 
 - The Bespoke web server is a now a good citizen when it comes to Accept-Encoding
   and Transfer-Encoding headers, i.e. third-party (and big) Javascript files are
-  now gzippped during transfer to the browser.
+  now gzipped during transfer to the browser.
 
 - The Service Worker mentioned above additionally cache all HTML and JavaScript
   files in the browser (until their signatures are changed).
