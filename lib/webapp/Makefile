@@ -7,7 +7,7 @@ SAN_FILE = priv/server-san.cnf
 
 all: $(CERT_FILE)
 	(cd src && $(MAKE) all)
-	(cd priv/docroot/js && $(MAKE) all)
+	(cd priv/docroot && $(MAKE) all)
 
 release: all
 
@@ -42,5 +42,5 @@ setcap:
 
 clean:
 	(cd src && $(MAKE) clean)
-	(cd priv/docroot/js && make clean)
+	(cd priv/docroot && make clean)
 	rm -f $(KEY_FILE) $(CERT_FILE) $(SAN_FILE)
