@@ -1,6 +1,6 @@
 all: priv/cert.pem
 	(cd src && $(MAKE) all)
-	(cd priv/docroot/js && make sign gzip)
+	(cd priv/docroot/js && $(MAKE) all)
 
 release: all
 

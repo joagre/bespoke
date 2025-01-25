@@ -1,7 +1,6 @@
 -module(webapp_crypto).
--export([generate_challenge/0,
-         verify_client_response/3,
-         generate_rsa_key/2,
+-export([generate_challenge/0, verify_client_response/3,
+         generate_rsa_key/2, load_native_rsa_key/1,
          sign_file/1, sign_file/2]).
 -export_type([challenge/0, client_response/0]).
 
@@ -12,24 +11,7 @@
 -type challenge() :: binary().
 -type client_response() :: binary().
 
--define(BESPOKE_PUBLIC_KEY,
-        #'RSAPublicKey'{
-           modulus = 22310749761507380952858925060176470047819365842955752534766085119425317099239201922168182765611401127958101142301075989239128686148896679895746447073275621640683732492941644447664391885788326565421181716562639234323211177360674989557951516936312131148182786381924110287876909027356813915657603519285875917799282594511710171769158208112038927052187449447192514887229464260010822021166536765322456540133561425863871561373550548656460591232492430357886608533352780665541125278257264323274730487591996086960991429169515996446718521489650929928959255008209282332382924641429713101619684764905816880401506461172337399396329,
-           publicExponent = 65537}).
-
-%% Just for testing purposes :-)
--define(BESPOKE_PRIVATE_KEY,
-        #'RSAPrivateKey'{
-           version = 'two-prime',
-           modulus = 22310749761507380952858925060176470047819365842955752534766085119425317099239201922168182765611401127958101142301075989239128686148896679895746447073275621640683732492941644447664391885788326565421181716562639234323211177360674989557951516936312131148182786381924110287876909027356813915657603519285875917799282594511710171769158208112038927052187449447192514887229464260010822021166536765322456540133561425863871561373550548656460591232492430357886608533352780665541125278257264323274730487591996086960991429169515996446718521489650929928959255008209282332382924641429713101619684764905816880401506461172337399396329,
-           publicExponent = 65537,
-           privateExponent = 2718289637943699719028326124782589854175224054126238834872520010344862121744779627512285706708597228765498006601329083412054071254606884307834481461986689646278507079811059603110368359232709218976569851519570684592925383368598191971657966016095264174463982581005634681705160962049159093562209239071941170165481262028734395700804431044687238411664563180861679118561858889666738209741885604227052345356440854322911578950839557280727741527731183369704570003434372700886480423006470318351156467513122178130682534850513811264814521871510586965101404091759702628572906917557342380473898359418190931665830015612933963928289,
-           prime1 = 167559416798697442325618928220277611350372528192141135406220247663260253625712915111687860131635886500493854608372015028608276029146950463529290727840323852340788330176324988896033503951705184156545601196949526405728778349525382963082036565699225180995277001489413807877298230008039537036539151960395868110793,
-           prime2 = 133151273666171044862615029474649843440689726447971316820999637565361413514748696344448974605777914039167102378613676256001910969976946949216861090150164517078322829816715379241047188069604049453511557054346253836960335053813696381885519140810828150459943617528483505878722196859927146764081041959811323365153,
-           exponent1 = 76709113664209825931848340683781515378263072208810450365332958338660564101687056046141429536436997462110214379892054364760884778102384222000843946280623717011469433606669189035929218900209204575260351751103600115218587009182752720468595496905165831597438025477011191811382559392880513751122025363806052015321,
-           exponent2 = 38577847389615878051350140831357114717668134424738382345806813221402910109068896137882373770763248726302774615333574694431607877960881161355108692490826919912159450273277562613928071273717773029331178499899700441829849428594755129152116170189602894867531461764054576950809116590266516055913008296578992142721,
-           coefficient = 160456898784908764857284487560625249479905464400187462481826258700325544880152878658688317474949558621163756944039008940118968827598689831101715118185973450768021138703728437979232725874239778990343432406774782875627894419125973347189179033497811331057049177115899333629960275308476365118252433024945396110773,
-           otherPrimeInfos = asn1_NOVALUE}).
+-define(PRIVATE_KEY_FILE_PATH, "/home/jocke/.bespoke/keys/bespoke.key").
 
 %%
 %% Exported: generate_challenge
@@ -57,20 +39,15 @@ verify_client_response(ClientResponse, Challenge, PasswordHash) ->
 %%
 
 -spec generate_rsa_key(file:filename(), file:filename()) ->
-          {public_key:rsa_private_key(), file:filename(),
-           public_key:rsa_public_key(), file:filename()}.
+          {file:filename(), file:filename(), file:filename(), file:filename()}.
+
 
 %% https://blog.differentpla.net/blog/2023/02/07/generate-rsa-key-erlang/
+%% webapp_crypto:generate_rsa_key("/home/jocke/.bespoke/keys", "bespoke").
 generate_rsa_key(DirPath, Name) ->
     Size = 2048,
     Exp = 65537,
     RSAPrivateKey = public_key:generate_key({rsa, Size, Exp}),
-    %% Private Key in PEM format (PKCS#1)
-    RSAPrivateKeyPEM =
-        public_key:pem_encode(
-          [public_key:pem_entry_encode('RSAPrivateKey', RSAPrivateKey)]),
-    RSAPrivateKeyPEMFilePath = filename:join([DirPath, Name]) ++ ".key",
-    ok = file:write_file(RSAPrivateKeyPEMFilePath, RSAPrivateKeyPEM),
     #'RSAPrivateKey'{modulus = Modulus, publicExponent = PublicExponent} =
         RSAPrivateKey,
     RSAPublicKey =
@@ -82,53 +59,54 @@ generate_rsa_key(DirPath, Name) ->
                           parameters = <<5,0>>},
            subjectPublicKey = public_key:der_encode('RSAPublicKey',
                                                     RSAPublicKey)},
-    %% Public Key in PEM format (PKCS#8)
+    %% Save private key in term format
+    RSAPrivateKeyFilePath = filename:join([DirPath, Name]) ++ ".key",
+    ok = file:write_file(RSAPrivateKeyFilePath,
+                         base64:encode(term_to_binary(RSAPrivateKey))),
+    %% Save public key in term format
+    RSAPublicKeyFilePath = filename:join([DirPath, Name]) ++ ".pub",
+    ok = file:write_file(RSAPublicKeyFilePath,
+                         base64:encode(term_to_binary(RSAPublicKey))),
+    %% Save private key in PEM format (PKCS#1)
+    RSAPrivateKeyPEM =
+        public_key:pem_encode(
+          [public_key:pem_entry_encode('RSAPrivateKey', RSAPrivateKey)]),
+    RSAPrivateKeyPEMFilePath = filename:join([DirPath, Name]) ++ "-pem.key",
+    ok = file:write_file(RSAPrivateKeyPEMFilePath, RSAPrivateKeyPEM),
+    %% Save public key in PEM format (PKCS#8)
     RSAPublicKeyPEM =
         public_key:pem_encode(
           [public_key:pem_entry_encode('SubjectPublicKeyInfo',
                                        SubjectPublicKeyInfo)]),
-    RSAPublicKeyPEMFilePath = filename:join([DirPath, Name]) ++ ".pub",
+    RSAPublicKeyPEMFilePath = filename:join([DirPath, Name]) ++ "-pem.pub",
     ok = file:write_file(RSAPublicKeyPEMFilePath, RSAPublicKeyPEM),
-    {RSAPrivateKey, RSAPrivateKeyPEMFilePath,
-     RSAPublicKey, RSAPublicKeyPEMFilePath}.
+    {RSAPrivateKeyFilePath, RSAPrivateKeyPEMFilePath,
+     RSAPublicKeyFilePath, RSAPublicKeyPEMFilePath}.
+
+%%
+%% load_native_rsa_key
+%%
+
+-spec load_native_rsa_key(file:filename()) -> public_key:rsa_private_key().
+
+load_native_rsa_key(FilePath) ->
+    {ok, KeyBin} = file:read_file(FilePath),
+    binary_to_term(base64:decode(KeyBin)).
 
 %%
 %% sign_file
 %%
 
--spec sign_file(file:filename(), public_key:rsa_private_key()) -> ok.
+-spec sign_file(file:filename()) -> no_return().
 
 sign_file(FilePath) ->
-    sign_file(FilePath, ?BESPOKE_PRIVATE_KEY).
+    PrivateKey = load_native_rsa_key(?PRIVATE_KEY_FILE_PATH),
+    sign_file(FilePath, PrivateKey).
+
+-spec sign_file(file:filename(), public_key:rsa_private_key()) -> no_return().
 
 sign_file(FilePath, PrivateKey) ->
-    sign_file(FilePath, PrivateKey, sha256).
-
-sign_file(FilePath, PrivateKey, Algorithm) ->
-    Hash = hash_file(FilePath, Algorithm),
-    Signature = public_key:sign(Hash, Algorithm, PrivateKey),
+    {ok, FileBin} = file:read_file(FilePath),
+    Signature = public_key:sign(FileBin, sha256, PrivateKey),
     io:format("~s", [base64:encode_to_string(Signature)]),
-    erlang:halt().
-
-hash_file(FilePath, Algorithm) ->
-    {ok, File} = file:open(FilePath, [read, binary]),
-    HashCtx = crypto:hash_init(Algorithm),
-    case read_chunks(File, HashCtx) of
-        {ok, HashCtxFinal} ->
-            file:close(File),
-            crypto:hash_final(HashCtxFinal);
-        {error, Reason} ->
-            file:close(File),
-            {error, Reason}
-    end.
-
-read_chunks(File, HashCtx) ->
-    case file:read(File, 4096) of
-        {ok, Chunk} ->
-            NewCtx = crypto:hash_update(HashCtx, Chunk),
-            read_chunks(File, NewCtx);
-        eof ->
-            {ok, HashCtx};
-        {error, Reason} ->
-            {error, {file_read_error, Reason}}
-    end.
+    halt().

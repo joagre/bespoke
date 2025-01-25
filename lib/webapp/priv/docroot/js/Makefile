@@ -4,13 +4,17 @@ THIRD_PARTY_JS_FILES=marked.min.js sodium.js uikit.js uikit.min.js uikit-icons.j
 THIRD_PARTY_GZ_FILES := $(patsubst %.js,%.js.gz,$(THIRD_PARTY_JS_FILES))
 BESPOKE_JS_FILES := $(filter-out $(THIRD_PARTY_JS_FILES), $(JS_FILES))
 
-all: sign gzip lint
+all: sign gzip
 
-sign: $(JS_SIGNATURE_FILES)
+sign: $(JS_SIGNATURE_FILES) ../sw.js.sig
 
 %.js.sig: %.js
 	@echo "Signing $<..."
-	@../../../../../bin/bespoke --clean -- -eval webapp_crypto:sign_file\("\"$<\""\) > $@
+	@../../../../../bin/bespoke --clean -- -noinput -eval webapp_crypto:sign_file\("\"$<\""\) > $@
+
+../sw.js.sig: ../sw.js
+	@echo "Signing $<..."
+	@../../../../../bin/bespoke --clean -- -noinput -eval webapp_crypto:sign_file\("\"$<\""\) > $@
 
 gzip: $(THIRD_PARTY_GZ_FILES)
 
@@ -24,4 +28,4 @@ lint:
 	done
 
 clean:
-	rm -f $(JS_SIGNATURE_FILES) $(THIRD_PARTY_GZ_FILES)
+	rm -f $(JS_SIGNATURE_FILES) ../sw.js.sig $(THIRD_PARTY_GZ_FILES)
