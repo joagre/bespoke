@@ -11,10 +11,10 @@ Sharing*.
 B3S is not meant for the Internet—instead, it lives in your local area as
 a WiFi Access Point.
 
-The B3S client Web app will be wrapped into native an Android app to make
-it effortless to sync content in the background just by passing near a
-B3S server instance. You'll also be able to interact with B3S offline,
-with syncing handled automatically when reconnected.
+An end-user can keep a personal B3S device on his/her person and it will
+automatically sync with any previously known B3S which comes into range. This
+way, the end-user can interact with B3S devices offline and let the devices
+later sync in the background.
 
 ## Why?
 
@@ -37,7 +37,7 @@ that range extends up to four times.
 ### Installation
 
 * $15: Buy a Raspberry Pi Zero 2W: https://www.adafruit.com/product/5291
-* $10: Buy a SD/MicroSD Memory Card (8 GB SDHC):
+* $5: Buy a SD/MicroSD Memory Card (8 GB SDHC):
   https://www.adafruit.com/product/1294
 
 Download the latest Bespoke image from
