@@ -26,6 +26,9 @@
 - The Service Worker mentioned above additionally cache all HTML and JavaScript
   files in the browser (until their signatures are changed).
 
+- SSL has been enabled with a self-signed certificate, or else Service Workers
+  refuse to start.
+
 ## [0.2.1]
 
 ### Fixed [0.2.1]
