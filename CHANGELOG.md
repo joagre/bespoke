@@ -1,5 +1,24 @@
 # Changelog
 
+# 0.2.2
+
+### Fixed [0.2.2]
+
+- A bug made it impossible to add attachments to posts (sigh!)
+
+### Added [0.2.2]
+
+- All HTML and Javascript files are now signed during the building of Bespoke
+  release images. The browser never loads any HTML or Javascript that has a bad
+  signature. This check is done by a pinned (semi-permanently cached) Service
+  Worker in the browser which is made permanent in the browser cache at single
+  point in time (ideally before the server take over :-). If the server is taken
+  over after the pinning has occured no malicious HTML and Javascript can be
+  loaded into the browser. A malicious attacker can obviously alter the REST API
+  on the server but all forum posts are signed and direct messages are stored as
+  encrypted blobs (produced with the private key each user has in the browser's
+  local storage).
+
 ## [0.2.1]
 
 ### Fixed [0.2.1]
