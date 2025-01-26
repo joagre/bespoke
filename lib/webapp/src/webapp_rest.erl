@@ -40,8 +40,8 @@ start_link() ->
     Options =
 	[{request_module, ?MODULE},
          {verify, verify_none},
-         {cacerts, []},
-         {certfile, filename:join([code:priv_dir(webapp), "server-cert.pem"])},
+         {cacerts, public_key:cacerts_get()},
+         {certfile, filename:join([code:priv_dir(webapp), "cert.pem"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
     {ok, ?READ_CACHE_DB} =
@@ -799,10 +799,13 @@ get_mac_address(Socket) ->
             {ok, <<"00:00:00:00:00:00">>};
         {ok, {IpAddress, _Port}} ->
             get_mac_address_for_ip_address(IpAddress)
+
     end.
 
 get_mac_address_for_ip_address(IpAddress) ->
-    Command = "ip neigh show | awk '/" ++ inet:ntoa(IpAddress) ++ "/ {print $5}'",
+    IpAddressString = inet:ntoa(IpAddress),
+    Command = "ping -c 1 " ++ IpAddressString ++ "; ip neigh show | awk '/" ++ IpAddressString ++
+        "/ {print $5}'",
     case string:trim(os:cmd(Command)) of
         "" ->
             {error, not_found};
