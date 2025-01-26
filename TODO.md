@@ -31,9 +31,3 @@
 * Add destructive aging of forum posts, direct messages and files
 
 * Add native WebView wrapper apps (for syncing and offline browsing)
-
-### Remember
-
-* Enable SSL-only in Web server
-
-* Sanitize HTML

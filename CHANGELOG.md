@@ -29,6 +29,8 @@
 - SSL has been enabled with a self-signed certificate, or else Service Workers
   refuse to start.
 
+- All HTML is now sanitized
+
 ## [0.2.1]
 
 ### Fixed [0.2.1]

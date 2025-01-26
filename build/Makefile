@@ -2,6 +2,7 @@ LIBS=apptools db main webapp
 EXTERNAL_DIRS := $(shell find ../external/ -mindepth 2 -maxdepth 2 -type d)
 RELEASE_DIR="bespoke-$(shell cat ../VERSION)"
 TARGET_DIR="releases/$(RELEASE_DIR)"
+JS_DIR=$(TARGET_DIR)/lib/webapp/priv/docroot/js
 
 release:
 	@echo "Cleaning up"
@@ -27,6 +28,8 @@ release:
 			cp -r ../lib/$$lib/priv $(TARGET_DIR)/lib/$$lib; \
 		fi; \
 	done
+	@echo "Gzipping js files"
+	@gzip $(JS_DIR)/purify.min.js $(JS_DIR)/uikit.js $(JS_DIR)/uikit.min.js $(JS_DIR)/uikit-icons.js $(JS_DIR)/uikit-icons.min.js $(JS_DIR)/uhtml.min.js $(JS_DIR)/sodium.js
 	@echo "Copying target files"
 	@cp -r ../target $(TARGET_DIR)
 	@echo "Copying bin files"
