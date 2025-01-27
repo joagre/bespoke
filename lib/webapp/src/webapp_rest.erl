@@ -41,7 +41,9 @@ start_link() ->
 	[{request_module, ?MODULE},
          {verify, verify_none},
          {cacerts, public_key:cacerts_get()},
-         {certfile, filename:join([code:priv_dir(webapp), "cert.pem"])},
+         {cacertfile, filename:join([code:priv_dir(webapp), "b3s.zone/cacerts.pem"])},
+         {certfile, filename:join([code:priv_dir(webapp), "b3s.zone/server.crt"])},
+         {keyfile, filename:join([code:priv_dir(webapp), "b3s.zone/server.dat"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
     {ok, ?READ_CACHE_DB} =
@@ -198,7 +200,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             case filelib:is_regular("/var/tmp/bespoke/bootstrap") of
                 true ->
                     rester_http_server:response_r(Socket, Request, 302, "Found", "",
-                                                  [{location, "http://b3s.zone/bootstrap.html"}|
+                                                  [{location, "http://foo.b3s.zone/bootstrap.html"}|
                                                    no_cache_headers()]);
                 false ->
                     {ok, MacAddress} = get_mac_address(Socket),
