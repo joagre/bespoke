@@ -40,10 +40,9 @@ start_link() ->
     Options =
 	[{request_module, ?MODULE},
          {verify, verify_none},
-         {cacerts, public_key:cacerts_get()},
          {cacertfile, filename:join([code:priv_dir(webapp), "b3s.zone/cacerts.pem"])},
          {certfile, filename:join([code:priv_dir(webapp), "b3s.zone/server.crt"])},
-         {keyfile, filename:join([code:priv_dir(webapp), "b3s.zone/server.dat"])},
+         {keyfile, filename:join([code:priv_dir(webapp), "b3s.zone/server.key"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
     {ok, ?READ_CACHE_DB} =
