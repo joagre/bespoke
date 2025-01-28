@@ -24,10 +24,19 @@
 
 ## Web app
 
-* Add end-to-end encrypted direct messaging
-
 * Add file sharing
 
-* Add destructive aging of forum posts, direct messages and files
+* Replace UIkit.upload() with something faster?
 
-* Add native WebView wrapper apps (for syncing and offline browsing)
+* Add direct messaging
+
+* Add Signal protocol under the hood
+
+* Add Contacts - A new top level entry point in indexhtml
+
+  - Make it possible to add/remove all username instances to Contacts with a
+    single click
+  - Mark all username instances in Contacts
+  - Only users in Contacts are suggested when writing a new direct message
+
+* Add destructive aging of forum posts, direct messages and files
