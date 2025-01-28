@@ -17,7 +17,7 @@ gzip: $(THIRD_PARTY_GZ_FILES)
 %.js.gz: %.js
 	gzip -k -f -c $< > $@
 
-lint:
+eslint:
 	@for file in $(BESPOKE_JS_FILES); do \
 		echo "Linting $$file..."; \
 		npx eslint $$file || exit 1; \

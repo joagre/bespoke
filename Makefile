@@ -32,6 +32,9 @@ distclean: mrproper
 # Type checking
 #
 
+eslint:
+	(cd lib/webapp; $(MAKE) eslint)
+
 ERL=$(shell which erl)
 ERL_TOP=$(ERL:%/bin/erl=%)
 LPATH=$(abspath $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..)

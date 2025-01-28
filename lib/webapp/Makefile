@@ -2,6 +2,9 @@ all:
 	(cd src && $(MAKE) all)
 	(cd priv/docroot && $(MAKE) all)
 
+eslint:
+	(cd priv/docroot/js && $(MAKE) eslint)
+
 release: all
 
 runtest:
