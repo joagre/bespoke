@@ -277,6 +277,14 @@ http_post(Socket, Request, Body, State) ->
 
 http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
     case Tokens of
+        ["api", "get_ssid"] ->
+            case handle_request(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, _Body} ->
+                    SSID = db_serv:get_ssid(),
+                    rest_util:response(Socket, Request, {ok, {format, SSID}})
+            end;
         ["api", "bootstrap"] ->
             case handle_request(Socket, Request, Body,  fun json_term_to_bootstrap/1, false) of
                 {return, Result} ->
@@ -880,7 +888,7 @@ change_ssid(SSID) ->
     ?log_info("Calling: ~s\n", [Command]),
     case string:trim(os:cmd(Command)) of
         "0" ->
-            ok;
+            db_serv:set_ssid(SSID);
         UnexpectedOutput ->
             ?log_error("Unexpected output from dnsmasq_tool.sh: ~s", [UnexpectedOutput]),
             {error, UnexpectedOutput}

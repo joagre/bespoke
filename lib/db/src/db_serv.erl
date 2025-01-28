@@ -1,6 +1,7 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
--export([get_user_id/0,
+-export([get_ssid/0, set_ssid/1,
+         get_user_id/0,
          list_top_posts/0,
          lookup_posts/1, lookup_posts/2, lookup_post_ids/1, lookup_post_ids/2,
          insert_post/1,
@@ -9,7 +10,7 @@
          subscribe_on_changes/1]).
 -export([sync/0]).
 -export([message_handler/1]).
--export_type([user_id/0, post_id/0, title/0, body/0, author/0,
+-export_type([ssid/0, user_id/0, post_id/0, title/0, body/0, author/0,
               seconds_since_epoch/0, attachment_path/0, content_type/0,
               subscription_id/0]).
 
@@ -26,6 +27,7 @@
 -define(BESPOKE_ATTACHMENTS_PATH, "/var/tmp/bespoke/attachment").
 -define(BESPOKE_ATTACHMENTS_TMP_PATH, "/var/tmp/bespoke/attachment/tmp").
 
+-type ssid() :: binary().
 -type user_id() :: integer().
 -type post_id() :: binary().
 -type title() :: binary().
@@ -68,6 +70,24 @@ start_link() ->
 
 stop() ->
     serv:call(?MODULE, stop).
+
+%%
+%% Exported: get_ssid
+%%
+
+-spec get_ssid() -> ssid().
+
+get_ssid() ->
+    serv:call(?MODULE, get_ssid).
+
+%%
+%% set_ssid
+%%
+
+-spec set_ssid(ssid()) -> ok.
+
+set_ssid(SSID) ->
+    serv:call(?MODULE, {set_ssid, SSID}).
 
 %%
 %% Exported: get_user_id
@@ -189,10 +209,19 @@ message_handler(S) ->
             _ = dets:close(?META_DB),
             _ = dets:close(?POST_DB),
             {reply, From, ok};
+        {call, From, get_ssid} ->
+            [#meta{ssid = SSID}] = dets:lookup(?META_DB, basic),
+            {reply, From, SSID};
+        {call, From, {set_ssid, SSID} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            [#meta{type = basic} = Meta] = dets:lookup(?META_DB, basic),
+            UpdatedMeta = Meta#meta{ssid = SSID},
+            ok = dets:insert(?META_DB, UpdatedMeta),
+            {reply, From, ok};
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),
             [#meta{next_user_id = NextUserId} = Meta] =
-                dets:lookup(?META_DB, basic),
+                                           dets:lookup(?META_DB, basic),
             UpdatedMeta = Meta#meta{next_user_id = NextUserId + 1},
             ok = dets:insert(?META_DB, UpdatedMeta),
             {reply, From, NextUserId};

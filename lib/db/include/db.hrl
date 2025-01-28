@@ -29,7 +29,8 @@
 -record(meta,
         {
          type = basic :: basic,
-         next_user_id = 0 :: integer(),
+         ssid = <<"BespokeBBS">> :: db_serv:ssid(),
+         next_user_id = 0 :: db_serv:user_id(),
          next_post_id = 0 :: integer()
         }).
 
