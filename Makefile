@@ -1,13 +1,14 @@
 all:
-	mkdir -p /var/tmp/bespoke/attachment/tmp
-	mkdir -p /var/tmp/bespoke/log
-	mkdir -p /var/tmp/bespoke/db
-	(cd external && $(MAKE) all)
+	mkdir -p /var/tmp/bespoke/attachment/tmp && \
+	mkdir -p /var/tmp/bespoke/file && \
+	mkdir -p /var/tmp/bespoke/log && \
+	mkdir -p /var/tmp/bespoke/db && \
+	(cd external && $(MAKE) all) && \
 	(cd lib && $(MAKE) all)
 
 release: mrproper
-	(cd lib && $(MAKE) release)
-	(cd external && $(MAKE) release)
+	(cd lib && $(MAKE) release) && \
+	(cd external && $(MAKE) release) && \
 	(cd build && $(MAKE) release)
 
 runtest:
@@ -17,8 +18,8 @@ setcap:
 	(cd webapp; make setcap)
 
 clean:
-	(cd lib && $(MAKE) clean)
-	(cd external && $(MAKE) clean)
+	(cd lib && $(MAKE) clean) && \
+	(cd external && $(MAKE) clean) && \
 	rm -f .dialyzer.plt
 
 mrproper: clean

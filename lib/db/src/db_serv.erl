@@ -11,9 +11,10 @@
          subscribe_on_changes/1]).
 -export([sync/0]).
 -export([message_handler/1]).
--export_type([ssid/0, host/0, user_id/0, post_id/0, title/0, body/0, author/0,
-              seconds_since_epoch/0, attachment_path/0, content_type/0,
-              subscription_id/0]).
+-export_type([ssid/0, host/0, user_id/0, post_id/0, title/0, body/0,
+              author/0, seconds_since_epoch/0, attachment_path/0,
+              content_type/0, file_id/0, filename/0, file_size/0,
+              subscription_id/0, monitor_ref/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -30,7 +31,9 @@
 
 -type ssid() :: binary().
 -type host() :: binary().
+
 -type user_id() :: integer().
+
 -type post_id() :: binary().
 -type title() :: binary().
 -type body() :: binary().
@@ -38,13 +41,19 @@
 -type seconds_since_epoch() :: integer().
 -type attachment_path() :: binary().
 -type content_type() :: binary().
--type monitor_ref() :: reference().
+
+-type file_id() :: integer().
+-type filename() :: binary().
+-type file_size() :: integer().
+
 -type subscription_id() :: reference().
+-type monitor_ref() :: reference().
 
 -record(state, {
                 parent :: pid(),
                 next_user_id = 0 :: integer(),
-                next_post_id = 0 :: integer()
+                next_post_id = 0 :: integer(),
+                next_file_id = 0 :: integer()
                }).
 
 -record(subscription, {

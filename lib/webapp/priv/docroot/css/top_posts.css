@@ -9,7 +9,3 @@
 #posts {
     margin-top: 1em;
 }
-
-.unread {
-    color: var(--uk-light-danger);
-}

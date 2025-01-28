@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>File Sharing</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke.css" />
+    <link rel="stylesheet" href="css/files.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Bespoke BBS" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
+    <script src="js/uhtml.min.js" defer></script>
+    <script src="js/marked.min.js" defer></script>
+    <script src="js/bespoke.js" defer></script>
+    <script src="js/files.js" defer></script>
+  </head>
+  <body>
+    <!-- Header -->
+    <div class="sticky-header-container">
+      <div class="uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
+        <div class="sticky-header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-background-default">
+          <!-- Go back -->
+          <div>
+            <button onclick="Bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+          </div>
+          <!-- Title -->
+          <div class="uk-width-expand">
+            <span class="uk-text-bold">File Sharing</span>
+            <span class="uk-text-meta">(<span id="title-username">Joakim</span>)</span>
+          </div>
+          <!-- Toolbar -->
+          <div class="js-upload" uk-form-custom>
+            <input type="file" id="file-type" multiple>
+            <label for="file-type" class="uk-icon-button" uk-icon="plus"></label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Top container -->
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
+      <div id="main-content">
+        <div id="have-no-files" class="uk-flex uk-flex-1 uk-flex-center" hidden>
+          &lt;No files have been uploaded&gt;
+        </div>
+        <!-- Have files -->
+        <div id="have-files" class="uk-margin-small-left uk-margin-small-right">
+          <div id="files">
+            <!-- File -->
+            <div>
+              <a href="/path/to/file.zip" download>file.zip</a>
+              <button onclick="Files.copyToClipboard('https://example.com/path/to/file.zip')"
+                      class="toolbar-button" uk-icon="icon: copy; ratio: 0.8"></button>
+              <span class="uk-text-meta">(video/mp4)</span>
+            </div>
+            <div class="uk-flex uk-flex-between uk-flex-middle">
+              <div class="file-meta-data uk-text-meta">
+                <span class="new" uk-icon="bolt"></span>
+                <span onclick="Files.toggleMembershipInContacts('Joakim')" class="toolbar-button" uk-icon="sign-in"></span> Joakim •
+                3d •
+                522KB/122KB
+              </div>
+              <!-- Buttons -->
+              <div>
+                <button onclick="" class="toolbar-button" uk-icon="trash"></button>
+              </div>
+            </div>
+            <hr class="uk-margin-small file-divider">
+            <!-- File -->
+            <div>
+              <a href="/path/to/saasa/saa/sa/sas/afile.zip" download>sember42.doc</a>
+              <button onclick="Files.copyToClipboard('https://example.com/path/to/file.zip')"
+                      class="toolbar-button" uk-icon="icon: copy; ratio: 0.8"></button>
+              <span class="uk-text-meta">(word/doc)</span>
+            </div>
+            <div class="uk-flex uk-flex-between uk-flex-middle">
+              <div class="file-meta-data uk-text-meta">
+                <span class="new" uk-icon="bolt"></span>
+                <span onclick="Files.toggleMembershipInContacts('Joakim')" class="toolbar-button" uk-icon="sign-in"></span> Joakim •
+                3d •
+                522KB/122KB
+              </div>
+              <!-- Buttons -->
+              <div>
+                <button onclick="" class="toolbar-button" uk-icon="trash"></button>
+              </div>
+            </div>
+            <hr class="uk-margin-small file-divider">
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

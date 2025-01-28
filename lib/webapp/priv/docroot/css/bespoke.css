@@ -10,6 +10,7 @@
     /* Custom colors */
     --uk-light-primary: #70BAF3;
     --uk-light-danger: #f58a9a;
+    --uk-light-warning: #ffc08a;
     --uk-light-muted: #ccc;
 }
 
@@ -86,7 +87,7 @@ input {
 /* Post styling */
 
 .unread {
-    color: var(--uk-light-danger);
+    color: var(--uk-warning);
 }
 
 .quote {
@@ -105,7 +106,7 @@ input {
 }
 
 .post-meta-data {
-    margin-top: 0.25rem;
+    margin-top: 0.25em;
 }
 
 .post-divider,
@@ -176,8 +177,8 @@ a.button-toggle:not([disabled]) {
 }
 
 .toolbar-button.liked svg path {
-    fill: var(--uk-danger) !important;
-    stroke: var(--uk-danger) !important;
+    fill: var(--uk-warning) !important;
+    stroke: var(--uk-warning) !important;
 }
 
 /* Notification styling */

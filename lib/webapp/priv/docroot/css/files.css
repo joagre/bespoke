@@ -1,0 +1,19 @@
+#have-no-files {
+    margin-top: 25%;
+}
+
+#files {
+    margin-top: 1em;
+}
+
+.new {
+    color: var(--uk-warning);
+}
+
+.file-divider {
+    border-color: var(--uk-light-muted);
+}
+
+.file-meta-data {
+    margin-top: 0.25em;
+}
