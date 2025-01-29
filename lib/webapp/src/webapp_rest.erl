@@ -242,7 +242,12 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                               Socket, Request, 200, "OK", {file, AbsFilename},
                               [{content_type, {url, UriPath}}]);
                         false ->
-                            ?log_info("********** File ~s not found~n", [AbsFilename]),
+                            ?log_info("********** File ~p not found~n",
+                                      [{AbsFilename, Headers}]),
+
+
+
+
                             rest_util:response(Socket, Request, {error, not_found})
                     end;
                 _ ->
@@ -260,7 +265,8 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                                       Socket, Request, 200, "OK", {file, AbsFilename},
                                       [{content_type, {url, UriPath}}]);
                                 false ->
-                                    ?log_info("********** File1 ~s not found~n", [AbsFilename]),
+                                    ?log_info("********** File1 ~p not found~n",
+                                              [{AbsFilename, Headers}]),
                                     rest_util:response(Socket, Request, {error, not_found})
                             end
                     end
