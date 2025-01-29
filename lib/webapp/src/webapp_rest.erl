@@ -541,7 +541,7 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 
 send_loader_page(Socket, Request) ->
     Host = db_serv:get_host(),
-    Body = io_lib:format("<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"0; url=https://~s.b3s.zone/loader.html\"></head><body></body></html>", [Host]),
+    Body = io_lib:format("<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"0; url=https://~s.b3s.zone:4433/loader.html\"></head><body></body></html>", [Host]),
     rester_http_server:response_r(Socket, Request, 200, "OK", ?l2b(Body),
                                   [{content_type, "text/html"}|no_cache_headers()]).
 
