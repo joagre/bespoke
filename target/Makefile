@@ -2,15 +2,18 @@ BASE_DIR=/home/pi/bespoke
 JS_DIR=$(BASE_DIR)/lib/webapp/priv/docroot/js
 RUNTIME_DIR=/var/tmp/bespoke
 
-.PHONY: install check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill clean-runtime-dir
+# Top-level rules
 
-install: check-target create-dirs enable-bootstrap setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill
+all: bespoke-install
 
-check-target:
-	if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then \
-		echo "Error: This must be run on a Raspberry Pi"; \
-		exit 1; \
-	fi
+bespoke-install: check-target create-dirs enable-bootstrap unpack-key restart
+
+bespoke-clean:
+	rm -rf $(RUNTIME_DIR)
+
+os-install: check-target setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill bespoke-install
+
+# Bespoke rules
 
 create-dirs:
 	mkdir -p $(RUNTIME_DIR)/attachment/tmp && \
@@ -20,6 +23,23 @@ create-dirs:
 
 enable-bootstrap:
 	touch $(RUNTIME_DIR)/bootstrap
+
+unpack-key:
+	$(MAKE) -C $(BASE_DIR)/lib/webapp/priv/b3s.zone all
+
+restart:
+	cd $(BASE_DIR) || exit 1 && \
+	sudo systemctl stop bespoke && \
+	sudo systemctl start bespoke && \
+	sudo systemctl is-active bespoke
+
+# OS rules
+
+check-target:
+	if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then \
+		echo "Error: This must be run on a Raspberry Pi"; \
+		exit 1; \
+	fi
 
 setup-change-ssid:
 	sudo install -m 440 etc/sudoers.d/change-ssid /etc/sudoers.d/ && \
@@ -53,6 +73,3 @@ install-wlan1-udev-rule:
 
 blacklist-rfkill:
 	sudo install -m 644 etc/modprobe.d/blacklist-rfkill.conf /etc/modprobe.d/
-
-clean-runtime-dir:
-	rm -rf $(RUNTIME_DIR)
