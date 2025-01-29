@@ -1,6 +1,7 @@
 REPOS=mixmesh/rester.git
 DIRS=$(REPOS:%.git=%)
-GITHUB_BASE=git@github.com:
+#GITHUB_BASE=git@github.com:
+GITHUB_BASE=https://github.com/
 
 all: clone
 	for dir in $(DIRS); do \
