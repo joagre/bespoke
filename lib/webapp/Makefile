@@ -1,9 +1,12 @@
 all:
-	(cd src && $(MAKE) all)
-	(cd priv/docroot && $(MAKE) all)
+	$(MAKE) -C src all
+	$(MAKE) -C priv/docroot gzip
+
+sign:
+	$(MAKE) -C priv/docroot sign
 
 eslint:
-	(cd priv/docroot/js && $(MAKE) eslint)
+	$(MAKE) -C priv/docroot/js eslint
 
 release: all
 
@@ -13,6 +16,6 @@ setcap:
 	sudo setcap cap_net_bind_service=+ep `find /usr/local/lib/erlang/ -name beam.smp`
 
 clean:
-	(cd src && $(MAKE) clean)
-	(cd priv/docroot && make clean)
+	$(MAKE) -C src clean
+	$(MAKE) -C priv/docroot clean
 	rm -f $(KEY_FILE) $(CERT_FILE) $(SAN_FILE)

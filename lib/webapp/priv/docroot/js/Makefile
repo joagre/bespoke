@@ -4,18 +4,22 @@ THIRD_PARTY_JS_FILES=purify.min.js marked.min.js sodium.js uikit.js uikit.min.js
 THIRD_PARTY_GZ_FILES := $(patsubst %.js,%.js.gz,$(THIRD_PARTY_JS_FILES))
 BESPOKE_JS_FILES := $(filter-out $(THIRD_PARTY_JS_FILES), $(JS_FILES))
 
-all: sign gzip
-
-sign: $(JS_SIGNATURE_FILES)
-
-../signatures/%.js.sig: %.js
-	@echo "Signing $<..."
-	@../../../../../bin/bespoke --clean -- -noinput -eval webapp_crypto:sign_file\("\"$<\""\) > $@
-
 gzip: $(THIRD_PARTY_GZ_FILES)
 
 %.js.gz: %.js
 	gzip -k -f -c $< > $@
+
+sign: not_on_target $(JS_SIGNATURE_FILES)
+
+not_on_target:
+	if grep -q "Raspberry Pi" /proc/cpuinfo; then \
+		echo "Error: This build should not be run on a Raspberry Pi"; \
+		exit 255; \
+	fi
+
+../signatures/%.js.sig: %.js
+	@echo "Signing $<..."
+	@../../../../../bin/bespoke --clean -- -noinput -eval webapp_crypto:sign_file\("\"$<\""\) > $@
 
 eslint:
 	@for file in $(BESPOKE_JS_FILES); do \
@@ -24,4 +28,4 @@ eslint:
 	done
 
 clean:
-	rm -f $(JS_SIGNATURE_FILES) $(THIRD_PARTY_GZ_FILES)
+	rm -f $(THIRD_PARTY_GZ_FILES)
