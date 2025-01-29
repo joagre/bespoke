@@ -8,7 +8,7 @@ sign: not_on_target $(HTML_SIGNATURE_FILES) signatures/sw.js.sig
 	$(MAKE) -C js sign
 
 not_on_target:
-	if grep -q "Raspberry Pi" /proc/cpuinfo; then \
+	@if grep -q "Raspberry Pi" /proc/cpuinfo; then \
 		echo "Error: This build should not be run on a Raspberry Pi"; \
 		exit 255; \
 	fi

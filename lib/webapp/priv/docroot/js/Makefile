@@ -12,7 +12,7 @@ gzip: $(THIRD_PARTY_GZ_FILES)
 sign: not_on_target $(JS_SIGNATURE_FILES)
 
 not_on_target:
-	if grep -q "Raspberry Pi" /proc/cpuinfo; then \
+	@if grep -q "Raspberry Pi" /proc/cpuinfo; then \
 		echo "Error: This build should not be run on a Raspberry Pi"; \
 		exit 255; \
 	fi
