@@ -159,26 +159,26 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
     case Tokens of
         %% iOS captive portal
         ["hotspot-detect.html"] ->
-            send_meta_refresh_page(Socket, Request);
+            goto_loader(Socket, Request);
         %% Windows captive portal
         ["connecttest.txt"] ->
-            send_meta_refresh_page(Socket, Request);
+            goto_loader(Socket, Request);
         ["ncsi.txt"] ->
-            send_meta_refresh_page(Socket, Request);
+            goto_loader(Socket, Request);
         %% In Firefox captive portal, the browser will check for a captive portal
         %% https://support.mozilla.org/en-US/kb/captive-portal
         ["success.html"] when Headers#http_chdr.host == "detectportal.firefox.com" ->
-            send_meta_refresh_page(Socket, Request);
+            goto_loader(Socket, Request);
         ["success.txt"] when Headers#http_chdr.host == "detectportal.firefox.com" ->
-            send_meta_refresh_page(Socket, Request);
+            goto_loader(Socket, Request);
         %% Android captive portal
         ["generate_204"] ->
-            send_meta_refresh_page(Socket, Request);
+            goto_loader(Socket, Request);
         ["gen_204"] ->
-            send_meta_refresh_page(Socket, Request);
+            goto_loader(Socket, Request);
         [_] when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
                  Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
-            send_meta_refresh_page(Socket, Request);
+            goto_loader(Socket, Request);
         %% Bespoke API
         ["api", "list_top_posts"] ->
             case handle_request(Socket, Request, Body) of
@@ -242,6 +242,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                               Socket, Request, 200, "OK", {file, AbsFilename},
                               [{content_type, {url, UriPath}}]);
                         false ->
+                            ?log_info("********** File ~s not found~n", [AbsFilename]),
                             rest_util:response(Socket, Request, {error, not_found})
                     end;
                 _ ->
@@ -259,6 +260,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                                       Socket, Request, 200, "OK", {file, AbsFilename},
                                       [{content_type, {url, UriPath}}]);
                                 false ->
+                                    ?log_info("********** File1 ~s not found~n", [AbsFilename]),
                                     rest_util:response(Socket, Request, {error, not_found})
                             end
                     end
@@ -542,16 +544,10 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 %%                                   [{content_type, {url, "/loader.html"}}|
 %%                                    no_cache_headers()]).
 
-send_meta_refresh_page(Socket, Request) ->
+goto_loader(Socket, Request) ->
     Host = db_serv:get_host(),
-    Body = io_lib:format("<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"0; url=https://~s.b3s.zone:4433/loader.html\"></head><body></body></html>", [Host]),
-
-
-
+    Body = io_lib:format("<!DOCTYPE html><html><head><body><a href=\"https://~s:4433/loader.html\">Click here</a></body></head></html>", [Host]),
     ?log_error("************************ REDIRECT SENT: ~s", [Body]),
-
-
-
     rester_http_server:response_r(Socket, Request, 200, "OK", ?l2b(Body),
                                   [{content_type, "text/html"}|no_cache_headers()]).
 
