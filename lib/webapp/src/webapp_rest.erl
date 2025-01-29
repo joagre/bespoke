@@ -552,10 +552,13 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 
 goto_loader(Socket, Request) ->
     Host = db_serv:get_host(),
-    Body = io_lib:format("<!DOCTYPE html><html><head><body><a href=\"https://~s.b3s.zone:4433/loader.html\">Click here</a></body></head></html>", [Host]),
+    Url = ?l2b(io_lib:format("https://~s.b3s.zone:4433/loader.html", [Host])),
+    Body = io_lib:format("<!DOCTYPE html><html><head><body><a href=\"~s\" target=\"_blank\">Click here</a></body></head></html>", [Url]),
     ?log_error("************************ REDIRECT SENT: ~s", [Body]),
-    rester_http_server:response_r(Socket, Request, 200, "OK", ?l2b(Body),
-                                  [{content_type, "text/html"}|no_cache_headers()]).
+    rester_http_server:response_r(Socket, Request, 302, "Found", ?l2b(Body),
+                                  [{location, ?b2l(Url)}|no_cache_headers()]).
+%    rester_http_server:response_r(Socket, Request, 302, "OK", ?l2b(Body),
+%                                  [{content_type, "text/html"}|no_cache_headers()]).
 
 %%
 %% Read cache
