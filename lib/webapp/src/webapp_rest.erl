@@ -199,7 +199,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             case filelib:is_regular("/var/tmp/bespoke/bootstrap") of
                 true ->
                     rester_http_server:response_r(Socket, Request, 302, "Found", "",
-                                                  [{location, "http://foo.b3s.zone/bootstrap.html"}|
+                                                  [{location, "/bootstrap.html"}|
                                                    no_cache_headers()]);
                 false ->
                     {ok, MacAddress} = get_mac_address(Socket),
@@ -281,7 +281,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case handle_request(Socket, Request, Body) of
                 {return, Result} ->
                     Result;
-                {ok, #user{id = UserId}, _Body} ->
+                {ok, _User, _Body} ->
                     SSID = db_serv:get_ssid(),
                     rest_util:response(Socket, Request, {ok, {format, SSID}})
             end;
@@ -533,11 +533,17 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 %% Captive portal
 %%
 
+%% send_loader_page(Socket, Request) ->
+%%     AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot/loader.html"]),
+%%     rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
+%%                                   [{content_type, {url, "/loader.html"}}|
+%%                                    no_cache_headers()]).
+
 send_loader_page(Socket, Request) ->
-    AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot/loader.html"]),
-    rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
-                                  [{content_type, {url, "/loader.html"}}|
-                                   no_cache_headers()]).
+    Host = db_serv:get_host(),
+    Body = io_lib:format("<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"0; url=https://~s.b3s.zone:4433/loader.html\"></head><body></body></html>", [Host]),
+    rester_http_server:response_r(Socket, Request, 200, "OK", ?l2b(Body),
+                                  [{content_type, "text/html"}|no_cache_headers()]).
 
 %%
 %% Read cache
