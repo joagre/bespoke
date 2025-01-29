@@ -176,8 +176,8 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             goto_loader(Socket, Request);
         ["gen_204"] ->
             goto_loader(Socket, Request);
-        [_] when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
-                 Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
+        _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
+               Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
             goto_loader(Socket, Request);
         %% Bespoke API
         ["api", "list_top_posts"] ->
