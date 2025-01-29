@@ -159,23 +159,26 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
     case Tokens of
         %% iOS captive portal
         ["hotspot-detect.html"] ->
-            send_loader_page(Socket, Request);
+            send_meta_refresh_page(Socket, Request);
         %% Windows captive portal
         ["connecttest.txt"] ->
-            send_loader_page(Socket, Request);
+            send_meta_refresh_page(Socket, Request);
         ["ncsi.txt"] ->
-            send_loader_page(Socket, Request);
+            send_meta_refresh_page(Socket, Request);
         %% In Firefox captive portal, the browser will check for a captive portal
         %% https://support.mozilla.org/en-US/kb/captive-portal
         ["success.html"] when Headers#http_chdr.host == "detectportal.firefox.com" ->
-            send_loader_page(Socket, Request);
+            send_meta_refresh_page(Socket, Request);
         ["success.txt"] when Headers#http_chdr.host == "detectportal.firefox.com" ->
-            send_loader_page(Socket, Request);
+            send_meta_refresh_page(Socket, Request);
         %% Android captive portal
         ["generate_204"] ->
-            send_loader_page(Socket, Request);
+            send_meta_refresh_page(Socket, Request);
         ["gen_204"] ->
-            send_loader_page(Socket, Request);
+            send_meta_refresh_page(Socket, Request);
+        [_] when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
+                 Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
+            send_meta_refresh_page(Socket, Request);
         %% Bespoke API
         ["api", "list_top_posts"] ->
             case handle_request(Socket, Request, Body) of
@@ -224,7 +227,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             UriPath =
                 case Tokens of
                     [] ->
-                        "/loader.html";
+                        "/not_found.html";
                     _ ->
                         Url#url.path
                 end,
@@ -539,7 +542,7 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 %%                                   [{content_type, {url, "/loader.html"}}|
 %%                                    no_cache_headers()]).
 
-send_loader_page(Socket, Request) ->
+send_meta_refresh_page(Socket, Request) ->
     Host = db_serv:get_host(),
     Body = io_lib:format("<!DOCTYPE html><html><head><meta http-equiv=\"refresh\" content=\"0; url=https://~s.b3s.zone:4433/loader.html\"></head><body></body></html>", [Host]),
 
