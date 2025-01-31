@@ -2,20 +2,20 @@ LIBS=apptools db enacl main webapp
 
 all:
 	for lib in $(LIBS) ; do \
-		(cd $$lib && $(MAKE) all) || exit $$?; \
+		$(MAKE) -C $$lib all || exit $$?; \
 	done
 
 release:
 	for lib in $(LIBS); do \
-		(cd $$lib && $(MAKE) release) || exit $$?; \
+		$(MAKE) -C $$lib release || exit $$?; \
 	done
 
 runtest:
 	for lib in $(LIBS); do \
-		(cd $$lib && $(MAKE) runtest) || exit $$?; \
+		$(MAKE) -C $$lib runtest || exit $$?; \
 	done
 
 clean:
 	for lib in $(LIBS); do \
-		(cd $$lib && $(MAKE) clean) || exit $$?; \
+		$(MAKE) -C $$lib  clean || exit $$?; \
 	done

@@ -3,26 +3,26 @@ all:
 	mkdir -p /var/tmp/bespoke/file && \
 	mkdir -p /var/tmp/bespoke/log && \
 	mkdir -p /var/tmp/bespoke/db && \
-	(cd external && $(MAKE) all) && \
-	(cd lib && $(MAKE) all)
+	$(MAKE) -C external all && \
+	$(MAKE) -C lib all
 
 sign:
 	$(MAKE) -C lib/webapp sign
 
 release: mrproper
-	(cd lib && $(MAKE) release) && \
-	(cd external && $(MAKE) release) && \
-	(cd build && $(MAKE) release)
+	$(MAKE) -C lib release && \
+	$(MAKE) -C external release && \
+	$(MAKE) -C build release
 
 runtest:
-	(cd lib && $(MAKE) runtest)
+	$(MAKE) -C lib runtest
 
 setcap:
-	(cd webapp; make setcap)
+	$(MAKE) -C webapp setcap
 
 clean:
-	(cd lib && $(MAKE) clean) && \
-	(cd external && $(MAKE) clean) && \
+	$(MAKE) -C lib clean && \
+	$(MAKE) -C external clean && \
 	rm -f .dialyzer.plt
 
 mrproper: clean
@@ -30,14 +30,14 @@ mrproper: clean
 
 distclean: mrproper
 	rm -f .dialyzer_init.plt
-	(cd build && $(MAKE) clean)
+	$(MAKE) -C build clean
 
 #
 # Type checking
 #
 
 eslint:
-	(cd lib/webapp; $(MAKE) eslint)
+	$(MAKE) -C lib/webapp eslint
 
 ERL=$(shell which erl)
 ERL_TOP=$(ERL:%/bin/erl=%)

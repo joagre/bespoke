@@ -1,10 +1,10 @@
 all:
-	(cd src && env ERLC_FLAGS=+debug_info $(MAKE) all)
+	env ERLC_FLAGS=+debug_info $(MAKE) -C src all
 
 release:
-	(cd src && $(MAKE) all)
+	$(MAKE) -C src all
 
 runtest:
 
 clean:
-	(cd src && $(MAKE) clean)
+	$(MAKE) -C src clean

@@ -1,10 +1,10 @@
 all:
-	(cd src && env $(MAKE) all)
+	$(MAKE) -C src all
 
 release:
-	(cd src && $(MAKE) all)
+	$(MAKE) -C src  all
 
 runtest:
 
 clean:
-	(cd src && $(MAKE) clean)
+	$(MAKE) -C src clean

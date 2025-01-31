@@ -1,13 +1,13 @@
 all:
-	(cd src && $(MAKE) all)
-	(cd c_src && $(MAKE) all)
+	$(MAKE) -C src all
+	$(MAKE) -C c_src all
 
 release:
-	(cd src && $(MAKE) release)
-	(cd c_src && $(MAKE) release)
+	$(MAKE) -C src release
+	$(MAKE) -C c_src release
 
 runtest:
 
 clean:
-	(cd src && $(MAKE) clean)
-	(cd c_src && $(MAKE) clean)
+	$(MAKE) -C src clean
+	$(MAKE) -C c_src clean

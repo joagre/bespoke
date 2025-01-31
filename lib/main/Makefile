@@ -1,9 +1,9 @@
 all:
-	(cd src && $(MAKE) all)
+	$(MAKE) -C src all
 
 release: all
 
 runtest:
 
 clean:
-	(cd src && $(MAKE) clean)
+	$(MAKE) -C src clean
