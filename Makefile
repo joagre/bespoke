@@ -6,6 +6,9 @@ all:
 	(cd external && $(MAKE) all) && \
 	(cd lib && $(MAKE) all)
 
+sign:
+	$(MAKE) -C lib/webapp sign
+
 release: mrproper
 	(cd lib && $(MAKE) release) && \
 	(cd external && $(MAKE) release) && \

@@ -552,7 +552,7 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 
 goto_loader(Socket, Request) ->
     Host = db_serv:get_host(),
-    Url = ?l2b(io_lib:format("https://~s.b3s.zone:4433/loader.html", [Host])),
+    Url = ?l2b(io_lib:format("https://~s.b3s.zone/loader.html", [Host])),
     Body = io_lib:format("<!DOCTYPE html><html><head><body><a href=\"~s\" target=\"_blank\">Click here</a></body></head></html>", [Url]),
     ?log_error("************************ REDIRECT SENT: ~s", [Body]),
     rester_http_server:response_r(Socket, Request, 302, "Found", ?l2b(Body),
