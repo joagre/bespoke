@@ -19,15 +19,15 @@
   encrypted blobs (produced with the private key each user has in the browser's
   local storage).
 
-- The Bespoke web server is a now a good citizen when it comes to Accept-Encoding
-  and Transfer-Encoding headers, i.e. third-party (and big) Javascript files are
-  now gzipped during transfer to the browser.
+- The Bespoke web server is a now a good citizen when it comes to
+  Accept-Encoding and Transfer-Encoding headers, i.e. third-party (and big)
+  Javascript files are now gzipped during transfer to the browser.
 
 - The Service Worker mentioned above additionally cache all HTML and JavaScript
-  files in the browser (until their signatures are changed).
+  files in the browser (until their signatures are changed)
 
 - SSL has been enabled with a self-signed certificate, or else Service Workers
-  refuse to start.
+  refuse to start
 
 - All HTML is now sanitized
 
