@@ -11,9 +11,15 @@ bespoke-install: check-target create-dirs enable-bootstrap unpack-key restart
 bespoke-clean:
 	rm -rf $(RUNTIME_DIR)
 
-os-install: check-target setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill bespoke-install
+os-install: check-target create-dirs setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill bespoke-install
 
 # Bespoke rules
+
+check-target:
+	if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then \
+		echo "Error: This must be run on a Raspberry Pi"; \
+		exit 1; \
+	fi
 
 create-dirs:
 	mkdir -p $(RUNTIME_DIR)/attachment/tmp && \
@@ -34,12 +40,6 @@ restart:
 	sudo systemctl is-active bespoke
 
 # OS rules
-
-check-target:
-	if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then \
-		echo "Error: This must be run on a Raspberry Pi"; \
-		exit 1; \
-	fi
 
 setup-change-ssid:
 	sudo install -m 440 etc/sudoers.d/change-ssid /etc/sudoers.d/ && \
