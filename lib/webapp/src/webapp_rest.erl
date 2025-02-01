@@ -159,26 +159,26 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
     case Tokens of
         %% iOS captive portal
         ["hotspot-detect.html"] ->
-            goto_loader(Socket, Request);
+            redirect_to_loader(Socket, Request);
         %% Windows captive portal
         ["connecttest.txt"] ->
-            goto_loader(Socket, Request);
+            redirect_to_loader(Socket, Request);
         ["ncsi.txt"] ->
-            goto_loader(Socket, Request);
+            redirect_to_loader(Socket, Request);
         %% In Firefox captive portal, the browser will check for a captive portal
         %% https://support.mozilla.org/en-US/kb/captive-portal
         ["success.html"] when Headers#http_chdr.host == "detectportal.firefox.com" ->
-            goto_loader(Socket, Request);
+            redirect_to_loader(Socket, Request);
         ["success.txt"] when Headers#http_chdr.host == "detectportal.firefox.com" ->
-            goto_loader(Socket, Request);
+            redirect_to_loader(Socket, Request);
         %% Android captive portal
         ["generate_204"] ->
-            goto_loader(Socket, Request);
+            redirect_to_loader(Socket, Request);
         ["gen_204"] ->
-            goto_loader(Socket, Request);
+            redirect_to_loader(Socket, Request);
         _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
                Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
-            goto_loader(Socket, Request);
+            redirect_to_loader(Socket, Request);
         %% Bespoke API
         ["api", "list_top_posts"] ->
             case handle_request(Socket, Request, Body) of
@@ -540,21 +540,12 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 %% Captive portal
 %%
 
-%% send_loader_page(Socket, Request) ->
-%%     AbsFilename = filename:join([filename:absname(code:priv_dir(webapp)), "docroot/loader.html"]),
-%%     rester_http_server:response_r(Socket, Request, 200, "OK", {file, AbsFilename},
-%%                                   [{content_type, {url, "/loader.html"}}|
-%%                                    no_cache_headers()]).
-
-goto_loader(Socket, Request) ->
+redirect_to_loader(Socket, Request) ->
     Host = db_serv:get_host(),
     Url = ?l2b(io_lib:format("https://~s.b3s.zone/loader.html", [Host])),
     Body = io_lib:format("<!DOCTYPE html><html><head><body><a href=\"~s\" target=\"_blank\">Click here</a></body></head></html>", [Url]),
-    ?log_error("************************ REDIRECT SENT: ~s", [Body]),
     rester_http_server:response_r(Socket, Request, 302, "Found", ?l2b(Body),
                                   [{location, ?b2l(Url)}|no_cache_headers()]).
-%    rester_http_server:response_r(Socket, Request, 302, "OK", ?l2b(Body),
-%                                  [{content_type, "text/html"}|no_cache_headers()]).
 
 %%
 %% Read cache
