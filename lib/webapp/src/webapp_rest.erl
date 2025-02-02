@@ -1,7 +1,7 @@
 % -*- fill-column: 100; -*-
 
 -module(webapp_rest).
--export([start_link/0]).
+-export([start_link/0, change_ssid/1]).
 %% rester_http_server callbacks
 -export([init/2, info/3, close/2, error/3, http_request/4]).
 
@@ -53,15 +53,33 @@ start_link() ->
     ?CHALLENGE_CACHE = ets:new(?CHALLENGE_CACHE, [{keypos, #challenge_cache_entry.username}, public,
                                                   named_table]),
     ?log_info("Database REST API has been started"),
-    HttpPort = application:get_env(webapp, http_port, 80),
+    {ok, HttpPort} = main:lookup_config("HttpPort", 80),
     {ok, _} = rester_http_server:start_link(HttpPort, Options),
-    case application:get_env(webapp, https_port, undefined) of
-	undefined ->
-	    ignore;
-	HttpPort ->
+    case main:lookup_config("HttpsPort", 443) of
+	{ok, HttpPort} ->
 	    ok;
-	HttpsPort ->
+	{ok, HttpsPort} ->
 	    rester_http_server:start_link(HttpsPort, Options)
+    end.
+
+%%
+%% Exported: change_ssid
+%%
+
+-spec change_ssid(binary()) -> ok | {error, string()}.
+
+change_ssid(SSID) ->
+    BaseDir = filename:join([code:lib_dir(main), "../.."]),
+    TargetBinDir = filename:join([BaseDir, "target/bin"]),
+    ScriptPath = filename:join([TargetBinDir, "change_ssid.sh"]),
+    Command = lists:flatten(io_lib:format("sudo bash ~s \"~s\" 2>&1; echo $?", [ScriptPath, SSID])),
+    ?log_info("Calling: ~s\n", [Command]),
+    case string:trim(os:cmd(Command)) of
+        "0" ->
+            main:insert_config("SSID", ?b2l(SSID));
+        UnexpectedOutput ->
+            ?log_error("Unexpected output from change_ssid.sh (this is OK on a developer machine): ~s", [UnexpectedOutput]),
+            {error, UnexpectedOutput}
     end.
 
 %%
@@ -288,8 +306,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, _User, _Body} ->
-                    SSID = db_serv:get_ssid(),
-                    send_response(Socket, Request, no_cache_headers(), {json, SSID})
+                    {ok, SSID} = main:lookup_config("SSID", "BespokeBBS"),
+                    send_response(Socket, Request, no_cache_headers(), {json, ?l2b(SSID)})
             end;
         ["api", "bootstrap"] ->
             case handle_request(Socket, Request, Body,  fun json_term_to_bootstrap/1, false) of
@@ -298,6 +316,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {ok, no_user, SSID} ->
                     ok = file:delete("/var/tmp/bespoke/bootstrap"),
                     ok = change_ssid(SSID),
+                    ok = main:insert_config("SSID", ?b2l(SSID)),
                     send_response(Socket, Request, no_cache_headers(), no_content)
             end;
         ["api", "generate_challenge"] ->
@@ -541,7 +560,8 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 %%
 
 redirect_to_loader(Socket, Request) ->
-    Host = db_serv:get_host(),
+    {ok, SSID} = main:lookup_config("SSID", "BespokeBBS"),
+    Host = string:lowercase(SSID),
     Url = ?l2b(io_lib:format("https://~s.b3s.zone/loader.html", [Host])),
     Body = io_lib:format("<!DOCTYPE html><html><head><body><a href=\"~s\" target=\"_blank\">Click here</a></body></head></html>", [Url]),
     rester_http_server:response_r(Socket, Request, 302, "Found", ?l2b(Body),
@@ -897,20 +917,6 @@ authenticate(_Request, false) ->
 authenticate(Request, true) ->
     {ok, #{<<"sessionId">> := SessionId}} = get_bespoke_cookie(Request),
     db_user_serv:get_user_from_session_id(base64:decode(SessionId)).
-
-change_ssid(SSID) ->
-    BaseDir = filename:join([code:lib_dir(main), "../.."]),
-    TargetBinDir = filename:join([BaseDir, "target/bin"]),
-    ScriptPath = filename:join([TargetBinDir, "change_ssid.sh"]),
-    Command = ["sudo bash ", ScriptPath, " \"", ?b2l(SSID), "\" 2>&1; echo $?"],
-    ?log_info("Calling: ~s\n", [Command]),
-    case string:trim(os:cmd(Command)) of
-        "0" ->
-            db_serv:set_ssid(SSID);
-        UnexpectedOutput ->
-            ?log_error("Unexpected output from dnsmasq_tool.sh: ~s", [UnexpectedOutput]),
-            {error, UnexpectedOutput}
-    end.
 
 has_valid_keys(PossibleKeys, Map) ->
     lists:all(fun(Key) -> lists:member(Key, PossibleKeys) end, maps:keys(Map)).

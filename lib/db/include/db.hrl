@@ -4,7 +4,7 @@
 -record(meta,
         {
          type = basic :: basic,
-         ssid = <<"BespokeBBS">> :: db_serv:ssid(),
+         ssid = <<"BespokeBBS">> :: db_serv:ssid(), %% NOTE: Not used!
          host = not_set :: db_serv:host() | not_set,
          next_user_id = 0 :: db_serv:user_id(),
          next_post_id = 0 :: integer()

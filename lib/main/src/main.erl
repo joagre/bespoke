@@ -1,5 +1,9 @@
 -module(main).
--export([start/0, stop/0]).
+-export([start/0, stop/0, lookup_config/2, insert_config/2]).
+
+-include_lib("apptools/include/shorthand.hrl").
+
+-define(CONFIG_FILE, "/var/tmp/bespoke/bespoke.conf").
 
 %%
 %% Exported: start
@@ -17,7 +21,15 @@ start() ->
     ok = application:start(apptools),
     ok = application:start(rester),
     ok = application:start(db),
+    ok = set_ssid(),
     ok = application:start(webapp).
+
+set_ssid() ->
+    {ok, SSID} = lookup_config("SSID", "BespokeBBS"),
+    %% In case the SSID is not set in the config file, we set it to the default
+    ok = insert_config("SSID", SSID),
+    _ = webapp_rest:change_ssid(?l2b(SSID)),
+    ok.
 
 %%
 %% Exported: stop
@@ -27,3 +39,24 @@ start() ->
 
 stop() ->
     init:stop().
+
+%%
+%% Exported: lookup_config
+%%
+
+-spec lookup_config(apptools_config:key(), apptools_config:value()) ->
+          {ok, apptools_config:value()} |
+          {error, apptools_config:error_reason()}.
+
+lookup_config(Key, DefaultValue) ->
+    apptools_config:lookup("Bespoke", ?CONFIG_FILE, Key, DefaultValue).
+
+%%
+%% Exported: insert_config
+%%
+
+-spec insert_config(apptools_config:key(), apptools_config:value()) ->
+          ok | {error, apptools_config:error_reason()}.
+
+insert_config(Key, Value) ->
+    apptools_config:insert("Bespoke", ?CONFIG_FILE, Key, Value).

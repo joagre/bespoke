@@ -6,12 +6,12 @@ RUNTIME_DIR=/var/tmp/bespoke
 
 all: bespoke-install
 
-bespoke-install: check-target create-dirs enable-bootstrap unpack-key restart
+bespoke-install: check-target create-env enable-bootstrap unpack-key restart
 
 bespoke-clean:
 	rm -rf $(RUNTIME_DIR)
 
-os-install: check-target create-dirs setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill bespoke-install
+os-install: check-target create-env setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill bespoke-install
 
 # Bespoke rules
 
@@ -21,11 +21,12 @@ check-target:
 		exit 1; \
 	fi
 
-create-dirs:
+create-env:
 	mkdir -p $(RUNTIME_DIR)/attachment/tmp && \
 	mkdir -p $(RUNTIME_DIR)/file && \
 	mkdir -p $(RUNTIME_DIR)/log && \
-	mkdir -p $(RUNTIME_DIR)/db
+	mkdir -p $(RUNTIME_DIR)/db && \
+	touch $(RUNTIME_DIR)/bespoke.conf
 
 enable-bootstrap:
 	touch $(RUNTIME_DIR)/bootstrap

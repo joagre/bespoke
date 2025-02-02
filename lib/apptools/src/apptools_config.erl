@@ -1,27 +1,29 @@
 -module(apptools_config).
--export([insert/3, lookup/3]).
+-export([lookup/4, insert/4]).
+-export_type([key/0, value/0, error_reason/0]).
+
 -include("../include/shorthand.hrl").
 
 -type key() :: string().
 -type value() :: string() | integer().
+-type error_reason() :: {bad_format, string()} | file:posix() | badarg |
+                        terminated | {no_translation, unicode, latin1}.
 
 %%
 %% Exported: lookup
 %%
 
--spec lookup(file:filename(), key(), value()) ->
-          {ok, value()} |
-          {error, {bad_format, string()} | file:posix() | badarg | terminated |
-                  {no_translation, unicode, latin1}}.
+-spec lookup(string(), file:filename(), key(), value()) ->
+          {ok, value()} | {error, error_reason()}.
 
-lookup(ConfigFilename, Key, DefaultValue) ->
+lookup(KeyPrefix, ConfigFilename, Key, DefaultValue) ->
     {ok, File} = file:open(ConfigFilename, [read, raw, {read_ahead, 1024}]),
-    Result = lookup_value(File, normalize_key(Key), DefaultValue),
+    Result = lookup_value(File, normalize_key(KeyPrefix ++ Key), DefaultValue),
     ok = file:close(File),
     Result.
 
 normalize_key(Key) ->
-    string:trim(string:to_lower(Key)).
+    string:trim(Key).
 
 lookup_value(File, Key, DefaultValue) ->
     case file:read_line(File) of
@@ -101,15 +103,14 @@ unescape([C|Rest]) ->
 %% Exported: insert
 %%
 
--spec insert(file:filename(), key(), value()) ->
-          ok | {error, {bad_format, string()} | file:posix() | badarg |
-                       terminated | {no_translation, unicode, latin1}}.
+-spec insert(string(), file:filename(), key(), value()) ->
+          ok | {error, error_reason()}.
 
-insert(ConfigFilename, Key, Value) ->
+insert(KeyPrefix, ConfigFilename, Key, Value) ->
     {ok, File} = file:open(ConfigFilename, [read, {read_ahead, 1024}]),
     {ok, TempFilename} = make_temp_filename(ConfigFilename),
     {ok, TempFile} = file:open(TempFilename, [write]),
-    case insert_value(File, TempFile, normalize_key(Key), Value) of
+    case insert_value(File, TempFile, normalize_key(KeyPrefix ++ Key), Value) of
         ok ->
             ok = file:close(File),
             ok = file:close(TempFile),

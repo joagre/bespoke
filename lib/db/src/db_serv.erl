@@ -1,8 +1,6 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
--export([get_host/0,
-         get_ssid/0, set_ssid/1,
-         get_user_id/0,
+-export([get_user_id/0,
          list_top_posts/0,
          lookup_posts/1, lookup_posts/2, lookup_post_ids/1, lookup_post_ids/2,
          insert_post/1,
@@ -81,33 +79,6 @@ start_link() ->
 
 stop() ->
     serv:call(?MODULE, stop).
-
-%%
-%% Exported: get_ssid
-%%
-
--spec get_ssid() -> ssid().
-
-get_ssid() ->
-    serv:call(?MODULE, get_ssid).
-
-%%
-%% set_ssid
-%%
-
--spec set_ssid(ssid()) -> ok.
-
-set_ssid(SSID) ->
-    serv:call(?MODULE, {set_ssid, SSID}).
-
-%%
-%% Exported: get_host
-%%
-
--spec get_host() -> host().
-
-get_host() ->
-    serv:call(?MODULE, get_host).
 
 %%
 %% Exported: get_user_id
@@ -229,25 +200,6 @@ message_handler(S) ->
             _ = dets:close(?META_DB),
             _ = dets:close(?POST_DB),
             {reply, From, ok};
-        {call, From, get_ssid} ->
-            [#meta{ssid = SSID}] = dets:lookup(?META_DB, basic),
-            {reply, From, SSID};
-        {call, From, {set_ssid, SSID} = Call} ->
-            ?log_debug("Call: ~p", [Call]),
-            [#meta{type = basic} = Meta] = dets:lookup(?META_DB, basic),
-            UpdatedMeta = Meta#meta{ssid = SSID},
-            ok = dets:insert(?META_DB, UpdatedMeta),
-            {reply, From, ok};
-        {call, From, get_host} ->
-            case dets:lookup(?META_DB, basic) of
-                [#meta{type = basic, ssid = SSID, host = not_set} = Meta] ->
-                    Host = string:lowercase(SSID),
-                    UpdatedMeta = Meta#meta{host = Host},
-                    ok = dets:insert(?META_DB, UpdatedMeta),
-                    {reply, From, Host};
-                [#meta{host = Host}] ->
-                    {reply, From, Host}
-            end;
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),
             [#meta{next_user_id = NextUserId} = Meta] =

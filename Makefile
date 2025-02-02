@@ -3,6 +3,7 @@ all:
 	mkdir -p /var/tmp/bespoke/file && \
 	mkdir -p /var/tmp/bespoke/log && \
 	mkdir -p /var/tmp/bespoke/db && \
+	touch /var/tmp/bespoke/bespoke.conf && \
 	$(MAKE) -C external all && \
 	$(MAKE) -C lib all
 
