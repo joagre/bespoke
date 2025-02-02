@@ -922,7 +922,7 @@ has_valid_keys(PossibleKeys, Map) ->
     lists:all(fun(Key) -> lists:member(Key, PossibleKeys) end, maps:keys(Map)).
 
 %%
-%% HTTP response (rest_util:response/3 is just too unwildly)
+%% HTTP response (rest_util:response/3 is just too unwieldly)
 %%
 
 send_response(Socket, Request, Opts, {json, JsonTerm}) ->
