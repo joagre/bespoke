@@ -27,7 +27,7 @@
         <div class="sticky-header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-background-default">
           <!-- Go back -->
           <div>
-            <button onclick="Bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+            <button onclick="Bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
           </div>
           <!-- Title -->
           <div class="uk-width-expand">
@@ -35,9 +35,9 @@
             <span class="uk-text-meta">(<span id="title-username">Joakim</span>)</span>
           </div>
           <!-- Toolbar -->
-          <div class="js-upload" uk-form-custom>
-            <input type="file" id="file-type" multiple>
-            <label for="file-type" class="uk-icon-button" uk-icon="plus"></label>
+          <div uk-form-custom>
+            <input id="file-upload" type="file">
+            <button class="uk-icon-button" type="button" uk-icon="icon: plus" uk-tooltip="Upload file"></button>
           </div>
         </div>
       </div>
@@ -53,44 +53,45 @@
           <div id="files">
             <!-- File -->
             <div>
-              <a class="uk-text-bold" href="/path/to/file.zip" download>file.zip</a>
-              <button onclick="Files.copyToClipboard('https://example.com/path/to/file.zip')"
-                      class="toolbar-button" uk-icon="icon: copy"></button>
-              <span class="uk-text-meta">(video/mp4)</span>
-            </div>
-            <div class="uk-flex uk-flex-between uk-flex-middle">
-              <div class="file-meta-data uk-text-meta">
-                <span class="new" uk-icon="bolt"></span>
-                <span onclick="Files.toggleMembershipInContacts('Joakim')" class="toolbar-button" uk-icon="plus-circle"></span> Joakim •
-                3d •
-                522KB/122KB
-              </div>
-              <!-- Buttons -->
               <div>
-                <button onclick="" class="toolbar-button" uk-icon="trash"></button>
+                <a class="uk-link-text uk-text-bold" href="/path/to/file.zip" download>file.zip</a>
+                <button onclick="Files.copyToClipboard('https://example.com/path/to/file.zip')" class="toolbar-button" uk-icon="icon: copy" uk-tooltip="Copy link"></button>
+                <span class="uk-text-meta">(video/mp4)</span>
               </div>
+              <div class="uk-flex uk-flex-between uk-flex-middle">
+                <div class="file-meta-data uk-text-meta">
+                  <span class="new" uk-icon="bolt"></span>
+                  <span onclick="Files.toggleMembershipInContacts('Joakim')" class="toolbar-button" uk-icon="plus-circle" uk-tooltip="Add user contact"></span> Joakim •
+                  3d •
+                  522KB/122KB
+                </div>
+                <div>
+                  <button onclick="" class="toolbar-button" uk-icon="trash" uk-tooltip="Remove file"></button>
+                </div>
+              </div>
+              <hr class="uk-margin-small file-divider">
             </div>
-            <hr class="uk-margin-small file-divider">
             <!-- File -->
             <div>
-              <a class="uk-text-bold" href="/path/to/saasa/saa/sa/sas/afile.zip" download>sember42.doc</a>
-              <button onclick="Files.copyToClipboard('https://example.com/path/to/file.zip')"
-                      class="toolbar-button" uk-icon="icon: copy"></button>
-              <span class="uk-text-meta">(word/doc)</span>
-            </div>
-            <div class="uk-flex uk-flex-between uk-flex-middle">
-              <div class="file-meta-data uk-text-meta">
-                <span class="new" uk-icon="bolt"></span>
-                <span onclick="Files.toggleMembershipInContacts('Joakim')" class="toolbar-button" uk-icon="minus-circle"></span> Joakim •
-                3d •
-                522KB/122KB
-              </div>
-              <!-- Buttons -->
               <div>
-                <button onclick="" class="toolbar-button" uk-icon="trash"></button>
+                <a class="uk-link-text uk-text-bold" href="/path/to/saasa/saa/sa/sas/afile.zip" download>sember42.doc</a>
+                <button onclick="Files.copyToClipboard('https://example.com/path/to/file.zip')"
+                        class="toolbar-button" uk-icon="icon: copy" uk-tooltip="Copy link"></button>
+                <span class="uk-text-meta">(word/doc)</span>
               </div>
+              <div class="uk-flex uk-flex-between uk-flex-middle">
+                <div class="file-meta-data uk-text-meta">
+                  <span class="new" uk-icon="bolt"></span>
+                  <span onclick="Files.toggleMembershipInContacts('Joakim')" class="toolbar-button" uk-icon="minus-circle" uk-tooltip="Remove user contact"></span> Joakim •
+                  3d •
+                  522KB/122KB
+                </div>
+                <div>
+                  <button onclick="" class="toolbar-button" uk-icon="trash" uk-tooltip="Remove file"></button>
+                </div>
+              </div>
+              <hr class="uk-margin-small file-divider">
             </div>
-            <hr class="uk-margin-small file-divider">
           </div>
         </div>
       </div>
