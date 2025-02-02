@@ -92,7 +92,7 @@ unescape([$\\, Next|Rest]) ->
         $$  -> [$$ | unescape(Rest)];
         $`  -> [$` | unescape(Rest)];
         $\n -> unescape(Rest);
-        _    -> [$\\, Next | unescape(Rest)]
+        _   -> [$\\, Next | unescape(Rest)]
     end;
 unescape([C|Rest]) ->
     [C|unescape(Rest)].
@@ -109,7 +109,7 @@ insert(ConfigFilename, Key, Value) ->
     {ok, File} = file:open(ConfigFilename, [read, {read_ahead, 1024}]),
     {ok, TempFilename} = make_temp_filename(ConfigFilename),
     {ok, TempFile} = file:open(TempFilename, [write]),
-    case insert_value(File, TempFile, Key, Value) of
+    case insert_value(File, TempFile, normalize_key(Key), Value) of
         ok ->
             ok = file:close(File),
             ok = file:close(TempFile),
@@ -158,11 +158,11 @@ format_assignment(Key, Value) when is_list(Value) ->
 escape_string(String) ->
     lists:flatten([escape_char(C) || C <- String]).
 
-escape_char($") -> [$\\, $" ];
+escape_char($")  -> [$\\, $" ];
 escape_char($\\) -> [$\\, $\\];
-escape_char($$) -> [$\\, $$];
-escape_char($`) -> [$\\, $`];
-escape_char(C) -> [C].
+escape_char($$)  -> [$\\, $$];
+escape_char($`)  -> [$\\, $`];
+escape_char(C)   -> [C].
 
 add_remaining_lines(File, TempFile) ->
     case file:read_line(File) of
