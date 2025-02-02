@@ -13,3 +13,7 @@ os-install:
 	@echo "Running OS installation..."
 	$(MAKE) -C target os-install
 	$(MAKE) install
+
+clean:
+	@echo "Cleaning up..."
+	$(MAKE) -C target bespoke-clean
