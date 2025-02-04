@@ -4,6 +4,8 @@ THIRD_PARTY_JS_FILES=purify.min.js marked.min.js sodium.js uikit.js uikit.min.js
 THIRD_PARTY_GZ_FILES := $(patsubst %.js,%.js.gz,$(THIRD_PARTY_JS_FILES))
 BESPOKE_JS_FILES := $(filter-out $(THIRD_PARTY_JS_FILES), $(JS_FILES))
 
+all: sign eslint
+
 gzip: $(THIRD_PARTY_GZ_FILES)
 
 %.js.gz: %.js

@@ -4,21 +4,10 @@
 -record(meta,
         {
          type = basic :: basic,
-         ssid = <<"BespokeBBS">> :: db_serv:ssid(), %% NOTE: Not used!
          host = not_set :: db_serv:host() | not_set,
-         next_user_id = 0 :: db_serv:user_id(),
-         next_post_id = 0 :: integer()
-        }).
-
--record(user,
-        {
-         id :: db_serv:user_id() | '_',
-         name :: db_user_serv:username() | '_',
-         session_id = not_set :: db_user_serv:session_id() | not_set | '_',
-         mac_address :: db_user_serv:mac_address() | '_',
-         password_salt = not_set :: db_user_serv:password_salt() | not_set | '_',
-         password_hash = not_set :: db_user_serv:password_hash() | not_set | '_',
-         updated :: db_serv:seconds_since_epoch() | '_'
+         next_post_id = 0 :: integer(),
+         next_file_id = 0 :: db_serv:file_id(),
+         next_user_id = 0 :: db_serv:user_id()
         }).
 
 -record(post,
@@ -42,18 +31,29 @@
 
 -record(file,
         {
-         id = db_serv:file_id(),
+         id = not_set :: db_serv:file_id() | not_set,
          filename :: db_serv:filename(),
          size :: db_serv:file_size(),
          content_type :: db_serv:content_type(),
-         uploader = db_serv:user_id(),
-         created = db_serv:seconds_since_epoch()
+         uploader = not_set :: db_serv:user_id() | not_set,
+         created = not_set :: db_serv:seconds_since_epoch() | not_set
         }).
 
 -record(read_cache,
         {
          user_id :: db_serv:user_id(),
          post_ids = [] :: [db_serv:post_id()]
+        }).
+
+-record(user,
+        {
+         id :: db_serv:user_id() | '_',
+         name :: db_user_serv:username() | '_',
+         session_id = not_set :: db_user_serv:session_id() | not_set | '_',
+         mac_address :: db_user_serv:mac_address() | '_',
+         password_salt = not_set :: db_user_serv:password_salt() | not_set | '_',
+         password_hash = not_set :: db_user_serv:password_hash() | not_set | '_',
+         updated :: db_serv:seconds_since_epoch() | '_'
         }).
 
 -endif.

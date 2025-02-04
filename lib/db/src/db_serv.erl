@@ -1,10 +1,11 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
--export([get_user_id/0,
-         list_top_posts/0,
-         lookup_posts/1, lookup_posts/2, lookup_post_ids/1, lookup_post_ids/2,
-         insert_post/1,
-         delete_post/1,
+-export([get_file_id/0,
+         get_user_id/0,
+         list_top_posts/0, lookup_posts/1, lookup_posts/2, lookup_post_ids/1,
+         lookup_post_ids/2,
+         insert_post/1, delete_post/1,
+         insert_file/1, delete_file/1,
          toggle_like/2,
          subscribe_on_changes/1]).
 -export([sync/0]).
@@ -19,11 +20,17 @@
 -include_lib("apptools/include/serv.hrl").
 -include("../include/db.hrl").
 
--define(POST_DB_FILENAME, "/var/tmp/bespoke/db/post.db").
--define(POST_DB, post).
 -define(META_DB_FILENAME, "/var/tmp/bespoke/db/meta.db").
 -define(META_DB, meta).
+
+-define(POST_DB_FILENAME, "/var/tmp/bespoke/db/post.db").
+-define(POST_DB, post).
+
+-define(FILE_DB_FILENAME, "/var/tmp/bespoke/db/file.db").
+-define(FILE_DB, file).
+
 -define(SUBSCRIPTION_DB, db_serv_subscription).
+
 -define(BESPOKE_ATTACHMENTS_PATH, "/var/tmp/bespoke/attachment").
 -define(BESPOKE_ATTACHMENTS_TMP_PATH, "/var/tmp/bespoke/attachment/tmp").
 
@@ -49,9 +56,9 @@
 
 -record(state, {
                 parent :: pid(),
-                next_user_id = 0 :: integer(),
                 next_post_id = 0 :: integer(),
-                next_file_id = 0 :: integer()
+                next_file_id = 0 :: integer(),
+                next_user_id = 0 :: integer()
                }).
 
 -record(subscription, {
@@ -79,6 +86,15 @@ start_link() ->
 
 stop() ->
     serv:call(?MODULE, stop).
+
+%%
+%% Exported: get_file_id
+%%
+
+-spec get_file_id() -> file_id().
+
+get_file_id() ->
+    serv:call(?MODULE, get_file_id).
 
 %%
 %% Exported: get_user_id
@@ -141,6 +157,24 @@ delete_post(PostId) ->
     serv:call(?MODULE, {delete_post, PostId}).
 
 %%
+%% Exported: insert_file
+%%
+
+-spec insert_file(#file{}) -> {ok, #file{}} | {error, invalid_file}.
+
+insert_file(File) ->
+    serv:call(?MODULE, {insert_file, File}).
+
+%%
+%% delete_file
+%%
+
+-spec delete_file(file_id()) -> ok | {error, not_found}.
+
+delete_file(FileId) ->
+    serv:call(?MODULE, {delete_file, FileId}).
+
+%%
 %% Exported: sync
 %%
 
@@ -173,9 +207,6 @@ subscribe_on_changes(PostIds) ->
 %%
 
 init(Parent) ->
-    {ok, ?POST_DB} =
-        dets:open_file(
-          ?POST_DB, [{file, ?POST_DB_FILENAME}, {keypos, #post.id}]),
     {ok, ?META_DB} =
         dets:open_file(
           ?META_DB, [{file, ?META_DB_FILENAME}, {keypos, #meta.type}]),
@@ -186,24 +217,39 @@ init(Parent) ->
         [Meta] ->
             ok
     end,
+    {ok, ?POST_DB} =
+        dets:open_file(
+          ?POST_DB, [{file, ?POST_DB_FILENAME}, {keypos, #post.id}]),
+    {ok, ?FILE_DB} =
+        dets:open_file(
+          ?FILE_DB, [{file, ?FILE_DB_FILENAME}, {keypos, #file.id}]),
     ?SUBSCRIPTION_DB =
         ets:new(?SUBSCRIPTION_DB, [{keypos, #subscription.id}, named_table]),
     ?log_info("Database server has been started"),
     {ok, #state{parent = Parent,
-                next_user_id = Meta#meta.next_user_id,
-                next_post_id = Meta#meta.next_post_id}}.
+                next_post_id = Meta#meta.next_post_id,
+                next_file_id = Meta#meta.next_file_id,
+                next_user_id = Meta#meta.next_user_id}}.
 
 message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            _ = dets:close(?META_DB),
+            _ = dets:close(?FILE_DB),
             _ = dets:close(?POST_DB),
+            _ = dets:close(?META_DB),
             {reply, From, ok};
+        {call, From, get_file_id = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            [#meta{next_file_id = NextFileId} = Meta] =
+                dets:lookup(?META_DB, basic),
+            UpdatedMeta = Meta#meta{next_file_id = NextFileId + 1},
+            ok = dets:insert(?META_DB, UpdatedMeta),
+            {reply, From, NextFileId};
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),
             [#meta{next_user_id = NextUserId} = Meta] =
-                                           dets:lookup(?META_DB, basic),
+                dets:lookup(?META_DB, basic),
             UpdatedMeta = Meta#meta{next_user_id = NextUserId + 1},
             ok = dets:insert(?META_DB, UpdatedMeta),
             {reply, From, NextUserId};
@@ -227,9 +273,9 @@ message_handler(S) ->
         {call, From, {insert_post, Post} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case do_insert_post(S#state.next_post_id, Post) of
-                {ok, NextUpcomingPostId, InsertedPost} ->
+                {ok, UpcomingPostId, InsertedPost} ->
                     {reply, From, {ok, InsertedPost},
-                     S#state{next_post_id = NextUpcomingPostId}};
+                     S#state{next_post_id = UpcomingPostId}};
                 {error, Reason} ->
                     {reply, From, {error, Reason}}
             end;
@@ -253,9 +299,33 @@ message_handler(S) ->
                 [] ->
                     {reply, From, {error, not_found}}
             end;
+        {call, From, {insert_file, File} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            UpcomingFileId = S#state.next_file_id + 1,
+            [Meta] = dets:lookup(?META_DB, basic),
+            UpdatedMeta = Meta#meta{next_file_id = UpcomingFileId},
+            ok = dets:insert(?META_DB, UpdatedMeta),
+            InsertedFile =
+                File#file{
+                  id = S#state.next_file_id,
+                  created = seconds_since_epoch()
+                 },
+            ok = dets:insert(?FILE_DB, InsertedFile),
+            {reply, From, {ok, InsertedFile}};
+        {call, From, {delete_file, FileId} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            case dets:lookup(?FILE_DB, FileId) of
+                [_] ->
+                    ok = dets:delete(?FILE_DB, FileId),
+                    {reply, From, ok};
+                [] ->
+                    {reply, From, {error, not_found}}
+            end;
         {call, From, sync = Call} ->
             ?log_debug("Call: ~p", [Call]),
+            ok = dets:sync(?META_DB),
             ok = dets:sync(?POST_DB),
+            ok = dets:sync(?FILE_DB),
             {reply, From, ok};
         {call, From, {toggle_like, PostId, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -308,15 +378,14 @@ do_insert_post(NextPostId, Post) ->
         {true, ParentPost, _TopPost}  ->
             case Post#post.id of
                 not_set ->
-                    NextUpcomingPostId = NextPostId + 1,
-                    UpdatedMeta =
-                        #meta{type = basic,
-                              next_post_id = NextUpcomingPostId},
+                    UpcomingPostId = NextPostId + 1,
+                    [Meta] = dets:lookup(?META_DB, basic),
+                    UpdatedMeta = Meta#meta{next_post_id = UpcomingPostId},
                     ok = dets:insert(?META_DB, UpdatedMeta),
                     NewPostId = ?i2b(NextPostId);
                 PostId ->
                     NewPostId = PostId,
-                    NextUpcomingPostId = NextPostId
+                    UpcomingPostId = NextPostId
             end,
             UpdatedAttachments =
                 move_tmp_attachments(Post#post.attachments, NewPostId),
@@ -328,14 +397,14 @@ do_insert_post(NextPostId, Post) ->
             ok = insert_and_inform(UpdatedPost),
             case ParentPost of
                 not_set ->
-                    {ok, NextUpcomingPostId, UpdatedPost};
+                    {ok, UpcomingPostId, UpdatedPost};
                 #post{replies = Replies} ->
                     UpdatedParentPost =
                         ParentPost#post{
                           replies = Replies ++ [NewPostId]},
                     ok = insert_and_inform(UpdatedParentPost),
                     ok = update_parent_count(ParentPost#post.id, 1),
-                    {ok, NextUpcomingPostId, UpdatedPost}
+                    {ok, UpcomingPostId, UpdatedPost}
             end;
         false ->
             {error, invalid_post}
@@ -478,6 +547,9 @@ delete_all([PostId|Rest]) ->
 %%
 %% Utilities
 %%
+
+seconds_since_epoch() ->
+    os:system_time(second).
 
 seconds_since_epoch(not_set) ->
     os:system_time(second);

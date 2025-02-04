@@ -151,6 +151,8 @@ http_request_(Socket, Request, Body, State) ->
 	    http_get(Socket, Request, Body, State);
 	'POST' ->
 	    http_post(Socket, Request, Body, State);
+        'PUT' ->
+            http_put(Socket, Request, Body, State);
 	_ ->
             send_response(Socket, Request, no_cache_headers(), not_allowed)
     end.
@@ -408,6 +410,21 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             send_response(Socket, Request, no_cache_headers(), bad_request)
                     end
             end;
+        ["api", "insert_file"] ->
+            case handle_request(Socket, Request, Body, fun json_term_to_file/1) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, File} ->
+                    UpdatedFile = File#file{uploader = UserId},
+                    case db_serv:insert_file(UpdatedFile) of
+                        {ok, InsertedFile} ->
+                            PayloadJsonTerm = file_to_json_term(InsertedFile),
+                            send_response(Socket, Request, no_cache_headers(),
+                                          {json, PayloadJsonTerm});
+                        {error, invalid_file} ->
+                            send_response(Socket, Request, no_cache_headers(), bad_request)
+                    end
+            end;
         ["api", "delete_post"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_binary/1) of
                 {return, Result} ->
@@ -441,7 +458,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                                             State#state.subscriptions)},
                     {ok, UpdatedState}
             end;
-        ["api", "upload_attachments"] ->
+        ["api", Token] when Token == "upload_attachments" orelse Token == "upload_file" ->
             [PayloadJsonTerm] =
                 lists:map(fun(#{filename := Filename,
                                 unique_filename := UniqueFilename,
@@ -469,6 +486,26 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     end,
                     send_response(Socket, Request, no_cache_headers(), no_content)
             end;
+        _ ->
+	    ?log_error("~p not found", [Tokens]),
+            send_response(Socket, Request, no_cache_headers(), not_found)
+    end.
+
+%%
+%% HTTP PUT
+%%
+
+http_put(Socket, Request, Body, State) ->
+    Url = Request#http_request.uri,
+    case string:tokens(Url#url.path, "/") of
+	["v1"|Tokens] ->
+	    http_put(Socket, Request, Url, Tokens, Body, State, v1);
+	Tokens ->
+	    http_put(Socket, Request, Url, Tokens, Body, State, v1)
+    end.
+
+http_put(Socket, Request, _Url, Tokens, _Body, _State, v1) ->
+    case Tokens of
         _ ->
 	    ?log_error("~p not found", [Tokens]),
             send_response(Socket, Request, no_cache_headers(), not_found)
@@ -696,9 +733,9 @@ json_term_to_change_password(_) ->
 json_term_to_post(#{<<"title">> := Title, <<"body">> := Body} = PostJsonTerm)
   when is_binary(Title) andalso is_binary(Body) ->
     case has_valid_keys([<<"title">>,
-                       <<"body">>,
-                       <<"created">>,
-                       <<"attachments">>], PostJsonTerm) of
+                         <<"body">>,
+                         <<"created">>,
+                         <<"attachments">>], PostJsonTerm) of
         true ->
             case {maps:get(<<"created">>, PostJsonTerm, not_set),
                   maps:get(<<"attachments">>, PostJsonTerm, [])} of
@@ -758,6 +795,23 @@ json_term_to_post(#{<<"parentPostId">> := ParentPostId,
 json_term_to_post(_) ->
     {error, invalid}.
 
+json_term_to_file(#{<<"filename">> := Filename,
+                    <<"size">> := Size,
+                    <<"contentType">> := ContentType} = FileJsonTerm)
+  when is_binary(Filename) andalso
+       is_integer(Size) andalso
+       is_binary(ContentType) ->
+    case has_valid_keys([<<"filename">>,
+                         <<"size">>,
+                         <<"contentType">>], FileJsonTerm) of
+        true ->
+            {ok, #file{filename = Filename,
+                       size = Size,
+                       content_type = ContentType}};
+        false ->
+            {error, invalid}
+    end.
+
 json_term_to_attachments(AttachmentsJsonTerm) ->
     json_term_to_attachments(AttachmentsJsonTerm, []).
 
@@ -806,6 +860,19 @@ post_to_json_term(#post{id = Id,
     add_optional_members([{<<"title">>, Title},
                           {<<"parentPostId">>, ParentPostId},
                           {<<"topPostId">>, TopPostId}], JsonTerm).
+
+file_to_json_term(#file{id = Id,
+                        filename = Filename,
+                        size = Size,
+                        content_type = ContentType,
+                        uploader = Uploader,
+                        created = Created}) ->
+    #{<<"id">> => Id,
+      <<"filename">> => Filename,
+      <<"size">> => Size,
+      <<"contentType">> => ContentType,
+      <<"uploader">> => Uploader,
+      <<"created">> => Created}.
 
 attachments_to_json_term([]) ->
     [];
