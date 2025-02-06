@@ -12,6 +12,7 @@
               content_type/0, file_id/0, filename/0, file_size/0,
               subscription_id/0, monitor_ref/0]).
 
+-include_lib("kernel/include/file.hrl").
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
 -include_lib("apptools/include/serv.hrl").
@@ -28,8 +29,8 @@
 
 -define(SUBSCRIPTION_DB, db_serv_subscription).
 
+-define(BESPOKE_TMP_PATH, "/var/tmp/bespoke/tmp").
 -define(BESPOKE_ATTACHMENTS_PATH, "/var/tmp/bespoke/attachment").
--define(BESPOKE_ATTACHMENTS_TMP_PATH, "/var/tmp/bespoke/attachment/tmp").
 
 -type ssid() :: binary().
 -type host() :: binary().
@@ -334,7 +335,7 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             Files =
                 dets:foldl(fun(#file{is_uploading = true} = File, Acc) ->
-                                   [File|Acc]
+                                   [update_uploaded_size(File)|Acc]
                            end, [], ?FILE_DB),
             SortedFiles =
                 lists:sort(fun(FileA, FileB) ->
@@ -347,7 +348,7 @@ message_handler(S) ->
                 lists:foldr(
                   fun(FileId, Acc) ->
                           [File] = dets:lookup(?FILE_DB, FileId),
-                          [File|Acc]
+                          [update_uploaded_size(File)|Acc]
                   end, [], FileIds),
             SortedFiles =
                 lists:sort(
@@ -526,7 +527,7 @@ check_insert_post(_) ->
 move_tmp_attachments(TmpAttachments, NewPostId) ->
     NewPath = filename:join([?BESPOKE_ATTACHMENTS_PATH, NewPostId]),
     ok = file:make_dir(NewPath),
-    TmpPath = ?BESPOKE_ATTACHMENTS_TMP_PATH,
+    TmpPath = ?BESPOKE_TMP_PATH,
     lists:map(
       fun({TmpAttachment, ContentType}) ->
               TmpFilePath = filename:join([TmpPath, TmpAttachment]),
@@ -583,6 +584,28 @@ inform_subscribers(PostId) ->
                       Acc
               end
       end, ok, ?SUBSCRIPTION_DB).
+
+%%
+%% List files
+%%
+
+update_uploaded_size(#file{id = FileId, is_uploading = true} = File) ->
+    TmpPath = ?BESPOKE_TMP_PATH,
+    TmpFilePathBeginning =
+        filename:join([TmpPath, "file-" ++ integer_to_list(FileId) ++ "-"]),
+    case filelib:wildcard(TmpFilePathBeginning ++ "*") of
+        [TmpFilePath|_] ->
+            case file:read_file_info(TmpFilePath) of
+                {ok, FileInfo} ->
+                    File#file{uploaded_size = FileInfo#file_info.size};
+                {error, _} ->
+                    File
+            end;
+        [] ->
+            File
+    end;
+update_uploaded_size(File) ->
+    File.
 
 %%
 %% Utilities

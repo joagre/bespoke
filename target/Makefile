@@ -22,7 +22,8 @@ check-target:
 	fi
 
 create-env:
-	mkdir -p $(RUNTIME_DIR)/attachment/tmp && \
+	mkdir -p $(RUNTIME_DIR)/attachment && \
+	mkdir -p $(RUNTIME_DIR)/tmp && \
 	mkdir -p $(RUNTIME_DIR)/file && \
 	mkdir -p $(RUNTIME_DIR)/log && \
 	mkdir -p $(RUNTIME_DIR)/db && \

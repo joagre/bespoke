@@ -1,5 +1,6 @@
 all:
-	mkdir -p /var/tmp/bespoke/attachment/tmp && \
+	mkdir -p /var/tmp/bespoke/attachment && \
+	mkdir -p /var/tmp/bespoke/tmp && \
 	mkdir -p /var/tmp/bespoke/file && \
 	mkdir -p /var/tmp/bespoke/log && \
 	mkdir -p /var/tmp/bespoke/db && \
