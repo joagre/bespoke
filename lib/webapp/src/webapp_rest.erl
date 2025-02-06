@@ -200,24 +200,6 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
             redirect_to_loader(Socket, Request);
         %% Bespoke API
-        ["api", "list_top_posts"] ->
-            case handle_request(Socket, Request, Body) of
-                {return, Result} ->
-                    Result;
-                {ok, #user{id = UserId}, _Body} ->
-                    TopPosts = db_serv:list_top_posts(),
-                    ReadPostIds = lookup_read_cache(UserId),
-                    PayloadJsonTerm =
-                        lists:map(
-                          fun(#post{id = PostId} = Post) ->
-                                  PostJsonTerm = post_to_json_term(Post, ReadPostIds),
-                                  Posts = db_serv:lookup_posts([Post#post.id], recursive),
-                                  ReplyPosts = lists:keydelete(PostId, #post.id, Posts),
-                                  ReadCount = count_read_replies(ReadPostIds, ReplyPosts),
-                                  maps:put(<<"readCount">>, ReadCount, PostJsonTerm)
-                          end, TopPosts),
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
-            end;
         ["api", "auto_login"] ->
             case filelib:is_regular("/var/tmp/bespoke/bootstrap") of
                 true ->
@@ -242,6 +224,34 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                             send_response(Socket, Request, no_cache_headers(),
                                           {json, UpdatedPayloadJsonTerm})
                     end
+            end;
+        ["api", "list_top_posts"] ->
+            case handle_request(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, _Body} ->
+                    TopPosts = db_serv:list_top_posts(),
+                    ReadPostIds = lookup_read_cache(UserId),
+                    PayloadJsonTerm =
+                        lists:map(
+                          fun(#post{id = PostId} = Post) ->
+                                  PostJsonTerm = post_to_json_term(Post, ReadPostIds),
+                                  Posts = db_serv:lookup_posts([Post#post.id], recursive),
+                                  ReplyPosts = lists:keydelete(PostId, #post.id, Posts),
+                                  ReadCount = count_read_replies(ReadPostIds, ReplyPosts),
+                                  maps:put(<<"readCount">>, ReadCount, PostJsonTerm)
+                          end, TopPosts),
+                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+            end;
+        ["api", "list_files"] ->
+            case handle_request(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                {ok, _User, _Body} ->
+                    Files = db_serv:list_files(),
+                    PayloadJsonTerm =
+                        lists:map(fun(File) -> file_to_json_term(File) end, Files),
+                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
         %% Act as static web server
         Tokens ->
@@ -303,14 +313,6 @@ http_post(Socket, Request, Body, State) ->
 
 http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
     case Tokens of
-        ["api", "get_ssid"] ->
-            case handle_request(Socket, Request, Body) of
-                {return, Result} ->
-                    Result;
-                {ok, _User, _Body} ->
-                    {ok, SSID} = main:lookup_config("SSID", "BespokeBBS"),
-                    send_response(Socket, Request, no_cache_headers(), {json, ?l2b(SSID)})
-            end;
         ["api", "bootstrap"] ->
             case handle_request(Socket, Request, Body,  fun json_term_to_bootstrap/1, false) of
                 {return, Result} ->
@@ -320,6 +322,14 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     ok = change_ssid(SSID),
                     ok = main:insert_config("SSID", ?b2l(SSID)),
                     send_response(Socket, Request, no_cache_headers(), no_content)
+            end;
+        ["api", "get_ssid"] ->
+            case handle_request(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                {ok, _User, _Body} ->
+                    {ok, SSID} = main:lookup_config("SSID", "BespokeBBS"),
+                    send_response(Socket, Request, no_cache_headers(), {json, ?l2b(SSID)})
             end;
         ["api", "generate_challenge"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_binary/1, false) of
@@ -410,32 +420,22 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             send_response(Socket, Request, no_cache_headers(), bad_request)
                     end
             end;
-        ["api", "insert_file"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_file/1) of
-                {return, Result} ->
-                    Result;
-                {ok, #user{id = UserId}, File} ->
-                    UpdatedFile = File#file{uploader = UserId},
-                    case db_serv:insert_file(UpdatedFile) of
-                        {ok, InsertedFile} ->
-                            PayloadJsonTerm = file_to_json_term(InsertedFile),
-                            send_response(Socket, Request, no_cache_headers(),
-                                          {json, PayloadJsonTerm});
-                        {error, invalid_file} ->
-                            send_response(Socket, Request, no_cache_headers(), bad_request)
-                    end
-            end;
         ["api", "delete_post"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_binary/1) of
                 {return, Result} ->
                     Result;
-                {ok, _User, PostId} ->
-                    case db_serv:delete_post(PostId) of
-                        ok ->
-                            send_response(Socket, Request, no_cache_headers(), no_content);
-                        {error, not_found} ->
-                            send_response(Socket, Request, no_cache_headers(), not_found)
-                    end
+                {ok, #user{name = Username}, PostId} ->
+                    case db_serv:lookup_posts([PostId]) of
+                        [#post{author = Username}] ->
+                            case db_serv:delete_post(PostId) of
+                                ok ->
+                                    send_response(Socket, Request, no_cache_headers(), no_content);
+                                {error, not_found} ->
+                                    send_response(Socket, Request, no_cache_headers(), not_found)
+                            end
+                    end;
+                {ok, _User, _PostId} ->
+                    send_response(Socket, Request, no_cache_headers(), forbidden)
             end;
         ["api", "toggle_like"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_binary/1) of
@@ -446,6 +446,38 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     PayloadJsonTerm = #{<<"liked">> => lists:member(User#user.id, Likers),
                                         <<"likesCount">> => length(Likers)},
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+            end;
+        ["api", "insert_file"] ->
+            case handle_request(Socket, Request, Body, fun json_term_to_file/1) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{name = Username}, File} ->
+                    UpdatedFile = File#file{uploader = Username},
+                    case db_serv:insert_file(UpdatedFile) of
+                        {ok, InsertedFile} ->
+                            PayloadJsonTerm = file_to_json_term(InsertedFile),
+                            send_response(Socket, Request, no_cache_headers(),
+                                          {json, PayloadJsonTerm});
+                        {error, invalid_file} ->
+                            send_response(Socket, Request, no_cache_headers(), bad_request)
+                    end
+            end;
+        ["api", "delete_file"] ->
+            case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{name = Username}, FileId} ->
+                    case db_serv:lookup_files([FileId]) of
+                        [#file{uploader = Username}] ->
+                            case db_serv:delete_file(FileId) of
+                                ok ->
+                                    send_response(Socket, Request, no_cache_headers(), no_content);
+                                {error, not_found} ->
+                                    send_response(Socket, Request, no_cache_headers(), not_found)
+                            end
+                    end;
+                {ok, _User, _fileId} ->
+                    send_response(Socket, Request, no_cache_headers(), forbidden)
             end;
         ["api", "subscribe_on_changes"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_binary_list/1) of
@@ -658,6 +690,11 @@ purge_challenge_cache() ->
 %% Marshalling
 %%
 
+json_term_to_integer(Int) when is_integer(Int) ->
+    {ok, Int};
+json_term_to_integer(_) ->
+    {error, invalid}.
+
 json_term_to_binary(Bin) when is_binary(Bin) ->
     {ok, Bin};
 json_term_to_binary(_) ->
@@ -797,17 +834,21 @@ json_term_to_post(_) ->
 
 json_term_to_file(#{<<"filename">> := Filename,
                     <<"size">> := Size,
-                    <<"contentType">> := ContentType} = FileJsonTerm)
+                    <<"contentType">> := ContentType,
+                    <<"isUploading">> := IsUploading} = FileJsonTerm)
   when is_binary(Filename) andalso
        is_integer(Size) andalso
-       is_binary(ContentType) ->
+       is_binary(ContentType) andalso
+       is_boolean(IsUploading) ->
     case has_valid_keys([<<"filename">>,
                          <<"size">>,
-                         <<"contentType">>], FileJsonTerm) of
+                         <<"contentType">>,
+                         <<"isUploading">>], FileJsonTerm) of
         true ->
             {ok, #file{filename = Filename,
                        size = Size,
-                       content_type = ContentType}};
+                       content_type = ContentType,
+                       is_uploading = IsUploading}};
         false ->
             {error, invalid}
     end.
@@ -864,15 +905,19 @@ post_to_json_term(#post{id = Id,
 file_to_json_term(#file{id = Id,
                         filename = Filename,
                         size = Size,
+                        uploaded_size = UploadedSize,
                         content_type = ContentType,
                         uploader = Uploader,
-                        created = Created}) ->
+                        created = Created,
+                        is_uploading = IsUploading}) ->
     #{<<"id">> => Id,
       <<"filename">> => Filename,
       <<"size">> => Size,
+      <<"uploadedSize">> => UploadedSize,
       <<"contentType">> => ContentType,
       <<"uploader">> => Uploader,
-      <<"created">> => Created}.
+      <<"created">> => Created,
+      <<"isUploading">> => IsUploading}.
 
 attachments_to_json_term([]) ->
     [];

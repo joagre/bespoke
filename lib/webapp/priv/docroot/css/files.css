@@ -17,3 +17,8 @@
 .file-meta-data {
     margin-top: 0.35em;
 }
+
+.file-spinner {
+    width: 1em;
+    height: 1em;
+}

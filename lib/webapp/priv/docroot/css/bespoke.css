@@ -58,6 +58,12 @@ input {
     text-decoration: underline;
 }
 
+.disabled-link {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Footer and header styling */
 
 .header {
