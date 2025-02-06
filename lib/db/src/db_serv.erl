@@ -334,17 +334,8 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             Files =
                 dets:foldl(fun(#file{is_uploading = true} = File, Acc) ->
-
-
-
-
-
-                                   [File|Acc] end,
-
-
-fun(File, Acc) ->
-                                   [File|Acc] end,
-                           [], ?FILE_DB),
+                                   [File|Acc]
+                           end, [], ?FILE_DB),
             SortedFiles =
                 lists:sort(fun(FileA, FileB) ->
                                    FileA#file.created > FileB#file.created
