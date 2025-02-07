@@ -1,10 +1,9 @@
 HTML_FILES := $(wildcard *.html)
 HTML_SIGNATURE_FILES := $(patsubst %.html,signatures/%.html.sig,$(HTML_FILES))
 
-gzip:
-	$(MAKE) -C js gzip
+all: sign eslint gzip
 
-sign: not_on_target $(HTML_SIGNATURE_FILES) signatures/sw.js.sig
+sign: not_on_target $(HTML_SIGNATURE_FILES)
 	$(MAKE) -C js sign
 
 not_on_target:
@@ -17,9 +16,11 @@ signatures/%.html.sig: %.html
 	@echo "Signing $<..."
 	@../../../../bin/bespoke --clean -- -noinput -eval webapp_crypto:sign_file\("\"$<\""\) > $@
 
-signatures/sw.js.sig: sw.js
-	@echo "Signing $<..."
-	@../../../../bin/bespoke --clean -- -noinput -eval webapp_crypto:sign_file\("\"$<\""\) > $@
+eslint:
+	$(MAKE) -C js eslint
+
+gzip:
+	$(MAKE) -C js gzip
 
 clean:
 	$(MAKE) -C js clean
