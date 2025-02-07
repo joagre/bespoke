@@ -3,7 +3,8 @@
 -export([get_file_id/0, get_user_id/0]).
 -export([list_top_posts/0, lookup_posts/1, lookup_posts/2, lookup_post_ids/1,
          lookup_post_ids/2, insert_post/1, delete_post/1, toggle_like/2]).
--export([list_files/0, lookup_files/1, insert_file/1, delete_file/1]).
+-export([list_files/0, lookup_files/1, insert_file/1, delete_file/1,
+         file_uploaded/1]).
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
 -export([message_handler/1]).
@@ -30,7 +31,8 @@
 -define(SUBSCRIPTION_DB, db_serv_subscription).
 
 -define(BESPOKE_TMP_PATH, "/var/tmp/bespoke/tmp").
--define(BESPOKE_ATTACHMENTS_PATH, "/var/tmp/bespoke/attachment").
+-define(BESPOKE_ATTACHMENT_PATH, "/var/tmp/bespoke/attachment").
+-define(BESPOKE_FILE_PATH, "/var/tmp/bespoke/file").
 
 -type ssid() :: binary().
 -type host() :: binary().
@@ -180,7 +182,7 @@ list_files() ->
 -spec lookup_files([file_id()]) -> [#file{}].
 
 lookup_files(FileIds) ->
-    serv:call(?MODULE, {lookup_filesd, FileIds}).
+    serv:call(?MODULE, {lookup_files, FileIds}).
 
 %%
 %% Exported: insert_file
@@ -199,6 +201,15 @@ insert_file(File) ->
 
 delete_file(FileId) ->
     serv:call(?MODULE, {delete_file, FileId}).
+
+%%
+%% file_uploaded
+%%
+
+-spec file_uploaded(file_id()) -> ok | {error, not_found}.
+
+file_uploaded(FileId) ->
+    serv:call(?MODULE, {file_uploaded, FileId}).
 
 %%
 %% Exported: subscribe_on_changes
@@ -335,7 +346,9 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             Files =
                 dets:foldl(fun(#file{is_uploading = true} = File, Acc) ->
-                                   [update_uploaded_size(File)|Acc]
+                                   [update_uploaded_size(File)|Acc];
+                              (File, Acc) ->
+                                   [File|Acc]
                            end, [], ?FILE_DB),
             SortedFiles =
                 lists:sort(fun(FileA, FileB) ->
@@ -372,8 +385,20 @@ message_handler(S) ->
         {call, From, {delete_file, FileId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?FILE_DB, FileId) of
-                [_] ->
+                [File] ->
                     ok = dets:delete(?FILE_DB, FileId),
+                    ok = delete_file_on_disk(File),
+                    {reply, From, ok};
+                [] ->
+                    {reply, From, {error, not_found}}
+            end;
+        {call, From, {file_uploaded, FileId} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            case dets:lookup(?FILE_DB, FileId) of
+                [File] ->
+                    UpdatedFile = File#file{is_uploading = false},
+                    ok = dets:insert(?FILE_DB, UpdatedFile),
+                    ok = move_file_on_disk(UpdatedFile),
                     {reply, From, ok};
                 [] ->
                     {reply, From, {error, not_found}}
@@ -525,7 +550,7 @@ check_insert_post(_) ->
     false.
 
 move_tmp_attachments(TmpAttachments, NewPostId) ->
-    NewPath = filename:join([?BESPOKE_ATTACHMENTS_PATH, NewPostId]),
+    NewPath = filename:join([?BESPOKE_ATTACHMENT_PATH, NewPostId]),
     ok = file:make_dir(NewPath),
     TmpPath = ?BESPOKE_TMP_PATH,
     lists:map(
@@ -592,7 +617,7 @@ inform_subscribers(PostId) ->
 update_uploaded_size(#file{id = FileId, is_uploading = true} = File) ->
     TmpPath = ?BESPOKE_TMP_PATH,
     TmpFilePathBeginning =
-        filename:join([TmpPath, "file-" ++ integer_to_list(FileId) ++ "-"]),
+        filename:join([TmpPath, "file-" ++ io_lib:format("~w-", [FileId])]),
     case filelib:wildcard(TmpFilePathBeginning ++ "*") of
         [TmpFilePath|_] ->
             case file:read_file_info(TmpFilePath) of
@@ -606,6 +631,49 @@ update_uploaded_size(#file{id = FileId, is_uploading = true} = File) ->
     end;
 update_uploaded_size(File) ->
     File.
+
+%%
+%% Delete file
+%%
+
+delete_file_on_disk(#file{id = FileId, filename = Filename}) ->
+    TmpPath = ?BESPOKE_TMP_PATH,
+    TmpFilePathBeginning =
+        filename:join([TmpPath, io_lib:format("file-~w-", [FileId])]),
+    case filelib:wildcard(TmpFilePathBeginning ++ "*") of
+        [TmpFilePath] ->
+            ?log_info("Deleting ~s (if it exists)...", [TmpFilePath]),
+            _ = file:delete(TmpFilePath),
+            UploadedFilePath =
+                filename:join(
+                  [?BESPOKE_FILE_PATH,
+                   io_lib:format("~w-~s", [FileId, Filename])]),
+            ?log_info("Deleting ~s (if it exists)...", [UploadedFilePath]),
+            _ = file:delete(UploadedFilePath),
+            ok;
+        [] ->
+            ok
+    end.
+
+%%
+%% File uploaded
+%%
+
+move_file_on_disk(#file{id = FileId, filename = Filename}) ->
+    TmpPath = ?BESPOKE_TMP_PATH,
+    TmpFilePathBeginning =
+        filename:join([TmpPath, io_lib:format("file-~w-", [FileId])]),
+    case filelib:wildcard(TmpFilePathBeginning ++ "*") of
+        [TmpFilePath] ->
+            UploadedFilePath =
+                filename:join(
+                  [?BESPOKE_FILE_PATH,
+                   io_lib:format("~w-~s", [FileId, Filename])]),
+            ?log_info("Moving ~s to ~s", [TmpFilePath, UploadedFilePath]),
+            ok = file:rename(TmpFilePath, UploadedFilePath);
+        [] ->
+            ok
+    end.
 
 %%
 %% Utilities

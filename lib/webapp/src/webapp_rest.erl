@@ -86,8 +86,8 @@ change_ssid(SSID) ->
 %% Exported: init callback
 %%
 
-init(_Socket, Options) ->
-    ?log_info("init: ~p", [Options]),
+init(_Socket, _Options) ->
+    %%?log_info("init: ~p", [Options]),
     {ok, #state{}}.
 
 %%
@@ -108,8 +108,8 @@ info(Socket, {subscription_change, SubscriptionId, PostId}, State) ->
             ?log_error("Spurious subscription id ~p\n", [SpuriousSubscriptionId]),
             {ok, State}
     end;
-info(_Socket, Info, State) ->
-    ?log_info("info: ~p\n", [{Info, State}]),
+info(_Socket, _Info, State) ->
+    %%?log_info("info: ~p\n", [{Info, State}]),
     {ok, State}.
 
 %%
@@ -117,7 +117,7 @@ info(_Socket, Info, State) ->
 %%
 
 close(_Socket, State) ->
-    ?log_info("close: ~p\n", [State]),
+    %%?log_info("close: ~p\n", [State]),
     {ok, State}.
 
 %%
@@ -125,7 +125,7 @@ close(_Socket, State) ->
 %%
 
 error(_Socket, Error, State) ->
-    ?log_info("error: ~p", [{Error, State}]),
+    ?log_error("error: ~p", [{Error, State}]),
     {stop, normal, State}.
 
 %%
@@ -133,9 +133,10 @@ error(_Socket, Error, State) ->
 %%
 
 http_request(Socket, Request, Body, State) ->
-    ?log_info("Request = ~s, Headers = ~s, Body = ~p",
-              [rester_http:format_request(Request),
-               rester_http:format_hdr(Request#http_request.headers), Body]),
+%    ?log_info("Request = ~s, Headers = ~s, Body = ~p",
+%              [rester_http:format_request(Request),
+%               rester_http:format_hdr(Request#http_request.headers), Body]),
+    ?log_info("~s\n~p", [rester_http:format_request(Request), Body]),
     try http_request_(Socket, Request, Body, State) of
 	Result ->
             Result
@@ -470,6 +471,23 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     case db_serv:lookup_files([FileId]) of
                         [#file{uploader = Username}] ->
                             case db_serv:delete_file(FileId) of
+                                ok ->
+                                    send_response(Socket, Request, no_cache_headers(), no_content);
+                                {error, not_found} ->
+                                    send_response(Socket, Request, no_cache_headers(), not_found)
+                            end
+                    end;
+                {ok, _User, _fileId} ->
+                    send_response(Socket, Request, no_cache_headers(), forbidden)
+            end;
+        ["api", "file_uploaded"] ->
+            case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{name = Username}, FileId} ->
+                    case db_serv:lookup_files([FileId]) of
+                        [#file{uploader = Username}] ->
+                            case db_serv:file_uploaded(FileId) of
                                 ok ->
                                     send_response(Socket, Request, no_cache_headers(), no_content);
                                 {error, not_found} ->
