@@ -1,12 +1,6 @@
 all:
 	$(MAKE) -C src all
-	$(MAKE) -C priv/docroot gzip
-
-sign:
-	$(MAKE) -C priv/docroot sign
-
-eslint:
-	$(MAKE) -C priv/docroot/js eslint
+	$(MAKE) -C priv/docroot all
 
 release: all
 

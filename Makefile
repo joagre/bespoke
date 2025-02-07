@@ -8,9 +8,6 @@ all:
 	$(MAKE) -C external all && \
 	$(MAKE) -C lib all
 
-sign:
-	$(MAKE) -C lib/webapp sign
-
 release: mrproper
 	$(MAKE) -C lib release && \
 	$(MAKE) -C external release && \
