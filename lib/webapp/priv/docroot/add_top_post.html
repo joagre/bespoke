@@ -26,7 +26,7 @@
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
         <div>
-          <button onclick="Bespoke.gotoPage(event, 'top_posts.html')" data-back-destination="top_posts.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+          <button onclick="Bespoke.gotoPage(event, 'top_posts.html')" data-back-destination="top_posts.html" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
@@ -35,9 +35,9 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="AddTopPost.gotoAddAttachments(event)"></button>
+          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="AddTopPost.gotoAddAttachments(event)" uk-tooltip="Add attachments"></button>
           <span id="attachment-counter" class="uk-text-meta uk-margin-small-right"></span>
-          <button id="add-button" onclick="AddTopPost.addNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" disabled></button>
+          <button id="add-button" onclick="AddTopPost.addNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" uk-tooltip="Add post" disabled></button>
         </div>
       </div>
       <!-- Form -->

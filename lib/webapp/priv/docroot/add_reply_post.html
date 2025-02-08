@@ -27,7 +27,7 @@
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
         <div>
-          <button onclick="AddReplyPost.goBack(event, true)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left"></button>
+          <button onclick="AddReplyPost.goBack(event, true)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
@@ -36,9 +36,9 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="AddReplyPost.gotoAddAttachments(event)"></button>
+          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="AddReplyPost.gotoAddAttachments(event)" uk-tooltip="Add attachments"></button>
           <span id="attachment-counter" class="uk-text-meta uk-margin-small-right"></span>
-          <button id="add-button" onclick="AddReplyPost.addNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" disabled></button>
+          <button id="add-button" onclick="AddReplyPost.addNow(event)" class="uk-icon-button button-toggle" uk-icon="bespoke-ok" uk-tooltip="Add reply" disabled></button>
         </div>
       </div>
       <div class="uk-flex uk-flex-1 uk-flex-column uk-margin-small-left uk-margin-small-right">
@@ -46,7 +46,7 @@
         <div id="parent-title" class="uk-text-bold"></div>
         <!-- Parent quote -->
         <div class="uk-text-meta">
-          <div class="quote" onclick="AddReplyPost.toggleQuote(event)">
+          <div class="quote" onclick="AddReplyPost.toggleQuote(event)" uk-tooltip="Like/Unlike">
             <span id="quote-action" class="uk-icon-link" uk-icon="chevron-down"></span>
             In reply to <span id="parent-author"></span>
           </div>
