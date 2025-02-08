@@ -45,9 +45,15 @@
         <!-- Toolbar -->
         <div>
           <div class="js-upload" uk-form-custom>
+            <input id="file-upload" type="file-type" multiple>
+            <button class="uk-icon-button" type="button" uk-icon="icon: plus" uk-tooltip="Add attachment"></button>
+          </div>
+<!--
+          <div class="js-upload" uk-form-custom>
             <input type="file" id="file-type" multiple>
             <label for="file-type" class="uk-icon-button" uk-icon="plus"></label>
           </div>
+-->
           <button onclick="AddAttachments.removeAttachment(event)" id="remove-button" class="uk-icon-button button-toggle" uk-icon="trash" disabled></button>
         </div>
       </div>

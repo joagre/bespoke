@@ -1,6 +1,6 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
--export([get_file_id/0, get_user_id/0]).
+-export([get_user_id/0]).
 -export([list_top_posts/0, lookup_posts/1, lookup_posts/2, lookup_post_ids/1,
          lookup_post_ids/2, insert_post/1, delete_post/1, toggle_like/2]).
 -export([list_files/0, lookup_files/1, insert_file/1, delete_file/1,
@@ -86,15 +86,6 @@ start_link() ->
 
 stop() ->
     serv:call(?MODULE, stop).
-
-%%
-%% Exported: get_file_id
-%%
-
--spec get_file_id() -> file_id().
-
-get_file_id() ->
-    serv:call(?MODULE, get_file_id).
 
 %%
 %% Exported: get_user_id
@@ -266,13 +257,6 @@ message_handler(S) ->
             _ = dets:close(?POST_DB),
             _ = dets:close(?META_DB),
             {reply, From, ok};
-        {call, From, get_file_id = Call} ->
-            ?log_debug("Call: ~p", [Call]),
-            [#meta{next_file_id = NextFileId} = Meta] =
-                dets:lookup(?META_DB, basic),
-            UpdatedMeta = Meta#meta{next_file_id = NextFileId + 1},
-            ok = dets:insert(?META_DB, UpdatedMeta),
-            {reply, From, NextFileId};
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),
             [#meta{next_user_id = NextUserId} = Meta] =
@@ -371,17 +355,18 @@ message_handler(S) ->
             {reply, From, SortedFiles};
         {call, From, {insert_file, File} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            UpcomingFileId = S#state.next_file_id + 1,
-            [Meta] = dets:lookup(?META_DB, basic),
-            UpdatedMeta = Meta#meta{next_file_id = UpcomingFileId},
-            ok = dets:insert(?META_DB, UpdatedMeta),
             InsertedFile =
                 File#file{
                   id = S#state.next_file_id,
                   created = seconds_since_epoch()
                  },
             ok = dets:insert(?FILE_DB, InsertedFile),
-            {reply, From, {ok, InsertedFile}};
+            UpcomingFileId = S#state.next_file_id + 1,
+            [Meta] = dets:lookup(?META_DB, basic),
+            UpdatedMeta = Meta#meta{next_file_id = UpcomingFileId},
+            ok = dets:insert(?META_DB, UpdatedMeta),
+            {reply, From, {ok, InsertedFile},
+             S#state{next_file_id = UpcomingFileId}};
         {call, From, {delete_file, FileId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?FILE_DB, FileId) of

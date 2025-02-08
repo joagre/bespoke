@@ -136,7 +136,13 @@ http_request(Socket, Request, Body, State) ->
 %    ?log_info("Request = ~s, Headers = ~s, Body = ~p",
 %              [rester_http:format_request(Request),
 %               rester_http:format_hdr(Request#http_request.headers), Body]),
-    ?log_info("~s\n~p", [rester_http:format_request(Request), Body]),
+    ?log_info("~s", [rester_http:format_request(Request)]),
+    if
+        size(Body) > 0 ->
+            ?log_info("Body = ~p", [Body]);
+        true ->
+            ok
+    end,
     try http_request_(Socket, Request, Body, State) of
 	Result ->
             Result
@@ -167,8 +173,8 @@ http_get(Socket, Request, Body, State) ->
     case string:tokens(Url#url.path, "/") of
 	["versions"] ->
 	    Object = json:encode([<<"v1">>]),
-	    rester_http_server:response_r(Socket, Request, 200, "OK", Object,
-                                          [{content_type, "application/json"}|no_cache_headers()]);
+            send_response(Socket, Request, [{content_type, "application/json"}|no_cache_headers()],
+                          {ok, Object});
 	["v1"|Tokens] ->
 	    http_get(Socket, Request, Url, Tokens, Body, State, v1);
 	Tokens ->
@@ -204,9 +210,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
         ["api", "auto_login"] ->
             case filelib:is_regular("/var/tmp/bespoke/bootstrap") of
                 true ->
-                    rester_http_server:response_r(Socket, Request, 302, "Found", "",
-                                                  [{location, "/bootstrap.html"}|
-                                                   no_cache_headers()]);
+                    send_response(Socket, Request, no_cache_headers(), {found, "/bootstrap.html"});
                 false ->
                     {ok, MacAddress} = get_mac_address(Socket),
                     User = db_user_serv:get_user_from_mac_address(MacAddress),
@@ -268,12 +272,12 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             AcceptEncoding = proplists:get_value('Accept-Encoding', Headers#http_chdr.other, ""),
             case string:str(AcceptEncoding, "gzip") of
                 0 ->
-
                     case filelib:is_regular(AbsFilename) of
                         true ->
-                            rester_http_server:response_r(
-                              Socket, Request, 200, "OK", {file, AbsFilename},
-                              [{content_type, {url, UriPath}}|no_cache_headers(AbsFilename)]);
+                            send_response(Socket, Request,
+                                          [{content_type, {url, UriPath}}|
+                                           no_cache_headers(AbsFilename)],
+                                          {ok, {file, AbsFilename}});
                         false ->
                             send_response(Socket, Request, no_cache_headers(), not_found)
                     end;
@@ -281,17 +285,16 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     GzippedAbsFilename = AbsFilename ++ ".gz",
                     case filelib:is_regular(GzippedAbsFilename) of
                         true ->
-                            rester_http_server:response_r(
-                              Socket, Request, 200, "OK", {file, GzippedAbsFilename},
-                              [{content_type, {url, UriPath}}, {"Content-Encoding", "gzip"}|
-                               no_cache_headers(GzippedAbsFilename)]);
+                            send_response(Socket, Request, [{content_type, {url, UriPath}},
+                                                            {"Content-Encoding", "gzip"}|
+                                                            no_cache_headers(GzippedAbsFilename)],
+                                          {ok, {file, GzippedAbsFilename}});
                         false ->
                             case filelib:is_regular(AbsFilename) of
                                 true ->
-                                    rester_http_server:response_r(
-                                      Socket, Request, 200, "OK", {file, AbsFilename},
-                                      [{content_type, {url, UriPath}}|
-                                       no_cache_headers(AbsFilename)]);
+                                    send_response(Socket, Request, [{content_type, {url, UriPath}}|
+                                                                    no_cache_headers(AbsFilename)],
+                                                  {ok, {file, AbsFilename}});
                                 false ->
                                     send_response(Socket, Request, no_cache_headers(), not_found)
                             end
@@ -651,8 +654,7 @@ redirect_to_loader(Socket, Request) ->
     Host = string:lowercase(SSID),
     Url = ?l2b(io_lib:format("https://~s.b3s.zone/loader.html", [Host])),
     Body = io_lib:format("<!DOCTYPE html><html><head><body><a href=\"~s\" target=\"_blank\">Click here</a></body></head></html>", [Url]),
-    rester_http_server:response_r(Socket, Request, 302, "Found", ?l2b(Body),
-                                  [{location, ?b2l(Url)}|no_cache_headers()]).
+    send_response(Socket, Request, no_cache_headers(), {found, ?b2l(Url), ?l2b(Body)}).
 
 %%
 %% Read cache
@@ -1055,20 +1057,40 @@ has_valid_keys(PossibleKeys, Map) ->
 %% HTTP response (rest_util:response/3 is just too unwieldly)
 %%
 
+send_response(Socket, Request, Opts, {ok, Body}) ->
+    ?log_info("Response: ~p", [Body]),
+    rester_http_server:response_r(Socket, Request, 200, "OK", Body, Opts);
 send_response(Socket, Request, Opts, {json, JsonTerm}) ->
+    ?log_info("Response: ~p", [JsonTerm]),
     Body = json:encode(JsonTerm),
     rester_http_server:response_r(Socket, Request, 200, "OK", Body,
                                   [{content_type, "application/json"}|Opts]);
 send_response(Socket, Request, Opts, no_content) ->
+    ?log_info("Response: No Content"),
     rester_http_server:response_r(Socket, Request, 204, "No Content", "", Opts);
+send_response(Socket, Request, Opts, {found, AbsPath}) ->
+    ?log_info("Response: Found (~p)", [AbsPath]),
+    rester_http_server:response_r(Socket, Request, 302, "Found", "",
+                                  [{location, "/bootstrap.html"}|Opts]);
+send_response(Socket, Request, Opts, {found, AbsPath, Body}) ->
+    %% Note: Adding a body to a 302 response is not standard, but it works better in practice (at
+    %% least for the captive portal)
+    ?log_info("Response: Found (~p)", [AbsPath]),
+    rester_http_server:response_r(Socket, Request, 302, "Found", Body,
+                                  [{location, "/bootstrap.html"}|Opts]);
 send_response(Socket, Request, Opts, bad_request) ->
+    ?log_info("Response: Bad Request"),
     rester_http_server:response_r(Socket, Request, 400, "Bad Request", "", Opts);
 send_response(Socket, Request, Opts, unauthorized) ->
+    ?log_info("Response: Unauthorized"),
     rester_http_server:response_r(Socket, Request, 401, "Unauthorized", "", Opts);
 send_response(Socket, Request, Opts, forbidden) ->
+    ?log_info("Response: Forbidden"),
     rester_http_server:response_r(Socket, Request, 403, "Forbidden", "", Opts);
 send_response(Socket, Request, Opts, not_found) ->
+    ?log_info("Response: Not Found"),
     rester_http_server:response_r(Socket, Request, 404, "Not Found", "", Opts);
 send_response(Socket, Request, Opts, not_allowed) ->
+    ?log_info("Response: Method Not Allowed"),
     rester_http_server:response_r(Socket, Request, 405, "Method Not Allowed", "",
                                   [{<<"Allow">>, <<"GET, PUT, POST">>}|Opts]).
