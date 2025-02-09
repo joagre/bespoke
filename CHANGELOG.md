@@ -31,6 +31,8 @@
 
 - All HTML is now sanitized
 
+- File sharing has been added
+
 ## [0.2.1]
 
 ### Fixed [0.2.1]

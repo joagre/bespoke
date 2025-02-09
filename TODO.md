@@ -2,6 +2,8 @@
 
 ## Captive portal mechanics
 
+REWRITE THIS BULLET POINT:
+
 * Make the captive portal mechanics work flawlessly. Study more
   extensively how real-life captive portals answer to `http/https`
   requests, `dns` lookups and `icmp` pings before and after the user
@@ -24,19 +26,22 @@
 
 ## Web app
 
-* Add file sharing
+* Rewrite add_attachments.js to use Bespoke.upload() (Remove FIXES/REMOVALS)
 
-* Replace UIkit.upload() with something faster?
+* Make sure all stuff that is supposed to be collapsable is collapsable (with
+  the same number of rows)
 
 * Add direct messaging
 
 * Add Signal protocol under the hood
 
-* Add Contacts - A new top level entry point in indexhtml
+====
+
+* Maybe: Add Contacts - A new top level entry point in indexhtml
 
   - Make it possible to add/remove all username instances to Contacts with a
     single click
   - Mark all username instances in Contacts
   - Only users in Contacts are suggested when writing a new direct message
 
-* Add destructive aging of forum posts, direct messages and files
+* Maybe: Add destructive aging of forum posts, direct messages and files
