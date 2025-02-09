@@ -45,3 +45,7 @@ REWRITE THIS BULLET POINT:
   - Only users in Contacts are suggested when writing a new direct message
 
 * Maybe: Add destructive aging of forum posts, direct messages and files
+
+## Misc
+
+- /README.md: Add a small video instead of a screenshot
