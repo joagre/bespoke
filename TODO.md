@@ -26,11 +26,6 @@ REWRITE THIS BULLET POINT:
 
 ## Web app
 
-* Rewrite add_attachments.js to use Bespoke.upload() (Remove FIXES/REMOVALS)
-
-* Make sure all stuff that is supposed to be collapsable is collapsable (with
-  the same number of rows)
-
 * Add direct messaging
 
 * Add Signal protocol under the hood
