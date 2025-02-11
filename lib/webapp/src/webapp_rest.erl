@@ -267,8 +267,9 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     _ ->
                         Url#url.path
                 end,
+            Filename = uri_string:unquote(tl(UriPath)),
             AbsFilename =
-                filename:join([filename:absname(code:priv_dir(webapp)), "docroot", tl(UriPath)]),
+                filename:join([filename:absname(code:priv_dir(webapp)), "docroot", Filename]),
             AcceptEncoding = proplists:get_value('Accept-Encoding', Headers#http_chdr.other, ""),
             case string:str(AcceptEncoding, "gzip") of
                 0 ->
