@@ -41,6 +41,10 @@ REWRITE THIS BULLET POINT:
 
 * Maybe: Add destructive aging of forum posts, direct messages and files
 
+## Syncing
+
+- Smart database syncing between B3S devices
+
 ## Misc
 
 - /README.md: Add a small video instead of a screenshot
