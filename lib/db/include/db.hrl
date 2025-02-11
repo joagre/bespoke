@@ -5,9 +5,37 @@
         {
          type = basic :: basic,
          host = not_set :: db_serv:host() | not_set,
+         next_message_id = 0 :: db_serv:message_id(),
          next_post_id = 0 :: integer(),
          next_file_id = 0 :: db_serv:file_id(),
          next_user_id = 0 :: db_serv:user_id()
+        }).
+
+-record(user,
+        {
+         id :: db_serv:user_id() | '_',
+         name :: db_user_serv:username() | '_',
+         session_id = not_set :: db_user_serv:session_id() | not_set | '_',
+         mac_address :: db_user_serv:mac_address() | '_',
+         password_salt = not_set :: db_user_serv:password_salt() | not_set | '_',
+         password_hash = not_set :: db_user_serv:password_hash() | not_set | '_',
+         updated :: db_serv:seconds_since_epoch() | '_'
+        }).
+
+-record(message,
+        {
+         id = not_set :: db_serv:message_id() | not_set | '_',
+         %% Note: Mandatory for top message and disallowed for reply messages
+         title = not_set :: db_serv:title() | not_set | '_',
+         %% Note: Mandatory for top message and disallowed for reply messages
+         recipients = [] :: [db_serv:user_id()] | '_',
+         %% Note: Mandatory for top message and disallowed for reply messages
+         replies = [] :: [db_serv:message_id()] | '_',
+         %% Note: Disallowed for top messages and mandatory for reply messages
+         parent_message_id = not_set :: db_serv:message_id() | not_set | '_',
+         author = not_set :: db_serv:username() | not_set | '_',
+         created = not_set :: db_serv:seconds_since_epoch() | not_set | '_',
+         attachments = [] :: [db_serv:attachment_path()] | '_'
         }).
 
 -record(post,
@@ -15,7 +43,7 @@
          id = not_set :: db_serv:post_id() | not_set | '_',
          %% Note: Mandatory for top posts and disallowed for reply posts
          title = not_set :: db_serv:title() | not_set | '_',
-         %% Note: Disallowed for top posts and mandatory for replt posts
+         %% Note: Disallowed for top posts and mandatory for reply posts
          parent_post_id = not_set :: db_serv:post_id() | not_set | '_',
          %% Note: Disallowed for top posts and mandatory for reply posts
          top_post_id = not_set :: db_serv:post_id() | not_set,
@@ -45,17 +73,6 @@
         {
          user_id :: db_serv:user_id(),
          post_ids = [] :: [db_serv:post_id()]
-        }).
-
--record(user,
-        {
-         id :: db_serv:user_id() | '_',
-         name :: db_user_serv:username() | '_',
-         session_id = not_set :: db_user_serv:session_id() | not_set | '_',
-         mac_address :: db_user_serv:mac_address() | '_',
-         password_salt = not_set :: db_user_serv:password_salt() | not_set | '_',
-         password_hash = not_set :: db_user_serv:password_hash() | not_set | '_',
-         updated :: db_serv:seconds_since_epoch() | '_'
         }).
 
 -endif.

@@ -8,8 +8,8 @@
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
 -export([message_handler/1]).
--export_type([ssid/0, username/0, host/0, user_id/0, post_id/0, title/0, body/0,
-              seconds_since_epoch/0, attachment_path/0,
+-export_type([ssid/0, host/0, user_id/0, username/0, message_id/0, post_id/0,
+              title/0, body/0, seconds_since_epoch/0, attachment_path/0,
               content_type/0, file_id/0, filename/0, file_size/0,
               subscription_id/0, monitor_ref/0]).
 
@@ -22,6 +22,9 @@
 -define(META_DB_FILENAME, "/var/tmp/bespoke/db/meta.db").
 -define(META_DB, meta).
 
+-define(MESSAGE_DB_FILENAME, "/var/tmp/bespoke/db/message.db").
+-define(MESSAGE_DB, message).
+
 -define(POST_DB_FILENAME, "/var/tmp/bespoke/db/post.db").
 -define(POST_DB, post).
 
@@ -31,6 +34,8 @@
 -define(SUBSCRIPTION_DB, db_serv_subscription).
 
 -define(BESPOKE_TMP_PATH, "/var/tmp/bespoke/tmp").
+
+-define(BESPOKE_MESSAGE_PATH, "/var/tmp/bespoke/message").
 -define(BESPOKE_ATTACHMENT_PATH, "/var/tmp/bespoke/attachment").
 -define(BESPOKE_FILE_PATH, "/var/tmp/bespoke/file").
 
@@ -39,6 +44,8 @@
 
 -type user_id() :: integer().
 -type username() :: binary().
+
+-type message_id() :: integer().
 
 -type post_id() :: binary().
 -type title() :: binary().
@@ -235,6 +242,9 @@ init(Parent) ->
         [Meta] ->
             ok
     end,
+    {ok, ?MESSAGE_DB} =
+        dets:open_file(
+          ?MESSAGE_DB, [{file, ?MESSAGE_DB_FILENAME}, {keypos, #message.id}]),
     {ok, ?POST_DB} =
         dets:open_file(
           ?POST_DB, [{file, ?POST_DB_FILENAME}, {keypos, #post.id}]),
@@ -255,6 +265,7 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             _ = dets:close(?FILE_DB),
             _ = dets:close(?POST_DB),
+            _ = dets:close(?MESSAGE_DB),
             _ = dets:close(?META_DB),
             {reply, From, ok};
         {call, From, get_user_id = Call} ->
@@ -402,6 +413,7 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             ok = dets:sync(?META_DB),
             ok = dets:sync(?POST_DB),
+            ok = dets:sync(?MESSAGE_DB),
             ok = dets:sync(?FILE_DB),
             {reply, From, ok};
         {'DOWN', MonitorRef, process, Pid, _Reason} ->
