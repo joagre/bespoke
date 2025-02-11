@@ -33,6 +33,8 @@
 
 - File sharing has been added
 
+- Direct messaging has been added (unencrypted for now)
+
 ## [0.2.1]
 
 ### Fixed [0.2.1]
