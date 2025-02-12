@@ -233,32 +233,27 @@ sync() ->
 %%
 
 init(Parent) ->
-    {ok, ?META_DB} =
-        dets:open_file(
-          ?META_DB, [{file, ?META_DB_FILENAME}, {keypos, #meta.type}]),
-    case dets:lookup(?META_DB, basic) of
-        [] ->
-            Meta = #meta{},
-            ok = dets:insert(?META_DB, Meta);
-        [Meta] ->
-            ok
-    end,
-    {ok, ?MESSAGE_DB} =
-        dets:open_file(
-          ?MESSAGE_DB, [{file, ?MESSAGE_DB_FILENAME}, {keypos, #message.id}]),
-    {ok, ?POST_DB} =
-        dets:open_file(
-          ?POST_DB, [{file, ?POST_DB_FILENAME}, {keypos, #post.id}]),
-    {ok, ?FILE_DB} =
-        dets:open_file(
-          ?FILE_DB, [{file, ?FILE_DB_FILENAME}, {keypos, #file.id}]),
-    ?SUBSCRIPTION_DB =
-        ets:new(?SUBSCRIPTION_DB, [{keypos, #subscription.id}, named_table]),
+    ok = open_disk_db(?META_DB, ?META_DB_FILENAME, #meta.type),
+    Meta = init_meta_db(),
+    ok = open_disk_db(?MESSAGE_DB, ?MESSAGE_DB_FILENAME, #message.id),
+    ok = open_disk_db(?POST_DB, ?POST_DB_FILENAME, #post.id),
+    ok = open_disk_db(?FILE_DB, ?FILE_DB_FILENAME, #file.id),
+    ok = open_ram_db(?SUBSCRIPTION_DB, #subscription.id),
     ?log_info("Database server has been started"),
     {ok, #state{parent = Parent,
                 next_post_id = Meta#meta.next_post_id,
                 next_file_id = Meta#meta.next_file_id,
                 next_user_id = Meta#meta.next_user_id}}.
+
+init_meta_db() ->
+    case dets:lookup(?META_DB, basic) of
+        [] ->
+            Meta = #meta{},
+            dets:insert(?META_DB, Meta),
+            Meta;
+        [Meta] ->
+            Meta
+    end.
 
 message_handler(S) ->
     receive
@@ -676,6 +671,16 @@ move_file_on_disk(#file{id = FileId, filename = Filename}) ->
 %%
 %% Utilities
 %%
+
+open_disk_db(Name, Filename, KeyPos) ->
+    {ok, Name} = dets:open_file(Name, [{file, Filename}, {keypos, KeyPos}]),
+    ok.
+
+open_disk_index_db(Name, Filename) ->
+    apptools_persistent_index:open(Name, Filename).
+
+open_ram_db(Name, KeyPos) ->
+    ets:new(Name, [{keypos, KeyPos}, named_table]).
 
 seconds_since_epoch() ->
     os:system_time(second).

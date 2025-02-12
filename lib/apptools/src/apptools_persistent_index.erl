@@ -1,8 +1,8 @@
--module(apptools_persistent_key_index).
+-module(apptools_persistent_index).
 -export([open/1, open/2, insert/3, lookup/2, delete/2, close/1]).
 -export_type([index_name/0, index_tid/0, index/0, key/0, id/0]).
 
--include("../include/persistent_key_index.hrl").
+-include("../include/persistent_index.hrl").
 
 -type index_name() :: dets:tab_name().
 -type index_tid() :: reference().
@@ -16,14 +16,13 @@
 
 -spec open(file:name()) -> {ok, index_tid()} | {error, term()}.
 
-open(IndexPath) ->
-    dets:open_file(IndexPath, [{type, set}, {keypos, #index.key}]).
+open(Filename) ->
+    dets:open_file(Filename, [{type, set}, {keypos, #index.key}]).
 
 -spec open(index_name(), file:name()) -> {ok, index_name()} | {error, term()}.
 
-open(IndexName, IndexPath) ->
-    dets:open_file(IndexName, [{type, set}, {keypos, #index.key},
-                               {file, IndexPath}]).
+open(Name, Filename) ->
+    dets:open_file(Name, [{type, set}, {keypos, #index.key}, {file, Filename}]).
 
 %%
 %% Exported: insert

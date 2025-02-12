@@ -23,7 +23,6 @@
          messages = [] :: [db_serv:message_id()] | '_'
         }).
 
-
 %% message/<message_id>/
 %% message/<message_id>/attachment/<attachment_id>-<user-id>
 
