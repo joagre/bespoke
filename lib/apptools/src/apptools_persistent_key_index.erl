@@ -17,12 +17,13 @@
 -spec open(file:name()) -> {ok, index_tid()} | {error, term()}.
 
 open(IndexPath) ->
-    dets:open_file(IndexPath).
+    dets:open_file(IndexPath, [{type, set}, {keypos, #index.key}]).
 
 -spec open(index_name(), file:name()) -> {ok, index_name()} | {error, term()}.
 
 open(IndexName, IndexPath) ->
-    dets:open_file(IndexName, [{file, IndexPath}]).
+    dets:open_file(IndexName, [{type, set}, {keypos, #index.key},
+                               {file, IndexPath}]).
 
 %%
 %% Exported: insert
@@ -37,14 +38,16 @@ insert(Index, Key, Id) ->
 %% Exported: lookup
 %%
 
--spec lookup(index(), key()) -> id() | {error, term()}.
+-spec lookup(index(), key()) -> [id()] | {error, term()}.
 
 lookup(Index, Key) ->
     case dets:lookup(Index, Key) of
         {error, Reason} ->
             {error, Reason};
+        [] ->
+            [];
         [#index{id = Id}] ->
-            Id
+            [Id]
     end.
 
 %%
