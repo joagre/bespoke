@@ -13,29 +13,35 @@
 
 -record(user,
         {
-         id :: db_serv:user_id() | '_',
+         id :: db_serv:user_id() | '_', %% primary key
          name :: db_user_serv:username() | '_',
          session_id = not_set :: db_user_serv:session_id() | not_set | '_',
          mac_address :: db_user_serv:mac_address() | '_',
          password_salt = not_set :: db_user_serv:password_salt() | not_set | '_',
          password_hash = not_set :: db_user_serv:password_hash() | not_set | '_',
-         updated :: db_serv:seconds_since_epoch() | '_'
+         updated :: db_serv:seconds_since_epoch() | '_',
+         messages = [] :: [db_serv:message_id()] | '_'
         }).
+
+
+%% message/<message_id>/
+%% message/<message_id>/attachment/<attachment_id>-<user-id>
 
 -record(message,
         {
-         id = not_set :: db_serv:message_id() | not_set | '_',
-         %% Note: Mandatory for top message and disallowed for reply messages
+         id = not_set :: db_serv:message_id() | not_set | '_', %% primary key
+         %% Note: Mandatory for top messages and disallowed for reply messages
          title = not_set :: db_serv:title() | not_set | '_',
-         %% Note: Mandatory for top message and disallowed for reply messages
+         %% Note: Mandatory for top messages and disallowed for reply messages
          recipients = [] :: [db_serv:user_id()] | '_',
-         %% Note: Mandatory for top message and disallowed for reply messages
+         %% Note: Mandatory for top messages and disallowed for reply messages
          replies = [] :: [db_serv:message_id()] | '_',
          %% Note: Disallowed for top messages and mandatory for reply messages
          parent_message_id = not_set :: db_serv:message_id() | not_set | '_',
-         author = not_set :: db_serv:username() | not_set | '_',
+         %% COMMENT: Switch to user_id everyehere and use username during the rest comunication.
+         author = not_set :: db_serv:user_id() | not_set | '_',
          created = not_set :: db_serv:seconds_since_epoch() | not_set | '_',
-         attachments = [] :: [db_serv:attachment_path()] | '_'
+         attachments = [] :: [db_serv:attachment_id()] | '_'
         }).
 
 -record(post,

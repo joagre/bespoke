@@ -11,7 +11,7 @@
 -export_type([ssid/0, host/0, user_id/0, username/0, message_id/0, post_id/0,
               title/0, body/0, seconds_since_epoch/0, attachment_path/0,
               content_type/0, file_id/0, filename/0, file_size/0,
-              subscription_id/0, monitor_ref/0]).
+              attachment_id/0, subscription_id/0, monitor_ref/0]).
 
 -include_lib("kernel/include/file.hrl").
 -include_lib("apptools/include/log.hrl").
@@ -57,6 +57,7 @@
 -type file_id() :: integer().
 -type filename() :: binary().
 -type file_size() :: integer().
+-type attachment_id() :: integer().
 
 -type subscription_id() :: reference().
 -type monitor_ref() :: reference().
