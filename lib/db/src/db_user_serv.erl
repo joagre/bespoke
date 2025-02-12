@@ -2,6 +2,7 @@
 -export([start_link/0, stop/0]).
 -export([get_user/1, get_user_from_username/1, get_user_from_session_id/1,
          get_user_from_mac_address/1,
+         insert_user/1,
          login/4, switch_user/2, switch_user/4, change_password/4,
          user_db_to_list/0]).
 -export([message_handler/1]).
@@ -87,6 +88,15 @@ get_user_from_session_id(SessionId) ->
 
 get_user_from_mac_address(MacAddress) ->
     serv:call(?MODULE, {get_user_from_mac_address, MacAddress}).
+
+%%
+%% Exported: insert_user
+%%
+
+-spec insert_user(db_serv:username()) -> {ok, #user{}}.
+
+insert_user(Username) ->
+    serv:call(?MODULE, {insert_user, Username}).
 
 %%
 %% Exported: login
@@ -202,6 +212,15 @@ message_handler(S) ->
                     ok = dets:insert(?USER_DB, LastUpdatedUser),
                     {reply, From, LastUpdatedUser}
             end;
+        {call, From, {insert_user, Username} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            User = #user{id = db_serv:get_user_id(),
+                         name = Username,
+                         mac_address = <<"00:00:00:00:00:00">>,
+                         updated = timestamp(),
+                         session_id = session_id()},
+            ok = dets:insert(?USER_DB, User),
+            {reply, From, {ok, User}};
         {call, From, {login, Username, MacAddress, PasswordSalt,
                       PasswordHash} = Call} ->
             ?log_debug("Call: ~p", [Call]),

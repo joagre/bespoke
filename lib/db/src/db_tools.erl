@@ -194,22 +194,42 @@ parse_comment(Line, SubmissionDb) ->
     end.
 
 insert_subreddit(SubmissionDb, CommentDb) ->
+    ok = create_all_users(SubmissionDb, CommentDb),
     dets:traverse(
-      SubmissionDb, fun({Id, #{<<"author">> := Author,
+      SubmissionDb, fun({Id, #{<<"author">> := AuthorUsername,
                                <<"created_utc">> := Created,
                                <<"id">> := Id,
                                <<"selftext">> := Selftext,
                                <<"title">> := Title}}) ->
                             io:format("** Inserting submission ~p~n", [Id]),
+                            AuthorId = get_author_id(AuthorUsername),
                             Post = #post{id = Id,
                                          title = Title,
                                          body = Selftext,
-                                         author = Author,
+                                         author = AuthorId,
                                          created = patch_created(Created)},
                             {ok, _} = db_serv:insert_post(Post),
                             ok = insert_comments(CommentDb, Id),
                             continue
                     end).
+
+create_all_users(SubmissionDb, CommentDb) ->
+    _ = dets:traverse(
+          SubmissionDb, fun({Id, #{<<"author">> := AuthorUsername}}) ->
+                                io:format("** Inserting submission ~p~n", [Id]),
+                                ok = create_author_id(AuthorUsername),
+                                ok = crete_all_comment_users(CommentDb, Id),
+                                continue
+                        end),
+    ok.
+
+crete_all_comment_users(CommentDb, ParentId) ->
+    Comments = dets:lookup(CommentDb, ParentId),
+    lists:foreach(fun({_, #{<<"author">> := AuthorUsername,
+                            <<"id">> := Id}}) ->
+                          ok = create_author_id(AuthorUsername),
+                          crete_all_comment_users(CommentDb, Id)
+                  end, Comments).
 
 %% The reddit json api returns the created_utc field as a list!
 patch_created(Created) when is_binary(Created) ->
@@ -219,16 +239,17 @@ patch_created(Created) ->
 
 insert_comments(CommentDb, ParentId) ->
     Comments = dets:lookup(CommentDb, ParentId),
-    lists:foreach(fun({_, #{<<"author">> := Author,
+    lists:foreach(fun({_, #{<<"author">> := AuthorUsername,
                             <<"body">> := Body,
                             <<"created_utc">> := Created,
                             <<"id">> := Id,
                             <<"link_id">> := <<_:3/binary, LinkId/binary>>}}) ->
+                          AuthorId = get_author_id(AuthorUsername),
                           Post = #post{id = Id,
                                        parent_post_id = ParentId,
                                        top_post_id = LinkId,
                                        body = Body,
-                                       author = Author,
+                                       author = AuthorId,
                                        created = patch_created(Created)},
                           io:format("** Inserting comment ~p~n", [Id]),
                           {ok, _} = db_serv:insert_post(Post),
@@ -276,39 +297,70 @@ purge_subreddit_db() ->
 %%
 
 create_dummy_db() ->
+    %% Create some dummy users
+    ok = create_author_id([<<"ginko4711">>, <<"zappeU">>, <<"snuvan">>,
+                           <<"harald">>, <<"sminkor">>, <<"honan">>]),
     %% Add two top posts
+    AuthorIdGinko4711 = get_author_id(<<"ginko4711">>),
     TopPost1 = #post{title = <<"Var har sillen tagit vagen?">>,
                      body = <<"body">>,
-                     author = <<"ginko4711">>},
+                     author = AuthorIdGinko4711},
     {ok, InsertedTopPost1} = db_serv:insert_post(TopPost1),
+    AuthorIdZappeU = get_author_id(<<"zappeU">>),
     TopPost2 = #post{title = <<"Republik nu!">>,
                      body = <<"body">>,
-                     author = <<"zappeU">>},
+                     author = AuthorIdZappeU},
     {ok, _InsertedTopPost2} = db_serv:insert_post(TopPost2),
     %% Add two replies
+    AuthorIdSnuvan = get_author_id(<<"snuvan">>),
     ReplyPost1 =
         #post{parent_post_id = InsertedTopPost1#post.id,
               top_post_id = InsertedTopPost1#post.id,
               body = <<"reply1">>,
-              author = <<"snuvan">>},
+              author = AuthorIdSnuvan},
     {ok, InsertedReplyPost1} = db_serv:insert_post(ReplyPost1),
+    AuthorIdHarald = get_author_id(<<"harald">>),
     ReplyPost2 =
         #post{parent_post_id = InsertedTopPost1#post.id,
               top_post_id = InsertedTopPost1#post.id,
               body = <<"reply2">>,
-              author = <<"harald">>},
+              author = AuthorIdHarald},
     {ok, _InsertedReplyPost2} = db_serv:insert_post(ReplyPost2),
     %% Add two replies to the first reply
+    AuthorIdSminkor = get_author_id(<<"sminkor">>),
     ReplyPost11 =
         #post{parent_post_id = InsertedReplyPost1#post.id,
               top_post_id = InsertedTopPost1#post.id,
               body = <<"reply11">>,
-              author = <<"sminkor">>},
+              author = AuthorIdSminkor},
     {ok, _InsertedReplyPost11} = db_serv:insert_post(ReplyPost11),
+    AuthorIdHonan = get_author_id(<<"honan">>),
     ReplyPost12 =
         #post{parent_post_id = InsertedReplyPost1#post.id,
               top_post_id = InsertedTopPost1#post.id,
               body = <<"reply12">>,
-              author = <<"honan">>},
+              author = AuthorIdHonan},
     {ok, _InsertedReplyPost12} = db_serv:insert_post(ReplyPost12),
     ok = db_serv:sync().
+
+%%
+%% Utilities
+%%
+
+get_author_id(Username) ->
+    {ok, User} = db_user_serv:get_user_from_username(Username),
+    User#user.id.
+
+create_author_id([]) ->
+    ok;
+create_author_id([Username|Rest]) ->
+    ok = create_author_id(Username),
+    create_author_id(Rest);
+create_author_id(Username) when is_binary(Username) ->
+    case db_user_serv:get_user_from_username(Username) of
+        {ok, _User} ->
+            ok;
+        {error, _} ->
+            {ok, _User} = db_user_serv:insert_user(Username),
+            ok
+    end.

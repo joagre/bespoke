@@ -65,9 +65,9 @@
 
 -record(state, {
                 parent :: pid(),
-                next_post_id = 0 :: integer(),
-                next_file_id = 0 :: integer(),
-                next_user_id = 0 :: integer()
+                next_user_id = 0 :: user_id(),
+                next_post_id = 0 :: integer(), %% not post_id() by design
+                next_file_id = 0 :: file_id()
                }).
 
 -record(subscription, {
@@ -249,7 +249,7 @@ open_disk_index_db(Name, Filename) ->
 %% Exported: open_ram_db
 
 open_ram_db(Name, KeyPos) ->
-    true = ets:new(Name, [{keypos, KeyPos}, named_table]),
+    Name = ets:new(Name, [{keypos, KeyPos}, named_table]),
     ok.
 
 %%

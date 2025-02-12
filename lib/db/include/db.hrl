@@ -53,7 +53,7 @@
          %% Note: Disallowed for top posts and mandatory for reply posts
          top_post_id = not_set :: db_serv:post_id() | not_set,
          body :: db_serv:body() | '_',
-         author = not_set :: db_serv:username() | not_set | '_',
+         author = not_set :: db_serv:user_id() | not_set | '_',
          created = not_set :: db_serv:seconds_since_epoch() | not_set | '_',
          reply_count = 0 :: integer() | '_',
          replies = [] :: [db_serv:post_id()] | '_',
@@ -69,7 +69,7 @@
          size :: db_serv:file_size(),
          uploaded_size = 0 :: db_serv:file_size(),
          content_type :: db_serv:content_type(),
-         uploader = not_set :: db_serv:username() | not_set,
+         uploader = not_set :: db_serv:user_id() | not_set,
          created = not_set :: db_serv:seconds_since_epoch() | not_set,
          is_uploading = false :: boolean()
         }).

@@ -254,8 +254,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     Result;
                 {ok, _User, _Body} ->
                     Files = db_serv:list_files(),
-                    PayloadJsonTerm =
-                        lists:map(fun(File) -> file_to_json_term(File) end, Files),
+                    PayloadJsonTerm = lists:map(fun(File) -> file_to_json_term(File) end, Files),
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
         %% Act as static web server
@@ -413,8 +412,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case handle_request(Socket, Request, Body, fun json_term_to_post/1) of
                 {return, Result} ->
                     Result;
-                {ok, #user{id = UserId, name = Username}, Post} ->
-                    UpdatedPost = Post#post{author = Username},
+                {ok, #user{id = UserId}, Post} ->
+                    UpdatedPost = Post#post{author = UserId},
                     case db_serv:insert_post(UpdatedPost) of
                         {ok, InsertedPost} ->
                             ReadPostIds = lookup_read_cache(UserId),
@@ -456,8 +455,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case handle_request(Socket, Request, Body, fun json_term_to_file/1) of
                 {return, Result} ->
                     Result;
-                {ok, #user{name = Username}, File} ->
-                    UpdatedFile = File#file{uploader = Username},
+                {ok, #user{id = UserId}, File} ->
+                    UpdatedFile = File#file{uploader = UserId},
                     case db_serv:insert_file(UpdatedFile) of
                         {ok, InsertedFile} ->
                             PayloadJsonTerm = file_to_json_term(InsertedFile),
@@ -471,9 +470,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
                 {return, Result} ->
                     Result;
-                {ok, #user{name = Username}, FileId} ->
+                {ok, #user{id = UserId}, FileId} ->
                     case db_serv:lookup_files([FileId]) of
-                        [#file{uploader = Username}] ->
+                        [#file{uploader = UserId}] ->
                             case db_serv:delete_file(FileId) of
                                 ok ->
                                     send_response(Socket, Request, no_cache_headers(), no_content);
@@ -488,9 +487,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
                 {return, Result} ->
                     Result;
-                {ok, #user{name = Username}, FileId} ->
+                {ok, #user{id = UserId}, FileId} ->
                     case db_serv:lookup_files([FileId]) of
-                        [#file{uploader = Username}] ->
+                        [#file{uploader = UserId}] ->
                             case db_serv:file_uploaded(FileId) of
                                 ok ->
                                     send_response(Socket, Request, no_cache_headers(), no_content);
@@ -904,15 +903,17 @@ post_to_json_term(#post{id = Id,
                         parent_post_id = ParentPostId,
                         top_post_id = TopPostId,
                         body = Body,
-                        author = Author,
+                        author = AuthorId,
                         created = Created,
                         reply_count = ReplyCount,
                         replies = Replies,
                         likers = Likers,
                         attachments = AttachmentsJsonTerm}, ReadPostIds) ->
+    {ok, #user{name = AuthorUsername}} = db_user_serv:get_user(AuthorId),
     JsonTerm = #{<<"id">> => Id,
                  <<"body">> => Body,
-                 <<"author">> => Author,
+                 <<"authorId">> => AuthorId,
+                 <<"authorUsername">> => AuthorUsername,
                  <<"created">> => Created,
                  <<"replyCount">> => ReplyCount,
                  <<"replies">> => Replies,
@@ -928,15 +929,17 @@ file_to_json_term(#file{id = Id,
                         size = Size,
                         uploaded_size = UploadedSize,
                         content_type = ContentType,
-                        uploader = Uploader,
+                        uploader = UploaderId,
                         created = Created,
                         is_uploading = IsUploading}) ->
+    {ok, #user{name = UploaderUsername}} = db_user_serv:get_user(UploaderId),
     #{<<"id">> => Id,
       <<"filename">> => Filename,
       <<"size">> => Size,
       <<"uploadedSize">> => UploadedSize,
       <<"contentType">> => ContentType,
-      <<"uploader">> => Uploader,
+      <<"uploaderId">> => UploaderId,
+      <<"uploaderUsername">> => UploaderUsername,
       <<"created">> => Created,
       <<"isUploading">> => IsUploading}.
 
