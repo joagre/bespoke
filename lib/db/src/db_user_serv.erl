@@ -143,9 +143,7 @@ user_db_to_list() ->
 %%
 
 init(Parent) ->
-    {ok, ?USER_DB} =
-        dets:open_file(
-          ?USER_DB, [{file, ?USER_DB_FILENAME}, {keypos, #user.id}]),
+    ok = db_serv:open_disk_db(?USER_DB, ?USER_DB_FILENAME, #user.id),
     ?log_info("Database user server has been started"),
     {ok, #state{parent = Parent,
                 word_list = init_word_list()}}.

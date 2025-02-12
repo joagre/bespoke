@@ -7,6 +7,7 @@
          file_uploaded/1]).
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
+-export([open_disk_db/3, open_disk_index_db/2, open_ram_db/2]).
 -export([message_handler/1]).
 -export_type([ssid/0, host/0, user_id/0, username/0, message_id/0, post_id/0,
               title/0, body/0, seconds_since_epoch/0, attachment_path/0,
@@ -227,6 +228,29 @@ subscribe_on_changes(PostIds) ->
 
 sync() ->
     serv:call(?MODULE, sync).
+
+%%
+%% Exported: open_disk_db
+%%
+
+open_disk_db(Name, Filename, KeyPos) ->
+    {ok, Name} = dets:open_file(Name, [{file, Filename}, {keypos, KeyPos}]),
+    ok.
+
+%%
+%% Exported: open_disk_index_db
+%%
+
+open_disk_index_db(Name, Filename) ->
+    {ok, Name} = apptools_persistent_index:open(Name, Filename),
+    ok.
+
+%%
+%% Exported: open_ram_db
+
+open_ram_db(Name, KeyPos) ->
+    true = ets:new(Name, [{keypos, KeyPos}, named_table]),
+    ok.
 
 %%
 %% Server
@@ -671,16 +695,6 @@ move_file_on_disk(#file{id = FileId, filename = Filename}) ->
 %%
 %% Utilities
 %%
-
-open_disk_db(Name, Filename, KeyPos) ->
-    {ok, Name} = dets:open_file(Name, [{file, Filename}, {keypos, KeyPos}]),
-    ok.
-
-open_disk_index_db(Name, Filename) ->
-    apptools_persistent_index:open(Name, Filename).
-
-open_ram_db(Name, KeyPos) ->
-    ets:new(Name, [{keypos, KeyPos}, named_table]).
 
 seconds_since_epoch() ->
     os:system_time(second).
