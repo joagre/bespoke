@@ -1,13 +1,16 @@
 -ifndef(DB_HRL).
 -define(DB_HRL, true).
 
+-define(RUNTIME_DIR, "/var/tmp/bespoke").
+-define(DB_DIR, filename:join(?RUNTIME_DIR, "db")).
+
 -record(meta,
         {
          type = basic :: basic,
          host = not_set :: db_serv:host() | not_set,
          next_user_id = 0 :: db_serv:user_id(),
          next_message_id = 0 :: db_serv:message_id(),
-         next_message_attachment_id = 0 :: db_serv:attachment_id(),
+         next_message_attachment_id = 0 :: db_serv:message_attachment_id(),
          next_post_id = 0 :: integer(), %% not db_serv:post_id() by design
          next_file_id = 0 :: db_serv:file_id()
         }).
@@ -26,7 +29,7 @@
 
 %% Disk layout
 %% message/<message_id>/<user_id>, ...
-%% message/<message_id>/attachment/<user_id>-<attachment_id>, ...
+%% message/<message_id>/attachment/<user_id>-<message_attachment_id>, ...
 
 -record(message,
         {
@@ -47,7 +50,7 @@
 
 -record(message_attachment,
         {
-         id :: db_serv:attachment_id(),
+         id :: db_serv:message_attachment_id(),
          message_id :: db_serv:message_id()
         }).
 

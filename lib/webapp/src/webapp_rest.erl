@@ -13,8 +13,9 @@
 -include_lib("db/include/db.hrl").
 -include("webapp_crypto.hrl").
 
--define(READ_CACHE_DB_FILENAME, "/var/tmp/bespoke/db/readCache.db").
+-define(READ_CACHE_DB_FILENAME, filename:join(?DB_DIR, "readCache.db")).
 -define(READ_CACHE_DB, read_cache).
+
 -define(CHALLENGE_CACHE, challenge_cache).
 -define(CHALLENGE_TIMEOUT, 5 * 60). % 5 minutes
 
@@ -45,20 +46,16 @@ start_link() ->
          {keyfile, filename:join([code:priv_dir(webapp), "b3s.zone/server.key"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
-    {ok, ?READ_CACHE_DB} =
-        dets:open_file(
-          ?READ_CACHE_DB, [{file, ?READ_CACHE_DB_FILENAME},
-                           {keypos, #read_cache.user_id}]),
-    %% Create a named table for the challenge cache
-    ?CHALLENGE_CACHE = ets:new(?CHALLENGE_CACHE, [{keypos, #challenge_cache_entry.username}, public,
-                                                  named_table]),
-    ?log_info("Database REST API has been started"),
+    ok = db_serv:open_disk_db(?READ_CACHE_DB, ?READ_CACHE_DB_FILENAME, #read_cache.user_id),
+    ok = db_serv:open_ram_db(?CHALLENGE_CACHE, #challenge_cache_entry.username),
     {ok, HttpPort} = main:lookup_config("HttpPort", 80),
     {ok, _} = rester_http_server:start_link(HttpPort, Options),
     case main:lookup_config("HttpsPort", 443) of
 	{ok, HttpPort} ->
+            ?log_info("Database REST API has been started"),
 	    ok;
 	{ok, HttpsPort} ->
+            ?log_info("Database REST API has been started"),
 	    rester_http_server:start_link(HttpsPort, Options)
     end.
 
@@ -208,7 +205,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             redirect_to_loader(Socket, Request);
         %% Bespoke API
         ["api", "auto_login"] ->
-            case filelib:is_regular("/var/tmp/bespoke/bootstrap") of
+            case filelib:is_regular(filename:join([?RUNTIME_DIR, "bootstrap"])) of
                 true ->
                     send_response(Socket, Request, no_cache_headers(), {found, "/bootstrap.html"});
                 false ->
@@ -322,7 +319,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, no_user, SSID} ->
-                    ok = file:delete("/var/tmp/bespoke/bootstrap"),
+                    ok = file:delete(filename:join([?RUNTIME_DIR, "bootstrap"])),
                     ok = change_ssid(SSID),
                     ok = main:insert_config("SSID", ?b2l(SSID)),
                     send_response(Socket, Request, no_cache_headers(), no_content)

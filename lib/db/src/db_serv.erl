@@ -9,10 +9,11 @@
 -export([sync/0]).
 -export([open_disk_db/3, open_disk_index_db/2, open_ram_db/2]).
 -export([message_handler/1]).
--export_type([ssid/0, host/0, user_id/0, username/0, message_id/0, post_id/0,
-              title/0, body/0, seconds_since_epoch/0, attachment_path/0,
-              content_type/0, file_id/0, filename/0, file_size/0,
-              attachment_id/0, subscription_id/0, monitor_ref/0]).
+-export_type([ssid/0, host/0, user_id/0, username/0, message_id/0,
+              message_attachment_id/0, post_id/0, title/0, body/0,
+              seconds_since_epoch/0, attachment_path/0, content_type/0,
+              file_id/0, filename/0, file_size/0, subscription_id/0,
+              monitor_ref/0]).
 
 -include_lib("kernel/include/file.hrl").
 -include_lib("apptools/include/log.hrl").
@@ -20,25 +21,32 @@
 -include_lib("apptools/include/serv.hrl").
 -include("../include/db.hrl").
 
--define(META_DB_FILENAME, "/var/tmp/bespoke/db/meta.db").
+-define(META_DB_FILENAME, filename:join(?DB_DIR, "meta.db")).
 -define(META_DB, meta).
 
--define(MESSAGE_DB_FILENAME, "/var/tmp/bespoke/db/message.db").
+-define(MESSAGE_DB_FILENAME, filename:join(?DB_DIR, "message.db")).
 -define(MESSAGE_DB, message).
 
--define(POST_DB_FILENAME, "/var/tmp/bespoke/db/post.db").
+-define(MESSAGE_RECIPIENT_DB_FILENAME,
+        filename:join(?DB_DIR, "message_recipient.db")).
+-define(MESSAGE_RECIPIENT_DB, message_recipient).
+
+-define(MESSAGE_ATTACHMENT_DB_FILENAME,
+        filename:join(?DB_DIR, "message_attachment.db")).
+-define(MESSAGE_ATTACHMENT_DB, message_attachment).
+
+-define(POST_DB_FILENAME, filename:join(?DB_DIR, "post.db")).
 -define(POST_DB, post).
 
--define(FILE_DB_FILENAME, "/var/tmp/bespoke/db/file.db").
+-define(FILE_DB_FILENAME, filename:join(?DB_DIR, "file.db")).
 -define(FILE_DB, file).
 
 -define(SUBSCRIPTION_DB, db_serv_subscription).
 
--define(BESPOKE_TMP_PATH, "/var/tmp/bespoke/tmp").
-
--define(BESPOKE_MESSAGE_PATH, "/var/tmp/bespoke/message").
--define(BESPOKE_ATTACHMENT_PATH, "/var/tmp/bespoke/attachment").
--define(BESPOKE_FILE_PATH, "/var/tmp/bespoke/file").
+-define(BESPOKE_TMP_PATH, filename:join(?RUNTIME_DIR, "tmp")).
+-define(BESPOKE_MESSAGE_PATH, filename:join(?RUNTIME_DIR, "message")).
+-define(BESPOKE_ATTACHMENT_PATH, filename:join(?RUNTIME_DIR, "attachment")).
+-define(BESPOKE_FILE_PATH, filename:join(?RUNTIME_DIR, "file")).
 
 -type ssid() :: binary().
 -type host() :: binary().
@@ -47,6 +55,7 @@
 -type username() :: binary().
 
 -type message_id() :: integer().
+-type message_attachment_id() :: integer().
 
 -type post_id() :: binary().
 -type title() :: binary().
@@ -58,14 +67,11 @@
 -type file_id() :: integer().
 -type filename() :: binary().
 -type file_size() :: integer().
--type attachment_id() :: integer().
 
 -type subscription_id() :: reference().
 -type monitor_ref() :: reference().
 
--record(state, {
-                parent :: pid()
-               }).
+-record(state, {parent :: pid()}).
 
 -record(subscription, {
                        id :: subscription_id() | '_',
@@ -256,7 +262,7 @@ open_disk_index_db(Name, Filename) ->
 %% Exported: open_ram_db
 
 open_ram_db(Name, KeyPos) ->
-    Name = ets:new(Name, [{keypos, KeyPos}, named_table]),
+    Name = ets:new(Name, [{keypos, KeyPos}, named_table, public]),
     ok.
 
 %%
@@ -266,6 +272,11 @@ open_ram_db(Name, KeyPos) ->
 init(Parent) ->
     ok = open_disk_db(?META_DB, ?META_DB_FILENAME, #meta.type),
     ok = open_disk_db(?MESSAGE_DB, ?MESSAGE_DB_FILENAME, #message.id),
+    ok = open_disk_db(?MESSAGE_RECIPIENT_DB, ?MESSAGE_RECIPIENT_DB_FILENAME,
+                      #message_recipient.message_id),
+
+
+
     ok = open_disk_db(?POST_DB, ?POST_DB_FILENAME, #post.id),
     ok = open_disk_db(?FILE_DB, ?FILE_DB_FILENAME, #file.id),
     ok = open_ram_db(?SUBSCRIPTION_DB, #subscription.id),
