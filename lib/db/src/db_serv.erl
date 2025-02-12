@@ -64,10 +64,7 @@
 -type monitor_ref() :: reference().
 
 -record(state, {
-                parent :: pid(),
-                next_user_id = 0 :: user_id(),
-                next_post_id = 0 :: integer(), %% not post_id() by design
-                next_file_id = 0 :: file_id()
+                parent :: pid()
                }).
 
 -record(subscription, {
@@ -235,7 +232,17 @@ sync() ->
 
 open_disk_db(Name, Filename, KeyPos) ->
     {ok, Name} = dets:open_file(Name, [{file, Filename}, {keypos, KeyPos}]),
-    ok.
+    case Name of
+        ?META_DB ->
+            case dets:lookup(?META_DB, basic) of
+                [] ->
+                    dets:insert(?META_DB, #meta{});
+                [_] ->
+                    ok
+            end;
+        _ ->
+            ok
+    end.
 
 %%
 %% Exported: open_disk_index_db
@@ -258,26 +265,12 @@ open_ram_db(Name, KeyPos) ->
 
 init(Parent) ->
     ok = open_disk_db(?META_DB, ?META_DB_FILENAME, #meta.type),
-    Meta = init_meta_db(),
     ok = open_disk_db(?MESSAGE_DB, ?MESSAGE_DB_FILENAME, #message.id),
     ok = open_disk_db(?POST_DB, ?POST_DB_FILENAME, #post.id),
     ok = open_disk_db(?FILE_DB, ?FILE_DB_FILENAME, #file.id),
     ok = open_ram_db(?SUBSCRIPTION_DB, #subscription.id),
     ?log_info("Database server has been started"),
-    {ok, #state{parent = Parent,
-                next_post_id = Meta#meta.next_post_id,
-                next_file_id = Meta#meta.next_file_id,
-                next_user_id = Meta#meta.next_user_id}}.
-
-init_meta_db() ->
-    case dets:lookup(?META_DB, basic) of
-        [] ->
-            Meta = #meta{},
-            dets:insert(?META_DB, Meta),
-            Meta;
-        [Meta] ->
-            Meta
-    end.
+    {ok, #state{parent = Parent}}.
 
 message_handler(S) ->
     receive
@@ -290,10 +283,7 @@ message_handler(S) ->
             {reply, From, ok};
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            [#meta{next_user_id = NextUserId} = Meta] =
-                dets:lookup(?META_DB, basic),
-            UpdatedMeta = Meta#meta{next_user_id = NextUserId + 1},
-            ok = dets:insert(?META_DB, UpdatedMeta),
+            NextUserId = step_meta_id(#meta.next_user_id),
             {reply, From, NextUserId};
         {call, From, list_top_posts = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -314,13 +304,7 @@ message_handler(S) ->
             {reply, From, do_lookup_post_ids(PostIds, Mode)};
         {call, From, {insert_post, Post} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            case do_insert_post(S#state.next_post_id, Post) of
-                {ok, UpcomingPostId, InsertedPost} ->
-                    {reply, From, {ok, InsertedPost},
-                     S#state{next_post_id = UpcomingPostId}};
-                {error, Reason} ->
-                    {reply, From, {error, Reason}}
-            end;
+            {reply, From, do_insert_post(Post)};
         {call, From, {delete_post, PostId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?POST_DB, PostId) of
@@ -386,18 +370,14 @@ message_handler(S) ->
             {reply, From, SortedFiles};
         {call, From, {insert_file, File} = Call} ->
             ?log_debug("Call: ~p", [Call]),
+            NextFileId = step_meta_id(#meta.next_file_id),
             InsertedFile =
                 File#file{
-                  id = S#state.next_file_id,
+                  id = NextFileId,
                   created = seconds_since_epoch()
                  },
             ok = dets:insert(?FILE_DB, InsertedFile),
-            UpcomingFileId = S#state.next_file_id + 1,
-            [Meta] = dets:lookup(?META_DB, basic),
-            UpdatedMeta = Meta#meta{next_file_id = UpcomingFileId},
-            ok = dets:insert(?META_DB, UpdatedMeta),
-            {reply, From, {ok, InsertedFile},
-             S#state{next_file_id = UpcomingFileId}};
+            {reply, From, {ok, InsertedFile}};
         {call, From, {delete_file, FileId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?FILE_DB, FileId) of
@@ -491,20 +471,17 @@ do_lookup_post_ids(PostIds, Mode) ->
 %% Insert post
 %%
 
-do_insert_post(NextPostId, Post) ->
+do_insert_post(Post) ->
     case is_valid_insert_post(Post) of
         {true, ParentPost, _TopPost}  ->
-            case Post#post.id of
-                not_set ->
-                    UpcomingPostId = NextPostId + 1,
-                    [Meta] = dets:lookup(?META_DB, basic),
-                    UpdatedMeta = Meta#meta{next_post_id = UpcomingPostId},
-                    ok = dets:insert(?META_DB, UpdatedMeta),
-                    NewPostId = ?i2b(NextPostId);
-                PostId ->
-                    NewPostId = PostId,
-                    UpcomingPostId = NextPostId
-            end,
+            NewPostId =
+                case Post#post.id of
+                    not_set ->
+                        NextPostId = step_meta_id(#meta.next_post_id),
+                        ?i2b(NextPostId);
+                    PostId ->
+                        PostId
+                end,
             UpdatedAttachments =
                 move_tmp_attachments(Post#post.attachments, NewPostId),
             UpdatedPost =
@@ -515,14 +492,14 @@ do_insert_post(NextPostId, Post) ->
             ok = insert_and_inform(UpdatedPost),
             case ParentPost of
                 not_set ->
-                    {ok, UpcomingPostId, UpdatedPost};
+                    {ok, UpdatedPost};
                 #post{replies = Replies} ->
                     UpdatedParentPost =
                         ParentPost#post{
                           replies = Replies ++ [NewPostId]},
                     ok = insert_and_inform(UpdatedParentPost),
                     ok = update_parent_count(ParentPost#post.id, 1),
-                    {ok, UpcomingPostId, UpdatedPost}
+                    {ok, UpdatedPost}
             end;
         false ->
             {error, invalid_post}
@@ -695,6 +672,13 @@ move_file_on_disk(#file{id = FileId, filename = Filename}) ->
 %%
 %% Utilities
 %%
+
+step_meta_id(N) ->
+    [Meta] = dets:lookup(?META_DB, basic),
+    NextId = element(N, Meta),
+    UpdatedMeta = setelement(N, Meta, NextId + 1),
+    ok = dets:insert(?META_DB, UpdatedMeta),
+    NextId.
 
 seconds_since_epoch() ->
     os:system_time(second).

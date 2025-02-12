@@ -5,15 +5,16 @@
         {
          type = basic :: basic,
          host = not_set :: db_serv:host() | not_set,
+         next_user_id = 0 :: db_serv:user_id(),
          next_message_id = 0 :: db_serv:message_id(),
-         next_post_id = 0 :: integer(),
-         next_file_id = 0 :: db_serv:file_id(),
-         next_user_id = 0 :: db_serv:user_id()
+         next_message_attachment_id = 0 :: db_serv:attachment_id(),
+         next_post_id = 0 :: integer(), %% not db_serv:post_id() by design
+         next_file_id = 0 :: db_serv:file_id()
         }).
 
 -record(user,
         {
-         id :: db_serv:user_id() | '_', %% primary key
+         id :: db_serv:user_id() | '_',
          name :: db_user_serv:username() | '_',
          session_id = not_set :: db_user_serv:session_id() | not_set | '_',
          mac_address :: db_user_serv:mac_address() | '_',
@@ -23,24 +24,31 @@
          messages = [] :: [db_serv:message_id()] | '_'
         }).
 
-%% message/<message_id>/
-%% message/<message_id>/attachment/<attachment_id>-<user-id>
+%% Disk layout
+%% message/<message_id>/<user_id>, ...
+%% message/<message_id>/attachment/<user_id>-<attachment_id>, ...
 
 -record(message,
         {
-         id = not_set :: db_serv:message_id() | not_set | '_', %% primary key
+         id = not_set :: db_serv:message_id() | not_set,
          %% Note: Mandatory for top messages and disallowed for reply messages
-         title = not_set :: db_serv:title() | not_set | '_',
-         %% Note: Mandatory for top messages and disallowed for reply messages
-         recipients = [] :: [db_serv:user_id()] | '_',
-         %% Note: Mandatory for top messages and disallowed for reply messages
-         replies = [] :: [db_serv:message_id()] | '_',
+         title = not_set :: db_serv:title() | not_set,
          %% Note: Disallowed for top messages and mandatory for reply messages
-         parent_message_id = not_set :: db_serv:message_id() | not_set | '_',
-         %% COMMENT: Switch to user_id everyehere and use username during the rest comunication.
-         author = not_set :: db_serv:user_id() | not_set | '_',
-         created = not_set :: db_serv:seconds_since_epoch() | not_set | '_',
-         attachments = [] :: [db_serv:attachment_id()] | '_'
+         parent_message_id = not_set :: db_serv:message_id() | not_set,
+         author = not_set :: db_serv:user_id() | not_set,
+         created = not_set :: db_serv:seconds_since_epoch() | not_set
+        }).
+
+-record(message_recipient,
+        {
+         message_id :: db_serv:message_id(),
+         user_id :: db_serv:user_id()
+        }).
+
+-record(message_attachment,
+        {
+         id :: db_serv:attachment_id(),
+         message_id :: db_serv:message_id()
         }).
 
 -record(post,
