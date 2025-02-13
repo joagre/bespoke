@@ -8,7 +8,7 @@
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
 -export([open_disk_db/3, sync_disk_db/1, close_disk_db/1,
-         open_disk_index_db/2, close_disk_index_db/1,
+         open_disk_index_db/2, sync_disk_index_db/1, close_disk_index_db/1,
          open_ram_db/2]).
 -export([message_handler/1]).
 -export_type([ssid/0, host/0, user_id/0, username/0, message_id/0,
@@ -293,6 +293,16 @@ open_disk_index_db(Name, Filename) ->
     ok.
 
 %%
+%% Exported: sync_disk_index_db
+%%
+
+-spec sync_disk_index_db(apptools_persistent_index:index_name()) ->
+          ok.
+
+sync_disk_index_db(Name) ->
+    apptools_persistent_index:sync(Name).
+
+%%
 %% Exported: close_disk_index_db
 %%
 
@@ -508,15 +518,15 @@ close_db() ->
     ok.
 
 sync_db() ->
-    ok = close_disk_db(?FILE_DB),
-    ok = close_disk_db(?POST_DB),
-    ok = close_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB),
-    ok = close_disk_db(?MESSAGE_ATTACHMENT_DB),
-    ok = close_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB),
-    ok = close_disk_db(?MESSAGE_RECIPIENT_DB),
-    ok = close_disk_index_db(?MESSAGE_INDEX_DB),
-    ok = close_disk_db(?MESSAGE_DB),
-    close_disk_db(?META_DB).
+    ok = sync_disk_db(?FILE_DB),
+    ok = sync_disk_db(?POST_DB),
+    ok = sync_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB),
+    ok = sync_disk_db(?MESSAGE_ATTACHMENT_DB),
+    ok = sync_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB),
+    ok = sync_disk_db(?MESSAGE_RECIPIENT_DB),
+    ok = sync_disk_index_db(?MESSAGE_INDEX_DB),
+    ok = sync_disk_db(?MESSAGE_DB),
+    sync_disk_db(?META_DB).
 
 %%
 %% Lookup posts
