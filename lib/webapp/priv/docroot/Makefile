@@ -1,10 +1,11 @@
 HTML_FILES := $(wildcard *.html)
 HTML_SIGNATURE_FILES := $(patsubst %.html,signatures/%.html.sig,$(HTML_FILES))
 
-all: sign
+all:
 	$(MAKE) -C js all
 
 sign: not_on_target $(HTML_SIGNATURE_FILES)
+	$(MAKE) -C js sign
 
 not_on_target:
 	@if grep -q "Raspberry Pi" /proc/cpuinfo; then \

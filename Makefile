@@ -9,6 +9,9 @@ all:
 	$(MAKE) -C external all && \
 	$(MAKE) -C lib all
 
+sign:
+	$(MAKE) -C lib/webapp/priv/docroot sign
+
 release: mrproper
 	$(MAKE) -C lib release && \
 	$(MAKE) -C external release && \
