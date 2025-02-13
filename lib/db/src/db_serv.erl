@@ -21,21 +21,21 @@
 -include_lib("apptools/include/serv.hrl").
 -include("../include/db.hrl").
 
+%% Meta DB
 -define(META_FILENAME, filename:join(?DB_DIR, "meta.db")).
 -define(META_DB, meta).
 
+%% Message DB
 -define(MESSAGE_FILENAME, filename:join(?DB_DIR, "message.db")).
 -define(MESSAGE_DB, message_db).
 -define(MESSAGE_INDEX_FILENAME, filename:join(?DB_DIR, "message_index.db")).
 -define(MESSAGE_INDEX_DB, message_index_db).
-
 -define(MESSAGE_RECIPIENT_FILENAME,
         filename:join(?DB_DIR, "message_recipient.db")).
 -define(MESSAGE_RECIPIENT_DB, message_recipient_db).
 -define(MESSAGE_RECIPIENT_INDEX_FILENAME,
         filename:join(?DB_DIR, "message_recipient_index.db")).
 -define(MESSAGE_RECIPIENT_INDEX_DB, message_recipient_index_db).
-
 -define(MESSAGE_ATTACHMENT_FILENAME,
         filename:join(?DB_DIR, "message_attachment.db")).
 -define(MESSAGE_ATTACHMENT_DB, message_attachment_db).
@@ -43,39 +43,39 @@
         filename:join(?DB_DIR, "message_attachment_index.db")).
 -define(MESSAGE_ATTACHMENT_INDEX_DB, message_attachment_index_db).
 
+%% Post DB
 -define(POST_FILENAME, filename:join(?DB_DIR, "post.db")).
 -define(POST_DB, post_db).
 
+%% File DB
 -define(FILE_FILENAME, filename:join(?DB_DIR, "file.db")).
 -define(FILE_DB, file_db).
 
+%% Subscription DB
 -define(SUBSCRIPTION_DB, subscription_db).
 
+%% Paths
 -define(BESPOKE_TMP_PATH, filename:join(?RUNTIME_DIR, "tmp")).
 -define(BESPOKE_MESSAGE_PATH, filename:join(?RUNTIME_DIR, "message")).
 -define(BESPOKE_ATTACHMENT_PATH, filename:join(?RUNTIME_DIR, "attachment")).
 -define(BESPOKE_FILE_PATH, filename:join(?RUNTIME_DIR, "file")).
 
+%% Types
 -type ssid() :: binary().
 -type host() :: binary().
-
 -type user_id() :: integer().
 -type username() :: binary().
-
 -type message_id() :: integer().
 -type message_attachment_id() :: integer().
-
 -type post_id() :: binary().
 -type title() :: binary().
 -type body() :: binary().
 -type seconds_since_epoch() :: integer().
 -type attachment_path() :: binary().
 -type content_type() :: binary().
-
 -type file_id() :: integer().
 -type filename() :: binary().
 -type file_size() :: integer().
-
 -type subscription_id() :: reference().
 -type monitor_ref() :: reference().
 
@@ -278,7 +278,9 @@ open_ram_db(Name, KeyPos) ->
 %%
 
 init(Parent) ->
+    %% Open Meta DB
     ok = open_disk_db(?META_DB, ?META_FILENAME, #meta.type),
+    %% Open Message DB
     ok = open_disk_db(?MESSAGE_DB, ?MESSAGE_FILENAME, #message.id),
     ok = open_disk_index_db(?MESSAGE_INDEX_DB, ?MESSAGE_INDEX_FILENAME),
     ok = open_disk_db(?MESSAGE_RECIPIENT_DB, ?MESSAGE_RECIPIENT_FILENAME,
@@ -289,8 +291,11 @@ init(Parent) ->
                       #message_attachment.id),
     ok = open_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB,
                             ?MESSAGE_ATTACHMENT_INDEX_FILENAME),
+    %% Open Post DB
     ok = open_disk_db(?POST_DB, ?POST_FILENAME, #post.id),
+    %% Open File DB
     ok = open_disk_db(?FILE_DB, ?FILE_FILENAME, #file.id),
+    %% Open Subscription DB
     ok = open_ram_db(?SUBSCRIPTION_DB, #subscription.id),
     ?log_info("Database server has been started"),
     {ok, #state{parent = Parent}}.

@@ -14,6 +14,7 @@
 -include_lib("apptools/include/shorthand.hrl").
 -include("../include/db.hrl").
 
+%% User DB
 -define(USER_FILENAME, filename:join(?DB_DIR, "user.db")).
 -define(USER_DB, user_db).
 
@@ -154,6 +155,7 @@ user_db_to_list() ->
 %%
 
 init(Parent) ->
+    %% Open User DB
     ok = db_serv:open_disk_db(?USER_DB, ?USER_FILENAME, #user.id),
     ?log_info("Database user server has been started"),
     {ok, #state{parent = Parent,
