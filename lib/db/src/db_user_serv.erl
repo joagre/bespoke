@@ -165,7 +165,7 @@ message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            _ = db_serv:close_disk_db(?USER_DB),
+            ok = close_db(),
             {reply, From, ok};
         {call, From, {get_user, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -316,6 +316,7 @@ message_handler(S) ->
             UserDb = dets:match_object(?USER_DB, #user{_ = '_'}),
             {reply, From, UserDb};
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
+            ok = close_db(),
             exit(Reason);
         {system, From, Request} ->
             ?log_debug("System: ~p", [Request]),
@@ -324,6 +325,10 @@ message_handler(S) ->
             ?log_error("Unknown message: ~p", [UnknownMessage]),
             noreply
     end.
+
+close_db() ->
+    _ = db_serv:close_disk_db(?USER_DB),
+    ok.
 
 %%
 %% Generate username

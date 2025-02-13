@@ -7,7 +7,7 @@
          file_uploaded/1]).
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
--export([open_disk_db/3, close_disk_db/1,
+-export([open_disk_db/3, sync_disk_db/1, close_disk_db/1,
          open_disk_index_db/2, close_disk_index_db/1,
          open_ram_db/2]).
 -export([message_handler/1]).
@@ -246,6 +246,9 @@ sync() ->
 %% Exported: open_disk_db
 %%
 
+-spec open_disk_db(dets:tab_name(), file:name(), integer()) ->
+          ok | {error, term()}.
+
 open_disk_db(Name, Filename, KeyPos) ->
     {ok, Name} = dets:open_file(Name, [{file, Filename}, {keypos, KeyPos}]),
     case Name of
@@ -261,8 +264,19 @@ open_disk_db(Name, Filename, KeyPos) ->
     end.
 
 %%
+%% Exported: sync_disk_db
+%%
+
+-spec sync_disk_db(dets:tab_name()) -> ok | {error, term()}.
+
+sync_disk_db(Name) ->
+    dets:sync(Name).
+
+%%
 %% Exported: close_disk_db
 %%
+
+-spec close_disk_db(dets:tab_name()) -> ok | {error, term()}.
 
 close_disk_db(Name) ->
     dets:close(Name).
@@ -270,6 +284,9 @@ close_disk_db(Name) ->
 %%
 %% Exported: open_disk_index_db
 %%
+
+-spec open_disk_index_db(apptools_persistent_index:index_name(), file:name()) ->
+          ok.
 
 open_disk_index_db(Name, Filename) ->
     {ok, Name} = apptools_persistent_index:open(Name, Filename),
@@ -279,12 +296,18 @@ open_disk_index_db(Name, Filename) ->
 %% Exported: close_disk_index_db
 %%
 
+
+-spec close_disk_index_db(apptools_persistent_index:index_name()) ->
+          ok | {error, term()}.
+
 close_disk_index_db(Name) ->
     apptools_persistent_index:close(Name).
 
 %%
 %% Exported: open_ram_db
 %%
+
+-spec open_ram_db(atom(), integer()) -> ok.
 
 open_ram_db(Name, KeyPos) ->
     Name = ets:new(Name, [{keypos, KeyPos}, named_table, public]),
@@ -321,15 +344,7 @@ message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            _ = close_disk_db(?FILE_DB),
-            _ = close_disk_db(?POST_DB),
-            _ = close_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB),
-            _ = close_disk_db(?MESSAGE_ATTACHMENT_DB),
-            _ = close_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB),
-            _ = close_disk_db(?MESSAGE_RECIPIENT_DB),
-            _ = close_disk_index_db(?MESSAGE_INDEX_DB),
-            _ = close_disk_db(?MESSAGE_DB),
-            _ = close_disk_db(?META_DB),
+            ok = close_db(),
             {reply, From, ok};
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -461,10 +476,7 @@ message_handler(S) ->
             {reply, From, SubscriptionId};
         {call, From, sync = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            ok = dets:sync(?META_DB),
-            ok = dets:sync(?POST_DB),
-            ok = dets:sync(?MESSAGE_DB),
-            ok = dets:sync(?FILE_DB),
+            ok = sync_db(),
             {reply, From, ok};
         {'DOWN', MonitorRef, process, Pid, _Reason} ->
             ?log_info("Subscriber died: ~w", [Pid]),
@@ -473,6 +485,7 @@ message_handler(S) ->
                      #subscription{monitor_ref = MonitorRef, _ = '_'}),
             noreply;
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
+            ok = close_db(),
             exit(Reason);
         {system, From, Request} ->
             ?log_debug("System: ~p", [Request]),
@@ -481,6 +494,29 @@ message_handler(S) ->
             ?log_error("Unknown message: ~p", [UnknownMessage]),
             noreply
     end.
+
+close_db() ->
+    _ = close_disk_db(?FILE_DB),
+    _ = close_disk_db(?POST_DB),
+    _ = close_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB),
+    _ = close_disk_db(?MESSAGE_ATTACHMENT_DB),
+    _ = close_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB),
+    _ = close_disk_db(?MESSAGE_RECIPIENT_DB),
+    _ = close_disk_index_db(?MESSAGE_INDEX_DB),
+    _ = close_disk_db(?MESSAGE_DB),
+    _ = close_disk_db(?META_DB),
+    ok.
+
+sync_db() ->
+    ok = close_disk_db(?FILE_DB),
+    ok = close_disk_db(?POST_DB),
+    ok = close_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB),
+    ok = close_disk_db(?MESSAGE_ATTACHMENT_DB),
+    ok = close_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB),
+    ok = close_disk_db(?MESSAGE_RECIPIENT_DB),
+    ok = close_disk_index_db(?MESSAGE_INDEX_DB),
+    ok = close_disk_db(?MESSAGE_DB),
+    close_disk_db(?META_DB).
 
 %%
 %% Lookup posts
