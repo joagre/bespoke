@@ -14,7 +14,7 @@
 -include("webapp_crypto.hrl").
 
 %% Read Cache DB
--define(READ_CACHE_FILENAME, filename:join(?DB_DIR, "readCache.db")).
+-define(READ_CACHE_FILENAME, filename:join(?DB_DIR, "read_cache.db")).
 -define(READ_CACHE_DB, read_cache_db).
 
 %% Challenge Cache DB
