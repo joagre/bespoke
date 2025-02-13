@@ -21,27 +21,35 @@
 -include_lib("apptools/include/serv.hrl").
 -include("../include/db.hrl").
 
--define(META_DB_FILENAME, filename:join(?DB_DIR, "meta.db")).
+-define(META_FILENAME, filename:join(?DB_DIR, "meta.db")).
 -define(META_DB, meta).
 
--define(MESSAGE_DB_FILENAME, filename:join(?DB_DIR, "message.db")).
--define(MESSAGE_DB, message).
+-define(MESSAGE_FILENAME, filename:join(?DB_DIR, "message.db")).
+-define(MESSAGE_DB, message_db).
+-define(MESSAGE_INDEX_FILENAME, filename:join(?DB_DIR, "message_index.db")).
+-define(MESSAGE_INDEX_DB, message_index_db).
 
--define(MESSAGE_RECIPIENT_DB_FILENAME,
+-define(MESSAGE_RECIPIENT_FILENAME,
         filename:join(?DB_DIR, "message_recipient.db")).
--define(MESSAGE_RECIPIENT_DB, message_recipient).
+-define(MESSAGE_RECIPIENT_DB, message_recipient_db).
+-define(MESSAGE_RECIPIENT_INDEX_FILENAME,
+        filename:join(?DB_DIR, "message_recipient_index.db")).
+-define(MESSAGE_RECIPIENT_INDEX_DB, message_recipient_index_db).
 
--define(MESSAGE_ATTACHMENT_DB_FILENAME,
+-define(MESSAGE_ATTACHMENT_FILENAME,
         filename:join(?DB_DIR, "message_attachment.db")).
--define(MESSAGE_ATTACHMENT_DB, message_attachment).
+-define(MESSAGE_ATTACHMENT_DB, message_attachment_db).
+-define(MESSAGE_ATTACHMENT_INDEX_FILENAME,
+        filename:join(?DB_DIR, "message_attachment_index.db")).
+-define(MESSAGE_ATTACHMENT_INDEX_DB, message_attachment_index_db).
 
--define(POST_DB_FILENAME, filename:join(?DB_DIR, "post.db")).
--define(POST_DB, post).
+-define(POST_FILENAME, filename:join(?DB_DIR, "post.db")).
+-define(POST_DB, post_db).
 
--define(FILE_DB_FILENAME, filename:join(?DB_DIR, "file.db")).
--define(FILE_DB, file).
+-define(FILE_FILENAME, filename:join(?DB_DIR, "file.db")).
+-define(FILE_DB, file_db).
 
--define(SUBSCRIPTION_DB, db_serv_subscription).
+-define(SUBSCRIPTION_DB, subscription_db).
 
 -define(BESPOKE_TMP_PATH, filename:join(?RUNTIME_DIR, "tmp")).
 -define(BESPOKE_MESSAGE_PATH, filename:join(?RUNTIME_DIR, "message")).
@@ -270,15 +278,19 @@ open_ram_db(Name, KeyPos) ->
 %%
 
 init(Parent) ->
-    ok = open_disk_db(?META_DB, ?META_DB_FILENAME, #meta.type),
-    ok = open_disk_db(?MESSAGE_DB, ?MESSAGE_DB_FILENAME, #message.id),
-    ok = open_disk_db(?MESSAGE_RECIPIENT_DB, ?MESSAGE_RECIPIENT_DB_FILENAME,
+    ok = open_disk_db(?META_DB, ?META_FILENAME, #meta.type),
+    ok = open_disk_db(?MESSAGE_DB, ?MESSAGE_FILENAME, #message.id),
+    ok = open_disk_index_db(?MESSAGE_INDEX_DB, ?MESSAGE_INDEX_FILENAME),
+    ok = open_disk_db(?MESSAGE_RECIPIENT_DB, ?MESSAGE_RECIPIENT_FILENAME,
                       #message_recipient.message_id),
-
-
-
-    ok = open_disk_db(?POST_DB, ?POST_DB_FILENAME, #post.id),
-    ok = open_disk_db(?FILE_DB, ?FILE_DB_FILENAME, #file.id),
+    ok = open_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB,
+                            ?MESSAGE_RECIPIENT_INDEX_FILENAME),
+    ok = open_disk_db(?MESSAGE_ATTACHMENT_DB, ?MESSAGE_ATTACHMENT_FILENAME,
+                      #message_attachment.id),
+    ok = open_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB,
+                            ?MESSAGE_ATTACHMENT_INDEX_FILENAME),
+    ok = open_disk_db(?POST_DB, ?POST_FILENAME, #post.id),
+    ok = open_disk_db(?FILE_DB, ?FILE_FILENAME, #file.id),
     ok = open_ram_db(?SUBSCRIPTION_DB, #subscription.id),
     ?log_info("Database server has been started"),
     {ok, #state{parent = Parent}}.

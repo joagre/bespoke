@@ -1,14 +1,12 @@
 -module(apptools_persistent_index).
 -export([open/1, open/2, insert/3, lookup/2, delete/2, close/1]).
--export_type([index_name/0, index_tid/0, index/0, key/0, id/0]).
-
--include("../include/persistent_index.hrl").
+-export_type([index_name/0, index_tid/0, index/0, primary/0, secondary/0]).
 
 -type index_name() :: dets:tab_name().
 -type index_tid() :: reference().
 -type index() :: index_name() | index_tid().
--type key() :: any().
--type id() :: any().
+-type primary() :: any().
+-type secondary() :: any().
 
 %%
 %% Exported: open
@@ -17,46 +15,44 @@
 -spec open(file:name()) -> {ok, index_tid()} | {error, term()}.
 
 open(Filename) ->
-    dets:open_file(Filename, [{type, set}, {keypos, #index.key}]).
+    dets:open_file(Filename, [{type, bag}]).
 
 -spec open(index_name(), file:name()) -> {ok, index_name()} | {error, term()}.
 
 open(Name, Filename) ->
-    dets:open_file(Name, [{type, set}, {keypos, #index.key}, {file, Filename}]).
+    dets:open_file(Name, [{type, bag}, {file, Filename}]).
 
 %%
 %% Exported: insert
 %%
 
--spec insert(index(), key(), id()) -> ok | {error, term()}.
+-spec insert(index(), primary(), secondary()) -> ok | {error, term()}.
 
-insert(Index, Key, Id) ->
-    dets:insert(Index, #index{key = Key, id = Id}).
+insert(Index, Primary, Secondary) ->
+    dets:insert(Index, {Primary, Secondary}).
 
 %%
 %% Exported: lookup
 %%
 
--spec lookup(index(), key()) -> [id()] | {error, term()}.
+-spec lookup(index(), primary()) -> [secondary()] | {error, term()}.
 
-lookup(Index, Key) ->
-    case dets:lookup(Index, Key) of
+lookup(Index, Primary) ->
+    case dets:lookup(Index, Primary) of
         {error, Reason} ->
             {error, Reason};
-        [] ->
-            [];
-        [#index{id = Id}] ->
-            [Id]
-    end.
+        List ->
+            lists:map(fun({_Primary, Secondary}) -> Secondary end, List)
+end.
 
 %%
 %% Exported: delete
 %%
 
--spec delete(index(), key()) -> ok | {error, term()}.
+-spec delete(index(), primary()) -> ok | {error, term()}.
 
-delete(Index, Key) ->
-    dets:delete(Index, Key).
+delete(Index, Primary) ->
+    dets:delete(Index, Primary).
 
 %%
 %% Exported: close

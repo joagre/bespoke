@@ -14,8 +14,8 @@
 -include_lib("apptools/include/shorthand.hrl").
 -include("../include/db.hrl").
 
--define(USER_DB_FILENAME, filename:join(?DB_DIR, "users.db")).
--define(USER_DB, users).
+-define(USER_FILENAME, filename:join(?DB_DIR, "user.db")).
+-define(USER_DB, user_db).
 
 -define(WORD_LIST_PATH, "/usr/share/dict/words").
 -define(MAX_USERNAME_LENGTH, 12).
@@ -154,7 +154,7 @@ user_db_to_list() ->
 %%
 
 init(Parent) ->
-    ok = db_serv:open_disk_db(?USER_DB, ?USER_DB_FILENAME, #user.id),
+    ok = db_serv:open_disk_db(?USER_DB, ?USER_FILENAME, #user.id),
     ?log_info("Database user server has been started"),
     {ok, #state{parent = Parent,
                 word_list = init_word_list()}}.

@@ -13,8 +13,8 @@
 -include_lib("db/include/db.hrl").
 -include("webapp_crypto.hrl").
 
--define(READ_CACHE_DB_FILENAME, filename:join(?DB_DIR, "readCache.db")).
--define(READ_CACHE_DB, read_cache).
+-define(READ_CACHE_FILENAME, filename:join(?DB_DIR, "readCache.db")).
+-define(READ_CACHE_DB, read_cache_db).
 
 -define(CHALLENGE_CACHE, challenge_cache).
 -define(CHALLENGE_TIMEOUT, 5 * 60). % 5 minutes
@@ -46,7 +46,7 @@ start_link() ->
          {keyfile, filename:join([code:priv_dir(webapp), "b3s.zone/server.key"])},
 	 {nodelay, true},
 	 {reuseaddr, true}],
-    ok = db_serv:open_disk_db(?READ_CACHE_DB, ?READ_CACHE_DB_FILENAME, #read_cache.user_id),
+    ok = db_serv:open_disk_db(?READ_CACHE_DB, ?READ_CACHE_FILENAME, #read_cache.user_id),
     ok = db_serv:open_ram_db(?CHALLENGE_CACHE, #challenge_cache_entry.username),
     {ok, HttpPort} = main:lookup_config("HttpPort", 80),
     {ok, _} = rester_http_server:start_link(HttpPort, Options),
