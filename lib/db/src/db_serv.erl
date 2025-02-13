@@ -7,7 +7,9 @@
          file_uploaded/1]).
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
--export([open_disk_db/3, open_disk_index_db/2, open_ram_db/2]).
+-export([open_disk_db/3, close_disk_db/1,
+         open_disk_index_db/2, close_disk_index_db/1,
+         open_ram_db/2]).
 -export([message_handler/1]).
 -export_type([ssid/0, host/0, user_id/0, username/0, message_id/0,
               message_attachment_id/0, post_id/0, title/0, body/0,
@@ -259,6 +261,13 @@ open_disk_db(Name, Filename, KeyPos) ->
     end.
 
 %%
+%% Exported: close_disk_db
+%%
+
+close_disk_db(Name) ->
+    dets:close(Name).
+
+%%
 %% Exported: open_disk_index_db
 %%
 
@@ -267,7 +276,15 @@ open_disk_index_db(Name, Filename) ->
     ok.
 
 %%
+%% Exported: close_disk_index_db
+%%
+
+close_disk_index_db(Name) ->
+    apptools_persistent_index:close(Name).
+
+%%
 %% Exported: open_ram_db
+%%
 
 open_ram_db(Name, KeyPos) ->
     Name = ets:new(Name, [{keypos, KeyPos}, named_table, public]),
@@ -304,10 +321,15 @@ message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            _ = dets:close(?FILE_DB),
-            _ = dets:close(?POST_DB),
-            _ = dets:close(?MESSAGE_DB),
-            _ = dets:close(?META_DB),
+            _ = close_disk_db(?FILE_DB),
+            _ = close_disk_db(?POST_DB),
+            _ = close_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB),
+            _ = close_disk_db(?MESSAGE_ATTACHMENT_DB),
+            _ = close_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB),
+            _ = close_disk_db(?MESSAGE_RECIPIENT_DB),
+            _ = close_disk_index_db(?MESSAGE_INDEX_DB),
+            _ = close_disk_db(?MESSAGE_DB),
+            _ = close_disk_db(?META_DB),
             {reply, From, ok};
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -523,8 +545,7 @@ do_insert_post(Post) ->
                     {ok, UpdatedPost};
                 #post{replies = Replies} ->
                     UpdatedParentPost =
-                        ParentPost#post{
-                          replies = Replies ++ [NewPostId]},
+                        ParentPost#post{replies = Replies ++ [NewPostId]},
                     ok = insert_and_inform(UpdatedParentPost),
                     ok = update_parent_count(ParentPost#post.id, 1),
                     {ok, UpdatedPost}

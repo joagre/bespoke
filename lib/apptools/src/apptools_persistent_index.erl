@@ -43,7 +43,7 @@ lookup(Index, Primary) ->
             {error, Reason};
         List ->
             lists:map(fun({_Primary, Secondary}) -> Secondary end, List)
-end.
+    end.
 
 %%
 %% Exported: delete

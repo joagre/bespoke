@@ -165,7 +165,7 @@ message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            ok = dets:close(?USER_DB),
+            _ = db_serv:close_disk_db(?USER_DB),
             {reply, From, ok};
         {call, From, {get_user, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
