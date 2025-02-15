@@ -40,10 +40,10 @@
 
 start_link() ->
     ok = webapp_dnsmasq:clear_all_mac_addresses(),
-    %% Open Read Cache DB
-    ok = db_serv:open_disk_db(?READ_CACHE_DB, ?READ_CACHE_FILENAME, #read_cache.user_id),
+    %% Open Read Cache DB (FIXME: Make a bag out of it)
+    {ok, _} = db:open_disk_db(?READ_CACHE_DB, ?READ_CACHE_FILENAME, #read_cache.user_id),
     %% Open Challenge Cache DB
-    ok = db_serv:open_ram_db(?CHALLENGE_CACHE, #challenge_cache_entry.username),
+    ok = db:open_ram_db(?CHALLENGE_CACHE, #challenge_cache_entry.username),
     %% Start HTTP(S) servers
     Options =
 	[{request_module, ?MODULE},
@@ -208,7 +208,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
         _ when Headers#http_chdr.host == "connectivity-check.ubuntu.com." orelse
                Headers#http_chdr.host == "connectivity-check.ubuntu.com" ->
             redirect_to_loader(Socket, Request);
-        %% Bespoke API
+        %% Authentication
         ["api", "auto_login"] ->
             case filelib:is_regular(filename:join([?RUNTIME_DIR, "bootstrap"])) of
                 true ->
@@ -232,6 +232,18 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                                           {json, UpdatedPayloadJsonTerm})
                     end
             end;
+        %% Direct messaging
+        ["api", "list_top_messages"] ->
+            case handle_request(Socket, Request, Body) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, _Body} ->
+                    TopMessages = db_serv:list_top_messages(UserId),
+                    PayloadJsonTerm =
+                        lists:map(fun(Message) -> message_to_json_term(Message) end, TopMessages),
+                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+            end;
+        %% Forum
         ["api", "list_top_posts"] ->
             case handle_request(Socket, Request, Body) of
                 {return, Result} ->
@@ -250,6 +262,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                           end, TopPosts),
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
+        %% File sharing
         ["api", "list_files"] ->
             case handle_request(Socket, Request, Body) of
                 {return, Result} ->
@@ -259,7 +272,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     PayloadJsonTerm = lists:map(fun(File) -> file_to_json_term(File) end, Files),
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
-        %% Act as static web server
+        %% Static file delivery
         Tokens ->
             UriPath =
                 case Tokens of
@@ -319,6 +332,7 @@ http_post(Socket, Request, Body, State) ->
 
 http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
     case Tokens of
+        %% Bootstrapping
         ["api", "bootstrap"] ->
             case handle_request(Socket, Request, Body,  fun json_term_to_bootstrap/1, false) of
                 {return, Result} ->
@@ -329,6 +343,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     ok = main:insert_config("SSID", ?b2l(SSID)),
                     send_response(Socket, Request, no_cache_headers(), no_content)
             end;
+        %% SSID management
         ["api", "get_ssid"] ->
             case handle_request(Socket, Request, Body) of
                 {return, Result} ->
@@ -337,6 +352,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     {ok, SSID} = main:lookup_config("SSID", "BespokeBBS"),
                     send_response(Socket, Request, no_cache_headers(), {json, ?l2b(SSID)})
             end;
+        %% Authentication
         ["api", "generate_challenge"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_binary/1, false) of
                 {return, Result} ->
@@ -378,6 +394,65 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {ok, User, {PasswordSalt, PasswordHash}} ->
                     change_password(Socket, Request, User, PasswordSalt, PasswordHash)
             end;
+        %% Direct messaging
+        ["api", "lookup_messages"] ->
+            case handle_request(Socket, Request, Body, fun json_term_to_integer_list/1) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, MessageIds} ->
+                    Messages = db_serv:lookup_messages(UserId, MessageIds),
+                    PayloadJsonTerm = lists:map(fun(Message) ->
+                                                        message_to_json_term(Message) end,
+                                                Messages),
+                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+            end;
+        ["api", "insert_message"] ->
+            case handle_request(Socket, Request, Body, fun json_term_to_message/1) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, Message} ->
+                    UpdatedMessage = Message#message{author = UserId},
+                    case db_serv:insert_message(UpdatedMessage) of
+                        {ok, InsertedMessage} ->
+                            PayloadJsonTerm = message_to_json_term(InsertedMessage),
+                            send_response(Socket, Request, no_cache_headers(),
+                                          {json, PayloadJsonTerm});
+                        {error, invalid_message} ->
+                            send_response(Socket, Request, no_cache_headers(), bad_request)
+                    end
+            end;
+        ["api", "delete_message"] ->
+            case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, MessageId} ->
+                    case db_serv:delete_message(UserId, MessageId) of
+                        ok ->
+                            send_response(Socket, Request, no_cache_headers(), no_content);
+                        {error, not_found} ->
+                            send_response(Socket, Request, no_cache_headers(), not_found)
+                    end
+            end;
+        ["api", "list_reply_messages"] ->
+            case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, TopLevelMessageId} ->
+                    ReplyMessages = db_serv:list_reply_messages(UserId, TopLevelMessageId),
+                    PayloadJsonTerm =
+                        lists:map(fun(Message) -> message_to_json_term(Message) end, ReplyMessages),
+                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+            end;
+        ["api", "list_message_attachments"] ->
+            case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, MessageId} ->
+                    AttachmentPaths = db_serv:list_message_attachments(UserId, MessageId),
+                    PayloadJsonTerm = AttachmentPaths,
+                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+            end;
+        %% Forum
         ["api", "lookup_posts"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_binary_list/1) of
                 {return, Result} ->
@@ -453,6 +528,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                         <<"likesCount">> => length(Likers)},
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
+        %% File sharing
         ["api", "insert_file"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_file/1) of
                 {return, Result} ->
@@ -502,6 +578,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {ok, _User, _fileId} ->
                     send_response(Socket, Request, no_cache_headers(), forbidden)
             end;
+        %% Subscription handling
         ["api", "subscribe_on_changes"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_binary_list/1) of
                 {return, Result} ->
@@ -513,7 +590,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                                             State#state.subscriptions)},
                     {ok, UpdatedState}
             end;
-        ["api", Token] when Token == "upload_attachments" orelse Token == "upload_file" ->
+        %% File uploading
+        ["api", "upload_file"] ->
             [PayloadJsonTerm] =
                 lists:map(fun(#{filename := Filename,
                                 unique_filename := UniqueFilename,
@@ -524,6 +602,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                     <<"contentType">> => ContentType}
                           end, Body),
             send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm});
+        %% Read cache
         ["api", "upload_read_cache"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_binary_list/1) of
                 {return, Result} ->
@@ -709,13 +788,23 @@ purge_challenge_cache() ->
       end, true, ?CHALLENGE_CACHE).
 
 %%
-%% Marshalling
+%% Marshalling: From JSON term
 %%
 
 json_term_to_integer(Int) when is_integer(Int) ->
     {ok, Int};
 json_term_to_integer(_) ->
     {error, invalid}.
+
+json_term_to_integer_list(List) when is_list(List) ->
+    json_term_to_integer_list(List, []);
+json_term_to_integer_list(_) ->
+    {error, invalid}.
+
+json_term_to_integer_list([], Acc) ->
+    {ok, lists:reverse(Acc)};
+json_term_to_integer_list([Int|Rest], Acc) when is_integer(Int) ->
+    json_term_to_integer_list(Rest, [Int|Acc]).
 
 json_term_to_binary(Bin) when is_binary(Bin) ->
     {ok, Bin};
@@ -787,6 +876,9 @@ json_term_to_change_password(#{<<"passwordSalt">> := PasswordSalt,
     end;
 json_term_to_change_password(_) ->
     {error, invalid}.
+
+json_term_to_message(_) ->
+    #message{}.
 
 %% Top post
 json_term_to_post(#{<<"title">> := Title, <<"body">> := Body} = PostJsonTerm)
@@ -900,6 +992,13 @@ json_term_to_attachment(#{<<"filename">> := Filename,
 json_term_to_attachment(_) ->
     {error, invalid}.
 
+%%%
+%%% Marshalling: To JSON term
+%%%
+
+message_to_json_term(_) ->
+    <<"">>.
+
 post_to_json_term(#post{id = Id,
                         title = Title,
                         parent_post_id = ParentPostId,
@@ -953,6 +1052,9 @@ attachments_to_json_term([Attachment|Rest]) ->
 attachment_to_json_term({Filename, ContentType}) ->
     #{<<"filename">> => Filename,
       <<"contentType">> => ContentType}.
+
+
+
 
 add_optional_members([], JsonTerm) ->
     JsonTerm;

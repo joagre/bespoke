@@ -1,15 +1,13 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
 -export([get_user_id/0]).
+-export([list_top_messages/1, list_reply_messages/2]).
 -export([list_top_posts/0, lookup_posts/1, lookup_posts/2, lookup_post_ids/1,
          lookup_post_ids/2, insert_post/1, delete_post/1, toggle_like/2]).
 -export([list_files/0, lookup_files/1, insert_file/1, delete_file/1,
          file_uploaded/1]).
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
--export([open_disk_db/3, sync_disk_db/1, close_disk_db/1,
-         open_disk_index_db/2, sync_disk_index_db/1, close_disk_index_db/1,
-         open_ram_db/2]).
 -export([message_handler/1]).
 -export_type([ssid/0, host/0, user_id/0, username/0, message_id/0,
               message_attachment_id/0, post_id/0, title/0, body/0,
@@ -22,28 +20,11 @@
 -include_lib("apptools/include/shorthand.hrl").
 -include_lib("apptools/include/serv.hrl").
 -include("../include/db.hrl").
+-include("db_message_db.hrl").
 
 %% Meta DB
 -define(META_FILENAME, filename:join(?DB_DIR, "meta.db")).
 -define(META_DB, meta).
-
-%% Message DB
--define(MESSAGE_FILENAME, filename:join(?DB_DIR, "message.db")).
--define(MESSAGE_DB, message_db).
--define(MESSAGE_INDEX_FILENAME, filename:join(?DB_DIR, "message_index.db")).
--define(MESSAGE_INDEX_DB, message_index_db).
--define(MESSAGE_RECIPIENT_FILENAME,
-        filename:join(?DB_DIR, "message_recipient.db")).
--define(MESSAGE_RECIPIENT_DB, message_recipient_db).
--define(MESSAGE_RECIPIENT_INDEX_FILENAME,
-        filename:join(?DB_DIR, "message_recipient_index.db")).
--define(MESSAGE_RECIPIENT_INDEX_DB, message_recipient_index_db).
--define(MESSAGE_ATTACHMENT_FILENAME,
-        filename:join(?DB_DIR, "message_attachment.db")).
--define(MESSAGE_ATTACHMENT_DB, message_attachment_db).
--define(MESSAGE_ATTACHMENT_INDEX_FILENAME,
-        filename:join(?DB_DIR, "message_attachment_index.db")).
--define(MESSAGE_ATTACHMENT_INDEX_DB, message_attachment_index_db).
 
 %% Post DB
 -define(POST_FILENAME, filename:join(?DB_DIR, "post.db")).
@@ -117,6 +98,25 @@ stop() ->
 
 get_user_id() ->
     serv:call(?MODULE, get_user_id).
+
+%%
+%% Exported: list_top_messages
+%%
+
+-spec list_top_messages(db_serv:user_id()) -> [#message{}].
+
+list_top_messages(UserId) ->
+    serv:call(?MODULE, {list_top_messages, UserId}).
+
+%%
+%% Exported: list_reply_messages
+%%
+
+-spec list_reply_messages(db_serv:user_id(), db_serv:message_id()) ->
+          [#message{}].
+
+list_reply_messages(UserId, TopLevelMessageId) ->
+    serv:call(?MODULE, {list_reply_messages, UserId, TopLevelMessageId}).
 
 %%
 %% Exported: list_top_posts
@@ -241,112 +241,12 @@ subscribe_on_changes(PostIds) ->
 
 sync() ->
     serv:call(?MODULE, sync).
-
-%%
-%% Exported: open_disk_db
-%%
-
--spec open_disk_db(dets:tab_name(), file:name(), integer()) ->
-          ok | {error, term()}.
-
-open_disk_db(Name, Filename, KeyPos) ->
-    {ok, Name} = dets:open_file(Name, [{file, Filename}, {keypos, KeyPos}]),
-    case Name of
-        ?META_DB ->
-            case dets:lookup(?META_DB, basic) of
-                [] ->
-                    dets:insert(?META_DB, #meta{});
-                [_] ->
-                    ok
-            end;
-        _ ->
-            ok
-    end.
-
-%%
-%% Exported: sync_disk_db
-%%
-
--spec sync_disk_db(dets:tab_name()) -> ok | {error, term()}.
-
-sync_disk_db(Name) ->
-    dets:sync(Name).
-
-%%
-%% Exported: close_disk_db
-%%
-
--spec close_disk_db(dets:tab_name()) -> ok | {error, term()}.
-
-close_disk_db(Name) ->
-    dets:close(Name).
-
-%%
-%% Exported: open_disk_index_db
-%%
-
--spec open_disk_index_db(apptools_persistent_index:index_name(), file:name()) ->
-          ok.
-
-open_disk_index_db(Name, Filename) ->
-    {ok, Name} = apptools_persistent_index:open(Name, Filename),
-    ok.
-
-%%
-%% Exported: sync_disk_index_db
-%%
-
--spec sync_disk_index_db(apptools_persistent_index:index_name()) ->
-          ok.
-
-sync_disk_index_db(Name) ->
-    apptools_persistent_index:sync(Name).
-
-%%
-%% Exported: close_disk_index_db
-%%
-
-
--spec close_disk_index_db(apptools_persistent_index:index_name()) ->
-          ok | {error, term()}.
-
-close_disk_index_db(Name) ->
-    apptools_persistent_index:close(Name).
-
-%%
-%% Exported: open_ram_db
-%%
-
--spec open_ram_db(atom(), integer()) -> ok.
-
-open_ram_db(Name, KeyPos) ->
-    Name = ets:new(Name, [{keypos, KeyPos}, named_table, public]),
-    ok.
-
 %%
 %% Server
 %%
 
 init(Parent) ->
-    %% Open Meta DB
-    ok = open_disk_db(?META_DB, ?META_FILENAME, #meta.type),
-    %% Open Message DB
-    ok = open_disk_db(?MESSAGE_DB, ?MESSAGE_FILENAME, #message.id),
-    ok = open_disk_index_db(?MESSAGE_INDEX_DB, ?MESSAGE_INDEX_FILENAME),
-    ok = open_disk_db(?MESSAGE_RECIPIENT_DB, ?MESSAGE_RECIPIENT_FILENAME,
-                      #message_recipient.message_id),
-    ok = open_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB,
-                            ?MESSAGE_RECIPIENT_INDEX_FILENAME),
-    ok = open_disk_db(?MESSAGE_ATTACHMENT_DB, ?MESSAGE_ATTACHMENT_FILENAME,
-                      #message_attachment.id),
-    ok = open_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB,
-                            ?MESSAGE_ATTACHMENT_INDEX_FILENAME),
-    %% Open Post DB
-    ok = open_disk_db(?POST_DB, ?POST_FILENAME, #post.id),
-    %% Open File DB
-    ok = open_disk_db(?FILE_DB, ?FILE_FILENAME, #file.id),
-    %% Open Subscription DB
-    ok = open_ram_db(?SUBSCRIPTION_DB, #subscription.id),
+    ok = open_db(),
     ?log_info("Database server has been started"),
     {ok, #state{parent = Parent}}.
 
@@ -360,6 +260,16 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             NextUserId = step_meta_id(#meta.next_user_id),
             {reply, From, NextUserId};
+
+
+
+
+        {call, From, {list_top_messages, UserId} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            {reply, From, db_message_db:get_top_level_messages(UserId)};
+        {call, From, {list_reply_messages, UserId, TopLevelMessageId} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            {reply, From, db_message_db:get_reply_messages(UserId, TopLevelMessageId)};
         {call, From, list_top_posts = Call} ->
             ?log_debug("Call: ~p", [Call]),
             TopPosts =
@@ -505,28 +415,48 @@ message_handler(S) ->
             noreply
     end.
 
+%%
+%% Database utilities
+%%
+
+open_db() ->
+    %% Open Meta DB
+    {ok, _} = db:open_disk_db(?META_DB, ?META_FILENAME, #meta.type),
+    case dets:lookup(?META_DB, basic) of
+        [] ->
+            dets:insert(?META_DB, #meta{});
+        [_] ->
+            ok
+    end,
+    %% Open Message DB
+    ok = db_message_db:open(),
+    %% Open Post DB
+    {ok, _} = db:open_disk_db(?POST_DB, ?POST_FILENAME, #post.id),
+    %% Open File DB
+    {ok, _} = db:open_disk_db(?FILE_DB, ?FILE_FILENAME, #file.id),
+    %% Open Subscription DB
+    db:open_ram_db(?SUBSCRIPTION_DB, #subscription.id).
+
 close_db() ->
-    _ = close_disk_db(?FILE_DB),
-    _ = close_disk_db(?POST_DB),
-    _ = close_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB),
-    _ = close_disk_db(?MESSAGE_ATTACHMENT_DB),
-    _ = close_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB),
-    _ = close_disk_db(?MESSAGE_RECIPIENT_DB),
-    _ = close_disk_index_db(?MESSAGE_INDEX_DB),
-    _ = close_disk_db(?MESSAGE_DB),
-    _ = close_disk_db(?META_DB),
+    %% Close File DB
+    _ = db:close_disk_db(?FILE_DB),
+    %% Close Post DB
+    _ = db:close_disk_db(?POST_DB),
+    %% Close Message DB
+    _ = db_message_db:close(),
+    %% Close Meta DB
+    _ = db:close_disk_db(?META_DB),
     ok.
 
 sync_db() ->
-    ok = sync_disk_db(?FILE_DB),
-    ok = sync_disk_db(?POST_DB),
-    ok = sync_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB),
-    ok = sync_disk_db(?MESSAGE_ATTACHMENT_DB),
-    ok = sync_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB),
-    ok = sync_disk_db(?MESSAGE_RECIPIENT_DB),
-    ok = sync_disk_index_db(?MESSAGE_INDEX_DB),
-    ok = sync_disk_db(?MESSAGE_DB),
-    sync_disk_db(?META_DB).
+    %% Sync File DB
+    ok = db:sync_disk_db(?FILE_DB),
+    %% Sync Post DB
+    ok = db:sync_disk_db(?POST_DB),
+    %% Sync Message DB
+    ok = db_message_db:sync(),
+    %% Sync Meta DB
+    db:sync_disk_db(?META_DB).
 
 %%
 %% Lookup posts
@@ -765,7 +695,7 @@ move_file_on_disk(#file{id = FileId, filename = Filename}) ->
     end.
 
 %%
-%% Utilities
+%% Misc utilities
 %%
 
 step_meta_id(N) ->

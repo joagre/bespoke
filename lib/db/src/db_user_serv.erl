@@ -156,10 +156,9 @@ user_db_to_list() ->
 
 init(Parent) ->
     %% Open User DB
-    ok = db_serv:open_disk_db(?USER_DB, ?USER_FILENAME, #user.id),
+    {ok, _} = db:open_disk_db(?USER_DB, ?USER_FILENAME, #user.id),
     ?log_info("Database user server has been started"),
-    {ok, #state{parent = Parent,
-                word_list = init_word_list()}}.
+    {ok, #state{parent = Parent, word_list = init_word_list()}}.
 
 message_handler(S) ->
     receive
@@ -327,7 +326,7 @@ message_handler(S) ->
     end.
 
 close_db() ->
-    _ = db_serv:close_disk_db(?USER_DB),
+    _ = db:close_disk_db(?USER_DB),
     ok.
 
 %%
