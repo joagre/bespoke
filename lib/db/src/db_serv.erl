@@ -1,7 +1,8 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
 -export([get_user_id/0]).
--export([list_top_messages/1, list_reply_messages/2]).
+-export([create_message/3, read_top_messages/1, read_reply_messages/2,
+         delete_message/2]).
 -export([list_top_posts/0, lookup_posts/1, lookup_posts/2, lookup_post_ids/1,
          lookup_post_ids/2, insert_post/1, delete_post/1, toggle_like/2]).
 -export([list_files/0, lookup_files/1, insert_file/1, delete_file/1,
@@ -11,7 +12,7 @@
 -export([message_handler/1]).
 -export_type([ssid/0, host/0, user_id/0, username/0, message_id/0,
               message_attachment_id/0, post_id/0, title/0, body/0,
-              seconds_since_epoch/0, attachment_path/0, content_type/0,
+              seconds_since_epoch/0, file_path/0, content_type/0,
               file_id/0, filename/0, file_size/0, subscription_id/0,
               monitor_ref/0]).
 
@@ -20,28 +21,17 @@
 -include_lib("apptools/include/shorthand.hrl").
 -include_lib("apptools/include/serv.hrl").
 -include("../include/db.hrl").
--include("db_message_db.hrl").
-
-%% Meta DB
--define(META_FILENAME, filename:join(?DB_DIR, "meta.db")).
--define(META_DB, meta).
 
 %% Post DB
--define(POST_FILENAME, filename:join(?DB_DIR, "post.db")).
+-define(POST_FILENAME, filename:join(?BESPOKE_DB_DIR, "post.db")).
 -define(POST_DB, post_db).
 
 %% File DB
--define(FILE_FILENAME, filename:join(?DB_DIR, "file.db")).
+-define(FILE_FILENAME, filename:join(?BESPOKE_DB_DIR, "file.db")).
 -define(FILE_DB, file_db).
 
 %% Subscription DB
 -define(SUBSCRIPTION_DB, subscription_db).
-
-%% Paths
--define(BESPOKE_TMP_PATH, filename:join(?RUNTIME_DIR, "tmp")).
--define(BESPOKE_MESSAGE_PATH, filename:join(?RUNTIME_DIR, "message")).
--define(BESPOKE_ATTACHMENT_PATH, filename:join(?RUNTIME_DIR, "attachment")).
--define(BESPOKE_FILE_PATH, filename:join(?RUNTIME_DIR, "file")).
 
 %% Types
 -type ssid() :: binary().
@@ -54,7 +44,7 @@
 -type title() :: binary().
 -type body() :: binary().
 -type seconds_since_epoch() :: integer().
--type attachment_path() :: binary().
+-type file_path() :: binary().
 -type content_type() :: binary().
 -type file_id() :: integer().
 -type filename() :: binary().
@@ -99,24 +89,50 @@ stop() ->
 get_user_id() ->
     serv:call(?MODULE, get_user_id).
 
-%%
-%% Exported: list_top_messages
-%%
 
--spec list_top_messages(db_serv:user_id()) -> [#message{}].
 
-list_top_messages(UserId) ->
-    serv:call(?MODULE, {list_top_messages, UserId}).
+
+
 
 %%
-%% Exported: list_reply_messages
+%% Exported: create_message
 %%
 
--spec list_reply_messages(db_serv:user_id(), db_serv:message_id()) ->
-          [#message{}].
+-spec create_message(#message{}, [{user_id(), filename()}],
+                     [{user_id(), filename()}]) ->
+          {ok, #message{}} | {error, file:posix()}.
 
-list_reply_messages(UserId, TopLevelMessageId) ->
-    serv:call(?MODULE, {list_reply_messages, UserId, TopLevelMessageId}).
+create_message(Message, BodyBlobs, AttachmentBlobs) ->
+    serv:call(?MODULE, {create_message, Message, BodyBlobs, AttachmentBlobs}).
+
+%%
+%% Exported: read_top_messages
+%%
+
+-spec read_top_messages(db_serv:user_id()) -> {ok, [#message{}]}.
+
+read_top_messages(UserId) ->
+    serv:call(?MODULE, {read_top_messages, UserId}).
+
+%%
+%% Exported: read_reply_messages
+%%
+
+-spec read_reply_messages(db_serv:user_id(), db_serv:message_id()) ->
+          {ok, [#message{}]} | {error, access_denied}.
+
+read_reply_messages(UserId, TopLevelMessageId) ->
+    serv:call(?MODULE, {read_reply_messages, UserId, TopLevelMessageId}).
+
+%%
+%% Exported: delete_message
+%%
+
+-spec delete_message(db_serv:user_id(), db_serv:message_id()) ->
+          ok | {error, access_denied}.
+
+delete_message(UserId, MessageId) ->
+    serv:call(?MODULE, {delete_message, UserId, MessageId}).
 
 %%
 %% Exported: list_top_posts
@@ -246,7 +262,7 @@ sync() ->
 %%
 
 init(Parent) ->
-    ok = open_db(),
+    ok = open_dbs(),
     ?log_info("Database server has been started"),
     {ok, #state{parent = Parent}}.
 
@@ -254,22 +270,37 @@ message_handler(S) ->
     receive
         {call, From, stop = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            ok = close_db(),
+            ok = close_dbs(),
             {reply, From, ok};
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            NextUserId = step_meta_id(#meta.next_user_id),
+            NextUserId = db_meta_db:read_next_user_id(),
             {reply, From, NextUserId};
 
 
 
 
-        {call, From, {list_top_messages, UserId} = Call} ->
+        {call, From, {create_message, Message, BlobFilename,
+                      AttachmentFilenames} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            {reply, From, db_message_db:get_top_level_messages(UserId)};
-        {call, From, {list_reply_messages, UserId, TopLevelMessageId} = Call} ->
+            {reply, From, db_message_db:create_message(Message, BlobFilename,
+                                                       AttachmentFilenames)};
+        {call, From, {read_top_messages, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            {reply, From, db_message_db:get_reply_messages(UserId, TopLevelMessageId)};
+            {reply, From, db_message_db:read_top_messages(UserId)};
+        {call, From, {read_reply_messages, UserId, TopMessageId} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            {reply, From, db_message_db:read_reply_messages(UserId,
+                                                            TopMessageId)};
+        {call, From, {delete_message, UserId, MessageId} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            {reply, From, db_message_db:delete_message(UserId, MessageId)};
+
+
+
+
+
+
         {call, From, list_top_posts = Call} ->
             ?log_debug("Call: ~p", [Call]),
             TopPosts =
@@ -355,11 +386,11 @@ message_handler(S) ->
             {reply, From, SortedFiles};
         {call, From, {insert_file, File} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            NextFileId = step_meta_id(#meta.next_file_id),
+            NextFileId = db_meta_db:read_next_file_id(),
             InsertedFile =
                 File#file{
                   id = NextFileId,
-                  created = seconds_since_epoch()
+                  created = db:seconds_since_epoch()
                  },
             ok = dets:insert(?FILE_DB, InsertedFile),
             {reply, From, {ok, InsertedFile}};
@@ -396,7 +427,7 @@ message_handler(S) ->
             {reply, From, SubscriptionId};
         {call, From, sync = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            ok = sync_db(),
+            ok = sync_dbs(),
             {reply, From, ok};
         {'DOWN', MonitorRef, process, Pid, _Reason} ->
             ?log_info("Subscriber died: ~w", [Pid]),
@@ -405,7 +436,7 @@ message_handler(S) ->
                      #subscription{monitor_ref = MonitorRef, _ = '_'}),
             noreply;
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
-            ok = close_db(),
+            ok = close_dbs(),
             exit(Reason);
         {system, From, Request} ->
             ?log_debug("System: ~p", [Request]),
@@ -419,44 +450,25 @@ message_handler(S) ->
 %% Database utilities
 %%
 
-open_db() ->
-    %% Open Meta DB
-    {ok, _} = db:open_disk_db(?META_DB, ?META_FILENAME, #meta.type),
-    case dets:lookup(?META_DB, basic) of
-        [] ->
-            dets:insert(?META_DB, #meta{});
-        [_] ->
-            ok
-    end,
-    %% Open Message DB
+open_dbs() ->
+    ok = db_meta_db:open(),
     ok = db_message_db:open(),
-    %% Open Post DB
     {ok, _} = db:open_disk_db(?POST_DB, ?POST_FILENAME, #post.id),
-    %% Open File DB
     {ok, _} = db:open_disk_db(?FILE_DB, ?FILE_FILENAME, #file.id),
-    %% Open Subscription DB
     db:open_ram_db(?SUBSCRIPTION_DB, #subscription.id).
 
-close_db() ->
-    %% Close File DB
+close_dbs() ->
     _ = db:close_disk_db(?FILE_DB),
-    %% Close Post DB
     _ = db:close_disk_db(?POST_DB),
-    %% Close Message DB
     _ = db_message_db:close(),
-    %% Close Meta DB
-    _ = db:close_disk_db(?META_DB),
+    _ = db_meta_db:close(),
     ok.
 
-sync_db() ->
-    %% Sync File DB
+sync_dbs() ->
     ok = db:sync_disk_db(?FILE_DB),
-    %% Sync Post DB
     ok = db:sync_disk_db(?POST_DB),
-    %% Sync Message DB
     ok = db_message_db:sync(),
-    %% Sync Meta DB
-    db:sync_disk_db(?META_DB).
+    db_meta_db:sync().
 
 %%
 %% Lookup posts
@@ -503,7 +515,7 @@ do_insert_post(Post) ->
             NewPostId =
                 case Post#post.id of
                     not_set ->
-                        NextPostId = step_meta_id(#meta.next_post_id),
+                        NextPostId = db_meta_db:read_next_post_id(),
                         ?i2b(NextPostId);
                     PostId ->
                         PostId
@@ -513,7 +525,7 @@ do_insert_post(Post) ->
             UpdatedPost =
                 Post#post{
                   id = NewPostId,
-                  created = seconds_since_epoch(Post#post.created),
+                  created = db:seconds_since_epoch(Post#post.created),
                   attachments = UpdatedAttachments},
             ok = insert_and_inform(UpdatedPost),
             case ParentPost of
@@ -635,8 +647,7 @@ inform_subscribers(PostId) ->
 
 update_uploaded_size(#file{id = FileId, is_uploading = true} = File) ->
     TmpPath = ?BESPOKE_TMP_PATH,
-    TmpFilePathBeginning =
-        filename:join([TmpPath, "file-" ++ io_lib:format("~w-", [FileId])]),
+    TmpFilePathBeginning = filename:join([TmpPath, io_lib:format("file-~w-", [FileId])]),
     case filelib:wildcard(TmpFilePathBeginning ++ "*") of
         [TmpFilePath|_] ->
             case file:read_file_info(TmpFilePath) of
@@ -657,8 +668,7 @@ update_uploaded_size(File) ->
 
 delete_file_on_disk(#file{id = FileId, filename = Filename}) ->
     TmpPath = ?BESPOKE_TMP_PATH,
-    TmpFilePathBeginning =
-        filename:join([TmpPath, io_lib:format("file-~w-", [FileId])]),
+    TmpFilePathBeginning = filename:join([TmpPath, io_lib:format("file-~w-", [FileId])]),
     case filelib:wildcard(TmpFilePathBeginning ++ "*") of
         [TmpFilePath] ->
             ?log_info("Deleting ~s (if it exists)...", [TmpFilePath]),
@@ -693,22 +703,3 @@ move_file_on_disk(#file{id = FileId, filename = Filename}) ->
         [] ->
             ok
     end.
-
-%%
-%% Misc utilities
-%%
-
-step_meta_id(N) ->
-    [Meta] = dets:lookup(?META_DB, basic),
-    NextId = element(N, Meta),
-    UpdatedMeta = setelement(N, Meta, NextId + 1),
-    ok = dets:insert(?META_DB, UpdatedMeta),
-    NextId.
-
-seconds_since_epoch() ->
-    os:system_time(second).
-
-seconds_since_epoch(not_set) ->
-    os:system_time(second);
-seconds_since_epoch(Seconds) ->
-    Seconds.

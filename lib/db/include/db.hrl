@@ -1,8 +1,19 @@
 -ifndef(DB_HRL).
 -define(DB_HRL, true).
 
--define(RUNTIME_DIR, "/var/tmp/bespoke").
--define(DB_DIR, filename:join(?RUNTIME_DIR, "db")).
+%% /var/tmp/bespoke/db
+%% /var/tmp/bespoke/tmp
+%% /var/tmp/bespoke/message
+%% /var/tmp/bespoke/attachment
+%% /var/tmp/bespoke/file
+
+-define(BESPOKE_RUNTIME_DIR, "/var/tmp/bespoke").
+-define(BESPOKE_DB_DIR, filename:join(?BESPOKE_RUNTIME_DIR, "db")).
+-define(BESPOKE_TMP_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "tmp")).
+-define(BESPOKE_MESSAGE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "message")).
+-define(BESPOKE_ATTACHMENT_PATH,
+        filename:join(?BESPOKE_RUNTIME_DIR, "attachment")).
+-define(BESPOKE_FILE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "file")).
 
 -record(meta,
         {
@@ -27,9 +38,10 @@
          messages = [] :: [db_serv:message_id()] | '_'
         }).
 
-%% Disk layout
-%% message/<message_id>/<user_id>, ...
-%% message/<message_id>/attachment/<user_id>-<message_attachment_id>, ...
+%% Disk layout:
+%% ?BESPOKE_MESSAGE_PATH/
+%%   <message_id>/<user_id>, ...
+%%   <message_id>/<user_id>-<message_attachment_id>, ...
 
 -record(message,
         {
@@ -37,7 +49,7 @@
          %% Note: Mandatory for top messages and disallowed for reply messages
          title = not_set :: db_serv:title() | not_set,
          %% Note: Disallowed for top messages and mandatory for reply messages
-         parent_message_id = not_set :: db_serv:message_id() | not_set,
+         top_message_id = not_set :: db_serv:message_id() | not_set,
          author = not_set :: db_serv:user_id() | not_set,
          created = not_set :: db_serv:seconds_since_epoch() | not_set
         }).
@@ -69,7 +81,7 @@
          reply_count = 0 :: integer() | '_',
          replies = [] :: [db_serv:post_id()] | '_',
          likers = [] :: [db_serv:user_id()] | '_',
-         attachments = [] :: [{db_serv:attachment_path(),
+         attachments = [] :: [{db_serv:file_path(),
                                db_serv:content_type()}] | '_'
         }).
 

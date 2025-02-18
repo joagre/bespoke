@@ -26,6 +26,13 @@ REWRITE THIS BULLET POINT:
 
 ## Web app
 
+* Move marshalling into webapp_rest.erl for post adn everything else too
+* Move post body from #post{}   to /var/tmp/bespoke/post/<post_id>/body
+* Move post attachments #post{} to /var/tmp/bespoke/post/<post_id>/attachment/<filename>, ...
+* Make all erlanf code 100 fill column
+
+
+
 * Add direct messaging
 
 * Add Signal protocol under the hood

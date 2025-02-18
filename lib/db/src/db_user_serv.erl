@@ -15,7 +15,7 @@
 -include("../include/db.hrl").
 
 %% User DB
--define(USER_FILENAME, filename:join(?DB_DIR, "user.db")).
+-define(USER_FILENAME, filename:join(?BESPOKE_DB_DIR, "user.db")).
 -define(USER_DB, user_db).
 
 -define(WORD_LIST_PATH, "/usr/share/dict/words").

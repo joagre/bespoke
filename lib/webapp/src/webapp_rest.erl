@@ -14,7 +14,7 @@
 -include("webapp_crypto.hrl").
 
 %% Read Cache DB
--define(READ_CACHE_FILENAME, filename:join(?DB_DIR, "read_cache.db")).
+-define(READ_CACHE_FILENAME, filename:join(?BESPOKE_DB_DIR, "read_cache.db")).
 -define(READ_CACHE_DB, read_cache_db).
 
 %% Challenge Cache DB
@@ -80,7 +80,7 @@ change_ssid(SSID) ->
         "0" ->
             main:insert_config("SSID", ?b2l(SSID));
         UnexpectedOutput ->
-            ?log_error("Unexpected output from change_ssid.sh (this is OK on a developer machine): ~s", [UnexpectedOutput]),
+            ?log_error("~s: ~s (this is OK on a developer machine)", [Command, UnexpectedOutput]),
             {error, UnexpectedOutput}
     end.
 
@@ -210,7 +210,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             redirect_to_loader(Socket, Request);
         %% Authentication
         ["api", "auto_login"] ->
-            case filelib:is_regular(filename:join([?RUNTIME_DIR, "bootstrap"])) of
+            case filelib:is_regular(filename:join([?BESPOKE_RUNTIME_DIR, "bootstrap"])) of
                 true ->
                     send_response(Socket, Request, no_cache_headers(), {found, "/bootstrap.html"});
                 false ->
@@ -233,16 +233,29 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     end
             end;
         %% Direct messaging
-        ["api", "list_top_messages"] ->
+
+
+
+
+
+        ["api", "read_top_messages"] ->
             case handle_request(Socket, Request, Body) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, _Body} ->
-                    TopMessages = db_serv:list_top_messages(UserId),
-                    PayloadJsonTerm =
-                        lists:map(fun(Message) -> message_to_json_term(Message) end, TopMessages),
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+                    {ok, Messages} = db_serv:read_top_messages(UserId),
+                    JsonTerm = lists:map(fun(Message) ->
+                                                 message_to_json_term(Message)
+                                         end, Messages),
+                    send_response(Socket, Request, no_cache_headers(), {json, JsonTerm})
             end;
+
+
+
+
+
+
+
         %% Forum
         ["api", "list_top_posts"] ->
             case handle_request(Socket, Request, Body) of
@@ -338,7 +351,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, no_user, SSID} ->
-                    ok = file:delete(filename:join([?RUNTIME_DIR, "bootstrap"])),
+                    ok = file:delete(filename:join([?BESPOKE_RUNTIME_DIR, "bootstrap"])),
                     ok = change_ssid(SSID),
                     ok = main:insert_config("SSID", ?b2l(SSID)),
                     send_response(Socket, Request, no_cache_headers(), no_content)
@@ -394,30 +407,41 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {ok, User, {PasswordSalt, PasswordHash}} ->
                     change_password(Socket, Request, User, PasswordSalt, PasswordHash)
             end;
+
+
+
+
+
         %% Direct messaging
-        ["api", "lookup_messages"] ->
+        ["api", "create_message"] ->
+            case handle_request(Socket, Request, Body, fun json_term_to_message/1) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, {Message, BodyFilename, AttachmentFilenames}} ->
+                    UpdatedMessage = Message#message{author = UserId},
+                    case db_serv:create_message(UpdatedMessage, BodyFilename,
+                                                AttachmentFilenames) of
+                        {ok, CreatedMessage} ->
+                            JsonTerm = message_to_json_term(CreatedMessage),
+                            send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});
+                        {error, Reason} ->
+                            ?log_error("/api/create_message: ~p", [Reason]),
+                            send_response(Socket, Request, no_cache_headers(), bad_request)
+                    end
+            end;
+        ["api", "read_reply_messages"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_integer_list/1) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, MessageIds} ->
-                    Messages = db_serv:lookup_messages(UserId, MessageIds),
-                    PayloadJsonTerm = lists:map(fun(Message) ->
-                                                        message_to_json_term(Message) end,
-                                                Messages),
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
-            end;
-        ["api", "insert_message"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_message/1) of
-                {return, Result} ->
-                    Result;
-                {ok, #user{id = UserId}, Message} ->
-                    UpdatedMessage = Message#message{author = UserId},
-                    case db_serv:insert_message(UpdatedMessage) of
-                        {ok, InsertedMessage} ->
-                            PayloadJsonTerm = message_to_json_term(InsertedMessage),
-                            send_response(Socket, Request, no_cache_headers(),
-                                          {json, PayloadJsonTerm});
-                        {error, invalid_message} ->
+                    case db_serv:read_reply_messages(UserId, MessageIds) of
+                        {ok, Messages} ->
+                            JsonTerm = lists:map(fun(Message) ->
+                                                         message_to_json_term(Message) end,
+                                                 Messages),
+                            send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});
+                        {error, Reason} ->
+                            ?log_error("/api/read_messages: ~p", [Reason]),
                             send_response(Socket, Request, no_cache_headers(), bad_request)
                     end
             end;
@@ -429,29 +453,19 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     case db_serv:delete_message(UserId, MessageId) of
                         ok ->
                             send_response(Socket, Request, no_cache_headers(), no_content);
-                        {error, not_found} ->
-                            send_response(Socket, Request, no_cache_headers(), not_found)
+                        {error, Reason} ->
+                            ?log_error("/api/delete_message: ~p", [Reason]),
+                            send_response(Socket, Request, no_cache_headers(), bad_request)
                     end
             end;
-        ["api", "list_reply_messages"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
-                {return, Result} ->
-                    Result;
-                {ok, #user{id = UserId}, TopLevelMessageId} ->
-                    ReplyMessages = db_serv:list_reply_messages(UserId, TopLevelMessageId),
-                    PayloadJsonTerm =
-                        lists:map(fun(Message) -> message_to_json_term(Message) end, ReplyMessages),
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
-            end;
-        ["api", "list_message_attachments"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
-                {return, Result} ->
-                    Result;
-                {ok, #user{id = UserId}, MessageId} ->
-                    AttachmentPaths = db_serv:list_message_attachments(UserId, MessageId),
-                    PayloadJsonTerm = AttachmentPaths,
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
-            end;
+
+
+
+
+
+
+
+
         %% Forum
         ["api", "lookup_posts"] ->
             case handle_request(Socket, Request, Body, fun json_term_to_binary_list/1) of
@@ -877,8 +891,44 @@ json_term_to_change_password(#{<<"passwordSalt">> := PasswordSalt,
 json_term_to_change_password(_) ->
     {error, invalid}.
 
+
+
+
+json_term_to_message(#{<<"bodyFilename">> := BodyFilename} = JsonTerm)
+  when is_binary(BodyFilename) ->
+    case has_valid_keys([<<"title">>,
+                         <<"topMessageId">>,
+                         <<"bodyFilename">>,
+                         <<"attachmentFilenames">>], JsonTerm) of
+        true ->
+            Title = maps:get(<<"attachmentFilenames">>, JsonTerm, not_set),
+            TopMessageId = maps:get(<<"topMessageId">>, JsonTerm, not_set),
+            AttachmentFilenames = maps:get(<<"attachmentsFilenames">>, JsonTerm, []),
+            case {Title, TopMessageId} of
+                {not_set, not_set} ->
+                    {error, invalid};
+                {Title, TopMessageId} when is_binary(Title) andalso is_binary(TopMessageId) ->
+                    {error, invalid};
+                _ ->
+                    case json_term_to_binary_list(AttachmentFilenames) of
+                        {ok, AttachmentFilenames} ->
+                            {ok, {#message{title = Title, top_message_id = TopMessageId},
+                                  BodyFilename,
+                                  AttachmentFilenames}};
+                        {error, invalid} ->
+                            {error, invalid}
+                    end
+            end;
+        false ->
+            {error, invalid}
+    end;
 json_term_to_message(_) ->
-    #message{}.
+    {error, invalid}.
+
+
+
+
+
 
 %% Top post
 json_term_to_post(#{<<"title">> := Title, <<"body">> := Body} = PostJsonTerm)
@@ -996,8 +1046,32 @@ json_term_to_attachment(_) ->
 %%% Marshalling: To JSON term
 %%%
 
-message_to_json_term(_) ->
-    <<"">>.
+
+
+
+
+
+
+message_to_json_term(#message{id = Id,
+                              title = Title,
+                              top_message_id = TopMessageId,
+                              author = AuthorId,
+                              created = Created}) ->
+    {ok, #user{name = AuthorUsername}} = db_user_serv:get_user(AuthorId),
+    JsonTerm = #{<<"id">> => Id,
+                 <<"authorId">> => AuthorId,
+                 <<"authorUsername">> => AuthorUsername,
+                 <<"created">> => Created},
+    add_optional_members([{<<"title">>, Title}, {<<"topMessageId">>, TopMessageId}], JsonTerm).
+
+
+
+
+
+
+
+
+
 
 post_to_json_term(#post{id = Id,
                         title = Title,
@@ -1053,8 +1127,12 @@ attachment_to_json_term({Filename, ContentType}) ->
     #{<<"filename">> => Filename,
       <<"contentType">> => ContentType}.
 
+%%
+%% Utilities
+%%
 
-
+timestamp() ->
+    os:system_time(second).
 
 add_optional_members([], JsonTerm) ->
     JsonTerm;
@@ -1062,13 +1140,6 @@ add_optional_members([{_Key, not_set}|Rest], JsonTerm) ->
     add_optional_members(Rest, JsonTerm);
 add_optional_members([{Key, Value}|Rest], JsonTerm) ->
     add_optional_members(Rest, maps:put(Key, Value, JsonTerm)).
-
-%%
-%% Utilities
-%%
-
-timestamp() ->
-    os:system_time(second).
 
 get_mac_address(Socket) ->
     case rester_socket:peername(Socket) of
@@ -1134,17 +1205,23 @@ handle_request(Socket, Request, Body, MarshallingFun, Authenticate) ->
                     {ok, User, no_body};
                 _ ->
                     case rest_util:parse_body(Request, Body) of
-                        {error, _Reason} ->
-                            {return,
-                             send_response(Socket, Request, no_cache_headers(), bad_request)};
-                        ParsedBody when is_function(MarshallingFun) ->
-                            case MarshallingFun(ParsedBody) of
-                                {ok, MarshalledBody} ->
-                                    {ok, User, MarshalledBody};
-                                {error, Reason} ->
-                                    ?log_error(Reason),
-                                    {return, send_response(Socket, Request, no_cache_headers(),
-                                                           bad_request)}
+                        {error, Reason} ->
+                            ?log_error(Reason),
+                            {return, send_response(Socket, Request, no_cache_headers(),
+                                                   bad_request)};
+                        ParsedBody ->
+                            case MarshallingFun of
+                                undefined ->
+                                    {ok, User, ParsedBody};
+                                _ when is_function(MarshallingFun) ->
+                                    case MarshallingFun(ParsedBody) of
+                                        {ok, MarshalledBody} ->
+                                            {ok, User, MarshalledBody};
+                                        {error, Reason} ->
+                                            ?log_error(Reason),
+                                            {return, send_response(Socket, Request,
+                                                                   no_cache_headers(), bad_request)}
+                                    end
                             end
                     end
             end;

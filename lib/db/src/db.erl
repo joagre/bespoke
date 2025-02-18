@@ -1,7 +1,7 @@
 -module(db).
 -export([open_disk_db/3, sync_disk_db/1, close_disk_db/1,
          open_disk_index_db/2, sync_disk_index_db/1, close_disk_index_db/1,
-         open_ram_db/2]).
+         open_ram_db/2, seconds_since_epoch/0, seconds_since_epoch/1]).
 
 %%
 %% Exported: open_disk_db
@@ -70,3 +70,15 @@ close_disk_index_db(Name) ->
 open_ram_db(Name, KeyPos) ->
     Name = ets:new(Name, [{keypos, KeyPos}, named_table, public]),
     ok.
+
+%%
+%% Exported: seconds_since_epoch
+%%
+
+seconds_since_epoch() ->
+    os:system_time(second).
+
+seconds_since_epoch(not_set) ->
+    os:system_time(second);
+seconds_since_epoch(Seconds) ->
+    Seconds.
