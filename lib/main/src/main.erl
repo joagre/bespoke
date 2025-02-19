@@ -1,9 +1,15 @@
 -module(main).
 -export([start/0, stop/0, lookup_config/2, insert_config/2]).
+-export_type([filename/0, file_path/0]).
 
 -include_lib("apptools/include/shorthand.hrl").
+-include_lib("db/include/db.hrl").
 
--define(CONFIG_FILE, "/var/tmp/bespoke/bespoke.conf").
+-define(CONFIG_FILE, filename:join(?BESPOKE_RUNTIME_DIR, "bespoke.conf")).
+-define(LOG_FILE, filename:join(?BESPOKE_RUNTIME_DIR, "log/bespoke.log")).
+
+-type filename() :: binary().
+-type file_path() :: binary().
 
 %%
 %% Exported: start
@@ -16,7 +22,7 @@ start() ->
     %%ok = logger:remove_handler(default),
     ok = logger:add_handler(
            file_logger, logger_std_h,
-           #{config => #{file => "/var/tmp/bespoke/log/bespoke.log"}}),
+           #{config => #{file => ?LOG_FILE}}),
     {ok, _} = application:ensure_all_started(ssl),
     ok = application:start(apptools),
     ok = application:start(rester),

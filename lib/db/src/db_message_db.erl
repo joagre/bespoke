@@ -16,16 +16,16 @@
 
 open() ->
     maybe
-        {ok, _} ?= db:open_disk_db(?MESSAGE_DB, ?MESSAGE_FILENAME, #message.id),
-        {ok, _} ?= db:open_disk_index_db(?MESSAGE_INDEX_DB, ?MESSAGE_INDEX_FILENAME),
-        {ok, _} ?= db:open_disk_db(?MESSAGE_RECIPIENT_DB, ?MESSAGE_RECIPIENT_FILENAME,
+        {ok, _} ?= db:open_disk_db(?MESSAGE_DB, ?MESSAGE_FILE_PATH, #message.id),
+        {ok, _} ?= db:open_disk_index_db(?MESSAGE_INDEX_DB, ?MESSAGE_INDEX_FILE_PATH),
+        {ok, _} ?= db:open_disk_db(?MESSAGE_RECIPIENT_DB, ?MESSAGE_RECIPIENT_FILE_PATH,
                                    #message_recipient.message_id),
         {ok, _} ?= db:open_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB,
-                                         ?MESSAGE_RECIPIENT_INDEX_FILENAME),
-        {ok, _} ?= db:open_disk_db(?MESSAGE_ATTACHMENT_DB, ?MESSAGE_ATTACHMENT_FILENAME,
+                                         ?MESSAGE_RECIPIENT_INDEX_FILE_PATH),
+        {ok, _} ?= db:open_disk_db(?MESSAGE_ATTACHMENT_DB, ?MESSAGE_ATTACHMENT_FILE_PATH,
                                    #message_attachment.id),
         {ok, _} ?= db:open_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB,
-                                         ?MESSAGE_ATTACHMENT_INDEX_FILENAME),
+                                         ?MESSAGE_ATTACHMENT_INDEX_FILE_PATH),
         ok
     else
         Error ->
@@ -75,8 +75,8 @@ close() ->
 %%
 
 -spec create_message(#message{},
-                     [{db_serv:user_id(), file:filename()}],
-                     [{db_serv:user_id(), file:filename()}]) ->
+                     [{db_serv:user_id(), main:filename()}],
+                     [{db_serv:user_id(), main:filename()}]) ->
           {ok, #message{}} | {error, term()}.
 
 create_message(Message, BodyBlobs, AttachmentBlobs) ->

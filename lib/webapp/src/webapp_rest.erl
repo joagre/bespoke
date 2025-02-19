@@ -14,7 +14,7 @@
 -include("webapp_crypto.hrl").
 
 %% Read Cache DB
--define(READ_CACHE_FILENAME, filename:join(?BESPOKE_DB_DIR, "read_cache.db")).
+-define(READ_CACHE_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "read_cache.db")).
 -define(READ_CACHE_DB, read_cache_db).
 
 %% Challenge Cache DB
@@ -41,7 +41,7 @@
 start_link() ->
     ok = webapp_dnsmasq:clear_all_mac_addresses(),
     %% Open Read Cache DB (FIXME: Make a bag out of it)
-    {ok, _} = db:open_disk_db(?READ_CACHE_DB, ?READ_CACHE_FILENAME, #read_cache.user_id),
+    {ok, _} = db:open_disk_db(?READ_CACHE_DB, ?READ_CACHE_FILE_PATH, #read_cache.user_id),
     %% Open Challenge Cache DB
     ok = db:open_ram_db(?CHALLENGE_CACHE, #challenge_cache_entry.username),
     %% Start HTTP(S) servers
@@ -71,9 +71,9 @@ start_link() ->
 -spec change_ssid(binary()) -> ok | {error, string()}.
 
 change_ssid(SSID) ->
-    BaseDir = filename:join([code:lib_dir(main), "../.."]),
-    TargetBinDir = filename:join([BaseDir, "target/bin"]),
-    ScriptPath = filename:join([TargetBinDir, "change_ssid.sh"]),
+    BaseDirPath = filename:join([code:lib_dir(main), "../.."]),
+    TargetBinDirPath = filename:join([BaseDirPath, "target/bin"]),
+    ScriptPath = filename:join([TargetBinDirPath, "change_ssid.sh"]),
     Command = lists:flatten(io_lib:format("sudo bash ~s \"~s\" 2>&1; echo $?", [ScriptPath, SSID])),
     ?log_info("Calling: ~s\n", [Command]),
     case string:trim(os:cmd(Command)) of
@@ -294,35 +294,35 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     _ ->
                         Url#url.path
                 end,
-            Filename = uri_string:unquote(tl(UriPath)),
-            AbsFilename =
-                filename:join([filename:absname(code:priv_dir(webapp)), "docroot", Filename]),
+            FilePath = uri_string:unquote(tl(UriPath)),
+            AbsFilePath =
+                filename:join([filename:absname(code:priv_dir(webapp)), "docroot", FilePath]),
             AcceptEncoding = proplists:get_value('Accept-Encoding', Headers#http_chdr.other, ""),
             case string:str(AcceptEncoding, "gzip") of
                 0 ->
-                    case filelib:is_regular(AbsFilename) of
+                    case filelib:is_regular(AbsFilePath) of
                         true ->
                             send_response(Socket, Request,
                                           [{content_type, {url, UriPath}}|
-                                           no_cache_headers(AbsFilename)],
-                                          {ok, {file, AbsFilename}});
+                                           no_cache_headers(AbsFilePath)],
+                                          {ok, {file, AbsFilePath}});
                         false ->
                             send_response(Socket, Request, no_cache_headers(), not_found)
                     end;
                 _ ->
-                    GzippedAbsFilename = AbsFilename ++ ".gz",
-                    case filelib:is_regular(GzippedAbsFilename) of
+                    GzippedAbsFilePath = AbsFilePath ++ ".gz",
+                    case filelib:is_regular(GzippedAbsFilePath) of
                         true ->
                             send_response(Socket, Request, [{content_type, {url, UriPath}},
                                                             {"Content-Encoding", "gzip"}|
-                                                            no_cache_headers(GzippedAbsFilename)],
-                                          {ok, {file, GzippedAbsFilename}});
+                                                            no_cache_headers(GzippedAbsFilePath)],
+                                          {ok, {file, GzippedAbsFilePath}});
                         false ->
-                            case filelib:is_regular(AbsFilename) of
+                            case filelib:is_regular(AbsFilePath) of
                                 true ->
                                     send_response(Socket, Request, [{content_type, {url, UriPath}}|
-                                                                    no_cache_headers(AbsFilename)],
-                                                  {ok, {file, AbsFilename}});
+                                                                    no_cache_headers(AbsFilePath)],
+                                                  {ok, {file, AbsFilePath}});
                                 false ->
                                     send_response(Socket, Request, no_cache_headers(), not_found)
                             end

@@ -5,7 +5,7 @@ THIRD_PARTY_GZ_FILES := $(patsubst %.js,%.js.gz,$(THIRD_PARTY_JS_FILES))
 BESPOKE_JS_FILES := $(filter-out $(THIRD_PARTY_JS_FILES), $(JS_FILES))
 BESPOKE_JS_OK_FILES := $(patsubst %.js,checked/%.js.ok,$(BESPOKE_JS_FILES))
 
-all: eslint gzip
+all: gzip
 
 sign: not_on_target $(JS_SIGNATURE_FILES)
 

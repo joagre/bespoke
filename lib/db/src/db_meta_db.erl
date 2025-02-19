@@ -15,7 +15,7 @@
 -spec open() -> ok | {error, term()}.
 
 open() ->
-    {ok, _} = db:open_disk_db(?META_DB, ?META_FILENAME, #meta.type),
+    {ok, _} = db:open_disk_db(?META_DB, ?META_FILE_PATH, #meta.type),
     case dets:lookup(?META_DB, basic) of
         [] ->
             dets:insert(?META_DB, #meta{});

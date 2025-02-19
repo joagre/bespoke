@@ -12,9 +12,8 @@
 -export([message_handler/1]).
 -export_type([ssid/0, host/0, user_id/0, username/0, message_id/0,
               message_attachment_id/0, post_id/0, title/0, body/0,
-              seconds_since_epoch/0, file_path/0, content_type/0,
-              file_id/0, filename/0, file_size/0, subscription_id/0,
-              monitor_ref/0]).
+              seconds_since_epoch/0, content_type/0, file_id/0, file_size/0,
+              subscription_id/0, monitor_ref/0]).
 
 -include_lib("kernel/include/file.hrl").
 -include_lib("apptools/include/log.hrl").
@@ -23,11 +22,11 @@
 -include("../include/db.hrl").
 
 %% Post DB
--define(POST_FILENAME, filename:join(?BESPOKE_DB_DIR, "post.db")).
+-define(POST_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "post.db")).
 -define(POST_DB, post_db).
 
 %% File DB
--define(FILE_FILENAME, filename:join(?BESPOKE_DB_DIR, "file.db")).
+-define(FILE_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "file.db")).
 -define(FILE_DB, file_db).
 
 %% Subscription DB
@@ -44,10 +43,8 @@
 -type title() :: binary().
 -type body() :: binary().
 -type seconds_since_epoch() :: integer().
--type file_path() :: binary().
 -type content_type() :: binary().
 -type file_id() :: integer().
--type filename() :: binary().
 -type file_size() :: integer().
 -type subscription_id() :: reference().
 -type monitor_ref() :: reference().
@@ -98,8 +95,8 @@ get_user_id() ->
 %% Exported: create_message
 %%
 
--spec create_message(#message{}, [{user_id(), filename()}],
-                     [{user_id(), filename()}]) ->
+-spec create_message(#message{}, [{user_id(), main:filename()}],
+                     [{user_id(), main:filename()}]) ->
           {ok, #message{}} | {error, file:posix()}.
 
 create_message(Message, BodyBlobs, AttachmentBlobs) ->
@@ -453,8 +450,8 @@ message_handler(S) ->
 open_dbs() ->
     ok = db_meta_db:open(),
     ok = db_message_db:open(),
-    {ok, _} = db:open_disk_db(?POST_DB, ?POST_FILENAME, #post.id),
-    {ok, _} = db:open_disk_db(?FILE_DB, ?FILE_FILENAME, #file.id),
+    {ok, _} = db:open_disk_db(?POST_DB, ?POST_FILE_PATH, #post.id),
+    {ok, _} = db:open_disk_db(?FILE_DB, ?FILE_FILE_PATH, #file.id),
     db:open_ram_db(?SUBSCRIPTION_DB, #subscription.id).
 
 close_dbs() ->

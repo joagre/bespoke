@@ -40,7 +40,7 @@ distclean: mrproper
 #
 
 eslint:
-	$(MAKE) -C lib/webapp eslint
+	$(MAKE) -C lib/webapp/priv/docroot/js eslint
 
 ERL=$(shell which erl)
 ERL_TOP=$(ERL:%/bin/erl=%)

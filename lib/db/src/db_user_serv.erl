@@ -15,7 +15,7 @@
 -include("../include/db.hrl").
 
 %% User DB
--define(USER_FILENAME, filename:join(?BESPOKE_DB_DIR, "user.db")).
+-define(USER_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "user.db")).
 -define(USER_DB, user_db).
 
 -define(WORD_LIST_PATH, "/usr/share/dict/words").
@@ -156,7 +156,7 @@ user_db_to_list() ->
 
 init(Parent) ->
     %% Open User DB
-    {ok, _} = db:open_disk_db(?USER_DB, ?USER_FILENAME, #user.id),
+    {ok, _} = db:open_disk_db(?USER_DB, ?USER_FILE_PATH, #user.id),
     ?log_info("Database user server has been started"),
     {ok, #state{parent = Parent, word_list = init_word_list()}}.
 

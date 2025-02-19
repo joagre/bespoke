@@ -81,14 +81,13 @@
          reply_count = 0 :: integer() | '_',
          replies = [] :: [db_serv:post_id()] | '_',
          likers = [] :: [db_serv:user_id()] | '_',
-         attachments = [] :: [{db_serv:file_path(),
-                               db_serv:content_type()}] | '_'
+         attachments = [] :: [{main:filename(), db_serv:content_type()}] | '_'
         }).
 
 -record(file,
         {
          id = not_set :: db_serv:file_id() | not_set,
-         filename :: db_serv:filename(),
+         filename :: main:filename(),
          size :: db_serv:file_size(),
          uploaded_size = 0 :: db_serv:file_size(),
          content_type :: db_serv:content_type(),
