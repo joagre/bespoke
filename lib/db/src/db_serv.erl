@@ -95,12 +95,14 @@ get_user_id() ->
 %% Exported: create_message
 %%
 
--spec create_message(#message{}, [{user_id(), main:filename()}],
-                     [{user_id(), main:filename()}]) ->
+-spec create_message(#message{},
+                     [{db_serv:user_id(), main:filename()}],
+                     [[{db_serv:user_id(), main:filename()}]]) ->
           {ok, #message{}} | {error, file:posix()}.
 
-create_message(Message, BodyBlobs, AttachmentBlobs) ->
-    serv:call(?MODULE, {create_message, Message, BodyBlobs, AttachmentBlobs}).
+create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
+    serv:call(?MODULE, {create_message, Message, MessageBodyBlobs,
+                        MessageAttachmentBlobs}).
 
 %%
 %% Exported: read_top_messages
@@ -277,11 +279,11 @@ message_handler(S) ->
 
 
 
-        {call, From, {create_message, Message, BlobFilename,
-                      AttachmentFilenames} = Call} ->
+        {call, From, {create_message, Message, MessageBodyBlobs,
+                      MessageAttachmentBlobs} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            {reply, From, db_message_db:create_message(Message, BlobFilename,
-                                                       AttachmentFilenames)};
+            {reply, From, db_message_db:create_message(
+                            Message, MessageBodyBlobs, MessageAttachmentBlobs)};
         {call, From, {read_top_messages, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:read_top_messages(UserId)};

@@ -239,14 +239,12 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
 
 
         ["api", "read_top_messages"] ->
-            case handle_request(Socket, Request, Body) of
+            case decode(Socket, Request, Body) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, _Body} ->
                     {ok, Messages} = db_serv:read_top_messages(UserId),
-                    JsonTerm = lists:map(fun(Message) ->
-                                                 message_to_json_term(Message)
-                                         end, Messages),
+                    JsonTerm = webapp_marshalling:encode(read_top_messages, Messages),
                     send_response(Socket, Request, no_cache_headers(), {json, JsonTerm})
             end;
 
@@ -258,7 +256,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
 
         %% Forum
         ["api", "list_top_posts"] ->
-            case handle_request(Socket, Request, Body) of
+            case decode(Socket, Request, Body) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, _Body} ->
@@ -277,7 +275,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             end;
         %% File sharing
         ["api", "list_files"] ->
-            case handle_request(Socket, Request, Body) of
+            case decode(Socket, Request, Body) of
                 {return, Result} ->
                     Result;
                 {ok, _User, _Body} ->
@@ -347,7 +345,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
     case Tokens of
         %% Bootstrapping
         ["api", "bootstrap"] ->
-            case handle_request(Socket, Request, Body,  fun json_term_to_bootstrap/1, false) of
+            case decode(Socket, Request, Body,  fun json_term_to_bootstrap/1, false) of
                 {return, Result} ->
                     Result;
                 {ok, no_user, SSID} ->
@@ -358,7 +356,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             end;
         %% SSID management
         ["api", "get_ssid"] ->
-            case handle_request(Socket, Request, Body) of
+            case decode(Socket, Request, Body) of
                 {return, Result} ->
                     Result;
                 {ok, _User, _Body} ->
@@ -367,7 +365,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             end;
         %% Authentication
         ["api", "generate_challenge"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_binary/1, false) of
+            case decode(Socket, Request, Body, fun json_term_to_binary/1, false) of
                 {return, Result} ->
                     Result;
                 {ok, no_user, Username} ->
@@ -384,14 +382,14 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
         ["api", "login"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_login/1, false) of
+            case decode(Socket, Request, Body, fun json_term_to_login/1, false) of
                 {return, Result} ->
                     Result;
                 {ok, no_user, {Username, ClientResponse}} ->
                     login(Socket, Request, Username, ClientResponse)
             end;
         ["api", "switch_user"] ->
-            case handle_request(Socket, Request, Body,
+            case decode(Socket, Request, Body,
                                 fun json_term_to_switch_user/1) of
                 {return, Result} ->
                     Result;
@@ -400,7 +398,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                 ClientResponse)
             end;
         ["api", "change_password"] ->
-            case handle_request(Socket, Request, Body,
+            case decode(Socket, Request, Body,
                                 fun json_term_to_change_password/1) of
                 {return, Result} ->
                     Result;
@@ -414,15 +412,15 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
 
         %% Direct messaging
         ["api", "create_message"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_message/1) of
+            case decode(Socket, Request, Body, create_message) of
                 {return, Result} ->
                     Result;
-                {ok, #user{id = UserId}, {Message, BodyFilename, AttachmentFilenames}} ->
+                {ok, #user{id = UserId}, {Message, MessageBodyBlobs, MessageAttachmentBlobs}} ->
                     UpdatedMessage = Message#message{author = UserId},
-                    case db_serv:create_message(UpdatedMessage, BodyFilename,
-                                                AttachmentFilenames) of
+                    case db_serv:create_message(UpdatedMessage, MessageBodyBlobs,
+                                                MessageAttachmentBlobs) of
                         {ok, CreatedMessage} ->
-                            JsonTerm = message_to_json_term(CreatedMessage),
+                            JsonTerm = webapp_marshalling:encode(create_message, CreatedMessage),
                             send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});
                         {error, Reason} ->
                             ?log_error("/api/create_message: ~p", [Reason]),
@@ -430,15 +428,13 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     end
             end;
         ["api", "read_reply_messages"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_integer_list/1) of
+            case decode(Socket, Request, Body, read_reply_messages) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, MessageIds} ->
                     case db_serv:read_reply_messages(UserId, MessageIds) of
                         {ok, Messages} ->
-                            JsonTerm = lists:map(fun(Message) ->
-                                                         message_to_json_term(Message) end,
-                                                 Messages),
+                            JsonTerm = webapp_marshalling:encode(read_reply_messages, Messages),
                             send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});
                         {error, Reason} ->
                             ?log_error("/api/read_messages: ~p", [Reason]),
@@ -446,7 +442,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     end
             end;
         ["api", "delete_message"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
+            case decode(Socket, Request, Body, fun json_term_to_integer/1) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, MessageId} ->
@@ -468,7 +464,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
 
         %% Forum
         ["api", "lookup_posts"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_binary_list/1) of
+            case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
@@ -480,7 +476,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
         ["api", "lookup_recursive_posts"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_binary_list/1) of
+            case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
@@ -492,7 +488,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
         ["api", "lookup_recursive_post_ids"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_binary_list/1) of
+            case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
                 {return, Result} ->
                     Result;
                 {ok, _User, PostIds} ->
@@ -500,7 +496,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
         ["api", "insert_post"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_post/1) of
+            case decode(Socket, Request, Body, fun json_term_to_post/1) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, Post} ->
@@ -516,7 +512,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     end
             end;
         ["api", "delete_post"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_binary/1) of
+            case decode(Socket, Request, Body, fun json_term_to_binary/1) of
                 {return, Result} ->
                     Result;
                 {ok, #user{name = Username}, PostId} ->
@@ -533,7 +529,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     send_response(Socket, Request, no_cache_headers(), forbidden)
             end;
         ["api", "toggle_like"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_binary/1) of
+            case decode(Socket, Request, Body, fun json_term_to_binary/1) of
                 {return, Result} ->
                     Result;
                 {ok, User, PostId} ->
@@ -544,7 +540,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             end;
         %% File sharing
         ["api", "insert_file"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_file/1) of
+            case decode(Socket, Request, Body, fun json_term_to_file/1) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, File} ->
@@ -559,7 +555,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     end
             end;
         ["api", "delete_file"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
+            case decode(Socket, Request, Body, fun json_term_to_integer/1) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, FileId} ->
@@ -576,7 +572,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     send_response(Socket, Request, no_cache_headers(), forbidden)
             end;
         ["api", "file_uploaded"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_integer/1) of
+            case decode(Socket, Request, Body, fun json_term_to_integer/1) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, FileId} ->
@@ -594,7 +590,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             end;
         %% Subscription handling
         ["api", "subscribe_on_changes"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_binary_list/1) of
+            case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
                 {return, Result} ->
                     Result;
                 {ok, _User, PostIds} ->
@@ -618,7 +614,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm});
         %% Read cache
         ["api", "upload_read_cache"] ->
-            case handle_request(Socket, Request, Body, fun json_term_to_binary_list/1) of
+            case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
@@ -810,16 +806,6 @@ json_term_to_integer(Int) when is_integer(Int) ->
 json_term_to_integer(_) ->
     {error, invalid}.
 
-json_term_to_integer_list(List) when is_list(List) ->
-    json_term_to_integer_list(List, []);
-json_term_to_integer_list(_) ->
-    {error, invalid}.
-
-json_term_to_integer_list([], Acc) ->
-    {ok, lists:reverse(Acc)};
-json_term_to_integer_list([Int|Rest], Acc) when is_integer(Int) ->
-    json_term_to_integer_list(Rest, [Int|Acc]).
-
 json_term_to_binary(Bin) when is_binary(Bin) ->
     {ok, Bin};
 json_term_to_binary(_) ->
@@ -894,36 +880,9 @@ json_term_to_change_password(_) ->
 
 
 
-json_term_to_message(#{<<"bodyFilename">> := BodyFilename} = JsonTerm)
-  when is_binary(BodyFilename) ->
-    case has_valid_keys([<<"title">>,
-                         <<"topMessageId">>,
-                         <<"bodyFilename">>,
-                         <<"attachmentFilenames">>], JsonTerm) of
-        true ->
-            Title = maps:get(<<"attachmentFilenames">>, JsonTerm, not_set),
-            TopMessageId = maps:get(<<"topMessageId">>, JsonTerm, not_set),
-            AttachmentFilenames = maps:get(<<"attachmentsFilenames">>, JsonTerm, []),
-            case {Title, TopMessageId} of
-                {not_set, not_set} ->
-                    {error, invalid};
-                {Title, TopMessageId} when is_binary(Title) andalso is_binary(TopMessageId) ->
-                    {error, invalid};
-                _ ->
-                    case json_term_to_binary_list(AttachmentFilenames) of
-                        {ok, AttachmentFilenames} ->
-                            {ok, {#message{title = Title, top_message_id = TopMessageId},
-                                  BodyFilename,
-                                  AttachmentFilenames}};
-                        {error, invalid} ->
-                            {error, invalid}
-                    end
-            end;
-        false ->
-            {error, invalid}
-    end;
-json_term_to_message(_) ->
-    {error, invalid}.
+
+
+
 
 
 
@@ -1052,17 +1011,6 @@ json_term_to_attachment(_) ->
 
 
 
-message_to_json_term(#message{id = Id,
-                              title = Title,
-                              top_message_id = TopMessageId,
-                              author = AuthorId,
-                              created = Created}) ->
-    {ok, #user{name = AuthorUsername}} = db_user_serv:get_user(AuthorId),
-    JsonTerm = #{<<"id">> => Id,
-                 <<"authorId">> => AuthorId,
-                 <<"authorUsername">> => AuthorUsername,
-                 <<"created">> => Created},
-    add_optional_members([{<<"title">>, Title}, {<<"topMessageId">>, TopMessageId}], JsonTerm).
 
 
 
@@ -1191,13 +1139,13 @@ no_cache_headers() ->
      {"Pragma", "no-cache"},
      {"Expires", 0}].
 
-handle_request(Socket, Request, Body) ->
-    handle_request(Socket, Request, Body, undefined, true).
+decode(Socket, Request, Body) ->
+    decode(Socket, Request, Body, undefined, true).
 
-handle_request(Socket, Request, Body, MarshallingFun) ->
-    handle_request(Socket, Request, Body, MarshallingFun, true).
+decode(Socket, Request, Body, MarshallingFun) ->
+    decode(Socket, Request, Body, MarshallingFun, true).
 
-handle_request(Socket, Request, Body, MarshallingFun, Authenticate) ->
+decode(Socket, Request, Body, MarshallingFun, Authenticate) ->
     case authenticate(Request, Authenticate) of
         {ok, User} ->
             case (Request#http_request.headers)#http_chdr.content_type of
@@ -1213,6 +1161,15 @@ handle_request(Socket, Request, Body, MarshallingFun, Authenticate) ->
                             case MarshallingFun of
                                 undefined ->
                                     {ok, User, ParsedBody};
+                                MarshallingType when is_atom(MarshallingType) ->
+                                    case webapp_marshalling:decode(MarshallingType, ParsedBody) of
+                                        {ok, MarshalledBody} ->
+                                            {ok, User, MarshalledBody};
+                                        {error, Reason} ->
+                                            ?log_error(Reason),
+                                            {return, send_response(Socket, Request,
+                                                                   no_cache_headers(), bad_request)}
+                                    end;
                                 _ when is_function(MarshallingFun) ->
                                     case MarshallingFun(ParsedBody) of
                                         {ok, MarshalledBody} ->

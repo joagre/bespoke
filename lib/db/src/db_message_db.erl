@@ -76,7 +76,7 @@ close() ->
 
 -spec create_message(#message{},
                      [{db_serv:user_id(), main:filename()}],
-                     [{db_serv:user_id(), main:filename()}]) ->
+                     [[{db_serv:user_id(), main:filename()}]]) ->
           {ok, #message{}} | {error, term()}.
 
 create_message(Message, BodyBlobs, AttachmentBlobs) ->
@@ -89,7 +89,6 @@ create_message(Message, BodyBlobs, AttachmentBlobs) ->
                   created = db:seconds_since_epoch()
                  },
             ok = dets:insert(?MESSAGE_DB, UpdatedMessage),
-            %% FIXME: Update database
             {ok, UpdatedMessage};
         Error ->
             Error
@@ -97,31 +96,40 @@ create_message(Message, BodyBlobs, AttachmentBlobs) ->
 
 handle_blobs(MessageId, BodyBlobs, AttachmentBlobs) ->
     maybe
+        %% Note: Disk layout is described in db.hrl
         MessageBlobPath = filename:join([?BESPOKE_MESSAGE_PATH, ?i2b(MessageId)]),
         ok ?= file:make_dir(MessageBlobPath),
-        ok ?= handle_body_blobs(MessageBlobPath, BodyBlobs),
-        ok ?= handle_attachment_blobs(MessageBlobPath, AttachmentBlobs)
+        ok ?= handle_body_blobs(MessageId, MessageBlobPath, BodyBlobs),
+        ok ?= handle_attachment_blobs(MessageId, MessageBlobPath, AttachmentBlobs)
     else
         Error ->
             Error
     end.
 
-handle_body_blobs(_MessageBlobPath, []) ->
+handle_body_blobs(_MessageId, _MessageBlobPath, []) ->
     ok;
-handle_body_blobs(MessageBlobPath, [{UserId, BlobFilename}|Rest]) ->
+handle_body_blobs(MessageId, MessageBlobPath, [{UserId, BlobFilename}|Rest]) ->
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     NewBlobPath = filename:join([MessageBlobPath, ?i2b(UserId)]),
     ok = file:rename(CurrentBlobPath, NewBlobPath),
-    handle_body_blobs(MessageBlobPath, Rest).
+    ok = dets:insert(?MESSAGE_RECIPIENT_DB,
+                     #message_recipient{message_id = MessageId, user_id = UserId}),
+    handle_body_blobs(MessageId, MessageBlobPath, Rest).
 
-handle_attachment_blobs(_MessageBlobPath, []) ->
+handle_attachment_blobs(_MessageId, _MessageBlobPath, []) ->
     ok;
-handle_attachment_blobs(MessageBlobPath, [{UserId, BlobFilename}|Rest]) ->
+handle_attachment_blobs(MessageId, MessageBlobPath, [AttachmentBlobs|Rest])
+  when is_list(AttachmentBlobs) ->
+    ok = handle_attachment_blobs(MessageId, MessageBlobPath, AttachmentBlobs),
+    handle_attachment_blobs(MessageId, MessageBlobPath, Rest);
+handle_attachment_blobs(MessageId, MessageBlobPath, [{UserId, BlobFilename}|Rest]) ->
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     AttachmentId = db_meta_db:read_next_message_attachment_id(),
     NewBlobPath = filename:join([MessageBlobPath, io_lib:format("~w-~w", [UserId, AttachmentId])]),
     ok = file:rename(CurrentBlobPath, NewBlobPath),
-    handle_attachment_blobs(MessageBlobPath, Rest).
+    ok = dets:insert(?MESSAGE_ATTACHMENT_DB,
+                     #message_attachment{id = AttachmentId, message_id = MessageId}),
+    handle_attachment_blobs(MessageId, MessageBlobPath, Rest).
 
 %%
 %% Exported: read_top_messages
