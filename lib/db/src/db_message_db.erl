@@ -4,6 +4,7 @@
 -export([open/0, sync/0, close/0, create_message/3, read_top_messages/1, read_reply_messages/2,
          delete_message/2]).
 
+-include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
 -include("../include/db.hrl").
 -include("db_message_db.hrl").
@@ -111,6 +112,7 @@ handle_body_blobs(_MessageId, _MessageBlobPath, []) ->
 handle_body_blobs(MessageId, MessageBlobPath, [{UserId, BlobFilename}|Rest]) ->
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     NewBlobPath = filename:join([MessageBlobPath, ?i2b(UserId)]),
+    ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
     ok = file:rename(CurrentBlobPath, NewBlobPath),
     ok = dets:insert(?MESSAGE_RECIPIENT_DB,
                      #message_recipient{message_id = MessageId, user_id = UserId}),
@@ -126,6 +128,7 @@ handle_attachment_blobs(MessageId, MessageBlobPath, [{UserId, BlobFilename}|Rest
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     AttachmentId = db_meta_db:read_next_message_attachment_id(),
     NewBlobPath = filename:join([MessageBlobPath, io_lib:format("~w-~w", [UserId, AttachmentId])]),
+    ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
     ok = file:rename(CurrentBlobPath, NewBlobPath),
     ok = dets:insert(?MESSAGE_ATTACHMENT_DB,
                      #message_attachment{id = AttachmentId, message_id = MessageId}),

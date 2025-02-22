@@ -279,11 +279,10 @@ message_handler(S) ->
 
 
 
-        {call, From, {create_message, Message, MessageBodyBlobs,
-                      MessageAttachmentBlobs} = Call} ->
+        {call, From, {create_message, Message, BodyBlobs, AttachmentBlobs} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:create_message(
-                            Message, MessageBodyBlobs, MessageAttachmentBlobs)};
+                            Message, BodyBlobs, AttachmentBlobs)};
         {call, From, {read_top_messages, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:read_top_messages(UserId)};

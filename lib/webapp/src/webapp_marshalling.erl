@@ -24,7 +24,7 @@ decode(create_message, #{<<"bodyBlobs">> := BodyBlobs} = JsonTerm) ->
                      <<"bodyBlobs">>,
                      <<"attachmentBlobs">>], JsonTerm) of
         true ->
-            Title = maps:get(<<"attachmentBlobs">>, JsonTerm, not_set),
+            Title = maps:get(<<"title">>, JsonTerm, not_set),
             TopMessageId = maps:get(<<"topMessageId">>, JsonTerm, not_set),
             case {Title, TopMessageId} of
                 {not_set, not_set} ->
@@ -41,7 +41,6 @@ decode(create_message, #{<<"bodyBlobs">> := BodyBlobs} = JsonTerm) ->
                               DecodedAttachmentBlobs}}
                     else
                         Error ->
-                            ?log_error("Error decoding message blobs: ~p\n", [Error]),
                             {error, invalid}
                     end
             end;
@@ -62,8 +61,10 @@ decode_blobs([], Acc) ->
 decode_blobs([Blobs|Rest], Acc) when is_list(Blobs) ->
     decode_blobs(Rest, [decode_blobs(Blobs)|Acc]);
 decode_blobs([#{<<"userId">> := UserId, <<"filename">> := Filename}|Rest], Acc)
-  when is_binary(UserId), is_binary(Filename) ->
-    decode_blobs(Rest, [{UserId, Filename}|Acc]).
+  when is_integer(UserId), is_binary(Filename) ->
+    decode_blobs(Rest, [{UserId, Filename}|Acc]);
+decode_blobs(_A, _B) ->
+    {error, invalid}.
 
 %%
 %% Exported: encode

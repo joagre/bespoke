@@ -415,10 +415,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case decode(Socket, Request, Body, create_message) of
                 {return, Result} ->
                     Result;
-                {ok, #user{id = UserId}, {Message, MessageBodyBlobs, MessageAttachmentBlobs}} ->
+                {ok, #user{id = UserId}, {Message, BodyBlobs, AttachmentBlobs}} ->
                     UpdatedMessage = Message#message{author = UserId},
-                    case db_serv:create_message(UpdatedMessage, MessageBodyBlobs,
-                                                MessageAttachmentBlobs) of
+                    case db_serv:create_message(UpdatedMessage, BodyBlobs, AttachmentBlobs) of
                         {ok, CreatedMessage} ->
                             JsonTerm = webapp_marshalling:encode(create_message, CreatedMessage),
                             send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});
@@ -1163,13 +1162,14 @@ decode(Socket, Request, Body, MarshallingFun, Authenticate) ->
                                     {ok, User, ParsedBody};
                                 MarshallingType when is_atom(MarshallingType) ->
                                     case webapp_marshalling:decode(MarshallingType, ParsedBody) of
-                                        {ok, MarshalledBody} ->
-                                            {ok, User, MarshalledBody};
+                                        {ok, DecodedBody} ->
+                                            {ok, User, DecodedBody};
                                         {error, Reason} ->
                                             ?log_error(Reason),
                                             {return, send_response(Socket, Request,
                                                                    no_cache_headers(), bad_request)}
                                     end;
+                                %% FIXME: remove when refactoring is done
                                 _ when is_function(MarshallingFun) ->
                                     case MarshallingFun(ParsedBody) of
                                         {ok, MarshalledBody} ->
