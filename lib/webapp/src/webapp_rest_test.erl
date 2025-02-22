@@ -7,6 +7,8 @@
 %% Exported: misc
 %%
 
+%% IMPORTANT: Run webapp_client:run_once() before running this test
+
 misc() ->
     _ = webapp_client:init_httpc(),
     %% Auto login
@@ -68,6 +70,8 @@ make_attachment(#{<<"absPath">> := AbsPath, <<"contentType">> := ContentType}) -
 %%
 %% Exported: messaging
 %%
+
+%% IMPORTANT: Perform a "make reset" before running this test
 
 messaging() ->
     _ = webapp_client:init_httpc(),
