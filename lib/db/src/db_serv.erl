@@ -1,7 +1,7 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
 -export([get_user_id/0]).
--export([create_message/3, read_top_messages/1, read_reply_messages/2,
+-export([create_message/4, read_top_messages/1, read_reply_messages/2,
          delete_message/2]).
 -export([list_top_posts/0, lookup_posts/1, lookup_posts/2, lookup_post_ids/1,
          lookup_post_ids/2, insert_post/1, delete_post/1, toggle_like/2]).
@@ -95,13 +95,13 @@ get_user_id() ->
 %% Exported: create_message
 %%
 
--spec create_message(#message{},
+-spec create_message(db_serv:user_id(), #message{},
                      [{db_serv:user_id(), main:filename()}],
                      [[{db_serv:user_id(), main:filename()}]]) ->
           {ok, #message{}} | {error, file:posix()}.
 
-create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
-    serv:call(?MODULE, {create_message, Message, MessageBodyBlobs,
+create_message(UserId, Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
+    serv:call(?MODULE, {create_message, UserId, Message, MessageBodyBlobs,
                         MessageAttachmentBlobs}).
 
 %%
@@ -279,10 +279,11 @@ message_handler(S) ->
 
 
 
-        {call, From, {create_message, Message, BodyBlobs, AttachmentBlobs} = Call} ->
+        {call, From, {create_message, UserId, Message, BodyBlobs,
+                      AttachmentBlobs} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:create_message(
-                            Message, BodyBlobs, AttachmentBlobs)};
+                            UserId, Message, BodyBlobs, AttachmentBlobs)};
         {call, From, {read_top_messages, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:read_top_messages(UserId)};
@@ -451,20 +452,20 @@ message_handler(S) ->
 open_dbs() ->
     ok = db_meta_db:open(),
     ok = db_message_db:open(),
-    {ok, _} = db:open_disk_db(?POST_DB, ?POST_FILE_PATH, #post.id),
-    {ok, _} = db:open_disk_db(?FILE_DB, ?FILE_FILE_PATH, #file.id),
-    db:open_ram_db(?SUBSCRIPTION_DB, #subscription.id).
+    {ok, _} = db:open_disk(?POST_DB, ?POST_FILE_PATH, #post.id),
+    {ok, _} = db:open_disk(?FILE_DB, ?FILE_FILE_PATH, #file.id),
+    db:open_ram(?SUBSCRIPTION_DB, #subscription.id).
 
 close_dbs() ->
-    _ = db:close_disk_db(?FILE_DB),
-    _ = db:close_disk_db(?POST_DB),
+    _ = db:close_disk(?FILE_DB),
+    _ = db:close_disk(?POST_DB),
     _ = db_message_db:close(),
     _ = db_meta_db:close(),
     ok.
 
 sync_dbs() ->
-    ok = db:sync_disk_db(?FILE_DB),
-    ok = db:sync_disk_db(?POST_DB),
+    ok = db:sync_disk(?FILE_DB),
+    ok = db:sync_disk(?POST_DB),
     ok = db_message_db:sync(),
     db_meta_db:sync().
 

@@ -32,7 +32,8 @@ REWRITE THIS BULLET POINT:
 * Move post body from #post{}   to /var/tmp/bespoke/post/<post_id>/body
 * Move post attachments #post{} to /var/tmp/bespoke/post/<post_id>/attachment/<filename>, ...
 * Make all erlanf code 100 fill column
-
+* Create db_user_db.erl
+* Use ram_db access functions for insert and lookup etc
 
 
 * Add direct messaging

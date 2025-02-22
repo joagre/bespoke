@@ -1,8 +1,8 @@
 % -*- fill-column: 100; -*-
 
 -module(db_message_db).
--export([open/0, sync/0, close/0, create_message/3, read_top_messages/1, read_reply_messages/2,
-         delete_message/2]).
+-export([open/0, dump/0, sync/0, close/0, create_message/4, read_top_messages/1,
+         read_reply_messages/2, delete_message/2]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -17,21 +17,35 @@
 
 open() ->
     maybe
-        {ok, _} ?= db:open_disk_db(?MESSAGE_DB, ?MESSAGE_FILE_PATH, #message.id),
-        {ok, _} ?= db:open_disk_index_db(?MESSAGE_INDEX_DB, ?MESSAGE_INDEX_FILE_PATH),
-        {ok, _} ?= db:open_disk_db(?MESSAGE_RECIPIENT_DB, ?MESSAGE_RECIPIENT_FILE_PATH,
-                                   #message_recipient.message_id),
-        {ok, _} ?= db:open_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB,
-                                         ?MESSAGE_RECIPIENT_INDEX_FILE_PATH),
-        {ok, _} ?= db:open_disk_db(?MESSAGE_ATTACHMENT_DB, ?MESSAGE_ATTACHMENT_FILE_PATH,
-                                   #message_attachment.id),
-        {ok, _} ?= db:open_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB,
-                                         ?MESSAGE_ATTACHMENT_INDEX_FILE_PATH),
+        {ok, _} ?= db:open_disk(?MESSAGE_DB, ?MESSAGE_FILE_PATH, #message.id),
+        {ok, _} ?= db:open_disk_index(?MESSAGE_INDEX_DB, ?MESSAGE_INDEX_FILE_PATH),
+        {ok, _} ?= db:open_disk(?MESSAGE_RECIPIENT_DB, ?MESSAGE_RECIPIENT_FILE_PATH,
+                                #message_recipient.message_id),
+        {ok, _} ?= db:open_disk_index(?MESSAGE_RECIPIENT_INDEX_DB,
+                                      ?MESSAGE_RECIPIENT_INDEX_FILE_PATH),
+        {ok, _} ?= db:open_disk(?MESSAGE_ATTACHMENT_DB, ?MESSAGE_ATTACHMENT_FILE_PATH,
+                                #message_attachment.id),
+        {ok, _} ?= db:open_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB,
+                                      ?MESSAGE_ATTACHMENT_INDEX_FILE_PATH),
         ok
     else
         Error ->
             Error
     end.
+
+%%
+%% Exported: dump
+%%
+
+-spec dump() -> [{dets:tab_name(), [term()]}].
+
+dump() ->
+    [{?MESSAGE_DB, db:dump_disk(?MESSAGE_DB)},
+     {?MESSAGE_INDEX_DB, db:dump_disk_index(?MESSAGE_INDEX_DB)},
+     {?MESSAGE_RECIPIENT_DB, db:dump_disk(?MESSAGE_RECIPIENT_DB)},
+     {?MESSAGE_RECIPIENT_INDEX_DB, db:dump_disk_index(?MESSAGE_RECIPIENT_INDEX_DB)},
+     {?MESSAGE_ATTACHMENT_DB, db:dump_disk(?MESSAGE_ATTACHMENT_DB)},
+     {?MESSAGE_ATTACHMENT_INDEX_DB, db:dump_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB)}].
 
 %%
 %% Exported: sync
@@ -41,12 +55,12 @@ open() ->
 
 sync() ->
     maybe
-        ok ?= db:sync_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB),
-        ok ?= db:sync_disk_db(?MESSAGE_ATTACHMENT_DB),
-        ok ?= db:sync_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB),
-        ok ?= db:sync_disk_db(?MESSAGE_RECIPIENT_DB),
-        ok ?= db:sync_disk_index_db(?MESSAGE_INDEX_DB),
-        ok ?= db:sync_disk_db(?MESSAGE_DB)
+        ok ?= db:sync_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB),
+        ok ?= db:sync_disk(?MESSAGE_ATTACHMENT_DB),
+        ok ?= db:sync_disk_index(?MESSAGE_RECIPIENT_INDEX_DB),
+        ok ?= db:sync_disk(?MESSAGE_RECIPIENT_DB),
+        ok ?= db:sync_disk_index(?MESSAGE_INDEX_DB),
+        ok ?= db:sync_disk(?MESSAGE_DB)
     else
         Error ->
             Error
@@ -60,12 +74,12 @@ sync() ->
 
 close() ->
     maybe
-        ok ?= db:close_disk_index_db(?MESSAGE_ATTACHMENT_INDEX_DB),
-        ok ?= db:close_disk_db(?MESSAGE_ATTACHMENT_DB),
-        ok ?= db:close_disk_index_db(?MESSAGE_RECIPIENT_INDEX_DB),
-        ok ?= db:close_disk_db(?MESSAGE_RECIPIENT_DB),
-        ok ?= db:close_disk_index_db(?MESSAGE_INDEX_DB),
-        ok ?= db:close_disk_db(?MESSAGE_DB)
+        ok ?= db:close_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB),
+        ok ?= db:close_disk(?MESSAGE_ATTACHMENT_DB),
+        ok ?= db:close_disk_index(?MESSAGE_RECIPIENT_INDEX_DB),
+        ok ?= db:close_disk(?MESSAGE_RECIPIENT_DB),
+        ok ?= db:close_disk_index(?MESSAGE_INDEX_DB),
+        ok ?= db:close_disk(?MESSAGE_DB)
     else
         Error ->
             Error
@@ -75,12 +89,12 @@ close() ->
 %% Exported: create_message
 %%
 
--spec create_message(#message{},
+-spec create_message(db_serv:user_id(), #message{},
                      [{db_serv:user_id(), main:filename()}],
                      [[{db_serv:user_id(), main:filename()}]]) ->
           {ok, #message{}} | {error, term()}.
 
-create_message(Message, BodyBlobs, AttachmentBlobs) ->
+create_message(UserId, Message, BodyBlobs, AttachmentBlobs) ->
     MessageId = db_meta_db:read_next_message_id(),
     case handle_blobs(MessageId, BodyBlobs, AttachmentBlobs) of
         ok ->
@@ -89,7 +103,8 @@ create_message(Message, BodyBlobs, AttachmentBlobs) ->
                   id = MessageId,
                   created = db:seconds_since_epoch()
                  },
-            ok = dets:insert(?MESSAGE_DB, UpdatedMessage),
+            ok = db:insert_disk(?MESSAGE_DB, UpdatedMessage),
+            ok = db:insert_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, UserId, MessageId),
             {ok, UpdatedMessage};
         Error ->
             Error
@@ -99,7 +114,7 @@ handle_blobs(MessageId, BodyBlobs, AttachmentBlobs) ->
     maybe
         %% Note: Disk layout is described in db.hrl
         MessageBlobPath = filename:join([?BESPOKE_MESSAGE_PATH, ?i2b(MessageId)]),
-        ok ?= file:make_dir(MessageBlobPath),
+        ok ?= make_dir(MessageBlobPath),
         ok ?= handle_body_blobs(MessageId, MessageBlobPath, BodyBlobs),
         ok ?= handle_attachment_blobs(MessageId, MessageBlobPath, AttachmentBlobs)
     else
@@ -114,8 +129,8 @@ handle_body_blobs(MessageId, MessageBlobPath, [{UserId, BlobFilename}|Rest]) ->
     NewBlobPath = filename:join([MessageBlobPath, ?i2b(UserId)]),
     ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
     ok = file:rename(CurrentBlobPath, NewBlobPath),
-    ok = dets:insert(?MESSAGE_RECIPIENT_DB,
-                     #message_recipient{message_id = MessageId, user_id = UserId}),
+    ok = db:insert_disk(?MESSAGE_RECIPIENT_DB,
+                        #message_recipient{message_id = MessageId, user_id = UserId}),
     handle_body_blobs(MessageId, MessageBlobPath, Rest).
 
 handle_attachment_blobs(_MessageId, _MessageBlobPath, []) ->
@@ -130,8 +145,8 @@ handle_attachment_blobs(MessageId, MessageBlobPath, [{UserId, BlobFilename}|Rest
     NewBlobPath = filename:join([MessageBlobPath, io_lib:format("~w-~w", [UserId, AttachmentId])]),
     ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
     ok = file:rename(CurrentBlobPath, NewBlobPath),
-    ok = dets:insert(?MESSAGE_ATTACHMENT_DB,
-                     #message_attachment{id = AttachmentId, message_id = MessageId}),
+    ok = db:insert_disk(?MESSAGE_ATTACHMENT_DB,
+                        #message_attachment{id = AttachmentId, message_id = MessageId}),
     handle_attachment_blobs(MessageId, MessageBlobPath, Rest).
 
 %%
@@ -141,11 +156,11 @@ handle_attachment_blobs(MessageId, MessageBlobPath, [{UserId, BlobFilename}|Rest
 -spec read_top_messages(db_serv:user_id()) -> {ok, [#message{}]}.
 
 read_top_messages(UserId) ->
-    MessageIds = dets:lookup(?MESSAGE_RECIPIENT_INDEX_DB, UserId),
+    MessageIds = db:lookup_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, UserId),
     Messages =
         lists:foldl(
           fun(MessageId, Acc) ->
-                  case dets:lookup(?MESSAGE_DB, MessageId) of
+                  case db:lookup_disk(?MESSAGE_DB, MessageId) of
                       [#message{top_message_id = not_set} = Message] ->
                           [Message|Acc];
                       _ ->
@@ -162,13 +177,13 @@ read_top_messages(UserId) ->
           {ok, [#message{}]} | {error, access_denied}.
 
 read_reply_messages(UserId, TopMessageId) ->
-    RecipientMessageIds = dets:lookup(?MESSAGE_RECIPIENT_DB, UserId),
+    RecipientMessageIds = db:lookup_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, UserId),
     case lists:member(TopMessageId, RecipientMessageIds) of
         true ->
-            MessageIds = dets:lookup(?MESSAGE_INDEX_DB, TopMessageId),
+            MessageIds = db:lookup_disk_index(?MESSAGE_INDEX_DB, TopMessageId),
             Messages =
                 lists:foldl(fun(MessageId, Acc) ->
-                                    [Message] = dets:lookup(?MESSAGE_DB, MessageId),
+                                    [Message] = db:lookup_disk(?MESSAGE_DB, MessageId),
                                     [Message|Acc]
                             end, [], MessageIds),
             {ok, sort(Messages)};
@@ -183,11 +198,11 @@ read_reply_messages(UserId, TopMessageId) ->
 -spec delete_message(db_serv:user_id(), db_serv:message_id()) -> ok | {error, access_denied}.
 
 delete_message(UserId, MessageId) ->
-    case dets:lookup(?MESSAGE_DB, MessageId) of
+    case db:lookup_disk(?MESSAGE_DB, MessageId) of
         [#message{author = UserId}] ->
             %% FIXME: Delete blobs and purge database
-            ok = dets:delete(?MESSAGE_DB, MessageId);
-        _ ->
+            ok = db:delete_disk(?MESSAGE_DB, MessageId);
+        [] ->
             {error, access_denied}
     end.
 
@@ -200,3 +215,11 @@ sort(Messages) ->
       fun(MessageA, MessageB) ->
               MessageA#message.created > MessageB#message.created
       end, Messages).
+
+make_dir(DirPath) ->
+    case filelib:is_dir(DirPath) of
+        true ->
+            ok;
+        false ->
+            file:make_dir(DirPath)
+    end.

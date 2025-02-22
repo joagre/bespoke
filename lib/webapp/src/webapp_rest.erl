@@ -41,9 +41,9 @@
 start_link() ->
     ok = webapp_dnsmasq:clear_all_mac_addresses(),
     %% Open Read Cache DB (FIXME: Make a bag out of it)
-    {ok, _} = db:open_disk_db(?READ_CACHE_DB, ?READ_CACHE_FILE_PATH, #read_cache.user_id),
+    {ok, _} = db:open_disk(?READ_CACHE_DB, ?READ_CACHE_FILE_PATH, #read_cache.user_id),
     %% Open Challenge Cache DB
-    ok = db:open_ram_db(?CHALLENGE_CACHE, #challenge_cache_entry.username),
+    ok = db:open_ram(?CHALLENGE_CACHE, #challenge_cache_entry.username),
     %% Start HTTP(S) servers
     Options =
 	[{request_module, ?MODULE},
@@ -417,7 +417,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, #user{id = UserId}, {Message, BodyBlobs, AttachmentBlobs}} ->
                     UpdatedMessage = Message#message{author = UserId},
-                    case db_serv:create_message(UpdatedMessage, BodyBlobs, AttachmentBlobs) of
+                    case db_serv:create_message(UserId, UpdatedMessage, BodyBlobs,
+                                                AttachmentBlobs) of
                         {ok, CreatedMessage} ->
                             JsonTerm = webapp_marshalling:encode(create_message, CreatedMessage),
                             send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});

@@ -28,6 +28,10 @@ clean:
 	$(MAKE) -C external clean && \
 	rm -f .dialyzer.plt
 
+reset:
+	rm -rf /var/tmp/bespoke/* && \
+	$(MAKE) all
+
 mrproper: clean
 	find . \( -name erl_crash.dump -or -name '*.beam' -or -name "*~" -or -name '#*' -or -name '.#*' \) -exec rm {} \;
 

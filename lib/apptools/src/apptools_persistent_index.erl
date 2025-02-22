@@ -1,12 +1,13 @@
 -module(apptools_persistent_index).
--export([open/1, open/2, sync/1, insert/3, lookup/2, delete/2, close/1]).
+-export([open/1, open/2, sync/1, insert/3, lookup/2, delete/2, dump/1,
+         close/1]).
 -export_type([index_name/0, index_tid/0, index/0, primary/0, secondary/0]).
 
 -type index_name() :: dets:tab_name().
 -type index_tid() :: reference().
 -type index() :: index_name() | index_tid().
--type primary() :: any().
--type secondary() :: any().
+-type primary() :: term().
+-type secondary() :: term().
 
 %%
 %% Exported: open
@@ -62,6 +63,15 @@ lookup(Index, Primary) ->
 
 delete(Index, Primary) ->
     dets:delete(Index, Primary).
+
+%%
+%% dump
+%%
+
+-spec dump(index()) -> [term()].
+
+dump(Index) ->
+    dets:foldl(fun(Entry, Acc) -> [Entry|Acc] end, [], Index).
 
 %%
 %% Exported: close

@@ -78,22 +78,24 @@ messaging() ->
            <<"username">> := _Username}} =
         webapp_client:http_get("http://localhost/api/auto_login"),
     %% Create users
-    [#{<<"userId">> := FooUserId, <<"sessionId">> := FooSessionId},
+    [#{<<"userId">> := _FooUserId, <<"sessionId">> := FooSessionId},
      #{<<"userId">> := BarUserId, <<"sessionId">> := BarSessionId},
      #{<<"userId">> := BazUserId,<<"sessionId">> := BazSessionId}] =
         create_users(SessionId, [<<"foo">>, <<"bar">>, <<"baz">>]),
     FooHeaders = [{"Cookie", webapp_client:bespoke_cookie(FooSessionId)}],
-    BarHeaders = [{"Cookie", webapp_client:bespoke_cookie(BarSessionId)}],
-    BazHeaders = [{"Cookie", webapp_client:bespoke_cookie(BazSessionId)}],
+    _BarHeaders = [{"Cookie", webapp_client:bespoke_cookie(BarSessionId)}],
+    _BazHeaders = [{"Cookie", webapp_client:bespoke_cookie(BazSessionId)}],
     %% Fetch all top messages
     {ok, []} = webapp_client:http_get("http://localhost/api/read_top_messages", FooHeaders),
     %% Create a message (without attachments: foo -> bar, baz)
     BarBodyBlob = upload_blob(BarUserId, unicode:characters_to_binary("BAJS\nPRUTTåäö\n")),
+    BazBodyBlob = upload_blob(BazUserId, unicode:characters_to_binary("BAJS\nPRUTTåäö\n")),
     {ok, #{<<"id">> := _MessageId}} =
         webapp_client:http_post("http://localhost/api/create_message",
                                 #{<<"title">> => <<"A title">>,
-                                  <<"bodyBlobs">> => [BarBodyBlob]},
-                                FooHeaders).
+                                  <<"bodyBlobs">> => [BarBodyBlob, BazBodyBlob]},
+                                FooHeaders),
+    webapp_client:http_get("http://localhost/api/read_top_messages", FooHeaders).
 
 create_users(_SessionId, []) ->
     [];
