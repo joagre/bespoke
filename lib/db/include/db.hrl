@@ -54,18 +54,6 @@
          created = not_set :: db_serv:seconds_since_epoch() | not_set
         }).
 
--record(message_recipient,
-        {
-         message_id :: db_serv:message_id(),
-         user_id :: db_serv:user_id()
-        }).
-
--record(message_attachment,
-        {
-         id :: db_serv:message_attachment_id(),
-         message_id :: db_serv:message_id()
-        }).
-
 -record(post,
         {
          id = not_set :: db_serv:post_id() | not_set | '_',

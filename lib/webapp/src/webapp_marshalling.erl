@@ -41,7 +41,7 @@ decode(create_message, #{<<"bodyBlobs">> := BodyBlobs} = JsonTerm) ->
                               DecodedAttachmentBlobs}}
                     else
                         Error ->
-                            {error, invalid}
+                            Error
                     end
             end;
         false ->
