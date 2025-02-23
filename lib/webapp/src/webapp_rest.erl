@@ -417,8 +417,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, #user{id = UserId}, {Message, BodyBlobs, AttachmentBlobs}} ->
                     UpdatedMessage = Message#message{author = UserId},
-                    case db_serv:create_message(UserId, UpdatedMessage, BodyBlobs,
-                                                AttachmentBlobs) of
+                    case db_serv:create_message(UpdatedMessage, BodyBlobs, AttachmentBlobs) of
                         {ok, CreatedMessage} ->
                             JsonTerm = webapp_marshalling:encode(create_message, CreatedMessage),
                             send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});

@@ -1,7 +1,7 @@
 % -*- fill-column: 100; -*-
 
 -module(db_message_db).
--export([open/0, dump/0, sync/0, close/0, create_message/4, read_top_messages/1,
+-export([open/0, dump/0, sync/0, close/0, create_message/3, read_top_messages/1,
          read_reply_messages/2, delete_message/2]).
 
 -include_lib("apptools/include/log.hrl").
@@ -83,12 +83,12 @@ close() ->
 %% Exported: create_message
 %%
 
--spec create_message(db_serv:user_id(), #message{},
+-spec create_message(#message{},
                      [{db_serv:user_id(), main:filename()}],
                      [[{db_serv:user_id(), main:filename()}]]) ->
           {ok, #message{}} | {error, term()}.
 
-create_message(UserId, Message, BodyBlobs, AttachmentBlobs) ->
+create_message(#message{author = Author} = Message, BodyBlobs, AttachmentBlobs) ->
     MessageId = db_meta_db:read_next_message_id(),
     case create_blobs(MessageId, BodyBlobs, AttachmentBlobs) of
         ok ->
@@ -102,9 +102,8 @@ create_message(UserId, Message, BodyBlobs, AttachmentBlobs) ->
             %% Update MESSAGE_TOP_INDEX_DB and MESSAGE_REPLY_INDEX_DB
             case Message#message.top_message_id of
                 not_set ->
-                    ok;
+                    ok = db:insert_disk_index(?MESSAGE_TOP_INDEX_DB, Author, MessageId);
                 TopMessageId ->
-                    ok = db:insert_disk_index(?MESSAGE_TOP_INDEX_DB, UserId, TopMessageId),
                     ok = db:insert_disk_index(?MESSAGE_REPLY_INDEX_DB, TopMessageId, MessageId)
             end,
             {ok, UpdatedMessage};
@@ -131,7 +130,7 @@ handle_body_blobs(MessageId, MessageBlobPath, [{UserId, BlobFilename}|Rest]) ->
     NewBlobPath = filename:join([MessageBlobPath, ?i2b(UserId)]),
     ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
     ok = file:rename(CurrentBlobPath, NewBlobPath),
-    %% Update MESSAGE_RECPIENT_DB
+    %% Update MESSAGE_RECPIENT_INDEX_DB
     ok = db:insert_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, MessageId, UserId),
     handle_body_blobs(MessageId, MessageBlobPath, Rest).
 

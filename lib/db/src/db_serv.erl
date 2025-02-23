@@ -1,7 +1,7 @@
 -module(db_serv).
 -export([start_link/0, stop/0]).
 -export([get_user_id/0]).
--export([create_message/4, read_top_messages/1, read_reply_messages/2,
+-export([create_message/3, read_top_messages/1, read_reply_messages/2,
          delete_message/2]).
 -export([list_top_posts/0, lookup_posts/1, lookup_posts/2, lookup_post_ids/1,
          lookup_post_ids/2, insert_post/1, delete_post/1, toggle_like/2]).
@@ -95,13 +95,13 @@ get_user_id() ->
 %% Exported: create_message
 %%
 
--spec create_message(db_serv:user_id(), #message{},
+-spec create_message(#message{},
                      [{db_serv:user_id(), main:filename()}],
                      [[{db_serv:user_id(), main:filename()}]]) ->
           {ok, #message{}} | {error, file:posix()}.
 
-create_message(UserId, Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
-    serv:call(?MODULE, {create_message, UserId, Message, MessageBodyBlobs,
+create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
+    serv:call(?MODULE, {create_message, Message, MessageBodyBlobs,
                         MessageAttachmentBlobs}).
 
 %%
@@ -279,11 +279,11 @@ message_handler(S) ->
 
 
 
-        {call, From, {create_message, UserId, Message, BodyBlobs,
+        {call, From, {create_message, Message, BodyBlobs,
                       AttachmentBlobs} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:create_message(
-                            UserId, Message, BodyBlobs, AttachmentBlobs)};
+                            Message, BodyBlobs, AttachmentBlobs)};
         {call, From, {read_top_messages, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:read_top_messages(UserId)};
