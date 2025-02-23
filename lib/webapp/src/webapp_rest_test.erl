@@ -87,21 +87,33 @@ messaging() ->
      #{<<"userId">> := BazUserId,<<"sessionId">> := BazSessionId}] =
         create_users(SessionId, [<<"foo">>, <<"bar">>, <<"baz">>]),
     FooHeaders = [{"Cookie", webapp_client:bespoke_cookie(FooSessionId)}],
-    _BarHeaders = [{"Cookie", webapp_client:bespoke_cookie(BarSessionId)}],
+    BarHeaders = [{"Cookie", webapp_client:bespoke_cookie(BarSessionId)}],
     _BazHeaders = [{"Cookie", webapp_client:bespoke_cookie(BazSessionId)}],
     %% Fetch all top messages
     {ok, []} = webapp_client:http_get("http://localhost/api/read_top_messages", FooHeaders),
     %% Create a message (without attachments: foo -> bar, baz)
-    FooBody = unicode:characters_to_binary("BAJS\nPRUTTåäö\n"),
+    FooBody = <<"BAJS\nPRUTTåäö\n">>,
     FooBodyBlob = upload_blob(FooUserId, FooBody),
     BarBodyBlob = upload_blob(BarUserId, FooBody),
     BazBodyBlob = upload_blob(BazUserId, FooBody),
+    %% Check that created message landed on the server
     {ok, #{<<"id">> := _MessageId}} =
         webapp_client:http_post("http://localhost/api/create_message",
                                 #{<<"title">> => <<"A title">>,
                                   <<"bodyBlobs">> => [FooBodyBlob, BarBodyBlob, BazBodyBlob]},
                                 FooHeaders),
-    webapp_client:http_get("http://localhost/api/read_top_messages", FooHeaders).
+    {ok, FooBodyString} = webapp_client:http_get("http://localhost/message/0/1"),
+    FooBody = list_to_binary(FooBodyString),
+    {ok, FooBodyString} = webapp_client:http_get("http://localhost/message/0/2"),
+    FooBody = list_to_binary(FooBodyString),
+    {ok, FooBodyString} = webapp_client:http_get("http://localhost/message/0/3"),
+    FooBody = list_to_binary(FooBodyString),
+    {ok, [#{<<"authorId">> := 1,
+            <<"authorUsername">> := <<"foo">>,
+            <<"id">> := 0,
+            <<"title">> := <<"A title">>}]} =
+        webapp_client:http_get("http://localhost/api/read_top_messages", FooHeaders),
+    webapp_client:http_get("http://localhost/api/read_top_messages", BarHeaders).
 
 create_users(_SessionId, []) ->
     [];
