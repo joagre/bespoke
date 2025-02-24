@@ -2,7 +2,7 @@
 
 -module(webapp_client).
 -export([run_once/0, init_httpc/0, http_get/1, http_get/2, http_post/2, http_post/3,
-         http_multipart_post/2, bespoke_cookie/1]).
+         http_multipart_post/2, bespoke_cookie/1, prepend_file_header/2]).
 
 -include_lib("apptools/include/shorthand.hrl").
 
@@ -64,7 +64,7 @@ http_post(Url, Data, Headers) ->
 -spec http_multipart_post(string(), {data, binary()} | binary()) -> term().
 
 http_multipart_post(Url, {data, Data}) ->
-    FilePath = filename:join(["/tmp", ?i2l(erlang:unique_integer([positive])) ++ ".dat"]),
+    FilePath = unique_file_path(),
     ok = file:write_file(FilePath, Data),
     Result = http_multipart_post(Url, FilePath),
     ok = file:delete(FilePath),
@@ -90,6 +90,31 @@ bespoke_cookie(SessionId) ->
     lists:flatten(io_lib:format("bespoke=~s", [EncodedCookieValue])).
 
 %%
+%% Exported: prepend_file_header
+%%
+
+-spec prepend_file_header(binary(), binary()) -> binary().
+
+prepend_file_header(FilePath, Header) ->
+    TmpFilePath = filename:join([<<"/tmp">>, filename:basename(FilePath)]),
+    {ok, In} = file:open(FilePath, [read, binary]),
+    {ok, Out} = file:open(TmpFilePath, [write, binary]),
+    ok = file:write(Out, Header),
+    ok = copy_stream(In, Out),
+    _ = file:close(In),
+    _ = file:close(Out),
+    TmpFilePath.
+
+copy_stream(In, Out) ->
+    case file:read(In, 4096) of
+        {ok, Data} ->
+            ok = file:write(Out, Data),
+            copy_stream(In, Out);
+        eof ->
+            ok
+    end.
+
+%%
 %% Utilities
 %%
 
@@ -104,3 +129,6 @@ handle_response({ok, {{"HTTP/1.1", StatusCode, ReasonPhrase}, ResponseHeaders, B
     {unexpected, StatusCode, ReasonPhrase, ResponseHeaders, Body};
 handle_response({error, Reason}) ->
     {error, Reason}.
+
+unique_file_path() ->
+    filename:join([<<"/tmp">>, ?i2l(erlang:unique_integer([positive])) ++ ".dat"]).

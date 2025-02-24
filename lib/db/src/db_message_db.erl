@@ -95,10 +95,10 @@ create_message(Message, BodyBlobs, AttachmentBlobs) ->
           id = MessageId,
           created = db:seconds_since_epoch()
          },
+    %% Update MESSAGE_DB
+    ok = db:insert_disk(?MESSAGE_DB, UpdatedMessage),
     case create_blobs(UpdatedMessage, BodyBlobs, AttachmentBlobs) of
         ok ->
-            %% Update MESSAGE_DB
-            ok = db:insert_disk(?MESSAGE_DB, UpdatedMessage),
             {ok, UpdatedMessage};
         Error ->
             Error
@@ -137,20 +137,22 @@ handle_body_blobs(#message{id = MessageId} = Message, MessageBlobPath,
 
 handle_attachment_blobs(_Message, _MessageBlobPath, []) ->
     ok;
-handle_attachment_blobs(Message, MessageBlobPath, [AttachmentBlobs|Rest])
-  when is_list(AttachmentBlobs) ->
-    ok = handle_attachment_blobs(Message, MessageBlobPath, AttachmentBlobs),
-    handle_attachment_blobs(Message, MessageBlobPath, Rest);
-handle_attachment_blobs(#message{id = MessageId} = Message, MessageBlobPath,
+handle_attachment_blobs(Message, MessageBlobPath, [AttachmentBlobs|Rest]) ->
+    AttachmentId = db_meta_db:read_next_message_attachment_id(),
+    ok = handle_attachment_blobs(AttachmentId, Message, MessageBlobPath, AttachmentBlobs),
+    handle_attachment_blobs(Message, MessageBlobPath, Rest).
+
+handle_attachment_blobs(_AttachmentId, _Message, _MessageBlobPath, []) ->
+    ok;
+handle_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, MessageBlobPath,
                         [{UserId, BlobFilename}|Rest]) ->
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
-    AttachmentId = db_meta_db:read_next_message_attachment_id(),
     NewBlobPath = filename:join([MessageBlobPath, io_lib:format("~w-~w", [UserId, AttachmentId])]),
     ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
     ok = file:rename(CurrentBlobPath, NewBlobPath),
     %% Update MESSAGE_ATTACHMENT_INDEX_DB
     ok = db:insert_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB, MessageId, AttachmentId),
-    handle_attachment_blobs(Message, MessageBlobPath, Rest).
+    handle_attachment_blobs(AttachmentId, Message, MessageBlobPath, Rest).
 
 %%
 %% Exported: read_top_messages

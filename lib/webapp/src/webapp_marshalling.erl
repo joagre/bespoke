@@ -32,10 +32,10 @@ decode(create_message, #{<<"bodyBlobs">> := BodyBlobs} = JsonTerm) ->
                 {Title, TopMessageId} when is_binary(Title) andalso is_binary(TopMessageId) ->
                     {error, invalid};
                 _ ->
-                    AttachmentBlobs = maps:get(<<"attachmentsBlobs">>, JsonTerm, []),
+                    AttachmentBlobs = maps:get(<<"attachmentBlobs">>, JsonTerm, []),
                     maybe
                         {ok, DecodedBodyBlobs} ?= decode_blobs(BodyBlobs),
-                        {ok, DecodedAttachmentBlobs} ?= decode_blobs(AttachmentBlobs),
+                        {ok, DecodedAttachmentBlobs} ?= decode_nested_blobs(AttachmentBlobs),
                         {ok, {#message{title = Title, top_message_id = TopMessageId},
                               DecodedBodyBlobs,
                               DecodedAttachmentBlobs}}
@@ -54,16 +54,30 @@ decode(delete_message, MessageId) ->
 decode(_, _) ->
     {error, invalid}.
 
-decode_blobs(Blobs) -> decode_blobs(Blobs, []).
+decode_blobs(Blobs) ->
+    decode_blobs(Blobs, []).
 
 decode_blobs([], Acc) ->
     {ok, lists:reverse(Acc)};
-decode_blobs([Blobs|Rest], Acc) when is_list(Blobs) ->
-    decode_blobs(Rest, [decode_blobs(Blobs)|Acc]);
 decode_blobs([#{<<"userId">> := UserId, <<"filename">> := Filename}|Rest], Acc)
   when is_integer(UserId), is_binary(Filename) ->
     decode_blobs(Rest, [{UserId, Filename}|Acc]);
-decode_blobs(_A, _B) ->
+decode_blobs(_, _) ->
+    {error, invalid}.
+
+decode_nested_blobs(NestedBlobs) ->
+    decode_nested_blobs(NestedBlobs, []).
+
+decode_nested_blobs([], Acc) ->
+    {ok, lists:reverse(Acc)};
+decode_nested_blobs([Blobs|Rest], Acc) ->
+    case decode_blobs(Blobs) of
+        {ok, DecodedBlobs} ->
+            decode_nested_blobs(Rest, [DecodedBlobs|Acc]);
+        Error ->
+            Error
+    end;
+decode_nested_blobs(_, _) ->
     {error, invalid}.
 
 %%
