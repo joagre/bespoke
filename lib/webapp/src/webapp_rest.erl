@@ -243,8 +243,8 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, _Body} ->
-                    {ok, Messages} = db_serv:read_top_messages(UserId),
-                    JsonTerm = webapp_marshalling:encode(read_top_messages, Messages),
+                    {ok, TopMessages} = db_serv:read_top_messages(UserId),
+                    JsonTerm = webapp_marshalling:encode(read_top_messages, TopMessages),
                     send_response(Socket, Request, no_cache_headers(), {json, JsonTerm})
             end;
 
@@ -415,7 +415,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case decode(Socket, Request, Body, create_message) of
                 {return, Result} ->
                     Result;
-                {ok, #user{id = UserId}, {Message, BodyBlobs, AttachmentBlobs}} ->
+                {ok, #user{id = UserId}, #{message := Message,
+                                           body_blobs := BodyBlobs,
+                                           attachment_blobs := AttachmentBlobs}} ->
                     UpdatedMessage = Message#message{author = UserId},
                     case db_serv:create_message(UpdatedMessage, BodyBlobs, AttachmentBlobs) of
                         {ok, CreatedMessage} ->
@@ -432,8 +434,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, #user{id = UserId}, MessageIds} ->
                     case db_serv:read_reply_messages(UserId, MessageIds) of
-                        {ok, Messages} ->
-                            JsonTerm = webapp_marshalling:encode(read_reply_messages, Messages),
+                        {ok, ReplyMessages} ->
+                            JsonTerm = webapp_marshalling:encode(read_reply_messages,
+                                                                 ReplyMessages),
                             send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});
                         {error, Reason} ->
                             ?log_error("/api/read_messages: ~p", [Reason]),

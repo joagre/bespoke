@@ -1,19 +1,18 @@
+% -*- fill-column: 100; -*-
+
 -module(db_serv).
 -export([start_link/0, stop/0]).
 -export([get_user_id/0]).
--export([create_message/3, read_top_messages/1, read_reply_messages/2,
-         delete_message/2]).
--export([list_top_posts/0, lookup_posts/1, lookup_posts/2, lookup_post_ids/1,
-         lookup_post_ids/2, insert_post/1, delete_post/1, toggle_like/2]).
--export([list_files/0, lookup_files/1, insert_file/1, delete_file/1,
-         file_uploaded/1]).
+-export([create_message/3, read_top_messages/1, read_reply_messages/2, delete_message/2]).
+-export([list_top_posts/0, lookup_posts/1, lookup_posts/2, lookup_post_ids/1, lookup_post_ids/2,
+         insert_post/1, delete_post/1, toggle_like/2]).
+-export([list_files/0, lookup_files/1, insert_file/1, delete_file/1, file_uploaded/1]).
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
 -export([message_handler/1]).
--export_type([ssid/0, host/0, user_id/0, username/0, message_id/0,
-              message_attachment_id/0, post_id/0, title/0, body/0,
-              seconds_since_epoch/0, content_type/0, file_id/0, file_size/0,
-              subscription_id/0, monitor_ref/0]).
+-export_type([ssid/0, host/0, user_id/0, username/0, message_id/0, message_attachment_id/0,
+              post_id/0, title/0, body/0, seconds_since_epoch/0, content_type/0, file_id/0,
+              file_size/0, subscription_id/0, monitor_ref/0]).
 
 -include_lib("kernel/include/file.hrl").
 -include_lib("apptools/include/log.hrl").
@@ -65,8 +64,7 @@
 -spec start_link() -> serv:spawn_server_result().
 
 start_link() ->
-    ?spawn_server(fun init/1, fun ?MODULE:message_handler/1,
-                  #serv_options{name = ?MODULE}).
+    ?spawn_server(fun init/1, fun ?MODULE:message_handler/1, #serv_options{name = ?MODULE}).
 
 %%
 %% Exported: stop
@@ -101,14 +99,14 @@ get_user_id() ->
           {ok, #message{}} | {error, file:posix()}.
 
 create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
-    serv:call(?MODULE, {create_message, Message, MessageBodyBlobs,
-                        MessageAttachmentBlobs}).
+    serv:call(?MODULE, {create_message, Message, MessageBodyBlobs, MessageAttachmentBlobs}).
 
 %%
 %% Exported: read_top_messages
 %%
 
--spec read_top_messages(db_serv:user_id()) -> {ok, [#message{}]}.
+-spec read_top_messages(db_serv:user_id()) ->
+          {ok, [{{#message{}, [db_serv:message_attachment_id()]}}]}.
 
 read_top_messages(UserId) ->
     serv:call(?MODULE, {read_top_messages, UserId}).
@@ -118,7 +116,8 @@ read_top_messages(UserId) ->
 %%
 
 -spec read_reply_messages(db_serv:user_id(), db_serv:message_id()) ->
-          {ok, [#message{}]} | {error, access_denied}.
+          {ok, [{{#message{}, [db_serv:message_attachment_id()]}}]} |
+          {error, access_denied}.
 
 read_reply_messages(UserId, TopLevelMessageId) ->
     serv:call(?MODULE, {read_reply_messages, UserId, TopLevelMessageId}).
@@ -279,18 +278,15 @@ message_handler(S) ->
 
 
 
-        {call, From, {create_message, Message, BodyBlobs,
-                      AttachmentBlobs} = Call} ->
+        {call, From, {create_message, Message, BodyBlobs, AttachmentBlobs} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            {reply, From, db_message_db:create_message(
-                            Message, BodyBlobs, AttachmentBlobs)};
+            {reply, From, db_message_db:create_message(Message, BodyBlobs, AttachmentBlobs)};
         {call, From, {read_top_messages, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:read_top_messages(UserId)};
         {call, From, {read_reply_messages, UserId, TopMessageId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            {reply, From, db_message_db:read_reply_messages(UserId,
-                                                            TopMessageId)};
+            {reply, From, db_message_db:read_reply_messages(UserId, TopMessageId)};
         {call, From, {delete_message, UserId, MessageId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:delete_message(UserId, MessageId)};
@@ -302,14 +298,10 @@ message_handler(S) ->
 
         {call, From, list_top_posts = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            TopPosts =
-                dets:match_object(
-                  ?POST_DB, #post{top_post_id = not_set, _ = '_'}),
-            SortedTopPosts =
-                lists:sort(
-                  fun(PostA, PostB) ->
-                          PostA#post.created > PostB#post.created
-                  end, TopPosts),
+            TopPosts = dets:match_object(?POST_DB, #post{top_post_id = not_set, _ = '_'}),
+            SortedTopPosts = lists:sort(fun(PostA, PostB) ->
+                                                PostA#post.created > PostB#post.created
+                                        end, TopPosts),
             {reply, From, SortedTopPosts};
         {call, From, {lookup_posts, PostIds, Mode} = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -323,14 +315,11 @@ message_handler(S) ->
         {call, From, {delete_post, PostId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?POST_DB, PostId) of
-                [#post{parent_post_id = ParentPostId}]
-                  when ParentPostId /= not_set ->
+                [#post{parent_post_id = ParentPostId}] when ParentPostId /= not_set ->
                     [ParentPost] = dets:lookup(?POST_DB, ParentPostId),
                     ok = insert_and_inform(
                            ParentPost#post{
-                             replies = lists:delete(
-                                         PostId,
-                                         ParentPost#post.replies)}),
+                             replies = lists:delete(PostId, ParentPost#post.replies)}),
                     N = delete_all([PostId]),
                     ok = update_parent_count(ParentPost#post.id, -N),
                     {reply, From, ok};
@@ -344,13 +333,12 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?POST_DB, PostId) of
                 [#post{likers = Likers} = Post] ->
-                    UpdatedLikers =
-                        case lists:member(UserId, Likers) of
-                            true ->
-                                lists:delete(UserId, Likers);
-                            false ->
-                                [UserId|Likers]
-                        end,
+                    UpdatedLikers = case lists:member(UserId, Likers) of
+                                        true ->
+                                            lists:delete(UserId, Likers);
+                                        false ->
+                                            [UserId|Likers]
+                                    end,
                     ok = insert_and_inform(Post#post{likers = UpdatedLikers}),
                     {reply, From, {ok, UpdatedLikers}};
                 [] ->
@@ -386,11 +374,10 @@ message_handler(S) ->
         {call, From, {insert_file, File} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             NextFileId = db_meta_db:read_next_file_id(),
-            InsertedFile =
-                File#file{
-                  id = NextFileId,
-                  created = db:seconds_since_epoch()
-                 },
+            InsertedFile = File#file{
+                             id = NextFileId,
+                             created = db:seconds_since_epoch()
+                            },
             ok = dets:insert(?FILE_DB, InsertedFile),
             {reply, From, {ok, InsertedFile}};
         {call, From, {delete_file, FileId} = Call} ->
@@ -417,12 +404,11 @@ message_handler(S) ->
         {call, From, {subscribe_on_changes, Subscriber, PostIds} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             SubscriptionId = make_ref(),
-            true = ets:insert(?SUBSCRIPTION_DB,
-                              #subscription{
-                                 id = SubscriptionId,
-                                 subscriber = Subscriber,
-                                 monitor_ref = monitor(process, Subscriber),
-                                 post_ids = PostIds}),
+            true = ets:insert(?SUBSCRIPTION_DB, #subscription{
+                                                   id = SubscriptionId,
+                                                   subscriber = Subscriber,
+                                                   monitor_ref = monitor(process, Subscriber),
+                                                   post_ids = PostIds}),
             {reply, From, SubscriptionId};
         {call, From, sync = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -430,9 +416,8 @@ message_handler(S) ->
             {reply, From, ok};
         {'DOWN', MonitorRef, process, Pid, _Reason} ->
             ?log_info("Subscriber died: ~w", [Pid]),
-            true = ets:match_delete(
-                     ?SUBSCRIPTION_DB,
-                     #subscription{monitor_ref = MonitorRef, _ = '_'}),
+            true = ets:match_delete(?SUBSCRIPTION_DB,
+                                    #subscription{monitor_ref = MonitorRef, _ = '_'}),
             noreply;
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             ok = close_dbs(),
@@ -481,8 +466,7 @@ do_lookup_posts(PostIds, Mode) ->
                       [Post] when Mode == flat ->
                           [Post|Acc];
                       [Post] when Mode == recursive ->
-                          Replies =
-                              do_lookup_posts(Post#post.replies, Mode),
+                          Replies = do_lookup_posts(Post#post.replies, Mode),
                           [Post|Acc] ++ Replies
                   end
           end, [], PostIds),
@@ -498,8 +482,7 @@ do_lookup_post_ids(PostIds, Mode) ->
                   [Post] when Mode == flat ->
                       [Post#post.id|Acc];
                   [Post] when Mode == recursive ->
-                      Replies =
-                          do_lookup_post_ids(Post#post.replies, Mode),
+                      Replies = do_lookup_post_ids(Post#post.replies, Mode),
                       [Post#post.id|Acc] ++ Replies
               end
       end, [], PostIds).
@@ -519,20 +502,17 @@ do_insert_post(Post) ->
                     PostId ->
                         PostId
                 end,
-            UpdatedAttachments =
-                move_tmp_attachments(Post#post.attachments, NewPostId),
-            UpdatedPost =
-                Post#post{
-                  id = NewPostId,
-                  created = db:seconds_since_epoch(Post#post.created),
-                  attachments = UpdatedAttachments},
+            UpdatedAttachments = move_tmp_attachments(Post#post.attachments, NewPostId),
+            UpdatedPost = Post#post{
+                            id = NewPostId,
+                            created = db:seconds_since_epoch(Post#post.created),
+                            attachments = UpdatedAttachments},
             ok = insert_and_inform(UpdatedPost),
             case ParentPost of
                 not_set ->
                     {ok, UpdatedPost};
                 #post{replies = Replies} ->
-                    UpdatedParentPost =
-                        ParentPost#post{replies = Replies ++ [NewPostId]},
+                    UpdatedParentPost = ParentPost#post{replies = Replies ++ [NewPostId]},
                     ok = insert_and_inform(UpdatedParentPost),
                     ok = update_parent_count(ParentPost#post.id, 1),
                     {ok, UpdatedPost}
@@ -693,10 +673,9 @@ move_file_on_disk(#file{id = FileId, filename = Filename}) ->
         filename:join([TmpPath, io_lib:format("file-~w-", [FileId])]),
     case filelib:wildcard(TmpFilePathBeginning ++ "*") of
         [TmpFilePath] ->
-            UploadedFilePath =
-                filename:join(
-                  [?BESPOKE_FILE_PATH,
-                   io_lib:format("~w-~s", [FileId, Filename])]),
+            UploadedFilePath = filename:join(
+                                 [?BESPOKE_FILE_PATH,
+                                  io_lib:format("~w-~s", [FileId, Filename])]),
             ?log_info("Moving ~s to ~s", [TmpFilePath, UploadedFilePath]),
             ok = file:rename(TmpFilePath, UploadedFilePath);
         [] ->

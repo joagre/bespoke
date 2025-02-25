@@ -19,30 +19,21 @@
 -spec decode(decode_type(), term()) -> {ok, term()} | {error, invalid}.
 
 decode(create_message, #{<<"bodyBlobs">> := BodyBlobs} = JsonTerm) ->
-    case valid_keys([<<"title">>,
-                     <<"topMessageId">>,
+    case valid_keys([<<"topMessageId">>,
                      <<"bodyBlobs">>,
                      <<"attachmentBlobs">>], JsonTerm) of
         true ->
-            Title = maps:get(<<"title">>, JsonTerm, not_set),
             TopMessageId = maps:get(<<"topMessageId">>, JsonTerm, not_set),
-            case {Title, TopMessageId} of
-                {not_set, not_set} ->
-                    {error, invalid};
-                {Title, TopMessageId} when is_binary(Title) andalso is_binary(TopMessageId) ->
-                    {error, invalid};
-                _ ->
-                    AttachmentBlobs = maps:get(<<"attachmentBlobs">>, JsonTerm, []),
-                    maybe
-                        {ok, DecodedBodyBlobs} ?= decode_blobs(BodyBlobs),
-                        {ok, DecodedAttachmentBlobs} ?= decode_nested_blobs(AttachmentBlobs),
-                        {ok, {#message{title = Title, top_message_id = TopMessageId},
-                              DecodedBodyBlobs,
-                              DecodedAttachmentBlobs}}
-                    else
-                        Error ->
-                            Error
-                    end
+            AttachmentBlobs = maps:get(<<"attachmentBlobs">>, JsonTerm, []),
+            maybe
+                {ok, DecodedBodyBlobs} ?= decode_blobs(BodyBlobs),
+                {ok, DecodedAttachmentBlobs} ?= decode_nested_blobs(AttachmentBlobs),
+                {ok, #{message => #message{top_message_id = TopMessageId},
+                       body_blobs => DecodedBodyBlobs,
+                       attachment_blobs => DecodedAttachmentBlobs}}
+            else
+                Error ->
+                    Error
             end;
         false ->
             {error, invalid}
@@ -88,13 +79,18 @@ decode_nested_blobs(_, _) ->
 
 encode(create_message, Message) ->
     encode_message(Message);
-encode(read_reply_messages, Messages) ->
-    lists:map(fun(Message) -> encode_message(Message) end, Messages);
-encode(read_top_messages, Messages) ->
-    lists:map(fun(Message) -> encode_message(Message) end, Messages).
+encode(read_top_messages, TopMessages) ->
+    lists:map(fun({Message, AttachmentIds}) ->
+                      EncodedMessage = encode_message(Message),
+                      EncodedMessage#{<<"attachmentIds">> => AttachmentIds}
+              end, TopMessages);
+encode(read_reply_messages, ReplyMessages) ->
+    lists:map(fun({Message, AttachmentIds}) ->
+                      EncodedMessage = encode_message(Message),
+                      EncodedMessage#{<<"attachmentIds">> => AttachmentIds}
+              end, ReplyMessages).
 
 encode_message(#message{id = Id,
-                        title = Title,
                         top_message_id = TopMessageId,
                         author = AuthorId,
                         created = Created}) ->
@@ -103,7 +99,7 @@ encode_message(#message{id = Id,
                  <<"authorId">> => AuthorId,
                  <<"authorUsername">> => AuthorUsername,
                  <<"created">> => Created},
-    add_optional_members([{<<"title">>, Title}, {<<"topMessageId">>, TopMessageId}], JsonTerm).
+    add_optional_members([{<<"topMessageId">>, TopMessageId}], JsonTerm).
 
 %%
 %% Utilities

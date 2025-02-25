@@ -79,14 +79,14 @@ make_attachment(#{<<"absPath">> := AbsPath, <<"contentType">> := ContentType}) -
 messaging() ->
     _ = webapp_client:init_httpc(),
     %% Auto login
-    ?log_info("** Auto login\n"),
+    ?log_info("** Auto login"),
     {ok, #{<<"noPassword">> := _NoPassword,
            <<"sessionId">> := SessionId,
            <<"userId">> := _UserId,
            <<"username">> := _Username}} =
         webapp_client:http_get("http://localhost/api/auto_login"),
     %% Create users
-    ?log_info("** Create users\n"),
+    ?log_info("** Create users"),
     [#{<<"userId">> := FooUserId, <<"sessionId">> := FooSessionId},
      #{<<"userId">> := BarUserId, <<"sessionId">> := BarSessionId},
      #{<<"userId">> := BazUserId,<<"sessionId">> := BazSessionId},
@@ -97,15 +97,15 @@ messaging() ->
     BazHeaders = [{"Cookie", webapp_client:bespoke_cookie(BazSessionId)}],
     FuubarHeaders = [{"Cookie", webapp_client:bespoke_cookie(FuubarSessionId)}],
     %% Fetch all top messages
-    ?log_info("** Verify that foo has no top messages\n"),
+    ?log_info("** Verify that foo has no top messages"),
     {ok, []} = webapp_client:http_get("http://localhost/api/read_top_messages", FooHeaders),
-    %% Create a message (foo -> bar, baz) with two attachments
-    ?log_info("** Create a message (foo -> bar, baz) with two attachments\n"),
+    %% Create a top message (foo -> bar, baz) with two attachments
+    ?log_info("** Create a message (foo -> bar, baz) with two attachments"),
     FooBody = <<"BAJS\nPRUTTåäö\n">>,
     FooBodyBlob = upload_blob(FooUserId, {data, FooBody}),
     BarBodyBlob = upload_blob(BarUserId, {data, FooBody}),
     BazBodyBlob = upload_blob(BazUserId, {data, FooBody}),
-    ?log_info("** Create the two attachments\n"),
+    ?log_info("** Create the two attachments"),
     FooAttachmentFilepath0 =
         filename:join([code:priv_dir(webapp), <<"docroot/images/animated-background.gif">>]),
     FooAttachmentBlob0 = upload_blob(FooUserId, FooAttachmentFilepath0),
@@ -115,49 +115,37 @@ messaging() ->
     FooAttachmentBlob1 = upload_blob(FooUserId, FooAttachmentFilepath1),
     BarAttachmentBlob1 = upload_blob(BarUserId, FooAttachmentFilepath1),
     BazAttachmentBlob1 = upload_blob(BazUserId, FooAttachmentFilepath1),
-    ?log_info("** Create the message\n"),
+    ?log_info("** Create the message"),
     {ok, #{<<"id">> := _MessageId}} =
         webapp_client:http_post(
           "http://localhost/api/create_message",
-          #{<<"title">> => <<"A title">>,
-            <<"bodyBlobs">> => [FooBodyBlob, BarBodyBlob, BazBodyBlob],
+          #{<<"bodyBlobs">> => [FooBodyBlob, BarBodyBlob, BazBodyBlob],
             <<"attachmentBlobs">> =>
                 [[FooAttachmentBlob0, BarAttachmentBlob0, BazAttachmentBlob0],
                  [FooAttachmentBlob1, BarAttachmentBlob1, BazAttachmentBlob1]]},
           FooHeaders),
-
-
-
-
-    %% Check that created message landed on the server
-
-    {ok, FooBodyString} = webapp_client:http_get("http://localhost/message/0/1"),
-    FooBody = list_to_binary(FooBodyString),
-    {ok, FooBodyString} = webapp_client:http_get("http://localhost/message/0/2"),
-    FooBody = list_to_binary(FooBodyString),
-    {ok, FooBodyString} = webapp_client:http_get("http://localhost/message/0/3"),
-    FooBody = list_to_binary(FooBodyString),
-
-
-
-
-
-
-    {ok, [#{<<"authorId">> := 1,
-            <<"authorUsername">> := <<"foo">>,
-            <<"id">> := 0,
-            <<"title">> := <<"A title">>}]} =
+    ?log_info("** Check body blobs"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/0/1"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/0/2"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/0/3"),
+    ?log_info("** Check attachment blobs"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/0/1-0"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/0/1-1"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/0/2-0"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/0/2-1"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/0/3-0"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/0/3-1"),
+    ?log_info("** Verify that foo, bar and baz got the top message"),
+    {ok,[#{<<"attachmentIds">> := [0,1], <<"authorId">> := FooUserId,
+           <<"authorUsername">> := <<"foo">>, <<"id">> := 0}]} =
         webapp_client:http_get("http://localhost/api/read_top_messages", FooHeaders),
-    {ok, [#{<<"authorId">> := 1,
-            <<"authorUsername">> := <<"foo">>,
-            <<"id">> := 0,
-            <<"title">> := <<"A title">>}]} =
+    {ok,[#{<<"attachmentIds">> := [0,1], <<"authorId">> := FooUserId,
+           <<"authorUsername">> := <<"foo">>, <<"id">> := 0}]} =
         webapp_client:http_get("http://localhost/api/read_top_messages", BarHeaders),
-    {ok, [#{<<"authorId">> := 1,
-            <<"authorUsername">> := <<"foo">>,
-            <<"id">> := 0,
-            <<"title">> := <<"A title">>}]} =
+    {ok,[#{<<"attachmentIds">> := [0,1], <<"authorId">> := FooUserId,
+           <<"authorUsername">> := <<"foo">>, <<"id">> := 0}]} =
         webapp_client:http_get("http://localhost/api/read_top_messages", BazHeaders),
+    ?log_info("** Verify that fuubar didn't get the top message"),
     {ok, []} = webapp_client:http_get("http://localhost/api/read_top_messages", FuubarHeaders).
 
 create_users(_SessionId, []) ->

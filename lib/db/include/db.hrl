@@ -46,8 +46,6 @@
 -record(message,
         {
          id = not_set :: db_serv:message_id() | not_set,
-         %% Note: Mandatory for top messages and disallowed for reply messages
-         title = not_set :: db_serv:title() | not_set,
          %% Note: Disallowed for top messages and mandatory for reply messages
          top_message_id = not_set :: db_serv:message_id() | not_set,
          author = not_set :: db_serv:user_id() | not_set,

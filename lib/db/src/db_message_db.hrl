@@ -19,8 +19,8 @@
         filename:join(?BESPOKE_DB_DIR, "message_recipient_index.db")).
 -define(MESSAGE_REPLY_INDEX_DB, message_reply_index_db).
 
-%% Recipient Index DB (message-id -> [user-id, ...])
-%% Description: To quickly find all recipients to a message
+%% Recipient Index DB (top-message-id -> [user-id, ...])
+%% Description: To quickly find all recipients to a top message
 -define(MESSAGE_RECIPIENT_INDEX_FILE_PATH,
         filename:join(?BESPOKE_DB_DIR, "message_recipient_index.db")).
 -define(MESSAGE_RECIPIENT_INDEX_DB, message_recipient_index_db).

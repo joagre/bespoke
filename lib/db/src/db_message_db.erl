@@ -118,21 +118,24 @@ create_blobs(#message{id = MessageId} = Message, BodyBlobs, AttachmentBlobs) ->
 
 handle_body_blobs(_Message, _MessageBlobPath, []) ->
     ok;
-handle_body_blobs(#message{id = MessageId} = Message, MessageBlobPath,
-                  [{UserId, BlobFilename}|Rest]) ->
+handle_body_blobs(#message{id = MessageId, top_message_id = TopMessageId} = Message,
+                  MessageBlobPath, [{UserId, BlobFilename}|Rest]) ->
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     NewBlobPath = filename:join([MessageBlobPath, ?i2b(UserId)]),
     ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
     ok = file:rename(CurrentBlobPath, NewBlobPath),
-    %% Update MESSAGE_TOP_INDEX_DB and MESSAGE_REPLY_INDEX_DB
-    case Message#message.top_message_id of
+    case TopMessageId of
+        %% Is a top message!
         not_set ->
-            ok = db:insert_disk_index(?MESSAGE_TOP_INDEX_DB, UserId, MessageId);
+            %% Update MESSAGE_TOP_INDEX_DB and MESSAGE_RECIPIENT_INDEX_DB
+            ok = db:insert_disk_index(?MESSAGE_TOP_INDEX_DB, UserId, MessageId),
+            ok = db:insert_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, MessageId, UserId);
+        %% Is a reply message!
         TopMessageId ->
-            ok = db:insert_disk_index(?MESSAGE_REPLY_INDEX_DB, TopMessageId, MessageId)
-    end,
-    %% Update MESSAGE_RECPIENT_INDEX_DB
-    ok = db:insert_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, MessageId, UserId),
+            %% Update MESSAGE_REPLY_INDEX_DB and MESSAGE_RECIPIENT_INDEX_DB
+            ok = db:insert_disk_index(?MESSAGE_REPLY_INDEX_DB, TopMessageId, MessageId),
+            ok = db:insert_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, TopMessageId, UserId)
+        end,
     handle_body_blobs(Message, MessageBlobPath, Rest).
 
 handle_attachment_blobs(_Message, _MessageBlobPath, []) ->
@@ -158,25 +161,40 @@ handle_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
 %% Exported: read_top_messages
 %%
 
--spec read_top_messages(db_serv:user_id()) -> {ok, [#message{}]}.
+-spec read_top_messages(db_serv:user_id()) ->
+          {ok, [{{#message{}, [db_serv:message_attachment_id()]}}]}.
 
 read_top_messages(UserId) ->
     MessageIds = db:lookup_disk_index(?MESSAGE_TOP_INDEX_DB, UserId),
-    {ok, sort(get_messages(MessageIds))}.
+    {ok, read_messages(MessageIds)}.
+
+read_messages(MessageIds) ->
+    Messages = sort_messages(lookup_messages(MessageIds)),
+    lists:map(fun(#message{id = MessageId} = Message) ->
+                      AttachmentIds = db:lookup_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB, MessageId),
+                      {Message, AttachmentIds}
+              end, Messages).
+
+lookup_messages([]) ->
+    [];
+lookup_messages([MessageId|Rest]) ->
+    [Message] = db:lookup_disk(?MESSAGE_DB, MessageId),
+    [Message|lookup_messages(Rest)].
 
 %%
 %% Exported: read_reply_messages
 %%
 
 -spec read_reply_messages(db_serv:user_id(), db_serv:message_id()) ->
-          {ok, [#message{}]} | {error, access_denied}.
+          {ok, [{{#message{}, [db_serv:message_attachment_id()]}}]} |
+          {error, access_denied}.
 
 read_reply_messages(UserId, TopMessageId) ->
     RecipientMessageIds = db:lookup_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, UserId),
     case lists:member(TopMessageId, RecipientMessageIds) of
         true ->
             MessageIds = db:lookup_disk_index(?MESSAGE_REPLY_INDEX_DB, TopMessageId),
-            {ok, sort(get_messages(MessageIds))};
+            {ok, read_messages(MessageIds)};
         false ->
             {error, access_denied}
     end.
@@ -209,7 +227,7 @@ delete_blobs(_MessageId) ->
 %% Utilities
 %%
 
-sort(Messages) ->
+sort_messages(Messages) ->
     lists:sort(
       fun(MessageA, MessageB) ->
               MessageA#message.created > MessageB#message.created
@@ -222,9 +240,3 @@ make_dir(DirPath) ->
         false ->
             file:make_dir(DirPath)
     end.
-
-get_messages([]) ->
-    [];
-get_messages([MessageId|Rest]) ->
-    [Message] = db:lookup_disk(?MESSAGE_DB, MessageId),
-    [Message|get_messages(Rest)].
