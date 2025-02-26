@@ -113,12 +113,12 @@ direct_messaging() ->
     {ok, _} = webapp_client:http_get("http://localhost/message/1/3"),
 
     ?log_info("**** Delete reply message"),
-    %% delete reply body blob for a specific user + specific attachments
-    %% do *not* delete message
+    %% 1) Delete reply body blob for the recipient + specific user attachments
+    %% 2) Do *not* delete top message
     ?log_info("**** Delete top message"),
-    %% delete top body blob for a specific user + specific attachments +
-    %% all reply messages + attachments
-    %% delete message
+    %% 1) Delete top body blob for a the top message author + specific top message attachments +
+    %%    delete reply body blobs for all recipients + specific user attachments
+    %% 2) Delete top message
     ok.
 
 create_users(_SessionId, []) ->
