@@ -14,24 +14,28 @@
 
 misc() ->
     _ = webapp_client:init_httpc(),
-    %% Auto login
+
+    ?log_info("**** Auto login"),
     {ok, #{<<"noPassword">> := _NoPassword,
            <<"sessionId">> := SessionId,
            <<"userId">> := _UserId,
            <<"username">> := _Username}} =
         webapp_client:http_get("http://localhost/api/auto_login"),
-    %% Fetch all top posts
+
+    ?log_info("**** Fetch all top posts"),
     Headers = [{"Cookie", webapp_client:bespoke_cookie(SessionId)}],
     {ok, [#{<<"id">> := PostId}|_]} =
         webapp_client:http_get("http://localhost/api/list_top_posts", Headers),
-    %% Fetch specific post(s)
+
+    ?log_info("**** Fetch specific post(s)"),
     {ok, [#{<<"id">> := PostId}]} =
         webapp_client:http_post("http://localhost/api/lookup_posts", [PostId], Headers),
-    %% Fetch specific post(s) recursively (include all nested replies)
+
+    ?log_info("**** Fetch specific post(s) recursively (include all nested replies)"),
     {ok, [#{<<"id">> := _PostId2}|_]} =
         webapp_client:http_post("http://localhost/api/lookup_recursive_posts", [PostId],
                                 Headers),
-    %% Switch user
+    ?log_info("**** Switch user"),
     {ok, #{<<"sessionId">> := NewSessionId,
            <<"userId">> := _NewUserId,
            <<"username">> := <<"foo">>}} =
@@ -41,14 +45,16 @@ misc() ->
                                   <<"passwordHash">> => null,
                                   <<"clientResponse">> => null},
                                 Headers),
-    %% Insert a top post
+
+    ?log_info("**** Insert a top post"),
     NewHeaders = [{"Cookie", webapp_client:bespoke_cookie(NewSessionId)}],
     {ok, #{<<"id">> := TopPostId}} =
         webapp_client:http_post("http://localhost/api/insert_post",
                                 #{<<"title">> => <<"A new title for a top post">>,
                                   <<"body">> => <<"A body">>},
                                 NewHeaders),
-    %% Insert a reply post to the top post (including one attachment)
+
+    ?log_info("**** Insert a reply post to the top post (including one attachment)"),
     FilePath =
         filename:join(
           [code:priv_dir(webapp), "docroot/images/animated-background.gif"]),
@@ -158,11 +164,18 @@ messaging() ->
                                    "http://localhost/api/create_message",
                                    #{<<"topMessageId">> => TopMessageId,
                                      <<"bodyBlobs">> =>  [FooBodyBlob, BarBodyBlob, BazBodyBlob]},
-                                   FuubarHeaders).
+                                   FuubarHeaders),
 
+    ?log_info("**** Create a reply as baz (should *not* fail)"),
+    {ok, _} = webapp_client:http_post("http://localhost/api/create_message",
+                                      #{<<"topMessageId">> => TopMessageId,
+                                        <<"bodyBlobs">> =>  [FooBodyBlob, BarBodyBlob, BazBodyBlob]},
+                                      BazHeaders),
 
-
-
+    ?log_info("**** Check body blobs"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/1/1"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/1/2"),
+    {ok, _} = webapp_client:http_get("http://localhost/message/1/3").
 
 create_users(_SessionId, []) ->
     [];

@@ -138,27 +138,35 @@ handle_body_blobs(#message{id = MessageId, top_message_id = TopMessageId} = Mess
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     NewBlobPath = filename:join([MessageBlobPath, ?i2b(UserId)]),
     ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
-    ok = file:rename(CurrentBlobPath, NewBlobPath),
-    case TopMessageId of
-        %% Is a top message!
-        not_set ->
-            %% Update MESSAGE_TOP_INDEX_DB and MESSAGE_RECIPIENT_INDEX_DB
-            ok = db:insert_disk_index(?MESSAGE_TOP_INDEX_DB, UserId, MessageId),
-            ok = db:insert_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, MessageId, UserId);
-        %% Is a reply message!
-        TopMessageId ->
-            %% Update MESSAGE_REPLY_INDEX_DB and MESSAGE_RECIPIENT_INDEX_DB
-            ok = db:insert_disk_index(?MESSAGE_REPLY_INDEX_DB, TopMessageId, MessageId),
-            ok = db:insert_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, TopMessageId, UserId)
-        end,
-    handle_body_blobs(Message, MessageBlobPath, Rest).
+    case file:rename(CurrentBlobPath, NewBlobPath) of
+        ok ->
+            case TopMessageId of
+                %% Is a top message!
+                not_set ->
+                    %% Update MESSAGE_TOP_INDEX_DB and MESSAGE_RECIPIENT_INDEX_DB
+                    ok = db:insert_disk_index(?MESSAGE_TOP_INDEX_DB, UserId, MessageId),
+                    ok = db:insert_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, MessageId, UserId);
+                %% Is a reply message!
+                TopMessageId ->
+                    %% Update MESSAGE_REPLY_INDEX_DB and MESSAGE_RECIPIENT_INDEX_DB
+                    ok = db:insert_disk_index(?MESSAGE_REPLY_INDEX_DB, TopMessageId, MessageId),
+                    ok = db:insert_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, TopMessageId, UserId)
+            end,
+            handle_body_blobs(Message, MessageBlobPath, Rest);
+        {error, Reason} ->
+            {error, Reason}
+    end.
 
 handle_attachment_blobs(_Message, _MessageBlobPath, []) ->
     ok;
 handle_attachment_blobs(Message, MessageBlobPath, [AttachmentBlobs|Rest]) ->
     AttachmentId = db_meta_db:read_next_message_attachment_id(),
-    ok = handle_attachment_blobs(AttachmentId, Message, MessageBlobPath, AttachmentBlobs),
-    handle_attachment_blobs(Message, MessageBlobPath, Rest).
+    case handle_attachment_blobs(AttachmentId, Message, MessageBlobPath, AttachmentBlobs) of
+        ok ->
+            handle_attachment_blobs(Message, MessageBlobPath, Rest);
+        {error, Reason} ->
+            {error, Reason}
+    end.
 
 handle_attachment_blobs(_AttachmentId, _Message, _MessageBlobPath, []) ->
     ok;
@@ -167,10 +175,14 @@ handle_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     NewBlobPath = filename:join([MessageBlobPath, io_lib:format("~w-~w", [UserId, AttachmentId])]),
     ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
-    ok = file:rename(CurrentBlobPath, NewBlobPath),
-    %% Update MESSAGE_ATTACHMENT_INDEX_DB
-    ok = db:insert_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB, MessageId, AttachmentId),
-    handle_attachment_blobs(AttachmentId, Message, MessageBlobPath, Rest).
+    case file:rename(CurrentBlobPath, NewBlobPath) of
+        ok ->
+            %% Update MESSAGE_ATTACHMENT_INDEX_DB
+            ok = db:insert_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB, MessageId, AttachmentId),
+            handle_attachment_blobs(AttachmentId, Message, MessageBlobPath, Rest);
+        {error, Reason} ->
+            {error, Reason}
+    end.
 
 %%
 %% Exported: read_top_messages

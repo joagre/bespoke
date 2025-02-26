@@ -427,7 +427,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             ?log_error("/api/create_message: ~p", [access_denied]),
                             send_response(Socket, Request, no_cache_headers(), forbidden);
                         {error, Reason} ->
-                            ?log_error("/api/create_message: ~p", [file:format_error(Reason)]),
+                            ?log_error("/api/create_message: ~p", [Reason]),
+                            %%?log_error("/api/create_message: ~p", [file:format_error(Reason)]),
                             send_response(Socket, Request, no_cache_headers(), internal_error)
                     end
             end;
