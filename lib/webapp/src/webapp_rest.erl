@@ -1242,7 +1242,7 @@ send_response(Socket, Request, Opts, not_found) ->
 send_response(Socket, Request, Opts, not_allowed) ->
     ?log_info("Response: Method Not Allowed"),
     rester_http_server:response_r(Socket, Request, 405, "Method Not Allowed", "",
-                                  [{<<"Allow">>, <<"GET, PUT, POST">>}|Opts]);
-send_response(Socket, Request, Opts, internal_error) ->
-    ?log_info("Response: Internal Error"),
-    rester_http_server:response_r(Socket, Request, 500, "Internal Error", "", Opts).
+                                  [{<<"Allow">>, <<"GET, PUT, POST">>}|Opts]).
+%send_response(Socket, Request, Opts, internal_error) ->
+%    ?log_info("Response: Internal Error"),
+%    rester_http_server:response_r(Socket, Request, 500, "Internal Error", "", Opts).

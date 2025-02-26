@@ -10,9 +10,9 @@
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
 -export([message_handler/1]).
--export_type([ssid/0, host/0, user_id/0, username/0, message_id/0, message_attachment_id/0,
-              post_id/0, title/0, body/0, seconds_since_epoch/0, content_type/0, file_id/0,
-              file_size/0, subscription_id/0, monitor_ref/0]).
+-export_type([ssid/0, host/0, user_id/0, username/0, message_id/0, attachment_id/0, post_id/0,
+              title/0, body/0, seconds_since_epoch/0, content_type/0, file_id/0, file_size/0,
+              subscription_id/0, monitor_ref/0]).
 
 -include_lib("kernel/include/file.hrl").
 -include_lib("apptools/include/log.hrl").
@@ -37,7 +37,7 @@
 -type user_id() :: integer().
 -type username() :: binary().
 -type message_id() :: integer().
--type message_attachment_id() :: integer().
+-type attachment_id() :: integer().
 -type post_id() :: binary().
 -type title() :: binary().
 -type body() :: binary().
@@ -106,7 +106,7 @@ create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
 %%
 
 -spec read_top_messages(db_serv:user_id()) ->
-          {ok, [{{#message{}, [db_serv:message_attachment_id()]}}]}.
+          {ok, [{{#message{}, [db_serv:attachment_id()]}}]}.
 
 read_top_messages(UserId) ->
     serv:call(?MODULE, {read_top_messages, UserId}).
@@ -116,7 +116,7 @@ read_top_messages(UserId) ->
 %%
 
 -spec read_reply_messages(db_serv:user_id(), db_serv:message_id()) ->
-          {ok, [{{#message{}, [db_serv:message_attachment_id()]}}]} |
+          {ok, [{{#message{}, [db_serv:attachment_id()]}}]} |
           {error, access_denied}.
 
 read_reply_messages(UserId, TopLevelMessageId) ->

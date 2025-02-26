@@ -2,8 +2,8 @@
 
 -module(db_meta_db).
 -export([open/0, sync/0, close/0,
-         read_host/0, read_next_user_id/0, read_next_message_id/0,
-         read_next_message_attachment_id/0, read_next_post_id/0, read_next_file_id/0]).
+         read_host/0, read_next_user_id/0, read_next_message_id/0, read_next_attachment_id/0,
+         read_next_post_id/0, read_next_file_id/0]).
 
 -include("../include/db.hrl").
 -include("db_meta_db.hrl").
@@ -70,13 +70,13 @@ read_next_message_id() ->
     step_meta_id(#meta.next_message_id).
 
 %%
-%% Exported: read_next_message_attachment_id
+%% Exported: read_next_attachment_id
 %%
 
--spec read_next_message_attachment_id() -> db_serv:message_attachment_id().
+-spec read_next_attachment_id() -> db_serv:attachment_id().
 
-read_next_message_attachment_id() ->
-    step_meta_id(#meta.next_message_attachment_id).
+read_next_attachment_id() ->
+    step_meta_id(#meta.next_attachment_id).
 
 %%
 %% Exported: read_next_post_id

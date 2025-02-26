@@ -160,7 +160,7 @@ handle_body_blobs(#message{id = MessageId, top_message_id = TopMessageId} = Mess
 handle_attachment_blobs(_Message, _MessageBlobPath, []) ->
     ok;
 handle_attachment_blobs(Message, MessageBlobPath, [AttachmentBlobs|Rest]) ->
-    AttachmentId = db_meta_db:read_next_message_attachment_id(),
+    AttachmentId = db_meta_db:read_next_attachment_id(),
     case handle_attachment_blobs(AttachmentId, Message, MessageBlobPath, AttachmentBlobs) of
         ok ->
             handle_attachment_blobs(Message, MessageBlobPath, Rest);
@@ -189,7 +189,7 @@ handle_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
 %%
 
 -spec read_top_messages(db_serv:user_id()) ->
-          {ok, [{{#message{}, [db_serv:message_attachment_id()]}}]}.
+          {ok, [{{#message{}, [db_serv:attachment_id()]}}]}.
 
 read_top_messages(UserId) ->
     MessageIds = db:lookup_disk_index(?MESSAGE_TOP_INDEX_DB, UserId),
@@ -213,7 +213,7 @@ lookup_messages([MessageId|Rest]) ->
 %%
 
 -spec read_reply_messages(db_serv:user_id(), db_serv:message_id()) ->
-          {ok, [{{#message{}, [db_serv:message_attachment_id()]}}]} |
+          {ok, [{{#message{}, [db_serv:attachment_id()]}}]} |
           {error, access_denied}.
 
 read_reply_messages(UserId, TopMessageId) ->

@@ -21,7 +21,7 @@
          host = not_set :: db_serv:host() | not_set,
          next_user_id = 0 :: db_serv:user_id(),
          next_message_id = 0 :: db_serv:message_id(),
-         next_message_attachment_id = 0 :: db_serv:message_attachment_id(),
+         next_attachment_id = 0 :: db_serv:attachment_id(),
          next_post_id = 0 :: integer(), %% not db_serv:post_id() by design
          next_file_id = 0 :: db_serv:file_id()
         }).
@@ -41,7 +41,7 @@
 %% Disk layout:
 %% ?BESPOKE_MESSAGE_PATH/
 %%   <message_id>/<user_id>, ...
-%%   <message_id>/<user_id>-<message_attachment_id>, ...
+%%   <message_id>/<user_id>-<attachment_id>, ...
 
 -record(message,
         {
