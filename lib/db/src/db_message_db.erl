@@ -88,20 +88,35 @@ close() ->
                      [[{db_serv:user_id(), main:filename()}]]) ->
           {ok, #message{}} | {error, term()}.
 
-create_message(Message, BodyBlobs, AttachmentBlobs) ->
-    MessageId = db_meta_db:read_next_message_id(),
-    UpdatedMessage =
-        Message#message{
-          id = MessageId,
-          created = db:seconds_since_epoch()
-         },
-    %% Update MESSAGE_DB
-    ok = db:insert_disk(?MESSAGE_DB, UpdatedMessage),
-    case create_blobs(UpdatedMessage, BodyBlobs, AttachmentBlobs) of
-        ok ->
-            {ok, UpdatedMessage};
-        Error ->
-            Error
+create_message(#message{top_message_id = TopMessageId, author = Author} = Message,
+               BodyBlobs, AttachmentBlobs) ->
+    RecipientMessageIds =
+        case TopMessageId of
+            %% Is a top message!
+            not_set ->
+                ignore;
+            %% Is a reply message!
+            _ ->
+                db:lookup_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, TopMessageId)
+        end,
+    case RecipientMessageIds == ignore orelse lists:member(Author, RecipientMessageIds) of
+        true ->
+            MessageId = db_meta_db:read_next_message_id(),
+            UpdatedMessage =
+                Message#message{
+                  id = MessageId,
+                  created = db:seconds_since_epoch()
+                 },
+            %% Update MESSAGE_DB
+            ok = db:insert_disk(?MESSAGE_DB, UpdatedMessage),
+            case create_blobs(UpdatedMessage, BodyBlobs, AttachmentBlobs) of
+                ok ->
+                    {ok, UpdatedMessage};
+                Error ->
+                    Error
+            end;
+        false ->
+            {error, access_denied}
     end.
 
 create_blobs(#message{id = MessageId} = Message, BodyBlobs, AttachmentBlobs) ->

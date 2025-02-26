@@ -96,7 +96,7 @@ get_user_id() ->
 -spec create_message(#message{},
                      [{db_serv:user_id(), main:filename()}],
                      [[{db_serv:user_id(), main:filename()}]]) ->
-          {ok, #message{}} | {error, file:posix()}.
+          {ok, #message{}} | {error, file:posix() | access_denied}.
 
 create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
     serv:call(?MODULE, {create_message, Message, MessageBodyBlobs, MessageAttachmentBlobs}).

@@ -423,9 +423,12 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         {ok, CreatedMessage} ->
                             JsonTerm = webapp_marshalling:encode(create_message, CreatedMessage),
                             send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});
+                        {error, access_denied} ->
+                            ?log_error("/api/create_message: ~p", [access_denied]),
+                            send_response(Socket, Request, no_cache_headers(), forbidden);
                         {error, Reason} ->
-                            ?log_error("/api/create_message: ~p", [Reason]),
-                            send_response(Socket, Request, no_cache_headers(), bad_request)
+                            ?log_error("/api/create_message: ~p", [file:format_error(Reason)]),
+                            send_response(Socket, Request, no_cache_headers(), internal_error)
                     end
             end;
         ["api", "read_reply_messages"] ->
@@ -1238,4 +1241,7 @@ send_response(Socket, Request, Opts, not_found) ->
 send_response(Socket, Request, Opts, not_allowed) ->
     ?log_info("Response: Method Not Allowed"),
     rester_http_server:response_r(Socket, Request, 405, "Method Not Allowed", "",
-                                  [{<<"Allow">>, <<"GET, PUT, POST">>}|Opts]).
+                                  [{<<"Allow">>, <<"GET, PUT, POST">>}|Opts]);
+send_response(Socket, Request, Opts, internal_error) ->
+    ?log_info("Response: Internal Error"),
+    rester_http_server:response_r(Socket, Request, 500, "Internal Error", "", Opts).
