@@ -122,7 +122,7 @@ messaging() ->
     BarAttachmentBlob1 = upload_blob(BarUserId, FooAttachmentFilepath1),
     BazAttachmentBlob1 = upload_blob(BazUserId, FooAttachmentFilepath1),
 
-    ?log_info("**** Create top amessage"),
+    ?log_info("**** Create top message"),
     {ok, #{<<"id">> := TopMessageId}} =
         webapp_client:http_post(
           "http://localhost/api/create_message",
@@ -167,10 +167,15 @@ messaging() ->
                                    FuubarHeaders),
 
     ?log_info("**** Create a reply as baz (should *not* fail)"),
-    {ok, _} = webapp_client:http_post("http://localhost/api/create_message",
-                                      #{<<"topMessageId">> => TopMessageId,
-                                        <<"bodyBlobs">> =>  [FooBodyBlob, BarBodyBlob, BazBodyBlob]},
-                                      BazHeaders),
+    BazBody = <<"BAJS\nPRUTTåäö\n">>,
+    FooBodyBlob2 = upload_blob(FooUserId, {data, FooBody}),
+    BarBodyBlob2 = upload_blob(BarUserId, {data, FooBody}),
+    BazBodyBlob2 = upload_blob(BazUserId, {data, FooBody}),
+    {ok, _} = webapp_client:http_post(
+                "http://localhost/api/create_message",
+                #{<<"topMessageId">> => TopMessageId,
+                  <<"bodyBlobs">> =>  [FooBodyBlob2, BarBodyBlob2, BazBodyBlob2]},
+                BazHeaders),
 
     ?log_info("**** Check body blobs"),
     {ok, _} = webapp_client:http_get("http://localhost/message/1/1"),

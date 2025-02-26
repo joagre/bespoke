@@ -429,7 +429,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         {error, Reason} ->
                             ?log_error("/api/create_message: ~p", [Reason]),
                             %%?log_error("/api/create_message: ~p", [file:format_error(Reason)]),
-                            send_response(Socket, Request, no_cache_headers(), internal_error)
+                            send_response(Socket, Request, no_cache_headers(), bad_request)
                     end
             end;
         ["api", "read_reply_messages"] ->
