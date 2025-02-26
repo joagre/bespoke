@@ -1,88 +1,18 @@
 % -*- fill-column: 100; -*-
 
 -module(webapp_rest_test).
--export([misc/0, messaging/0]).
+-export([direct_messaging/0, forum/0, system/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
 
 %%
-%% Exported: misc
-%%
-
-%% IMPORTANT: Run webapp_client:run_once() before running this test
-
-misc() ->
-    _ = webapp_client:init_httpc(),
-
-    ?log_info("**** Auto login"),
-    {ok, #{<<"noPassword">> := _NoPassword,
-           <<"sessionId">> := SessionId,
-           <<"userId">> := _UserId,
-           <<"username">> := _Username}} =
-        webapp_client:http_get("http://localhost/api/auto_login"),
-
-    ?log_info("**** Fetch all top posts"),
-    Headers = [{"Cookie", webapp_client:bespoke_cookie(SessionId)}],
-    {ok, [#{<<"id">> := PostId}|_]} =
-        webapp_client:http_get("http://localhost/api/list_top_posts", Headers),
-
-    ?log_info("**** Fetch specific post(s)"),
-    {ok, [#{<<"id">> := PostId}]} =
-        webapp_client:http_post("http://localhost/api/lookup_posts", [PostId], Headers),
-
-    ?log_info("**** Fetch specific post(s) recursively (include all nested replies)"),
-    {ok, [#{<<"id">> := _PostId2}|_]} =
-        webapp_client:http_post("http://localhost/api/lookup_recursive_posts", [PostId],
-                                Headers),
-    ?log_info("**** Switch user"),
-    {ok, #{<<"sessionId">> := NewSessionId,
-           <<"userId">> := _NewUserId,
-           <<"username">> := <<"foo">>}} =
-        webapp_client:http_post("http://localhost/api/switch_user",
-                                #{<<"username">> => <<"foo">>,
-                                  <<"passwordSalt">> => null,
-                                  <<"passwordHash">> => null,
-                                  <<"clientResponse">> => null},
-                                Headers),
-
-    ?log_info("**** Insert a top post"),
-    NewHeaders = [{"Cookie", webapp_client:bespoke_cookie(NewSessionId)}],
-    {ok, #{<<"id">> := TopPostId}} =
-        webapp_client:http_post("http://localhost/api/insert_post",
-                                #{<<"title">> => <<"A new title for a top post">>,
-                                  <<"body">> => <<"A body">>},
-                                NewHeaders),
-
-    ?log_info("**** Insert a reply post to the top post (including one attachment)"),
-    FilePath =
-        filename:join(
-          [code:priv_dir(webapp), "docroot/images/animated-background.gif"]),
-    UploadedFile =
-        webapp_client:http_multipart_post("http://localhost/api/upload_file", FilePath),
-    {ok, #{<<"id">> := _ReplyPostId}} =
-        webapp_client:http_post("http://localhost/api/insert_post",
-                                #{<<"parentPostId">> => TopPostId,
-                                  %% The top post is the parent post in this case
-                                  <<"topPostId">> => TopPostId,
-                                  %% One hour back in time
-                                  <<"created">> => os:system_time(second) - 3600,
-                                  <<"body">> => <<"A reply body">>,
-                                  %% One attachment
-                                  <<"attachments">> => [make_attachment(UploadedFile)]},
-                                NewHeaders).
-
-make_attachment(#{<<"absPath">> := AbsPath, <<"contentType">> := ContentType}) ->
-    <<"/tmp/", TmpFilename/binary>> = AbsPath,
-    #{<<"filename">> => TmpFilename, <<"contentType">> => ContentType}.
-
-%%
-%% Exported: messaging
+%% Exported: direct_messaging
 %%
 
 %% IMPORTANT: Perform a "make reset" before running this test
 
-messaging() ->
+direct_messaging() ->
     _ = webapp_client:init_httpc(),
     ?log_info("**** Auto login"),
     {ok, #{<<"noPassword">> := _NoPassword,
@@ -168,9 +98,9 @@ messaging() ->
 
     ?log_info("**** Create a reply as baz (should *not* fail)"),
     BazBody = <<"BAJS\nPRUTTåäö\n">>,
-    FooBodyBlob2 = upload_blob(FooUserId, {data, FooBody}),
-    BarBodyBlob2 = upload_blob(BarUserId, {data, FooBody}),
-    BazBodyBlob2 = upload_blob(BazUserId, {data, FooBody}),
+    FooBodyBlob2 = upload_blob(FooUserId, {data, BazBody}),
+    BarBodyBlob2 = upload_blob(BarUserId, {data, BazBody}),
+    BazBodyBlob2 = upload_blob(BazUserId, {data, BazBody}),
     {ok, _} = webapp_client:http_post(
                 "http://localhost/api/create_message",
                 #{<<"topMessageId">> => TopMessageId,
@@ -180,7 +110,16 @@ messaging() ->
     ?log_info("**** Check body blobs"),
     {ok, _} = webapp_client:http_get("http://localhost/message/1/1"),
     {ok, _} = webapp_client:http_get("http://localhost/message/1/2"),
-    {ok, _} = webapp_client:http_get("http://localhost/message/1/3").
+    {ok, _} = webapp_client:http_get("http://localhost/message/1/3"),
+
+    ?log_info("**** Delete reply message"),
+    %% delete reply body blob for a specific user + specific attachments
+    %% do *not* delete message
+    ?log_info("**** Delete top message"),
+    %% delete top body blob for a specific user + specific attachments +
+    %% all reply messages + attachments
+    %% delete message
+    ok.
 
 create_users(_SessionId, []) ->
     [];
@@ -211,3 +150,98 @@ upload_blob(UserId, FilePath) ->
         webapp_client:http_multipart_post("http://localhost/api/upload_file", TmpFilePath),
     ok = file:delete(TmpFilePath),
     #{<<"userId">> => UserId, <<"filename">> => filename:basename(Filename)}.
+
+%%
+%% Exported: forum
+%%
+
+forum() ->
+    _ = webapp_client:init_httpc(),
+    ok = db_tools:create_subreddit_db(),
+
+    ?log_info("**** Auto login"),
+    {ok, #{<<"noPassword">> := _NoPassword,
+           <<"sessionId">> := SessionId,
+           <<"userId">> := _UserId,
+           <<"username">> := _Username}} =
+        webapp_client:http_get("http://localhost/api/auto_login"),
+
+    ?log_info("**** Fetch all top posts"),
+    Headers = [{"Cookie", webapp_client:bespoke_cookie(SessionId)}],
+    {ok, [#{<<"id">> := PostId}|_]} =
+        webapp_client:http_get("http://localhost/api/list_top_posts", Headers),
+
+    ?log_info("**** Fetch specific post(s)"),
+    {ok, [#{<<"id">> := PostId}]} =
+        webapp_client:http_post("http://localhost/api/lookup_posts", [PostId], Headers),
+
+    ?log_info("**** Fetch specific post(s) recursively (include all nested replies)"),
+    {ok, [#{<<"id">> := _PostId2}|_]} =
+        webapp_client:http_post("http://localhost/api/lookup_recursive_posts", [PostId],
+                                Headers),
+    ?log_info("**** Switch user"),
+    {ok, #{<<"sessionId">> := NewSessionId,
+           <<"userId">> := _NewUserId,
+           <<"username">> := <<"foo">>}} =
+        webapp_client:http_post("http://localhost/api/switch_user",
+                                #{<<"username">> => <<"foo">>,
+                                  <<"passwordSalt">> => null,
+                                  <<"passwordHash">> => null,
+                                  <<"clientResponse">> => null},
+                                Headers),
+
+    ?log_info("**** Insert a top post"),
+    NewHeaders = [{"Cookie", webapp_client:bespoke_cookie(NewSessionId)}],
+    {ok, #{<<"id">> := TopPostId}} =
+        webapp_client:http_post("http://localhost/api/insert_post",
+                                #{<<"title">> => <<"A new title for a top post">>,
+                                  <<"body">> => <<"A body">>},
+                                NewHeaders),
+
+    ?log_info("**** Insert a reply post to the top post (including one attachment)"),
+    FilePath =
+        filename:join(
+          [code:priv_dir(webapp), "docroot/images/animated-background.gif"]),
+    UploadedFile =
+        webapp_client:http_multipart_post("http://localhost/api/upload_file", FilePath),
+    {ok, #{<<"id">> := _ReplyPostId}} =
+        webapp_client:http_post("http://localhost/api/insert_post",
+                                #{<<"parentPostId">> => TopPostId,
+                                  %% The top post is the parent post in this case
+                                  <<"topPostId">> => TopPostId,
+                                  %% One hour back in time
+                                  <<"created">> => os:system_time(second) - 3600,
+                                  <<"body">> => <<"A reply body">>,
+                                  %% One attachment
+                                  <<"attachments">> => [make_attachment(UploadedFile)]},
+                                NewHeaders).
+
+make_attachment(#{<<"absPath">> := AbsPath, <<"contentType">> := ContentType}) ->
+    <<"/tmp/", TmpFilename/binary>> = AbsPath,
+    #{<<"filename">> => TmpFilename, <<"contentType">> => ContentType}.
+
+%%
+%% Exported: system
+%%
+
+system() ->
+    _ = webapp_client:init_httpc(),
+
+    ?log_info("**** Auto login"),
+    {ok, #{<<"noPassword">> := _NoPassword,
+           <<"sessionId">> := SessionId,
+           <<"userId">> := _UserId,
+           <<"username">> := _Username}} =
+        webapp_client:http_get("http://localhost/api/auto_login"),
+
+    ?log_info("**** Switch user"),
+    Headers = [{"Cookie", webapp_client:bespoke_cookie(SessionId)}],
+    {ok, #{<<"sessionId">> := _NewSessionId,
+           <<"userId">> := _NewUserId,
+           <<"username">> := <<"foo">>}} =
+        webapp_client:http_post("http://localhost/api/switch_user",
+                                #{<<"username">> => <<"foo">>,
+                                  <<"passwordSalt">> => null,
+                                  <<"passwordHash">> => null,
+                                  <<"clientResponse">> => null},
+                                Headers).

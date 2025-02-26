@@ -1,19 +1,10 @@
 % -*- fill-column: 100; -*-
 
 -module(webapp_client).
--export([run_once/0, init_httpc/0, http_get/1, http_get/2, http_post/2, http_post/3,
-         http_multipart_post/2, bespoke_cookie/1, prepend_file_header/2]).
+-export([init_httpc/0, http_get/1, http_get/2, http_post/2, http_post/3, http_multipart_post/2,
+         bespoke_cookie/1, prepend_file_header/2]).
 
 -include_lib("apptools/include/shorthand.hrl").
-
-%%
-%% Exported: run_once
-%%
-
--spec run_once() -> ok.
-
-run_once() ->
-    db_tools:create_subreddit_db().
 
 %%
 %% Exported: init_httpc
