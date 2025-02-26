@@ -4,6 +4,6 @@
 -include("../include/db.hrl").
 
 -define(META_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "meta.db")).
--define(META_DB, meta).
+-define(META_DB, meta_db).
 
 -endif.

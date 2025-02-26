@@ -1,7 +1,7 @@
 % -*- fill-column: 100; -*-
 
 -module(db_meta_db).
--export([open/0, sync/0, close/0,
+-export([open/0, dump/0, sync/0, close/0,
          read_host/0, read_next_user_id/0, read_next_message_id/0, read_next_attachment_id/0,
          read_next_post_id/0, read_next_file_id/0]).
 
@@ -22,6 +22,15 @@ open() ->
         [_] ->
             ok
     end.
+
+%%
+%% Exported: dump
+%%
+
+-spec dump() -> [{dets:tab_name(), [term()]}].
+
+dump() ->
+    [{?META_DB, [db:dump_disk(?META_DB)]}].
 
 %%
 %% Exported: sync
