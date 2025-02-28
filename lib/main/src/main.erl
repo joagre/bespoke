@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -module(main).
 -export([start/0, stop/0, lookup_config/2, insert_config/2]).
 -export_type([filename/0, file_path/0]).
@@ -20,9 +22,7 @@
 start() ->
     {ok, _} = application:ensure_all_started(sasl),
     %%ok = logger:remove_handler(default),
-    ok = logger:add_handler(
-           file_logger, logger_std_h,
-           #{config => #{file => ?LOG_FILE}}),
+    ok = logger:add_handler(file_logger, logger_std_h, #{config => #{file => ?LOG_FILE}}),
     {ok, _} = application:ensure_all_started(ssl),
     ok = application:start(apptools),
     ok = application:start(rester),
