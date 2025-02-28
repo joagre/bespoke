@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -module(supervisor_helper).
 -export([foreach_worker/2, get_selected_worker_pids/2]).
 

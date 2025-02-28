@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -ifndef(SHORTHAND_HRL).
 -define(SHORTHAND_HRL, true).
 

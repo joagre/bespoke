@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -module(test_engine).
 -export([start/1]).
 
@@ -10,7 +12,7 @@
 -spec start([binary()]) -> no_return().
 
 start([BaseDir|Targets]) ->
-  start(BaseDir, Targets, []).
+    start(BaseDir, Targets, []).
 
 start(BaseDir, [], Modules) ->
     OrderedModules = lists:flatten(lists:reverse(Modules)),
@@ -23,16 +25,13 @@ start(BaseDir, [Target|Rest], Modules) ->
             Filename = filename:join([Target, "active_tests.dat"]),
             case file:consult(Filename) of
                 {ok, ConsultedModules} ->
-                    start(BaseDir, Rest,
-                          [lists:reverse(ConsultedModules), Modules]);
+                    start(BaseDir, Rest, [lists:reverse(ConsultedModules), Modules]);
                 {error, Reason} ->
-                    io:format(standard_error, "~s: ~s\n",
-                              [Filename, file:format_error(Reason)]),
+                    io:format(standard_error, "~s: ~s\n", [Filename, file:format_error(Reason)]),
                     return(1)
             end;
         false ->
-            start(BaseDir, Rest,
-                  [?l2a("test_" ++ Target), Modules])
+            start(BaseDir, Rest, [?l2a("test_" ++ Target), Modules])
     end.
 
 return(Status) ->
@@ -50,8 +49,7 @@ run(BaseDir, [Module|Rest]) ->
         run(BaseDir, Rest)
     catch
         Class:Reason:StackTrace ->
-            io:format("Class: ~w\nReason: ~p\nStackTrace: ~p\n",
-                      [Class, Reason, StackTrace]),
+            io:format("Class: ~w\nReason: ~p\nStackTrace: ~p\n", [Class, Reason, StackTrace]),
             io:format("---- FAILURE!\n\n"),
             erlang:halt(1)
     end.

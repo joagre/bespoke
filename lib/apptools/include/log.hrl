@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -ifndef(LOG_HRL).
 -define(LOG_HRL, true).
 

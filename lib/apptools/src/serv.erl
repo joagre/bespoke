@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -module(serv).
 -export([spawn_server/3, spawn_server/4]).
 -export([cast/2, call/2, call/3, reply/2]).
@@ -26,15 +28,13 @@
           spawn_server_result().
 
 spawn_server(ModuleName, InitState, MessageHandler) ->
-    spawn_server(ModuleName, InitState, MessageHandler,
-                 #serv_options{module_name = ModuleName}).
+    spawn_server(ModuleName, InitState, MessageHandler, #serv_options{module_name = ModuleName}).
 
 spawn_server(ModuleName, InitState, MessageHandler,
              #serv_options{timeout = Timeout, link = Link} = Options) ->
     StartFunction = start_function(Link),
     case proc_lib:StartFunction(
-           ?MODULE, init,
-           [ModuleName, InitState, MessageHandler, Options, self()], Timeout) of
+           ?MODULE, init, [ModuleName, InitState, MessageHandler, Options, self()], Timeout) of
         {ok, Pid} ->
             _ = serv_manager:add_process(Pid),
             {ok, Pid};
@@ -49,10 +49,9 @@ start_function(false) ->
 
 init(ModuleName, InitState, MessageHandler,
      #serv_options{name = Name, trap_exit = TrapExit} = Options, Parent) ->
-    ok = put_options(Options#serv_options{
-                       module_name = ModuleName,
-                       parent = Parent,
-                       message_handler = MessageHandler}),
+    ok = put_options(Options#serv_options{module_name = ModuleName,
+                                          parent = Parent,
+                                          message_handler = MessageHandler}),
     true = register_server(Name),
     case TrapExit of
         true ->
@@ -112,10 +111,8 @@ loop(MessageHandler, State) ->
             %% Just loop again to use the new current message handler module
             loop(MessageHandler, State);
         {system, From, Request} ->
-            #serv_options{parent = Parent, debug_options = DebugOptions} =
-                get_options(),
-            sys:handle_system_msg(Request, From, Parent, ?MODULE, DebugOptions,
-                                  State);
+            #serv_options{parent = Parent, debug_options = DebugOptions} = get_options(),
+            sys:handle_system_msg(Request, From, Parent, ?MODULE, DebugOptions, State);
         {swap_message_handler, NewMessageHandler} ->
             loop(NewMessageHandler, State);
         {swap_message_handler, NewMessageHandler, NewState} ->
@@ -136,8 +133,7 @@ cast(To, Request) when is_pid(To) ->
 cast(To, Request) ->
     case whereis(To) of
         undefined ->
-            ?log_error("No such registered process name: ~w (~p)",
-                       [To, Request]),
+            ?log_error("No such registered process name: ~w (~p)", [To, Request]),
             throw(badarg);
         Pid ->
             Pid ! {cast, Request},
@@ -148,11 +144,10 @@ cast(To, Request) ->
 %% Exported: call
 %%
 
--spec call(serv:name(), any(), integer() | infinity) ->
-                  any() | {error, timeout}.
+-spec call(serv:name(), any(), integer() | infinity) -> any() | {error, timeout}.
 
 call(To, Request) ->
-  call(To, Request, infinity).
+    call(To, Request, infinity).
 
 call(To, Request, Timeout) ->
     Pid =
@@ -240,11 +235,9 @@ system_code_change(State, ModuleName, OldVersion, Extra) ->
 
 system_continue(Parent, DebugOptions, State) ->
     case get_options() of
-        #serv_options{message_handler = MessageHandler,
-                      system_continue = not_set} ->
+        #serv_options{message_handler = MessageHandler, system_continue = not_set} ->
             ?MODULE:loop(MessageHandler, State);
-        #serv_options{message_handler = MessageHandler,
-                      system_continue = SystemContinue} ->
+        #serv_options{message_handler = MessageHandler, system_continue = SystemContinue} ->
             NewState = SystemContinue(Parent, DebugOptions, State),
             ?MODULE:loop(MessageHandler, NewState)
     end.

@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -ifndef(SERV_HRL).
 -define(SERV_HRL, true).
 

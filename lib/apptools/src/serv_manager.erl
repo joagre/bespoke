@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -module(serv_manager).
 -export([start_link/0, stop/0, add_process/1, reload_processes/1]).
 -export([message_handler/1]).
@@ -13,10 +15,7 @@
           serv:spawn_server_result().
 
 start_link() ->
-    ?spawn_server(
-      fun init/1,
-      fun message_handler/1,
-      #serv_options{name = ?MODULE}).
+    ?spawn_server(fun init/1, fun message_handler/1, #serv_options{name = ?MODULE}).
 
 %%
 %% Exported: stop
@@ -71,17 +70,14 @@ message_handler(#{parent := Parent, processes := Processes} = State) ->
         {cast, {add_process, Pid} = Cast} ->
             ?log_debug("Cast: ~p", [Cast]),
             MonitorRef = monitor(process, Pid),
-            {noreply, State#{processes =>
-                                 maps:put(Pid, MonitorRef, Processes)}};
+            {noreply, State#{processes => maps:put(Pid, MonitorRef, Processes)}};
         {cast, {reload_processes, _ModuleName} = Cast} ->
             ?log_debug("Cast: ~p", [Cast]),
             ok = calm_down(),
             ok = maps:fold(
                    fun(Pid, _MonitorRef, ok) ->
                            ?log_debug("Reload: ~w", [Pid]),
-                           catch begin
-                                     Pid ! {system, undefined, code_switch}
-                                 end,
+                           catch begin Pid ! {system, undefined, code_switch} end,
                            ok
                    end, ok, Processes),
             noreply;

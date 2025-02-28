@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -ifndef(BITS_HRL).
 -define(BITS_HRL, true).
 

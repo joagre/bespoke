@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -module(apptools_sup).
 -behaviour(supervisor).
 -export([start_link/0]).

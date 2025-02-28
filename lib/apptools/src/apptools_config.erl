@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -module(apptools_config).
 -export([lookup/4, insert/4]).
 -export_type([key/0, value/0, error_reason/0]).
@@ -6,8 +8,8 @@
 
 -type key() :: string().
 -type value() :: string() | integer().
--type error_reason() :: {bad_format, string()} | file:posix() | badarg |
-                        terminated | {no_translation, unicode, latin1}.
+-type error_reason() :: {bad_format, string()} | file:posix() | badarg | terminated |
+                        {no_translation, unicode, latin1}.
 
 %%
 %% Exported: lookup
