@@ -124,20 +124,20 @@ create_blobs(#message{id = MessageId} = Message, BodyBlobs, AttachmentBlobs) ->
         %% Note: Disk layout is described in db.hrl
         MessageBlobPath = filename:join([?BESPOKE_MESSAGE_PATH, ?i2b(MessageId)]),
         ok ?= make_dir(MessageBlobPath),
-        ok ?= handle_body_blobs(Message, MessageBlobPath, BodyBlobs),
-        ok ?= handle_attachment_blobs(Message, MessageBlobPath, AttachmentBlobs)
+        ok ?= create_body_blobs(Message, MessageBlobPath, BodyBlobs),
+        ok ?= create_attachment_blobs(Message, MessageBlobPath, AttachmentBlobs)
     else
         Error ->
             Error
     end.
 
-handle_body_blobs(_Message, _MessageBlobPath, []) ->
+create_body_blobs(_Message, _MessageBlobPath, []) ->
     ok;
-handle_body_blobs(#message{id = MessageId, top_message_id = TopMessageId} = Message,
+create_body_blobs(#message{id = MessageId, top_message_id = TopMessageId} = Message,
                   MessageBlobPath, [{UserId, BlobFilename}|Rest]) ->
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     NewBlobPath = filename:join([MessageBlobPath, ?i2b(UserId)]),
-    ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
+    ?log_info("Renaming body blob from ~s to ~s", [CurrentBlobPath, NewBlobPath]),
     case file:rename(CurrentBlobPath, NewBlobPath) of
         ok ->
             case TopMessageId of
@@ -152,34 +152,34 @@ handle_body_blobs(#message{id = MessageId, top_message_id = TopMessageId} = Mess
                     ok = db:insert_disk_index(?MESSAGE_REPLY_INDEX_DB, TopMessageId, MessageId),
                     ok = db:insert_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, TopMessageId, UserId)
             end,
-            handle_body_blobs(Message, MessageBlobPath, Rest);
+            create_body_blobs(Message, MessageBlobPath, Rest);
         {error, Reason} ->
             {error, Reason}
     end.
 
-handle_attachment_blobs(_Message, _MessageBlobPath, []) ->
+create_attachment_blobs(_Message, _MessageBlobPath, []) ->
     ok;
-handle_attachment_blobs(Message, MessageBlobPath, [AttachmentBlobs|Rest]) ->
+create_attachment_blobs(Message, MessageBlobPath, [AttachmentBlobs|Rest]) ->
     AttachmentId = db_meta_db:read_next_attachment_id(),
-    case handle_attachment_blobs(AttachmentId, Message, MessageBlobPath, AttachmentBlobs) of
+    case create_attachment_blobs(AttachmentId, Message, MessageBlobPath, AttachmentBlobs) of
         ok ->
-            handle_attachment_blobs(Message, MessageBlobPath, Rest);
+            create_attachment_blobs(Message, MessageBlobPath, Rest);
         {error, Reason} ->
             {error, Reason}
     end.
 
-handle_attachment_blobs(_AttachmentId, _Message, _MessageBlobPath, []) ->
+create_attachment_blobs(_AttachmentId, _Message, _MessageBlobPath, []) ->
     ok;
-handle_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, MessageBlobPath,
+create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, MessageBlobPath,
                         [{UserId, BlobFilename}|Rest]) ->
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     NewBlobPath = filename:join([MessageBlobPath, io_lib:format("~w-~w", [UserId, AttachmentId])]),
-    ?log_info("Renaming ~s to ~s", [CurrentBlobPath, NewBlobPath]),
+    ?log_info("Renaming attachment blob ~s to ~s", [CurrentBlobPath, NewBlobPath]),
     case file:rename(CurrentBlobPath, NewBlobPath) of
         ok ->
             %% Update MESSAGE_ATTACHMENT_INDEX_DB
             ok = db:insert_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB, MessageId, AttachmentId),
-            handle_attachment_blobs(AttachmentId, Message, MessageBlobPath, Rest);
+            create_attachment_blobs(AttachmentId, Message, MessageBlobPath, Rest);
         {error, Reason} ->
             {error, Reason}
     end.
@@ -234,21 +234,70 @@ read_reply_messages(UserId, TopMessageId) ->
 
 delete_message(UserId, MessageId) ->
     case db:lookup_disk(?MESSAGE_DB, MessageId) of
-        [#message{author = UserId}] ->
-            ok = delete_blobs(MessageId),
+        [#message{top_message_id = TopMessageId, author = UserId} = Message] ->
+            ok = delete_blobs(Message),
             %% Update MESSAGE_DB
             ok = db:delete_disk(?MESSAGE_DB, MessageId),
             %% Update MESSAGE_TOP_INDEX_DB
-            ok = db:delete_disk_index(?MESSAGE_TOP_INDEX_DB, UserId),
-            %% Update MESSAGE_REPLY_INDEX_DB
-            ok = db:delete_disk_index(?MESSAGE_REPLY_INDEX_DB, MessageId);
+            case TopMessageId of
+                not_set ->
+                    %% Is a top message!
+                    RecipientUserIds = db:lookup_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, MessageId),
+                    %% Update MESSAGE_TOP_INDEX_DB
+                    lists:foreach(
+                      fun(RecipientUserId) ->
+                              ok = db:delete_disk_index(?MESSAGE_TOP_INDEX_DB, RecipientUserId,
+                                                        MessageId)
+                      end, RecipientUserIds),
+                    %% Update MESSAGE_REPLY_INDEX_DB
+                    ok = db:delete_disk_index(?MESSAGE_REPLY_INDEX_DB, MessageId),
+                    %% Update MESSAGE_RECIPIENT_INDEX_DB
+                    ok = db:delete_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, MessageId);
+                _ ->
+                    %% Is a reply message!
+                    ok
+            end,
+            %% Update MESSAGE_ATTACHMENT_INDEX_DB
+            AttachmentIds = db:lookup_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB, MessageId),
+            lists:foreach(
+              fun(AttachmentId) ->
+                      ok = db:delete_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB, AttachmentId)
+              end, AttachmentIds);
         [] ->
             {error, access_denied}
     end.
 
-delete_blobs(_MessageId) ->
-    %% FIXME
-    ok.
+delete_blobs(#message{id = MessageId, top_message_id = TopMessageId}) ->
+    RecipientUserIds = db:lookup_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, TopMessageId),
+    MessageBlobPath = filename:join([?BESPOKE_MESSAGE_PATH, ?i2b(MessageId)]),
+    lists:foreach(
+      fun(RecipientUserId) ->
+              BodyBlobPath = filename:join([MessageBlobPath, ?i2b(RecipientUserId)]),
+              ?log_info("Deleting body blob ~s", [BodyBlobPath]),
+              case file:delete(BodyBlobPath) of
+                  ok ->
+                      AttachmentIds = db:lookup_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB, MessageId),
+                      lists:foreach(
+                        fun(AttachmentId) ->
+                                AttachmentBlobPath =
+                                    filename:join([MessageBlobPath,
+                                                   io_lib:format("~w-~w",
+                                                                 [RecipientUserId, AttachmentId])]),
+                                ?log_info("Deleting attachment blob ~s", [AttachmentBlobPath]),
+                                case file:delete(AttachmentBlobPath) of
+                                    ok ->
+                                        ok;
+                                    {error, Reason} ->
+                                        ?log_error("Failed to delete ~s: ~s",
+                                                   [AttachmentBlobPath, Reason])
+                                end
+                        end, AttachmentIds);
+                  {error, Reason} ->
+                      ?log_error("Failed to delete ~s: ~s", [BodyBlobPath, Reason]),
+                      %% Note: A recipient added late to a thread may not have a body blob
+                      ok
+              end
+      end, RecipientUserIds).
 
 %%
 %% Utilities

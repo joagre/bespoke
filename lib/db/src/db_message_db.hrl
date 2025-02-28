@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -ifndef(DB_MESSAGE_DB_HRL).
 -define(DB_MESSAGE_DB_HRL, true).
 
@@ -9,8 +11,7 @@
 
 %% Top Message Index DB (user-id -> [top-message-id, ...])
 %% Description: To quickly find all top messages for a user
--define(MESSAGE_TOP_INDEX_FILE_PATH,
-         filename:join(?BESPOKE_DB_DIR, "message_top_index.db")).
+-define(MESSAGE_TOP_INDEX_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "message_top_index.db")).
 -define(MESSAGE_TOP_INDEX_DB, message_top_index_db).
 
 %% Reply Index DB (top-message-id -> [message-id, ...])

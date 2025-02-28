@@ -3,9 +3,9 @@
 -module(db).
 -export([open_disk/3, lookup_disk/2, insert_disk/2, delete_disk/2, dump_disk/1, sync_disk/1,
          close_disk/1, open_disk_index/2, lookup_disk_index/2, insert_disk_index/3,
-         delete_disk_index/2, dump_disk_index/1, sync_disk_index/1, close_disk_index/1, open_ram/2,
-         lookup_ram/2, insert_ram/2, delete_ram/2, dump_ram/1, seconds_since_epoch/0,
-         seconds_since_epoch/1]).
+         delete_disk_index/2, delete_disk_index/3, dump_disk_index/1, sync_disk_index/1,
+         close_disk_index/1, open_ram/2, lookup_ram/2, insert_ram/2, delete_ram/2, dump_ram/1,
+         seconds_since_epoch/0, seconds_since_epoch/1]).
 
 %%
 %% Exported: open_disk_db
@@ -89,8 +89,8 @@ open_disk_index(Name, Filename) ->
                         apptools_persistent_index:primary()) ->
           [apptools_persistent_index:secondary()] | {error, term()}.
 
-lookup_disk_index(Name, Key) ->
-    apptools_persistent_index:lookup(Name, Key).
+lookup_disk_index(Name, Primary) ->
+    apptools_persistent_index:lookup(Name, Primary).
 
 %%
 %% Exported: insert_disk_index
@@ -112,8 +112,16 @@ insert_disk_index(Name, Primary, Secondary) ->
                         apptools_persistent_index:primary()) ->
           ok | {error, term()}.
 
-delete_disk_index(Name, Key) ->
-    apptools_persistent_index:delete(Name, Key).
+delete_disk_index(Name, Primary) ->
+    apptools_persistent_index:delete(Name, Primary).
+
+-spec delete_disk_index(apptools_persistent_index:index_name(),
+                        apptools_persistent_index:primary(),
+                        apptools_persistent_index:secondary()) ->
+          ok | {error, term()}.
+
+delete_disk_index(Name, Primary, Secondary) ->
+    apptools_persistent_index:delete(Name, Primary, Secondary).
 
 %%
 %% Exported: dump_disk_index

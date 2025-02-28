@@ -448,16 +448,16 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     end
             end;
         ["api", "delete_message"] ->
-            case decode(Socket, Request, Body, fun json_term_to_integer/1) of
+            case decode(Socket, Request, Body, delete_message) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, MessageId} ->
                     case db_serv:delete_message(UserId, MessageId) of
                         ok ->
                             send_response(Socket, Request, no_cache_headers(), no_content);
-                        {error, Reason} ->
-                            ?log_error("/api/delete_message: ~p", [Reason]),
-                            send_response(Socket, Request, no_cache_headers(), bad_request)
+                        {error, access_denied} ->
+                            ?log_error("/api/delete_message: ~p", [access_denied]),
+                            send_response(Socket, Request, no_cache_headers(), forbidden)
                     end
             end;
 

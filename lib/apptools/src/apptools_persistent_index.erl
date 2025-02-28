@@ -1,5 +1,5 @@
 -module(apptools_persistent_index).
--export([open/1, open/2, sync/1, insert/3, lookup/2, delete/2, dump/1,
+-export([open/1, open/2, sync/1, insert/3, lookup/2, delete/2, delete/3, dump/1,
          close/1]).
 -export_type([index_name/0, index_tid/0, index/0, primary/0, secondary/0]).
 
@@ -63,6 +63,11 @@ lookup(Index, Primary) ->
 
 delete(Index, Primary) ->
     dets:delete(Index, Primary).
+
+-spec delete(index(), primary(), secondary()) -> ok | {error, term()}.
+
+delete(Index, Primary, Secondary) ->
+    dets:delete_object(Index, {Primary, Secondary}).
 
 %%
 %% dump

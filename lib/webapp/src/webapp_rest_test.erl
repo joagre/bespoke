@@ -20,7 +20,6 @@ direct_messaging() ->
            <<"userId">> := _UserId,
            <<"username">> := _Username}} =
         webapp_client:http_get("http://localhost/api/auto_login"),
-
     ?log_info("**** Create users"),
     [#{<<"userId">> := FooUserId, <<"sessionId">> := FooSessionId},
      #{<<"userId">> := BarUserId, <<"sessionId">> := BarSessionId},
@@ -31,16 +30,13 @@ direct_messaging() ->
     BarHeaders = [{"Cookie", webapp_client:bespoke_cookie(BarSessionId)}],
     BazHeaders = [{"Cookie", webapp_client:bespoke_cookie(BazSessionId)}],
     FuubarHeaders = [{"Cookie", webapp_client:bespoke_cookie(FuubarSessionId)}],
-
     ?log_info("**** Verify that foo has no top messages"),
     {ok, []} = webapp_client:http_get("http://localhost/api/read_top_messages", FooHeaders),
-
     ?log_info("**** Create message (foo -> bar, baz) with two attachments"),
     FooBody = <<"BAJS\nPRUTTåäö\n">>,
     FooBodyBlob = upload_blob(FooUserId, {data, FooBody}),
     BarBodyBlob = upload_blob(BarUserId, {data, FooBody}),
     BazBodyBlob = upload_blob(BazUserId, {data, FooBody}),
-
     ?log_info("**** Create two attachments"),
     FooAttachmentFilepath0 =
         filename:join([code:priv_dir(webapp), <<"docroot/images/animated-background.gif">>]),
@@ -51,7 +47,6 @@ direct_messaging() ->
     FooAttachmentBlob1 = upload_blob(FooUserId, FooAttachmentFilepath1),
     BarAttachmentBlob1 = upload_blob(BarUserId, FooAttachmentFilepath1),
     BazAttachmentBlob1 = upload_blob(BazUserId, FooAttachmentFilepath1),
-
     ?log_info("**** Create top message"),
     {ok, #{<<"id">> := TopMessageId}} =
         webapp_client:http_post(
@@ -61,12 +56,10 @@ direct_messaging() ->
                 [[FooAttachmentBlob0, BarAttachmentBlob0, BazAttachmentBlob0],
                  [FooAttachmentBlob1, BarAttachmentBlob1, BazAttachmentBlob1]]},
           FooHeaders),
-
     ?log_info("**** Check body blobs"),
     {ok, _} = webapp_client:http_get("http://localhost/message/0/1"),
     {ok, _} = webapp_client:http_get("http://localhost/message/0/2"),
     {ok, _} = webapp_client:http_get("http://localhost/message/0/3"),
-
     ?log_info("**** Check attachment blobs"),
     {ok, _} = webapp_client:http_get("http://localhost/message/0/1-0"),
     {ok, _} = webapp_client:http_get("http://localhost/message/0/1-1"),
@@ -74,7 +67,6 @@ direct_messaging() ->
     {ok, _} = webapp_client:http_get("http://localhost/message/0/2-1"),
     {ok, _} = webapp_client:http_get("http://localhost/message/0/3-0"),
     {ok, _} = webapp_client:http_get("http://localhost/message/0/3-1"),
-
     ?log_info("**** Verify that foo, bar and baz got the top message"),
     {ok,[#{<<"attachmentIds">> := [0,1], <<"authorId">> := FooUserId,
            <<"authorUsername">> := <<"foo">>, <<"id">> := 0}]} =
@@ -85,42 +77,35 @@ direct_messaging() ->
     {ok,[#{<<"attachmentIds">> := [0,1], <<"authorId">> := FooUserId,
            <<"authorUsername">> := <<"foo">>, <<"id">> := 0}]} =
         webapp_client:http_get("http://localhost/api/read_top_messages", BazHeaders),
-
     ?log_info("**** Verify that fuubar didn't get the top message"),
     {ok, []} = webapp_client:http_get("http://localhost/api/read_top_messages", FuubarHeaders),
-
     ?log_info("**** Create a reply as fuubar (should fail)"),
     {unexpected, 403, _, _, _} = webapp_client:http_post(
                                    "http://localhost/api/create_message",
                                    #{<<"topMessageId">> => TopMessageId,
                                      <<"bodyBlobs">> =>  [FooBodyBlob, BarBodyBlob, BazBodyBlob]},
                                    FuubarHeaders),
-
     ?log_info("**** Create a reply as baz (should *not* fail)"),
     BazBody = <<"BAJS\nPRUTTåäö\n">>,
     FooBodyBlob2 = upload_blob(FooUserId, {data, BazBody}),
     BarBodyBlob2 = upload_blob(BarUserId, {data, BazBody}),
     BazBodyBlob2 = upload_blob(BazUserId, {data, BazBody}),
-    {ok, _} = webapp_client:http_post(
-                "http://localhost/api/create_message",
-                #{<<"topMessageId">> => TopMessageId,
-                  <<"bodyBlobs">> =>  [FooBodyBlob2, BarBodyBlob2, BazBodyBlob2]},
-                BazHeaders),
-
+    {ok, #{<<"id">> := BazMessageId}} =
+        webapp_client:http_post(
+          "http://localhost/api/create_message",
+          #{<<"topMessageId">> => TopMessageId,
+            <<"bodyBlobs">> => [FooBodyBlob2, BarBodyBlob2, BazBodyBlob2]},
+          BazHeaders),
     ?log_info("**** Check body blobs"),
     {ok, _} = webapp_client:http_get("http://localhost/message/1/1"),
     {ok, _} = webapp_client:http_get("http://localhost/message/1/2"),
     {ok, _} = webapp_client:http_get("http://localhost/message/1/3"),
-
     ?log_info("**** Delete reply message"),
-    %% 1) Delete reply body blob for all recipients + delete attachments for all recipients
-    %% 2) Delete reply message
+    {unexpected, 204, _, _, _} =
+        webapp_client:http_post("http://localhost/api/delete_message", BazMessageId, BazHeaders),
     ?log_info("**** Delete top message"),
-    %% 1) Delete top body blob for all recipients + delete attachments for all recipients +
-    %%    delete reply body blobs for all recipients + delete all attachments for all recipients +
-    %%    delete all reply messages
-    %% 2) Delete top message
-    ok.
+    {unexpected, 204, _, _, _} =
+        webapp_client:http_post("http://localhost/api/delete_message", TopMessageId, FooHeaders).
 
 create_users(_SessionId, []) ->
     [];
@@ -159,23 +144,19 @@ upload_blob(UserId, FilePath) ->
 forum() ->
     _ = webapp_client:init_httpc(),
     ok = db_tools:create_subreddit_db(),
-
     ?log_info("**** Auto login"),
     {ok, #{<<"noPassword">> := _NoPassword,
            <<"sessionId">> := SessionId,
            <<"userId">> := _UserId,
            <<"username">> := _Username}} =
         webapp_client:http_get("http://localhost/api/auto_login"),
-
     ?log_info("**** Fetch all top posts"),
     Headers = [{"Cookie", webapp_client:bespoke_cookie(SessionId)}],
     {ok, [#{<<"id">> := PostId}|_]} =
         webapp_client:http_get("http://localhost/api/list_top_posts", Headers),
-
     ?log_info("**** Fetch specific post(s)"),
     {ok, [#{<<"id">> := PostId}]} =
         webapp_client:http_post("http://localhost/api/lookup_posts", [PostId], Headers),
-
     ?log_info("**** Fetch specific post(s) recursively (include all nested replies)"),
     {ok, [#{<<"id">> := _PostId2}|_]} =
         webapp_client:http_post("http://localhost/api/lookup_recursive_posts", [PostId],
@@ -190,7 +171,6 @@ forum() ->
                                   <<"passwordHash">> => null,
                                   <<"clientResponse">> => null},
                                 Headers),
-
     ?log_info("**** Insert a top post"),
     NewHeaders = [{"Cookie", webapp_client:bespoke_cookie(NewSessionId)}],
     {ok, #{<<"id">> := TopPostId}} =
@@ -198,7 +178,6 @@ forum() ->
                                 #{<<"title">> => <<"A new title for a top post">>,
                                   <<"body">> => <<"A body">>},
                                 NewHeaders),
-
     ?log_info("**** Insert a reply post to the top post (including one attachment)"),
     FilePath =
         filename:join(
@@ -227,14 +206,12 @@ make_attachment(#{<<"absPath">> := AbsPath, <<"contentType">> := ContentType}) -
 
 system() ->
     _ = webapp_client:init_httpc(),
-
     ?log_info("**** Auto login"),
     {ok, #{<<"noPassword">> := _NoPassword,
            <<"sessionId">> := SessionId,
            <<"userId">> := _UserId,
            <<"username">> := _Username}} =
         webapp_client:http_get("http://localhost/api/auto_login"),
-
     ?log_info("**** Switch user"),
     Headers = [{"Cookie", webapp_client:bespoke_cookie(SessionId)}],
     {ok, #{<<"sessionId">> := _NewSessionId,

@@ -34,7 +34,7 @@ REWRITE THIS BULLET POINT:
 
 
 * Add direct messaging
-
+* Add an admin user
 * Add Signal protocol under the hood
 
 ====

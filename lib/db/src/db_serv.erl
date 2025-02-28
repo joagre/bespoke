@@ -277,7 +277,7 @@ message_handler(S) ->
 
 
 
-
+        %% Direct messaging
         {call, From, {create_message, Message, BodyBlobs, AttachmentBlobs} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:create_message(Message, BodyBlobs, AttachmentBlobs)};
@@ -295,7 +295,7 @@ message_handler(S) ->
 
 
 
-
+        %% Forum
         {call, From, list_top_posts = Call} ->
             ?log_debug("Call: ~p", [Call]),
             TopPosts = dets:match_object(?POST_DB, #post{top_post_id = not_set, _ = '_'}),
