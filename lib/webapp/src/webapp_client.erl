@@ -22,7 +22,7 @@ init_httpc() ->
 
 -spec http_get(string()) ->
           {ok, term()} |
-          {unexpected, integer(), string(), list(), iolist()} |
+          {ok, integer(), string(), list(), iolist()} |
           {error, term()}.
 
 http_get(Url) ->
@@ -37,7 +37,7 @@ http_get(Url, Headers) ->
 
 -spec http_post(string(), term()) ->
           {ok, term()} |
-          {unexpected, integer(), string(), list(), iolist()} |
+          {ok, integer(), string(), list(), iolist()} |
           {error, term()}.
 
 http_post(Url, Data) ->
@@ -117,7 +117,7 @@ handle_response({ok, {{"HTTP/1.1", 200, "OK"}, ResponseHeaders, Body}}) ->
             {ok, Body}
     end;
 handle_response({ok, {{"HTTP/1.1", StatusCode, ReasonPhrase}, ResponseHeaders, Body}}) ->
-    {unexpected, StatusCode, ReasonPhrase, ResponseHeaders, Body};
+    {ok, StatusCode, ReasonPhrase, ResponseHeaders, Body};
 handle_response({error, Reason}) ->
     {error, Reason}.
 

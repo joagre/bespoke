@@ -263,12 +263,18 @@ delete_message(UserId, MessageId) ->
               fun(AttachmentId) ->
                       ok = db:delete_disk_index(?MESSAGE_ATTACHMENT_INDEX_DB, AttachmentId)
               end, AttachmentIds);
-        [] ->
+        _ ->
             {error, access_denied}
     end.
 
 delete_blobs(#message{id = MessageId, top_message_id = TopMessageId}) ->
-    RecipientUserIds = db:lookup_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, TopMessageId),
+    RecipientUserIds =
+        case TopMessageId of
+            not_set ->
+                db:lookup_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, MessageId);
+            _ ->
+                db:lookup_disk_index(?MESSAGE_RECIPIENT_INDEX_DB, TopMessageId)
+        end,
     MessageBlobPath = filename:join([?BESPOKE_MESSAGE_PATH, ?i2b(MessageId)]),
     lists:foreach(
       fun(RecipientUserId) ->

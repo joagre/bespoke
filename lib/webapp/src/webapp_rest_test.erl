@@ -10,7 +10,7 @@
 %% Exported: direct_messaging
 %%
 
-%% IMPORTANT: Perform a "make reset" before running this test
+%% Run: make reset && ./bin/bespoke -- -eval "webapp_rest_test:direct_messaging()"
 
 direct_messaging() ->
     _ = webapp_client:init_httpc(),
@@ -80,11 +80,11 @@ direct_messaging() ->
     ?log_info("**** Verify that fuubar didn't get the top message"),
     {ok, []} = webapp_client:http_get("http://localhost/api/read_top_messages", FuubarHeaders),
     ?log_info("**** Create a reply as fuubar (should fail)"),
-    {unexpected, 403, _, _, _} = webapp_client:http_post(
-                                   "http://localhost/api/create_message",
-                                   #{<<"topMessageId">> => TopMessageId,
-                                     <<"bodyBlobs">> =>  [FooBodyBlob, BarBodyBlob, BazBodyBlob]},
-                                   FuubarHeaders),
+    {ok, 403, _, _, _} = webapp_client:http_post(
+                           "http://localhost/api/create_message",
+                           #{<<"topMessageId">> => TopMessageId,
+                             <<"bodyBlobs">> =>  [FooBodyBlob, BarBodyBlob, BazBodyBlob]},
+                           FuubarHeaders),
     ?log_info("**** Create a reply as baz (should *not* fail)"),
     BazBody = <<"BAJS\nPRUTTåäö\n">>,
     FooBodyBlob2 = upload_blob(FooUserId, {data, BazBody}),
@@ -101,10 +101,10 @@ direct_messaging() ->
     {ok, _} = webapp_client:http_get("http://localhost/message/1/2"),
     {ok, _} = webapp_client:http_get("http://localhost/message/1/3"),
     ?log_info("**** Delete reply message"),
-    {unexpected, 204, _, _, _} =
+    {ok, 204, _, _, _} =
         webapp_client:http_post("http://localhost/api/delete_message", BazMessageId, BazHeaders),
     ?log_info("**** Delete top message"),
-    {unexpected, 204, _, _, _} =
+    {ok, 204, _, _, _} =
         webapp_client:http_post("http://localhost/api/delete_message", TopMessageId, FooHeaders).
 
 create_users(_SessionId, []) ->
@@ -140,6 +140,8 @@ upload_blob(UserId, FilePath) ->
 %%
 %% Exported: forum
 %%
+
+%% Run: make reset && ./bin/bespoke -- -eval "webapp_rest_test:forum()"
 
 forum() ->
     _ = webapp_client:init_httpc(),
@@ -203,6 +205,8 @@ make_attachment(#{<<"absPath">> := AbsPath, <<"contentType">> := ContentType}) -
 %%
 %% Exported: system
 %%
+
+%% Run: make reset && ./bin/bespoke -- -eval "webapp_rest_test:system()"
 
 system() ->
     _ = webapp_client:init_httpc(),
