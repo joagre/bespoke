@@ -1,6 +1,9 @@
+% -*- fill-column: 100; -*-
+
 -ifndef(DB_HRL).
 -define(DB_HRL, true).
 
+%% FIXME: Cleanup, see disk layout comment below
 %% /var/tmp/bespoke/db
 %% /var/tmp/bespoke/tmp
 %% /var/tmp/bespoke/message
@@ -11,8 +14,7 @@
 -define(BESPOKE_DB_DIR, filename:join(?BESPOKE_RUNTIME_DIR, "db")).
 -define(BESPOKE_TMP_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "tmp")).
 -define(BESPOKE_MESSAGE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "message")).
--define(BESPOKE_ATTACHMENT_PATH,
-        filename:join(?BESPOKE_RUNTIME_DIR, "attachment")).
+-define(BESPOKE_ATTACHMENT_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "attachment")).
 -define(BESPOKE_FILE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "file")).
 
 -record(meta,

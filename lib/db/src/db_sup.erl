@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -module(db_sup).
 -behaviour(supervisor).
 -export([start_link/0]).
@@ -23,6 +25,5 @@ start_link() ->
 
 init([]) ->
     DbServSpec = #{id => db_serv, start => {db_serv, start_link, []}},
-    DbUserServSpec =
-        #{id => db_user_serv, start => {db_user_serv, start_link, []}},
+    DbUserServSpec = #{id => db_user_serv, start => {db_user_serv, start_link, []}},
     {ok, {#{strategy => one_for_all}, [DbServSpec, DbUserServSpec]}}.

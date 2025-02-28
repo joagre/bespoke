@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -module(db_user_serv).
 -export([start_link/0, stop/0]).
 -export([get_user/1, get_user_from_username/1, get_user_from_session_id/1,
@@ -6,8 +8,7 @@
          login/4, switch_user/2, switch_user/4, change_password/4,
          user_db_to_list/0]).
 -export([message_handler/1]).
--export_type([username/0, session_id/0, mac_address/0, password_salt/0,
-              password_hash/0]).
+-export_type([username/0, session_id/0, mac_address/0, password_salt/0, password_hash/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/serv.hrl").
@@ -40,8 +41,7 @@
 -spec start_link() -> serv:spawn_server_result().
 
 start_link() ->
-    ?spawn_server(fun init/1, fun ?MODULE:message_handler/1,
-                  #serv_options{name = ?MODULE}).
+    ?spawn_server(fun init/1, fun ?MODULE:message_handler/1, #serv_options{name = ?MODULE}).
 
 %%
 %% Exported: stop
@@ -108,8 +108,7 @@ insert_user(Username) ->
           {ok, #user{}} | {error, failure}.
 
 login(Username, MacAddress, PasswordSalt, PasswordHash) ->
-    serv:call(?MODULE, {login, Username, MacAddress, PasswordSalt,
-                        PasswordHash}).
+    serv:call(?MODULE, {login, Username, MacAddress, PasswordSalt, PasswordHash}).
 
 %%
 %% Exported: switch_user
@@ -121,25 +120,21 @@ login(Username, MacAddress, PasswordSalt, PasswordHash) ->
 switch_user(Username, MacAddress) ->
     serv:call(?MODULE, {switch_user, Username, MacAddress}).
 
--spec switch_user(username(), mac_address(), password_salt(),
-                  password_hash()) ->
+-spec switch_user(username(), mac_address(), password_salt(), password_hash()) ->
           #user{}.
 
 switch_user(Username, MacAddress, PasswordSalt, PasswordHash) ->
-    serv:call(?MODULE, {switch_user, Username, MacAddress, PasswordSalt,
-                        PasswordHash}).
+    serv:call(?MODULE, {switch_user, Username, MacAddress, PasswordSalt, PasswordHash}).
 
 %%
 %% Exported: change_password
 %%
 
--spec change_password(username(), mac_address(), password_salt(),
-                      password_hash()) ->
+-spec change_password(username(), mac_address(), password_salt(), password_hash()) ->
           ok | {error, failure}.
 
 change_password(Username, MacAddress, PasswordSalt, PasswordHash) ->
-    serv:call(?MODULE, {change_password, Username, MacAddress, PasswordSalt,
-                        PasswordHash}).
+    serv:call(?MODULE, {change_password, Username, MacAddress, PasswordSalt, PasswordHash}).
 
 %%
 %% Exported: user_db_to_list
@@ -176,8 +171,7 @@ message_handler(S) ->
             end;
         {call, From, {get_user_from_username, Username} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            case dets:match_object(?USER_DB,
-                                   #user{name = Username, _ = '_'}) of
+            case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 [User] ->
                     {reply, From, {ok, User}};
                 [] ->
@@ -185,8 +179,7 @@ message_handler(S) ->
             end;
         {call, From, {get_user_from_session_id, SessionId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            case dets:match_object(?USER_DB,
-                                   #user{session_id = SessionId, _ = '_'}) of
+            case dets:match_object(?USER_DB, #user{session_id = SessionId, _ = '_'}) of
                 [User] ->
                     {reply, From, {ok, User}};
                 [] ->
@@ -194,8 +187,7 @@ message_handler(S) ->
             end;
         {call, From, {get_user_from_mac_address, MacAddress} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            case dets:match_object(?USER_DB,
-                                   #user{mac_address = MacAddress, _ = '_'}) of
+            case dets:match_object(?USER_DB, #user{mac_address = MacAddress, _ = '_'}) of
                 [] ->
                     %% Note: Generate a new user
                     User = #user{id = db_serv:get_user_id(),
@@ -207,10 +199,9 @@ message_handler(S) ->
                     {reply, From, User};
                 Users ->
                     [LastUpdatedUser|_] =
-                        lists:sort(
-                          fun(User1, User2) ->
-                                  User1#user.updated > User2#user.updated
-                          end, Users),
+                        lists:sort(fun(User1, User2) ->
+                                           User1#user.updated > User2#user.updated
+                                   end, Users),
                     ok = dets:insert(?USER_DB, LastUpdatedUser),
                     {reply, From, LastUpdatedUser}
             end;
@@ -223,17 +214,15 @@ message_handler(S) ->
                          session_id = session_id()},
             ok = dets:insert(?USER_DB, User),
             {reply, From, {ok, User}};
-        {call, From, {login, Username, MacAddress, PasswordSalt,
-                      PasswordHash} = Call} ->
+        {call, From, {login, Username, MacAddress, PasswordSalt, PasswordHash} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 [User] ->
-                    UpdatedUser =
-                        User#user{session_id = session_id(),
-                                  mac_address = MacAddress,
-                                  password_salt = PasswordSalt,
-                                  password_hash = PasswordHash,
-                                  updated = timestamp()},
+                    UpdatedUser = User#user{session_id = session_id(),
+                                            mac_address = MacAddress,
+                                            password_salt = PasswordSalt,
+                                            password_hash = PasswordHash,
+                                            updated = timestamp()},
                     ok = dets:insert(?USER_DB, UpdatedUser),
                     {reply, From, {ok, UpdatedUser}};
                 [] ->
@@ -264,8 +253,7 @@ message_handler(S) ->
                     {reply, From, {ok, User}}
             end;
         %% Switch to user *with* password
-        {call, From, {switch_user, Username, MacAddress, PasswordSalt,
-                      PasswordHash} = Call} ->
+        {call, From, {switch_user, Username, MacAddress, PasswordSalt, PasswordHash} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 %% User without password exists
@@ -296,15 +284,13 @@ message_handler(S) ->
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, User}
             end;
-        {call, From, {change_password, Username, MacAddress, PasswordSalt,
-                      PasswordHash} = Call} ->
+        {call, From, {change_password, Username, MacAddress, PasswordSalt, PasswordHash} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
                 [User] ->
-                    UpdatedUser =
-                        User#user{mac_address = MacAddress,
-                                  password_salt = PasswordSalt,
-                                  password_hash = PasswordHash},
+                    UpdatedUser = User#user{mac_address = MacAddress,
+                                            password_salt = PasswordSalt,
+                                            password_hash = PasswordHash},
                     ok = dets:insert(?USER_DB, UpdatedUser),
                     {reply, From, ok};
                 [] ->
@@ -382,8 +368,7 @@ is_valid_word(Word) ->
                     false;
                 _ ->
                     %% We know that there are only ASCII words in the dictionary
-                    {true, ?l2b([string:to_upper(hd(StrippedWord))|
-                                 tl(StrippedWord)])}
+                    {true, ?l2b([string:to_upper(hd(StrippedWord))|tl(StrippedWord)])}
             end;
         _ ->
             false

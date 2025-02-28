@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -ifndef(DB_META_DB_HRL).
 -define(DB_META_DB_HRL, true).
 

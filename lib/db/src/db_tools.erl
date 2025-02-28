@@ -1,6 +1,7 @@
+% -*- fill-column: 100; -*-
+
 -module(db_tools).
--export([create_subreddit_db/0, purge_subreddit_db/0, dump_subreddit_db/0,
-         create_dummy_db/0]).
+-export([create_subreddit_db/0, purge_subreddit_db/0, dump_subreddit_db/0, create_dummy_db/0]).
 
 -include("../include/db.hrl").
 -include("../../apptools/include/log.hrl").
@@ -40,10 +41,8 @@ create_subreddit_db() ->
 
 get_cached_subreddit(SubmissionsFile, CommentsFile, NoSubmissions,
                      MinNoComments) ->
-    SubmissionsDbFile =
-        filename:join(code:priv_dir(webapp), "submissions.db"),
-    CommentsDbFile =
-        filename:join(code:priv_dir(webapp), "comments.db"),
+    SubmissionsDbFile = filename:join(code:priv_dir(webapp), "submissions.db"),
+    CommentsDbFile = filename:join(code:priv_dir(webapp), "comments.db"),
     %% If there is no submission database just delete the comments
     %% database as well (if it exists)
     case filelib:is_regular(SubmissionsDbFile) of
@@ -67,26 +66,20 @@ get_cached_subreddit(SubmissionsFile, CommentsFile, NoSubmissions,
                     open_dbs(SubmissionsDbFile, CommentsDbFile);
                 false ->
                     io:format("** Using cached submission database~n"),
-                    {SubmissionDb, CommentDb} =
-                        open_dbs(SubmissionsDbFile, CommentsDbFile),
+                    {SubmissionDb, CommentDb} = open_dbs(SubmissionsDbFile, CommentsDbFile),
                     io:format("** Creating new comment database~n"),
                     {NoParentsIds, NoComments, ParsedComments} =
-                        populate_comment_db(
-                          CommentsFile, SubmissionDb, CommentDb),
-                    io:format("** Total number of parent ids = ~p~n",
-                              [NoParentsIds]),
-                    io:format("** Total number of comments = ~p~n",
-                              [NoComments]),
+                        populate_comment_db(CommentsFile, SubmissionDb, CommentDb),
+                    io:format("** Total number of parent ids = ~p~n", [NoParentsIds]),
+                    io:format("** Total number of comments = ~p~n", [NoComments]),
                     io:format("** Parsed ~p comments~n", [ParsedComments]),
                     {SubmissionDb, CommentDb}
             end;
         false ->
-            {SubmissionDb, CommentDb} =
-                open_dbs(SubmissionsDbFile, CommentsDbFile),
+            {SubmissionDb, CommentDb} = open_dbs(SubmissionsDbFile, CommentsDbFile),
             io:format("** Creating new submission database~n"),
             {NoSubmissions, ParsedSubmissions} =
-                populate_submission_db(
-                  SubmissionsFile, SubmissionDb, NoSubmissions, MinNoComments),
+                populate_submission_db(SubmissionsFile, SubmissionDb, NoSubmissions, MinNoComments),
             io:format("** Total number of submissions = ~p~n", [NoSubmissions]),
             io:format("** Parsed ~p submissions~n", [ParsedSubmissions]),
             io:format("** Creating new comment database~n"),
@@ -99,42 +92,35 @@ get_cached_subreddit(SubmissionsFile, CommentsFile, NoSubmissions,
     end.
 
 open_dbs(SubmissionsDbFile, CommentsDbFile) ->
-    {ok, SubmissionDb} =
-        dets:open_file(submissions, [{file, SubmissionsDbFile}]),
-    {ok, CommentDb} =
-        dets:open_file(comments, [{file, CommentsDbFile}, {type, bag}]),
+    {ok, SubmissionDb} = dets:open_file(submissions, [{file, SubmissionsDbFile}]),
+    {ok, CommentDb} = dets:open_file(comments, [{file, CommentsDbFile}, {type, bag}]),
     {SubmissionDb, CommentDb}.
 
 close_dbs(SubmissionDb, CommentDb) ->
     dets:close(SubmissionDb),
     dets:close(CommentDb).
 
-populate_submission_db(SubmissionsFile, SubmissionDb, NoSubmissions,
-                       MinNoComments) ->
+populate_submission_db(SubmissionsFile, SubmissionDb, NoSubmissions, MinNoComments) ->
     {ok, SubmissionsFd} = file:open(SubmissionsFile, [read, binary]),
-    populate_submission_db(SubmissionDb, NoSubmissions, MinNoComments,
-                           SubmissionsFd, _ParsedLines = 0).
+    populate_submission_db(SubmissionDb, NoSubmissions, MinNoComments, SubmissionsFd,
+                           _ParsedLines = 0).
 
-populate_submission_db(SubmissionDb, 0, _MinNoComments, SubmissionsFd,
-                       ParsedLines) ->
+populate_submission_db(SubmissionDb, 0, _MinNoComments, SubmissionsFd, ParsedLines) ->
     NoSubmissions = dets:info(SubmissionDb, no_keys),
     dets:sync(SubmissionDb),
     file:close(SubmissionsFd),
     {NoSubmissions, ParsedLines};
-populate_submission_db(SubmissionDb, NoSubmissions, MinNoComments,
-                       SubmissionsFd, ParsedLines) ->
+populate_submission_db(SubmissionDb, NoSubmissions, MinNoComments, SubmissionsFd, ParsedLines) ->
     case file:read_line(SubmissionsFd) of
         {ok, Line} ->
             case parse_submission(Line, MinNoComments) of
                 skipped ->
-                    populate_submission_db(SubmissionDb, NoSubmissions,
-                                           MinNoComments, SubmissionsFd,
-                                           ParsedLines + 1);
+                    populate_submission_db(SubmissionDb, NoSubmissions, MinNoComments,
+                                           SubmissionsFd, ParsedLines + 1);
                 #{<<"id">> := Id} = JsonTerm ->
                     ok = dets:insert(SubmissionDb, {Id, JsonTerm}),
-                    populate_submission_db(SubmissionDb, NoSubmissions - 1,
-                                           MinNoComments, SubmissionsFd,
-                                           ParsedLines + 1)
+                    populate_submission_db(SubmissionDb, NoSubmissions - 1, MinNoComments,
+                                           SubmissionsFd, ParsedLines + 1)
             end;
         eof ->
             file:close(SubmissionsFd),
@@ -165,12 +151,10 @@ populate_comment_db(SubmissionDb, CommentDb, CommentsFd, ParsedLines) ->
         {ok, Line} ->
             case parse_comment(Line, SubmissionDb) of
                 skipped ->
-                    populate_comment_db(SubmissionDb, CommentDb, CommentsFd,
-                                        ParsedLines + 1);
+                    populate_comment_db(SubmissionDb, CommentDb, CommentsFd, ParsedLines + 1);
                 #{<<"parent_id">> := ParentId} = Comment ->
                     ok = dets:insert(CommentDb, {ParentId, Comment}),
-                    populate_comment_db(SubmissionDb, CommentDb, CommentsFd,
-                                        ParsedLines + 1)
+                    populate_comment_db(SubmissionDb, CommentDb, CommentsFd, ParsedLines + 1)
             end;
         eof ->
             NoParentIds = dets:info(CommentDb, no_keys),
@@ -225,8 +209,7 @@ create_all_users(SubmissionDb, CommentDb) ->
 
 crete_all_comment_users(CommentDb, ParentId) ->
     Comments = dets:lookup(CommentDb, ParentId),
-    lists:foreach(fun({_, #{<<"author">> := AuthorUsername,
-                            <<"id">> := Id}}) ->
+    lists:foreach(fun({_, #{<<"author">> := AuthorUsername, <<"id">> := Id}}) ->
                           ok = create_author_id(AuthorUsername),
                           crete_all_comment_users(CommentDb, Id)
                   end, Comments).
@@ -264,8 +247,7 @@ dump_subreddit_db() ->
     SubmissionsDbFile = filename:join(code:priv_dir(webapp), "submissions.db"),
     CommentsDbFile = filename:join(code:priv_dir(webapp), "comments.db"),
     {SubmissionDb, CommentDb} = open_dbs(SubmissionsDbFile, CommentsDbFile),
-    SubmissionsDumpFile =
-        filename:join(code:priv_dir(webapp), "submissions.dump"),
+    SubmissionsDumpFile = filename:join(code:priv_dir(webapp), "submissions.dump"),
     Submissions = dets:foldl(
                     fun({_Id, JsonTerm}, Acc) ->
                             [JsonTerm|Acc]
@@ -273,12 +255,10 @@ dump_subreddit_db() ->
     ok = file:write_file(SubmissionsDumpFile,
                          ?l2b(io_lib:format("~p", [Submissions]))),
     CommentsDumpFile = filename:join(code:priv_dir(webapp), "comments.dump"),
-    Comments = dets:foldl(
-                 fun({_ParentId, JsonTerm}, Acc) ->
-                         [JsonTerm|Acc]
-                 end, [], CommentDb),
-    ok = file:write_file(CommentsDumpFile,
-                         ?l2b(io_lib:format("~p", [Comments]))),
+    Comments = dets:foldl(fun({_ParentId, JsonTerm}, Acc) ->
+                                  [JsonTerm|Acc]
+                          end, [], CommentDb),
+    ok = file:write_file(CommentsDumpFile, ?l2b(io_lib:format("~p", [Comments]))),
     close_dbs(SubmissionDb, CommentDb).
 
 %%
@@ -298,8 +278,8 @@ purge_subreddit_db() ->
 
 create_dummy_db() ->
     %% Create some dummy users
-    ok = create_author_id([<<"ginko4711">>, <<"zappeU">>, <<"snuvan">>,
-                           <<"harald">>, <<"sminkor">>, <<"honan">>]),
+    ok = create_author_id([<<"ginko4711">>, <<"zappeU">>, <<"snuvan">>, <<"harald">>, <<"sminkor">>,
+                           <<"honan">>]),
     %% Add two top posts
     AuthorIdGinko4711 = get_author_id(<<"ginko4711">>),
     TopPost1 = #post{title = <<"Var har sillen tagit vagen?">>,
@@ -313,33 +293,29 @@ create_dummy_db() ->
     {ok, _InsertedTopPost2} = db_serv:insert_post(TopPost2),
     %% Add two replies
     AuthorIdSnuvan = get_author_id(<<"snuvan">>),
-    ReplyPost1 =
-        #post{parent_post_id = InsertedTopPost1#post.id,
-              top_post_id = InsertedTopPost1#post.id,
-              body = <<"reply1">>,
-              author = AuthorIdSnuvan},
+    ReplyPost1 = #post{parent_post_id = InsertedTopPost1#post.id,
+                       top_post_id = InsertedTopPost1#post.id,
+                       body = <<"reply1">>,
+                       author = AuthorIdSnuvan},
     {ok, InsertedReplyPost1} = db_serv:insert_post(ReplyPost1),
     AuthorIdHarald = get_author_id(<<"harald">>),
-    ReplyPost2 =
-        #post{parent_post_id = InsertedTopPost1#post.id,
-              top_post_id = InsertedTopPost1#post.id,
-              body = <<"reply2">>,
-              author = AuthorIdHarald},
+    ReplyPost2 = #post{parent_post_id = InsertedTopPost1#post.id,
+                       top_post_id = InsertedTopPost1#post.id,
+                       body = <<"reply2">>,
+                       author = AuthorIdHarald},
     {ok, _InsertedReplyPost2} = db_serv:insert_post(ReplyPost2),
     %% Add two replies to the first reply
     AuthorIdSminkor = get_author_id(<<"sminkor">>),
-    ReplyPost11 =
-        #post{parent_post_id = InsertedReplyPost1#post.id,
-              top_post_id = InsertedTopPost1#post.id,
-              body = <<"reply11">>,
-              author = AuthorIdSminkor},
+    ReplyPost11 = #post{parent_post_id = InsertedReplyPost1#post.id,
+                        top_post_id = InsertedTopPost1#post.id,
+                        body = <<"reply11">>,
+                        author = AuthorIdSminkor},
     {ok, _InsertedReplyPost11} = db_serv:insert_post(ReplyPost11),
     AuthorIdHonan = get_author_id(<<"honan">>),
-    ReplyPost12 =
-        #post{parent_post_id = InsertedReplyPost1#post.id,
-              top_post_id = InsertedTopPost1#post.id,
-              body = <<"reply12">>,
-              author = AuthorIdHonan},
+    ReplyPost12 = #post{parent_post_id = InsertedReplyPost1#post.id,
+                        top_post_id = InsertedTopPost1#post.id,
+                        body = <<"reply12">>,
+                        author = AuthorIdHonan},
     {ok, _InsertedReplyPost12} = db_serv:insert_post(ReplyPost12),
     ok = db_serv:sync().
 
