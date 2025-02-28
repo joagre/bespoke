@@ -1,7 +1,7 @@
+% -*- fill-column: 100; -*-
+
 -module(webapp_dnsmasq).
--export([set_post_login_mac_address/1,
-         clear_mac_addresses/1,
-         clear_all_mac_addresses/0]).
+-export([set_post_login_mac_address/1, clear_mac_addresses/1, clear_all_mac_addresses/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -25,10 +25,9 @@ set_post_login_mac_address(MacAddress) ->
 -spec clear_mac_addresses([mac_address()]) -> ok | {error, string()}.
 
 clear_mac_addresses(MacAddresses) ->
-    Parameters =
-        lists:foldr(fun(MacAddress, Acc) ->
-                            [" --clear ", ?b2l(MacAddress)|Acc]
-                    end, [], MacAddresses),
+    Parameters = lists:foldr(fun(MacAddress, Acc) ->
+                                     [" --clear ", ?b2l(MacAddress)|Acc]
+                             end, [], MacAddresses),
     dnsmasq_tool(Parameters).
 
 %%

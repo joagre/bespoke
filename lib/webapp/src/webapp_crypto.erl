@@ -1,6 +1,7 @@
+% -*- fill-column: 100; -*-
+
 -module(webapp_crypto).
--export([generate_challenge/0, verify_client_response/3,
-         generate_rsa_key/2, load_native_rsa_key/1,
+-export([generate_challenge/0, verify_client_response/3, generate_rsa_key/2, load_native_rsa_key/1,
          sign_file/1, sign_file/2]).
 -export_type([challenge/0, client_response/0]).
 
@@ -26,8 +27,7 @@ generate_challenge() ->
 %% Exported: verify_client_response
 %%
 
--spec verify_client_response(
-        client_response(), challenge(), db_user_serv:password_hash()) ->
+-spec verify_client_response(client_response(), challenge(), db_user_serv:password_hash()) ->
           boolean().
 
 verify_client_response(ClientResponse, Challenge, PasswordHash) ->
@@ -48,36 +48,29 @@ generate_rsa_key(DirPath, Name) ->
     Size = 2048,
     Exp = 65537,
     RSAPrivateKey = public_key:generate_key({rsa, Size, Exp}),
-    #'RSAPrivateKey'{modulus = Modulus, publicExponent = PublicExponent} =
-        RSAPrivateKey,
-    RSAPublicKey =
-        #'RSAPublicKey'{modulus = Modulus, publicExponent = PublicExponent},
+    #'RSAPrivateKey'{modulus = Modulus, publicExponent = PublicExponent} = RSAPrivateKey,
+    RSAPublicKey = #'RSAPublicKey'{modulus = Modulus, publicExponent = PublicExponent},
     SubjectPublicKeyInfo =
         #'SubjectPublicKeyInfo'{
            algorithm = #'AlgorithmIdentifier'{
                           algorithm = {1,2,840,113549,1,1,1},
                           parameters = <<5,0>>},
-           subjectPublicKey = public_key:der_encode('RSAPublicKey',
-                                                    RSAPublicKey)},
+           subjectPublicKey = public_key:der_encode('RSAPublicKey', RSAPublicKey)},
     %% Save private key in term format
     RSAPrivateKeyFilePath = filename:join([DirPath, Name]) ++ ".key",
-    ok = file:write_file(RSAPrivateKeyFilePath,
-                         base64:encode(term_to_binary(RSAPrivateKey))),
+    ok = file:write_file(RSAPrivateKeyFilePath, base64:encode(term_to_binary(RSAPrivateKey))),
     %% Save public key in term format
     RSAPublicKeyFilePath = filename:join([DirPath, Name]) ++ ".pub",
-    ok = file:write_file(RSAPublicKeyFilePath,
-                         base64:encode(term_to_binary(RSAPublicKey))),
+    ok = file:write_file(RSAPublicKeyFilePath, base64:encode(term_to_binary(RSAPublicKey))),
     %% Save private key in PEM format (PKCS#1)
     RSAPrivateKeyPEM =
-        public_key:pem_encode(
-          [public_key:pem_entry_encode('RSAPrivateKey', RSAPrivateKey)]),
+        public_key:pem_encode([public_key:pem_entry_encode('RSAPrivateKey', RSAPrivateKey)]),
     RSAPrivateKeyPEMFilePath = filename:join([DirPath, Name]) ++ "-pem.key",
     ok = file:write_file(RSAPrivateKeyPEMFilePath, RSAPrivateKeyPEM),
     %% Save public key in PEM format (PKCS#8)
     RSAPublicKeyPEM =
         public_key:pem_encode(
-          [public_key:pem_entry_encode('SubjectPublicKeyInfo',
-                                       SubjectPublicKeyInfo)]),
+          [public_key:pem_entry_encode('SubjectPublicKeyInfo', SubjectPublicKeyInfo)]),
     RSAPublicKeyPEMFilePath = filename:join([DirPath, Name]) ++ "-pem.pub",
     ok = file:write_file(RSAPublicKeyPEMFilePath, RSAPublicKeyPEM),
     {RSAPrivateKeyFilePath, RSAPrivateKeyPEMFilePath,

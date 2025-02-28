@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -ifndef(WEBAPP_AUTH_HRL).
 -define(WEBAPP_AUTH_HRL, true).
 

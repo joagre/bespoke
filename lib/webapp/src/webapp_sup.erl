@@ -1,3 +1,5 @@
+% -*- fill-column: 100; -*-
+
 -module(webapp_sup).
 -behaviour(supervisor).
 -export([start_link/0]).
@@ -22,6 +24,5 @@ start_link() ->
 %%
 
 init([]) ->
-    WebappRestSpec =
-        #{id => webapp_rest, start => {webapp_rest, start_link, []}},
+    WebappRestSpec = #{id => webapp_rest, start => {webapp_rest, start_link, []}},
     {ok, {#{strategy => one_for_all}, [WebappRestSpec]}}.

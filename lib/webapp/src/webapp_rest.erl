@@ -39,7 +39,6 @@
 %%
 
 start_link() ->
-    ok = webapp_dnsmasq:clear_all_mac_addresses(),
     %% Open Read Cache DB (FIXME: Make a bag out of it)
     {ok, _} = db:open_disk(?READ_CACHE_DB, ?READ_CACHE_FILE_PATH, #read_cache.user_id),
     %% Open Challenge Cache DB

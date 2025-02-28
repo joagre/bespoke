@@ -45,8 +45,8 @@ http_post(Url, Data) ->
 
 http_post(Url, Data, Headers) ->
     handle_response(
-      httpc:request(post, {Url, [{"connection", "close"}|Headers],
-                           "application/json", json:encode(Data)}, [], [])).
+      httpc:request(post, {Url, [{"connection", "close"}|Headers], "application/json",
+                           json:encode(Data)}, [], [])).
 
 %%
 %% Exported: http_multipart_post
@@ -63,8 +63,7 @@ http_multipart_post(Url, {data, Data}) ->
 http_multipart_post(Url, FilePath) ->
     %% httpc does not support multipart/form-data
     Command =
-        lists:flatten(
-          io_lib:format("curl -s -X POST -F 'filename=@~s' ~s", [FilePath, Url])),
+        lists:flatten(io_lib:format("curl -s -X POST -F 'filename=@~s' ~s", [FilePath, Url])),
     Result = os:cmd(Command),
     json:decode(list_to_binary(Result)).
 
