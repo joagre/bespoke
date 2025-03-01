@@ -127,7 +127,8 @@ upload_blob(UserId, {data, Data}) ->
 upload_blob(UserId, FilePath) ->
     OriginFilename = filename:basename(FilePath),
     FilenameSize = byte_size(OriginFilename),
-    ContentType = mimerl:extension(filename:extension(OriginFilename)),
+    {ok, ContentType} =
+        apptools_mime:mime_type(string:slice(filename:extension(OriginFilename), 1)),
     ContentTypeSize = byte_size(ContentType),
     Header = <<FilenameSize:32/unsigned-integer, OriginFilename:FilenameSize/binary,
                ContentTypeSize:32/integer, ContentType:ContentTypeSize/binary>>,
