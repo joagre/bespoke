@@ -21,8 +21,7 @@
 
 start() ->
     {ok, _} = application:ensure_all_started(sasl),
-    %%ok = logger:remove_handler(default),
-    ok = logger:add_handler(file_logger, logger_std_h, #{config => #{file => ?LOG_FILE}}),
+    ok = configure_logger(),
     {ok, _} = application:ensure_all_started(ssl),
     ok = application:start(apptools),
     ok = apptools_mime:start(),
@@ -30,6 +29,33 @@ start() ->
     ok = application:start(db),
     ok = set_ssid(),
     ok = application:start(webapp).
+
+configure_logger() ->
+    ok = logger:remove_handler(default),
+    ok = logger:add_handler(
+           io_logger, logger_std_h,
+           #{config => #{type => standard_io},
+             formatter =>
+                 {logger_formatter,
+                  #{single_line => false,
+                    template =>
+                        ["=",level,"==== ",time," ===",
+                         {module,
+                          [" in ", module,":",function,"/",arity," on line ",line,"\n"],
+                          [" on line ",line,"\n"]},
+                         msg,{module,["\n\n"],["\n"]}]}}}),
+    logger:add_handler(
+      file_logger, logger_std_h,
+      #{config => #{file => ?LOG_FILE},
+        formatter =>
+            {logger_formatter,
+             #{single_line => false,
+               template =>
+                   ["=",level,"==== ",time," ===",
+                    {module,
+                     [" in ", module,":",function,"/",arity," on line ",line,"\n"],
+                     [" on line ",line,"\n"]},
+                    msg,{module,["\n\n"],["\n"]}]}}}).
 
 set_ssid() ->
     {ok, SSID} = lookup_config("SSID", "BespokeBBS"),

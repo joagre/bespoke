@@ -43,7 +43,6 @@ while :; do
             usage
             ;;
         --release)
-            erl_config="-config ${bin_dir}/bespoke-release.config"
             shell="-noshell"
             shift
             ;;
