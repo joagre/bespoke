@@ -105,7 +105,7 @@ add_challenge(Username, Challenge) ->
 %% Exported: get_challenge
 %%
 
--spec get_challenge(db_serv:user_id()) -> {ok, webapp_crypto:challenge()} | {error, not_found}.
+-spec get_challenge(db_serv:username()) -> {ok, webapp_crypto:challenge()} | {error, not_found}.
 
 get_challenge(Username) ->
     ok = purge_challenges(),

@@ -13,22 +13,10 @@
 -include_lib("db/include/db.hrl").
 -include("webapp_crypto.hrl").
 
-%% Challenge Cache DB
--define(CHALLENGE_CACHE, challenge_cache).
--define(CHALLENGE_TIMEOUT, 5 * 60). % 5 minutes
-
--type(timestamp() :: integer()).
-
 -record(state, {
                 subscriptions = #{} ::
                   #{rester_socket() => {Request :: term(), db_serv:subscription_id()}}
                }).
-
--record(challenge_cache_entry, {
-                                username :: db_serv:username(),
-                                challenge :: webapp_crypto:challenge(),
-                                timestamp :: timestamp()
-                               }).
 
 %%
 %% Exported: start_link
@@ -36,8 +24,6 @@
 
 start_link() ->
     ok = webapp_cache:open(),
-    %% Open Challenge Cache DB
-    ok = db:open_ram(?CHALLENGE_CACHE, #challenge_cache_entry.username),
     %% Start HTTP(S) servers
     Options =
 	[{request_module, ?MODULE},
@@ -372,15 +358,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Challenge = webapp_crypto:generate_challenge(),
                     PayloadJsonTerm = #{<<"passwordSalt">> => base64:encode(PasswordSalt),
                                         <<"challenge">> => base64:encode(Challenge)},
-
-
-
-                    true = add_challenge_to_cache(Username, Challenge),
-
-
-
-
-
+                    ok = webapp_cache:add_challenge(Username, Challenge),
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
         ["api", "login"] ->
@@ -660,10 +638,7 @@ http_put(Socket, Request, _Url, Tokens, _Body, _State, v1) ->
 
 login(Socket, Request, Username, ClientResponse) ->
     maybe
-        {ok, Challenge} ?= get_challenge_from_cache(Username),
-
-
-
+        {ok, Challenge} ?= webapp_cache:get_challenge(Username),
         {ok, #user{password_salt = PasswordSalt, password_hash = PasswordHash}} ?=
             db_user_serv:get_user_from_username(Username),
         true ?= webapp_crypto:verify_client_response(ClientResponse, Challenge, PasswordHash),
@@ -692,7 +667,7 @@ switch_user(Socket, Request, Username, _PasswordSalt = not_set, _PasswordHash = 
             send_response(Socket, Request, no_cache_headers(), forbidden)
     end;
 switch_user(Socket, Request, Username, PasswordSalt, PasswordHash, ClientResponse) ->
-    case get_challenge_from_cache(Username) of
+    case webapp_cache:get_challenge(Username) of
         {ok, Challenge} ->
             case db_user_serv:get_user_from_username(Username) of
                 {ok, #user{password_hash = not_set}} ->
@@ -762,34 +737,6 @@ count_read_replies(ReadPostIds, [#post{id = PostId}|Rest]) ->
         false ->
             count_read_replies(ReadPostIds, Rest)
     end.
-
-%%
-%% Challenge cache
-%%
-
-add_challenge_to_cache(UserId, Challenge) ->
-    ets:insert(?CHALLENGE_CACHE, #challenge_cache_entry{username = UserId,
-                                                        challenge = Challenge,
-                                                        timestamp = timestamp()}).
-
-get_challenge_from_cache(Username) ->
-    true = purge_challenge_cache(),
-    case ets:lookup(?CHALLENGE_CACHE, Username) of
-        [] ->
-            {error, not_found};
-        [#challenge_cache_entry{challenge = Challenge}] ->
-            {ok, Challenge}
-    end.
-
-purge_challenge_cache() ->
-    Threshold = timestamp() - ?CHALLENGE_TIMEOUT,
-    ets:foldl(
-      fun(#challenge_cache_entry{username = Username, timestamp = Timestamp}, _Acc)
-            when Timestamp < Threshold ->
-              ets:delete(?CHALLENGE_CACHE, Username);
-         (_, Acc) ->
-              Acc
-      end, true, ?CHALLENGE_CACHE).
 
 %%
 %% Marshalling: From JSON term
@@ -1072,9 +1019,6 @@ attachment_to_json_term({Filename, ContentType}) ->
 %%
 %% Utilities
 %%
-
-timestamp() ->
-    os:system_time(second).
 
 add_optional_members([], JsonTerm) ->
     JsonTerm;
