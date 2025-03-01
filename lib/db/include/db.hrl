@@ -40,7 +40,7 @@
          messages = [] :: [db_serv:message_id()] | '_'
         }).
 
-%% Disk layout:
+%% Message disk layout:
 %% ?BESPOKE_MESSAGE_PATH/
 %%   <message_id>/<user_id>, ...
 %%   <message_id>/<user_id>-<attachment_id>, ...
@@ -82,12 +82,6 @@
          uploader = not_set :: db_serv:user_id() | not_set,
          created = not_set :: db_serv:seconds_since_epoch() | not_set,
          is_uploading = false :: boolean()
-        }).
-
--record(read_cache,
-        {
-         user_id :: db_serv:user_id(),
-         post_ids = [] :: [db_serv:post_id()]
         }).
 
 -endif.

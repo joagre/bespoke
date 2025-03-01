@@ -17,7 +17,7 @@
 -define(POST_READ_CACHE, post_read_cache).
 
 %% Challenge Cache
--define(CHALLENGE_CACHE, challenge_cache_GGGGG).
+-define(CHALLENGE_CACHE, challenge_cache).
 -define(CHALLENGE_TIMEOUT, 5 * 60). % 5 minutes in seconds
 -record(challenge, {
                     username :: db_serv:username(),

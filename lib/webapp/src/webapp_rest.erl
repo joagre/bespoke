@@ -82,7 +82,7 @@ info(Socket, {subscription_change, SubscriptionId, PostId}, State) ->
         not_found ->
             {ok, State};
         {Request, SubscriptionId} ->
-            send_response(Socket, Request, no_cache_headers(), {json, PostId}),
+            send_response(Socket, Request, {json, PostId}),
             UpdatedState = State#state{subscriptions =
                                            maps:remove(Socket, State#state.subscriptions)},
             {ok, UpdatedState};
@@ -143,7 +143,7 @@ http_request_(Socket, Request, Body, State) ->
         'PUT' ->
             http_put(Socket, Request, Body, State);
 	_ ->
-            send_response(Socket, Request, no_cache_headers(), not_allowed)
+            send_response(Socket, Request, not_allowed)
     end.
 
 %%
@@ -192,7 +192,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
         ["api", "auto_login"] ->
             case filelib:is_regular(filename:join([?BESPOKE_RUNTIME_DIR, "bootstrap"])) of
                 true ->
-                    send_response(Socket, Request, no_cache_headers(), {found, "/bootstrap.html"});
+                    send_response(Socket, Request, {found, "/bootstrap.html"});
                 false ->
                     {ok, MacAddress} = get_mac_address(Socket),
                     User = db_user_serv:get_user_from_mac_address(MacAddress),
@@ -203,13 +203,11 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                           <<"sessionId">> => base64:encode(User#user.session_id)},
                     case User#user.password_hash of
                         not_set ->
-                            send_response(Socket, Request, no_cache_headers(),
-                                          {json, PayloadJsonTerm});
+                            send_response(Socket, Request, {json, PayloadJsonTerm});
                         _ ->
                             UpdatedPayloadJsonTerm =
                                 maps:put(<<"noPassword">>, false, PayloadJsonTerm),
-                            send_response(Socket, Request, no_cache_headers(),
-                                          {json, UpdatedPayloadJsonTerm})
+                            send_response(Socket, Request, {json, UpdatedPayloadJsonTerm})
                     end
             end;
         %% Direct messaging
@@ -225,7 +223,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                 {ok, #user{id = UserId}, _Body} ->
                     {ok, TopMessages} = db_serv:read_top_messages(UserId),
                     JsonTerm = webapp_marshalling:encode(read_top_messages, TopMessages),
-                    send_response(Socket, Request, no_cache_headers(), {json, JsonTerm})
+                    send_response(Socket, Request, {json, JsonTerm})
             end;
 
 
@@ -251,7 +249,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                                   ReadCount = count_read_replies(ReadPostIds, ReplyPosts),
                                   maps:put(<<"readCount">>, ReadCount, PostJsonTerm)
                           end, TopPosts),
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+                    send_response(Socket, Request, {json, PayloadJsonTerm})
             end;
         %% File sharing
         ["api", "list_files"] ->
@@ -261,7 +259,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                 {ok, _User, _Body} ->
                     Files = db_serv:list_files(),
                     PayloadJsonTerm = lists:map(fun(File) -> file_to_json_term(File) end, Files),
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+                    send_response(Socket, Request, {json, PayloadJsonTerm})
             end;
         %% Static file delivery
         Tokens ->
@@ -280,12 +278,12 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                 0 ->
                     case filelib:is_regular(AbsFilePath) of
                         true ->
-                            send_response(Socket, Request,
-                                          [{content_type, {url, UriPath}}|
-                                           no_cache_headers(AbsFilePath)],
-                                          {ok, {file, AbsFilePath}});
+                            send_response(
+                              Socket, Request, [{content_type, {url, UriPath}}|
+                                                no_cache_headers(AbsFilePath)],
+                              {ok, {file, AbsFilePath}});
                         false ->
-                            send_response(Socket, Request, no_cache_headers(), not_found)
+                            send_response(Socket, Request, not_found)
                     end;
                 _ ->
                     GzippedAbsFilePath = AbsFilePath ++ ".gz",
@@ -302,7 +300,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                                                                     no_cache_headers(AbsFilePath)],
                                                   {ok, {file, AbsFilePath}});
                                 false ->
-                                    send_response(Socket, Request, no_cache_headers(), not_found)
+                                    send_response(Socket, Request, not_found)
                             end
                     end
             end
@@ -332,7 +330,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     ok = file:delete(filename:join([?BESPOKE_RUNTIME_DIR, "bootstrap"])),
                     ok = change_ssid(SSID),
                     ok = main:insert_config("SSID", ?b2l(SSID)),
-                    send_response(Socket, Request, no_cache_headers(), no_content)
+                    send_response(Socket, Request, no_content)
             end;
         %% SSID management
         ["api", "get_ssid"] ->
@@ -341,7 +339,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, _User, _Body} ->
                     {ok, SSID} = main:lookup_config("SSID", "BespokeBBS"),
-                    send_response(Socket, Request, no_cache_headers(), {json, ?l2b(SSID)})
+                    send_response(Socket, Request, {json, ?l2b(SSID)})
             end;
         %% Authentication
         ["api", "generate_challenge"] ->
@@ -359,7 +357,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     PayloadJsonTerm = #{<<"passwordSalt">> => base64:encode(PasswordSalt),
                                         <<"challenge">> => base64:encode(Challenge)},
                     ok = webapp_cache:add_challenge(Username, Challenge),
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+                    send_response(Socket, Request, {json, PayloadJsonTerm})
             end;
         ["api", "login"] ->
             case decode(Socket, Request, Body, fun json_term_to_login/1, false) of
@@ -402,14 +400,14 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     case db_serv:create_message(UpdatedMessage, BodyBlobs, AttachmentBlobs) of
                         {ok, CreatedMessage} ->
                             JsonTerm = webapp_marshalling:encode(create_message, CreatedMessage),
-                            send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});
+                            send_response(Socket, Request, {json, JsonTerm});
                         {error, access_denied} ->
                             ?log_error("/api/create_message: ~p", [access_denied]),
-                            send_response(Socket, Request, no_cache_headers(), forbidden);
+                            send_response(Socket, Request, forbidden);
                         {error, Reason} ->
                             ?log_error("/api/create_message: ~p", [Reason]),
                             %%?log_error("/api/create_message: ~p", [file:format_error(Reason)]),
-                            send_response(Socket, Request, no_cache_headers(), bad_request)
+                            send_response(Socket, Request, bad_request)
                     end
             end;
         ["api", "read_reply_messages"] ->
@@ -421,10 +419,10 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         {ok, ReplyMessages} ->
                             JsonTerm = webapp_marshalling:encode(read_reply_messages,
                                                                  ReplyMessages),
-                            send_response(Socket, Request, no_cache_headers(), {json, JsonTerm});
+                            send_response(Socket, Request, {json, JsonTerm});
                         {error, Reason} ->
                             ?log_error("/api/read_messages: ~p", [Reason]),
-                            send_response(Socket, Request, no_cache_headers(), bad_request)
+                            send_response(Socket, Request, bad_request)
                     end
             end;
         ["api", "delete_message"] ->
@@ -434,10 +432,10 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {ok, #user{id = UserId}, MessageId} ->
                     case db_serv:delete_message(UserId, MessageId) of
                         ok ->
-                            send_response(Socket, Request, no_cache_headers(), no_content);
+                            send_response(Socket, Request, no_content);
                         {error, access_denied} ->
                             ?log_error("/api/delete_message: ~p", [access_denied]),
-                            send_response(Socket, Request, no_cache_headers(), forbidden)
+                            send_response(Socket, Request, forbidden)
                     end
             end;
 
@@ -459,7 +457,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     PayloadJsonTerm = lists:map(fun(Post) ->
                                                         post_to_json_term(Post, ReadPostIds) end,
                                                 Posts),
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+                    send_response(Socket, Request, {json, PayloadJsonTerm})
             end;
         ["api", "lookup_recursive_posts"] ->
             case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
@@ -471,7 +469,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     PayloadJsonTerm = lists:map(fun(Post) ->
                                                         post_to_json_term(Post, ReadPostIds)
                                                 end, Posts),
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+                    send_response(Socket, Request, {json, PayloadJsonTerm})
             end;
         ["api", "lookup_recursive_post_ids"] ->
             case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
@@ -479,7 +477,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, _User, PostIds} ->
                     PayloadJsonTerm = db_serv:lookup_post_ids(PostIds, recursive),
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+                    send_response(Socket, Request, {json, PayloadJsonTerm})
             end;
         ["api", "insert_post"] ->
             case decode(Socket, Request, Body, fun json_term_to_post/1) of
@@ -491,10 +489,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         {ok, InsertedPost} ->
                             ReadPostIds = webapp_cache:marked_posts(UserId),
                             PayloadJsonTerm = post_to_json_term(InsertedPost, ReadPostIds),
-                            send_response(Socket, Request, no_cache_headers(),
-                                          {json, PayloadJsonTerm});
+                            send_response(Socket, Request, {json, PayloadJsonTerm});
                         {error, invalid_post} ->
-                            send_response(Socket, Request, no_cache_headers(), bad_request)
+                            send_response(Socket, Request, bad_request)
                     end
             end;
         ["api", "delete_post"] ->
@@ -506,13 +503,13 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         [#post{author = Username}] ->
                             case db_serv:delete_post(PostId) of
                                 ok ->
-                                    send_response(Socket, Request, no_cache_headers(), no_content);
+                                    send_response(Socket, Request, no_content);
                                 {error, not_found} ->
-                                    send_response(Socket, Request, no_cache_headers(), not_found)
+                                    send_response(Socket, Request, not_found)
                             end
                     end;
                 {ok, _User, _PostId} ->
-                    send_response(Socket, Request, no_cache_headers(), forbidden)
+                    send_response(Socket, Request, forbidden)
             end;
         ["api", "toggle_like"] ->
             case decode(Socket, Request, Body, fun json_term_to_binary/1) of
@@ -522,7 +519,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     {ok, Likers} = db_serv:toggle_like(PostId, User#user.id),
                     PayloadJsonTerm = #{<<"liked">> => lists:member(User#user.id, Likers),
                                         <<"likesCount">> => length(Likers)},
-                    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+                    send_response(Socket, Request, {json, PayloadJsonTerm})
             end;
         %% File sharing
         ["api", "insert_file"] ->
@@ -534,10 +531,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     case db_serv:insert_file(UpdatedFile) of
                         {ok, InsertedFile} ->
                             PayloadJsonTerm = file_to_json_term(InsertedFile),
-                            send_response(Socket, Request, no_cache_headers(),
-                                          {json, PayloadJsonTerm});
+                            send_response(Socket, Request, {json, PayloadJsonTerm});
                         {error, invalid_file} ->
-                            send_response(Socket, Request, no_cache_headers(), bad_request)
+                            send_response(Socket, Request, bad_request)
                     end
             end;
         ["api", "delete_file"] ->
@@ -549,13 +545,13 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         [#file{uploader = UserId}] ->
                             case db_serv:delete_file(FileId) of
                                 ok ->
-                                    send_response(Socket, Request, no_cache_headers(), no_content);
+                                    send_response(Socket, Request, no_content);
                                 {error, not_found} ->
-                                    send_response(Socket, Request, no_cache_headers(), not_found)
+                                    send_response(Socket, Request, not_found)
                             end
                     end;
                 {ok, _User, _fileId} ->
-                    send_response(Socket, Request, no_cache_headers(), forbidden)
+                    send_response(Socket, Request, forbidden)
             end;
         ["api", "file_uploaded"] ->
             case decode(Socket, Request, Body, fun json_term_to_integer/1) of
@@ -566,13 +562,13 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         [#file{uploader = UserId}] ->
                             case db_serv:file_uploaded(FileId) of
                                 ok ->
-                                    send_response(Socket, Request, no_cache_headers(), no_content);
+                                    send_response(Socket, Request, no_content);
                                 {error, not_found} ->
-                                    send_response(Socket, Request, no_cache_headers(), not_found)
+                                    send_response(Socket, Request, not_found)
                             end
                     end;
                 {ok, _User, _fileId} ->
-                    send_response(Socket, Request, no_cache_headers(), forbidden)
+                    send_response(Socket, Request, forbidden)
             end;
         %% Subscription handling
         ["api", "subscribe_on_changes"] ->
@@ -597,7 +593,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                     <<"absPath">> => AbsPath,
                                     <<"contentType">> => ContentType}
                           end, Body),
-            send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm});
+            send_response(Socket, Request, {json, PayloadJsonTerm});
         %% Read cache
         ["api", "upload_read_cache"] ->
             case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
@@ -605,11 +601,11 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
                     ok = webapp_cache:mark_posts(UserId, PostIds),
-                    send_response(Socket, Request, no_cache_headers(), no_content)
+                    send_response(Socket, Request, no_content)
             end;
         _ ->
 	    ?log_error("~p not found", [Tokens]),
-            send_response(Socket, Request, no_cache_headers(), not_found)
+            send_response(Socket, Request, not_found)
     end.
 
 %%
@@ -629,7 +625,7 @@ http_put(Socket, Request, _Url, Tokens, _Body, _State, v1) ->
     case Tokens of
         _ ->
 	    ?log_error("~p not found", [Tokens]),
-            send_response(Socket, Request, no_cache_headers(), not_found)
+            send_response(Socket, Request, not_found)
     end.
 
 %%
@@ -648,10 +644,10 @@ login(Socket, Request, Username, ClientResponse) ->
         PayloadJsonTerm = #{<<"userId">> => UserId,
                             <<"username">> => Username,
                             <<"sessionId">> => base64:encode(SessionId)},
-        send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
+        send_response(Socket, Request, {json, PayloadJsonTerm})
     else
         _ ->
-            send_response(Socket, Request, no_cache_headers(), forbidden)
+            send_response(Socket, Request, forbidden)
     end.
 
 switch_user(Socket, Request, Username, _PasswordSalt = not_set, _PasswordHash = not_set,
@@ -662,9 +658,9 @@ switch_user(Socket, Request, Username, _PasswordSalt = not_set, _PasswordHash = 
             PayloadJsonTerm = #{<<"userId">> => UserId,
                                 <<"username">> => Username,
                                 <<"sessionId">> => base64:encode(SessionId)},
-            send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm});
+            send_response(Socket, Request, {json, PayloadJsonTerm});
         {error, failure} ->
-            send_response(Socket, Request, no_cache_headers(), forbidden)
+            send_response(Socket, Request, forbidden)
     end;
 switch_user(Socket, Request, Username, PasswordSalt, PasswordHash, ClientResponse) ->
     case webapp_cache:get_challenge(Username) of
@@ -682,17 +678,17 @@ switch_user(Socket, Request, Username, PasswordSalt, PasswordHash, ClientRespons
                             switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt,
                                             PasswordHash);
                         false ->
-                            send_response(Socket, Request, no_cache_headers(), forbidden)
+                            send_response(Socket, Request, forbidden)
                     end;
                 {ok, _} ->
-                    send_response(Socket, Request, no_cache_headers(), forbidden);
+                    send_response(Socket, Request, forbidden);
                 {error, not_found} ->
                     {ok, MacAddress} = get_mac_address(Socket),
                     switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt,
                                     PasswordHash)
             end;
         {error, not_found} ->
-            send_response(Socket, Request, no_cache_headers(), forbidden)
+            send_response(Socket, Request, forbidden)
     end.
 
 switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt, PasswordHash) ->
@@ -702,15 +698,15 @@ switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt, PasswordHas
         #{<<"userId">> => UserId,
           <<"username">> => Username,
           <<"sessionId">> => base64:encode(SessionId)},
-    send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm}).
+    send_response(Socket, Request, {json, PayloadJsonTerm}).
 
 change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordHash) ->
     {ok, MacAddress} = get_mac_address(Socket),
     case db_user_serv:change_password(Username, MacAddress, PasswordSalt, PasswordHash) of
         ok ->
-            send_response(Socket, Request, no_cache_headers(), no_content);
+            send_response(Socket, Request, no_content);
         {error, failure} ->
-            send_response(Socket, Request, no_cache_headers(), forbidden)
+            send_response(Socket, Request, forbidden)
     end.
 
 %%
@@ -722,7 +718,7 @@ redirect_to_loader(Socket, Request) ->
     Host = string:lowercase(SSID),
     Url = ?l2b(io_lib:format("https://~s.b3s.zone/loader.html", [Host])),
     Body = io_lib:format("<!DOCTYPE html><html><head><body><a href=\"~s\" target=\"_blank\">Click here</a></body></head></html>", [Url]),
-    send_response(Socket, Request, no_cache_headers(), {found, ?b2l(Url), ?l2b(Body)}).
+    send_response(Socket, Request, {found, ?b2l(Url), ?l2b(Body)}).
 
 %%
 %% Read cache
@@ -1093,8 +1089,7 @@ decode(Socket, Request, Body, MarshallingFun, Authenticate) ->
                     case rest_util:parse_body(Request, Body) of
                         {error, Reason} ->
                             ?log_error(Reason),
-                            {return, send_response(Socket, Request, no_cache_headers(),
-                                                   bad_request)};
+                            {return, send_response(Socket, Request, bad_request)};
                         ParsedBody ->
                             case MarshallingFun of
                                 undefined ->
@@ -1105,8 +1100,7 @@ decode(Socket, Request, Body, MarshallingFun, Authenticate) ->
                                             {ok, User, DecodedBody};
                                         {error, Reason} ->
                                             ?log_error(Reason),
-                                            {return, send_response(Socket, Request,
-                                                                   no_cache_headers(), bad_request)}
+                                            {return, send_response(Socket, Request, bad_request)}
                                     end;
                                 %% FIXME: remove when refactoring is done
                                 _ when is_function(MarshallingFun) ->
@@ -1115,14 +1109,13 @@ decode(Socket, Request, Body, MarshallingFun, Authenticate) ->
                                             {ok, User, MarshalledBody};
                                         {error, Reason} ->
                                             ?log_error(Reason),
-                                            {return, send_response(Socket, Request,
-                                                                   no_cache_headers(), bad_request)}
+                                            {return, send_response(Socket, Request, bad_request)}
                                     end
                             end
                     end
             end;
         {error, not_found} ->
-            {return, send_response(Socket, Request, no_cache_headers(), unauthorized)}
+            {return, send_response(Socket, Request, unauthorized)}
     end.
 
 authenticate(_Request, false) ->
@@ -1137,6 +1130,9 @@ has_valid_keys(PossibleKeys, Map) ->
 %%
 %% HTTP response (rest_util:response/3 is just too unwieldly)
 %%
+
+send_response(Socket, Request, Response) ->
+    send_response(Socket, Request, no_cache_headers(), Response).
 
 send_response(Socket, Request, Opts, {ok, Body}) ->
     ?log_info("Response: ~p", [Body]),
