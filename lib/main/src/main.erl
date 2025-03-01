@@ -32,30 +32,22 @@ start() ->
 
 configure_logger() ->
     ok = logger:remove_handler(default),
-    ok = logger:add_handler(
-           io_logger, logger_std_h,
-           #{config => #{type => standard_io},
-             formatter =>
-                 {logger_formatter,
-                  #{single_line => false,
-                    template =>
-                        ["=",level,"==== ",time," ===",
-                         {module,
-                          [" in ", module,":",function,"/",arity," on line ",line,"\n"],
-                          [" on line ",line,"\n"]},
-                         msg,{module,["\n\n"],["\n"]}]}}}),
+    ok = add_bespoke_logger(io_logger, #{type => standard_io}),
+    add_bespoke_logger(file_logger, #{file => ?LOG_FILE}).
+
+add_bespoke_logger(Name, Config) ->
     logger:add_handler(
-      file_logger, logger_std_h,
-      #{config => #{file => ?LOG_FILE},
+      Name, logger_std_h,
+      #{config => Config,
         formatter =>
             {logger_formatter,
              #{single_line => false,
                template =>
-                   ["=",level,"==== ",time," ===",
+                   ["=", level, "==== ", time, " ===",
                     {module,
-                     [" in ", module,":",function,"/",arity," on line ",line,"\n"],
-                     [" on line ",line,"\n"]},
-                    msg,{module,["\n\n"],["\n"]}]}}}).
+                     [" in ", module,":", function, "/", arity, " on line ", line, "\n"],
+                     [" on line ", line, "\n"]},
+                    msg, {module, ["\n\n"], ["\n"]}]}}}).
 
 set_ssid() ->
     {ok, SSID} = lookup_config("SSID", "BespokeBBS"),
