@@ -8,7 +8,7 @@
          login/4, switch_user/2, switch_user/4, change_password/4,
          user_db_to_list/0]).
 -export([message_handler/1]).
--export_type([username/0, session_id/0, mac_address/0, password_salt/0, password_hash/0]).
+-export_type([session_id/0, mac_address/0, password_salt/0, password_hash/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/serv.hrl").
@@ -23,7 +23,6 @@
 -define(MAX_USERNAME_LENGTH, 12).
 -define(SESSION_ID_SIZE, 16).
 
--type username() :: binary().
 -type session_id() :: binary().
 -type mac_address() :: binary().
 -type password_salt() :: binary().
@@ -66,7 +65,7 @@ get_user(UserId) ->
 %% Exported: get_user_from_username
 %%
 
--spec get_user_from_username(db_user_serv:username()) ->
+-spec get_user_from_username(db_serv:username()) ->
           {ok, #user{}} | {error, not_found}.
 
 get_user_from_username(Username) ->
@@ -104,7 +103,7 @@ insert_user(Username) ->
 %% Exported: login
 %%
 
--spec login(username(), mac_address(), password_salt(), password_hash()) ->
+-spec login(db_serv:username(), mac_address(), password_salt(), password_hash()) ->
           {ok, #user{}} | {error, failure}.
 
 login(Username, MacAddress, PasswordSalt, PasswordHash) ->
@@ -114,13 +113,13 @@ login(Username, MacAddress, PasswordSalt, PasswordHash) ->
 %% Exported: switch_user
 %%
 
--spec switch_user(username(), mac_address()) ->
+-spec switch_user(db_serv:username(), mac_address()) ->
           {ok, #user{}} | {error, failure}.
 
 switch_user(Username, MacAddress) ->
     serv:call(?MODULE, {switch_user, Username, MacAddress}).
 
--spec switch_user(username(), mac_address(), password_salt(), password_hash()) ->
+-spec switch_user(db_serv:username(), mac_address(), password_salt(), password_hash()) ->
           #user{}.
 
 switch_user(Username, MacAddress, PasswordSalt, PasswordHash) ->
@@ -130,7 +129,7 @@ switch_user(Username, MacAddress, PasswordSalt, PasswordHash) ->
 %% Exported: change_password
 %%
 
--spec change_password(username(), mac_address(), password_salt(), password_hash()) ->
+-spec change_password(db_serv:username(), mac_address(), password_salt(), password_hash()) ->
           ok | {error, failure}.
 
 change_password(Username, MacAddress, PasswordSalt, PasswordHash) ->

@@ -2,10 +2,14 @@
 
 -module(db).
 -export([open_disk/3, lookup_disk/2, insert_disk/2, delete_disk/2, dump_disk/1, sync_disk/1,
-         close_disk/1, open_disk_index/2, lookup_disk_index/2, insert_disk_index/3,
-         delete_disk_index/2, delete_disk_index/3, dump_disk_index/1, sync_disk_index/1,
-         close_disk_index/1, open_ram/2, lookup_ram/2, insert_ram/2, delete_ram/2, dump_ram/1,
-         seconds_since_epoch/0, seconds_since_epoch/1]).
+         close_disk/1]).
+-export([open_disk_index/2, lookup_disk_index/2, insert_disk_index/3, delete_disk_index/2,
+         delete_disk_index/3, dump_disk_index/1, sync_disk_index/1, close_disk_index/1]).
+-export([open_ram/2, lookup_ram/2, foldl_ram/3, insert_ram/2, delete_ram/2, dump_ram/1,
+         close_ram_db/1, seconds_since_epoch/0, seconds_since_epoch/1]).
+-export_type([seconds_since_epoch/0]).
+
+-type seconds_since_epoch() :: integer().
 
 %%
 %% Exported: open_disk_db
@@ -170,6 +174,15 @@ lookup_ram(Name, Key) ->
     ets:lookup(Name, Key).
 
 %%
+%% Exported: foldl_ram
+%%
+
+-spec foldl_ram(atom(), fun((term(), term()) -> term()), term()) -> term().
+
+foldl_ram(Name, Fun, Acc) ->
+    ets:foldl(Fun, Acc, Name).
+
+%%
 %% Exported: insert_ram
 %%
 
@@ -199,10 +212,20 @@ dump_ram(Name) ->
     ets:tab2list(Name).
 
 %%
+%% Exported: close_ram_db
+%%
+
+-spec close_ram_db(atom()) -> ok.
+
+close_ram_db(Name) ->
+    true = ets:delete(Name),
+    ok.
+
+%%
 %% Exported: seconds_since_epoch
 %%
 
--spec seconds_since_epoch() -> integer().
+-spec seconds_since_epoch() -> seconds_since_epoch().
 
 seconds_since_epoch() ->
     os:system_time(second).

@@ -13,10 +13,6 @@
 -include_lib("db/include/db.hrl").
 -include("webapp_crypto.hrl").
 
-%% Read Cache DB
--define(READ_CACHE_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "read_cache.db")).
--define(READ_CACHE_DB, read_cache_db).
-
 %% Challenge Cache DB
 -define(CHALLENGE_CACHE, challenge_cache).
 -define(CHALLENGE_TIMEOUT, 5 * 60). % 5 minutes
@@ -29,7 +25,7 @@
                }).
 
 -record(challenge_cache_entry, {
-                                username :: db_user_serv:username(),
+                                username :: db_serv:username(),
                                 challenge :: webapp_crypto:challenge(),
                                 timestamp :: timestamp()
                                }).
@@ -39,8 +35,7 @@
 %%
 
 start_link() ->
-    %% Open Read Cache DB (FIXME: Make a bag out of it)
-    {ok, _} = db:open_disk(?READ_CACHE_DB, ?READ_CACHE_FILE_PATH, #read_cache.user_id),
+    ok = webapp_cache:open(),
     %% Open Challenge Cache DB
     ok = db:open_ram(?CHALLENGE_CACHE, #challenge_cache_entry.username),
     %% Start HTTP(S) servers
@@ -260,7 +255,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     Result;
                 {ok, #user{id = UserId}, _Body} ->
                     TopPosts = db_serv:list_top_posts(),
-                    ReadPostIds = lookup_read_cache(UserId),
+                    ReadPostIds = webapp_cache:marked_posts(UserId),
                     PayloadJsonTerm =
                         lists:map(
                           fun(#post{id = PostId} = Post) ->
@@ -377,7 +372,15 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Challenge = webapp_crypto:generate_challenge(),
                     PayloadJsonTerm = #{<<"passwordSalt">> => base64:encode(PasswordSalt),
                                         <<"challenge">> => base64:encode(Challenge)},
+
+
+
                     true = add_challenge_to_cache(Username, Challenge),
+
+
+
+
+
                     send_response(Socket, Request, no_cache_headers(), {json, PayloadJsonTerm})
             end;
         ["api", "login"] ->
@@ -474,7 +477,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
                     Posts = db_serv:lookup_posts(PostIds),
-                    ReadPostIds = lookup_read_cache(UserId),
+                    ReadPostIds = webapp_cache:marked_posts(UserId),
                     PayloadJsonTerm = lists:map(fun(Post) ->
                                                         post_to_json_term(Post, ReadPostIds) end,
                                                 Posts),
@@ -486,7 +489,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
                     Posts = db_serv:lookup_posts(PostIds, recursive),
-                    ReadPostIds = lookup_read_cache(UserId),
+                    ReadPostIds = webapp_cache:marked_posts(UserId),
                     PayloadJsonTerm = lists:map(fun(Post) ->
                                                         post_to_json_term(Post, ReadPostIds)
                                                 end, Posts),
@@ -508,7 +511,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     UpdatedPost = Post#post{author = UserId},
                     case db_serv:insert_post(UpdatedPost) of
                         {ok, InsertedPost} ->
-                            ReadPostIds = lookup_read_cache(UserId),
+                            ReadPostIds = webapp_cache:marked_posts(UserId),
                             PayloadJsonTerm = post_to_json_term(InsertedPost, ReadPostIds),
                             send_response(Socket, Request, no_cache_headers(),
                                           {json, PayloadJsonTerm});
@@ -623,16 +626,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
-                    case dets:lookup(?READ_CACHE_DB, UserId) of
-                        [] ->
-                            ok = dets:insert(?READ_CACHE_DB,
-                                             #read_cache{user_id = UserId, post_ids = PostIds});
-                        [#read_cache{post_ids = ExistingPostIds} = ReadCache] ->
-                            ok = dets:insert(?READ_CACHE_DB,
-                                             ReadCache#read_cache{
-                                               user_id = UserId,
-                                               post_ids = lists:usort(PostIds ++ ExistingPostIds)})
-                    end,
+                    ok = webapp_cache:mark_posts(UserId, PostIds),
                     send_response(Socket, Request, no_cache_headers(), no_content)
             end;
         _ ->
@@ -667,6 +661,9 @@ http_put(Socket, Request, _Url, Tokens, _Body, _State, v1) ->
 login(Socket, Request, Username, ClientResponse) ->
     maybe
         {ok, Challenge} ?= get_challenge_from_cache(Username),
+
+
+
         {ok, #user{password_salt = PasswordSalt, password_hash = PasswordHash}} ?=
             db_user_serv:get_user_from_username(Username),
         true ?= webapp_crypto:verify_client_response(ClientResponse, Challenge, PasswordHash),
@@ -755,14 +752,6 @@ redirect_to_loader(Socket, Request) ->
 %%
 %% Read cache
 %%
-
-lookup_read_cache(UserId) ->
-    case dets:lookup(?READ_CACHE_DB, UserId) of
-        [] ->
-            [];
-        [#read_cache{post_ids = PostIds}] ->
-            PostIds
-    end.
 
 count_read_replies(_ReadPostIds, []) ->
     0;

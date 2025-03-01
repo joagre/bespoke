@@ -6,7 +6,9 @@
          read_next_post_id/0, read_next_file_id/0]).
 
 -include("../include/db.hrl").
--include("db_meta_db.hrl").
+
+-define(META_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "meta.db")).
+-define(META_DB, meta_db).
 
 %%
 %% Exported: open

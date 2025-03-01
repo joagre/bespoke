@@ -9,11 +9,14 @@
 
 ## Web app
 
+* bagify read cache och generalisera den föý mer användning + dbify + generalisa
+
+
 * Move post attachments #post{} to /var/tmp/bespoke/post/<post_id>/attachment/<filename>, ...
 * Move marshalling into webapp_rest.erl for post adn everything else too
 * Create db_user_db.erl etc for all
 * Use ram_db access functions for insert and lookup etc
-* bagify read cache och generalisera den föý mer användning
+
 
 
 

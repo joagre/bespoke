@@ -31,7 +31,7 @@
 -record(user,
         {
          id :: db_serv:user_id() | '_',
-         name :: db_user_serv:username() | '_',
+         name :: db_serv:username() | '_',
          session_id = not_set :: db_user_serv:session_id() | not_set | '_',
          mac_address :: db_user_serv:mac_address() | '_',
          password_salt = not_set :: db_user_serv:password_salt() | not_set | '_',
