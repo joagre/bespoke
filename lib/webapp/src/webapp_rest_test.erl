@@ -156,13 +156,13 @@ forum() ->
     ?log_info("**** Fetch all top posts"),
     Headers = [{"Cookie", webapp_client:bespoke_cookie(SessionId)}],
     {ok, [#{<<"id">> := PostId}|_]} =
-        webapp_client:http_get("http://localhost/api/list_top_posts", Headers),
+        webapp_client:http_get("http://localhost/api/read_top_posts", Headers),
     ?log_info("**** Fetch specific post(s)"),
     {ok, [#{<<"id">> := PostId}]} =
-        webapp_client:http_post("http://localhost/api/lookup_posts", [PostId], Headers),
+        webapp_client:http_post("http://localhost/api/read_posts", [PostId], Headers),
     ?log_info("**** Fetch specific post(s) recursively (include all nested replies)"),
     {ok, [#{<<"id">> := _PostId2}|_]} =
-        webapp_client:http_post("http://localhost/api/lookup_recursive_posts", [PostId],
+        webapp_client:http_post("http://localhost/api/read_recursive_posts", [PostId],
                                 Headers),
     ?log_info("**** Switch user"),
     {ok, #{<<"sessionId">> := NewSessionId,
@@ -174,21 +174,21 @@ forum() ->
                                   <<"passwordHash">> => null,
                                   <<"clientResponse">> => null},
                                 Headers),
-    ?log_info("**** Insert a top post"),
+    ?log_info("**** Create a top post"),
     NewHeaders = [{"Cookie", webapp_client:bespoke_cookie(NewSessionId)}],
     {ok, #{<<"id">> := TopPostId}} =
-        webapp_client:http_post("http://localhost/api/insert_post",
+        webapp_client:http_post("http://localhost/api/create_post",
                                 #{<<"title">> => <<"A new title for a top post">>,
                                   <<"body">> => <<"A body">>},
                                 NewHeaders),
-    ?log_info("**** Insert a reply post to the top post (including one attachment)"),
+    ?log_info("**** Create a reply post to the top post (including one attachment)"),
     FilePath =
         filename:join(
           [code:priv_dir(webapp), "docroot/images/animated-background.gif"]),
     UploadedFile =
         webapp_client:http_multipart_post("http://localhost/api/upload_file", FilePath),
     {ok, #{<<"id">> := _ReplyPostId}} =
-        webapp_client:http_post("http://localhost/api/insert_post",
+        webapp_client:http_post("http://localhost/api/create_post",
                                 #{<<"parentPostId">> => TopPostId,
                                   %% The top post is the parent post in this case
                                   <<"topPostId">> => TopPostId,

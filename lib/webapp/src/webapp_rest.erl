@@ -211,11 +211,6 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     end
             end;
         %% Direct messaging
-
-
-
-
-
         ["api", "read_top_messages"] ->
             case decode(Socket, Request, Body) of
                 {return, Result} ->
@@ -225,41 +220,35 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     JsonTerm = webapp_marshalling:encode(read_top_messages, TopMessages),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
-
-
-
-
-
-
-
         %% Forum
-        ["api", "list_top_posts"] ->
+        ["api", "read_top_posts"] ->
             case decode(Socket, Request, Body) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, _Body} ->
-                    TopPosts = db_serv:list_top_posts(),
+                    TopPosts = db_serv:read_top_posts(),
                     ReadPostIds = webapp_cache:marked_posts(UserId),
-                    PayloadJsonTerm =
-                        lists:map(
-                          fun(#post{id = PostId} = Post) ->
-                                  PostJsonTerm = post_to_json_term(Post, ReadPostIds),
-                                  Posts = db_serv:lookup_posts([Post#post.id], recursive),
-                                  ReplyPosts = lists:keydelete(PostId, #post.id, Posts),
-                                  ReadCount = count_read_replies(ReadPostIds, ReplyPosts),
-                                  maps:put(<<"readCount">>, ReadCount, PostJsonTerm)
-                          end, TopPosts),
-                    send_response(Socket, Request, {json, PayloadJsonTerm})
+                    AdornedTopPosts =
+                        lists:map(fun(#post{id = PostId} = Post) ->
+                                          Posts = db_serv:read_posts([Post#post.id], recursive),
+                                          ReplyPosts = lists:keydelete(PostId, #post.id, Posts),
+                                          ReadCount = count_read_replies(ReadPostIds, ReplyPosts),
+                                          {Post, ReadCount}
+                                  end, TopPosts),
+                    JsonTerm = webapp_marshalling:encode(
+                                 read_top_posts, #{read_post_ids => ReadPostIds,
+                                                   adorned_top_posts => AdornedTopPosts}),
+                    send_response(Socket, Request, {json, JsonTerm})
             end;
         %% File sharing
-        ["api", "list_files"] ->
+        ["api", "read_files"] ->
             case decode(Socket, Request, Body) of
                 {return, Result} ->
                     Result;
                 {ok, _User, _Body} ->
-                    Files = db_serv:list_files(),
-                    PayloadJsonTerm = lists:map(fun(File) -> file_to_json_term(File) end, Files),
-                    send_response(Socket, Request, {json, PayloadJsonTerm})
+                    Files = db_serv:read_files(),
+                    JsonTerm = webapp_marshalling:encode(read_files, Files),
+                    send_response(Socket, Request, {json, JsonTerm})
             end;
         %% Static file delivery
         Tokens ->
@@ -321,9 +310,9 @@ http_post(Socket, Request, Body, State) ->
 
 http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
     case Tokens of
-        %% Bootstrapping
+        %% Bootstrap
         ["api", "bootstrap"] ->
-            case decode(Socket, Request, Body,  fun json_term_to_bootstrap/1, false) of
+            case decode(Socket, Request, Body, bootstrap, false) of
                 {return, Result} ->
                     Result;
                 {ok, no_user, SSID} ->
@@ -339,11 +328,12 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, _User, _Body} ->
                     {ok, SSID} = main:lookup_config("SSID", "BespokeBBS"),
-                    send_response(Socket, Request, {json, ?l2b(SSID)})
+                    JsonTerm = webapp_marshalling:encode(get_ssid, SSID),
+                    send_response(Socket, Request, {json, JsonTerm})
             end;
         %% Authentication
         ["api", "generate_challenge"] ->
-            case decode(Socket, Request, Body, fun json_term_to_binary/1, false) of
+            case decode(Socket, Request, Body, generate_challenge, false) of
                 {return, Result} ->
                     Result;
                 {ok, no_user, Username} ->
@@ -354,40 +344,38 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             PasswordSalt = crypto:strong_rand_bytes(?CRYPTO_PWHASH_SALTBYTES)
                     end,
                     Challenge = webapp_crypto:generate_challenge(),
-                    PayloadJsonTerm = #{<<"passwordSalt">> => base64:encode(PasswordSalt),
-                                        <<"challenge">> => base64:encode(Challenge)},
+                    JsonTerm =
+                        webapp_marshalling:encode(generate_challenge,
+                                                  #{password_salt => PasswordSalt,
+                                                    challenge => Challenge}),
                     ok = webapp_cache:add_challenge(Username, Challenge),
-                    send_response(Socket, Request, {json, PayloadJsonTerm})
+                    send_response(Socket, Request, {json, JsonTerm})
             end;
         ["api", "login"] ->
-            case decode(Socket, Request, Body, fun json_term_to_login/1, false) of
+            case decode(Socket, Request, Body, login, false) of
                 {return, Result} ->
                     Result;
-                {ok, no_user, {Username, ClientResponse}} ->
+                {ok, no_user, #{username := Username, client_response := ClientResponse}} ->
                     login(Socket, Request, Username, ClientResponse)
             end;
         ["api", "switch_user"] ->
-            case decode(Socket, Request, Body,
-                                fun json_term_to_switch_user/1) of
+            case decode(Socket, Request, Body, switch_user) of
                 {return, Result} ->
                     Result;
-                {ok, _User, {Username, PasswordSalt, PasswordHash, ClientResponse}} ->
+                {ok, _User, #{username := Username,
+                              password_salt := PasswordSalt,
+                              password_hash := PasswordHash,
+                              client_response := ClientResponse}} ->
                     switch_user(Socket, Request, Username, PasswordSalt, PasswordHash,
                                 ClientResponse)
             end;
         ["api", "change_password"] ->
-            case decode(Socket, Request, Body,
-                                fun json_term_to_change_password/1) of
+            case decode(Socket, Request, Body, change_password) of
                 {return, Result} ->
                     Result;
-                {ok, User, {PasswordSalt, PasswordHash}} ->
+                {ok, User, #{password_salt := PasswordSalt, password_hash := PasswordHash}} ->
                     change_password(Socket, Request, User, PasswordSalt, PasswordHash)
             end;
-
-
-
-
-
         %% Direct messaging
         ["api", "create_message"] ->
             case decode(Socket, Request, Body, create_message) of
@@ -438,68 +426,61 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             send_response(Socket, Request, forbidden)
                     end
             end;
-
-
-
-
-
-
-
-
         %% Forum
-        ["api", "lookup_posts"] ->
-            case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
-                {return, Result} ->
-                    Result;
-                {ok, #user{id = UserId}, PostIds} ->
-                    Posts = db_serv:lookup_posts(PostIds),
-                    ReadPostIds = webapp_cache:marked_posts(UserId),
-                    PayloadJsonTerm = lists:map(fun(Post) ->
-                                                        post_to_json_term(Post, ReadPostIds) end,
-                                                Posts),
-                    send_response(Socket, Request, {json, PayloadJsonTerm})
-            end;
-        ["api", "lookup_recursive_posts"] ->
-            case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
-                {return, Result} ->
-                    Result;
-                {ok, #user{id = UserId}, PostIds} ->
-                    Posts = db_serv:lookup_posts(PostIds, recursive),
-                    ReadPostIds = webapp_cache:marked_posts(UserId),
-                    PayloadJsonTerm = lists:map(fun(Post) ->
-                                                        post_to_json_term(Post, ReadPostIds)
-                                                end, Posts),
-                    send_response(Socket, Request, {json, PayloadJsonTerm})
-            end;
-        ["api", "lookup_recursive_post_ids"] ->
-            case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
-                {return, Result} ->
-                    Result;
-                {ok, _User, PostIds} ->
-                    PayloadJsonTerm = db_serv:lookup_post_ids(PostIds, recursive),
-                    send_response(Socket, Request, {json, PayloadJsonTerm})
-            end;
-        ["api", "insert_post"] ->
-            case decode(Socket, Request, Body, fun json_term_to_post/1) of
+        ["api", "create_post"] ->
+            case decode(Socket, Request, Body, create_post) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, Post} ->
                     UpdatedPost = Post#post{author = UserId},
-                    case db_serv:insert_post(UpdatedPost) of
-                        {ok, InsertedPost} ->
+                    case db_serv:create_post(UpdatedPost) of
+                        {ok, CreatedPost} ->
                             ReadPostIds = webapp_cache:marked_posts(UserId),
-                            PayloadJsonTerm = post_to_json_term(InsertedPost, ReadPostIds),
-                            send_response(Socket, Request, {json, PayloadJsonTerm});
+                            JsonTerm = webapp_marshalling:encode(
+                                         create_post, {CreatedPost, ReadPostIds}),
+                            send_response(Socket, Request, {json, JsonTerm});
                         {error, invalid_post} ->
                             send_response(Socket, Request, bad_request)
                     end
             end;
+        ["api", "read_posts"] ->
+            case decode(Socket, Request, Body, read_posts) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, PostIds} ->
+                    ReadPostIds = webapp_cache:marked_posts(UserId),
+                    Posts = db_serv:read_posts(PostIds),
+                    JsonTerm = webapp_marshalling:encode(read_posts, #{read_post_ids => ReadPostIds,
+                                                                       posts => Posts}),
+                    send_response(Socket, Request, {json, JsonTerm})
+            end;
+        ["api", "read_recursive_posts"] ->
+            case decode(Socket, Request, Body, read_recursive_posts) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, PostIds} ->
+                    ReadPostIds = webapp_cache:marked_posts(UserId),
+                    Posts = db_serv:read_posts(PostIds, recursive),
+                    JsonTerm = webapp_marshalling:encode(
+                                 read_recursive_posts, #{read_post_ids => ReadPostIds,
+                                                         posts => Posts}),
+                    send_response(Socket, Request, {json, JsonTerm})
+            end;
+        ["api", "read_recursive_post_ids"] ->
+            case decode(Socket, Request, Body, read_recursive_post_ids) of
+                {return, Result} ->
+                    Result;
+                {ok, _User, PostIds} ->
+                    PostIds = db_serv:read_post_ids(PostIds, recursive),
+                    JsonTerm = webapp_marshalling:encode(read_recursive_post_ids, PostIds),
+                    send_response(Socket, Request, {json, JsonTerm})
+            end;
         ["api", "delete_post"] ->
-            case decode(Socket, Request, Body, fun json_term_to_binary/1) of
+            case decode(Socket, Request, Body, delete_post) of
                 {return, Result} ->
                     Result;
                 {ok, #user{name = Username}, PostId} ->
-                    case db_serv:lookup_posts([PostId]) of
+                    case db_serv:read_posts([PostId]) of
                         [#post{author = Username}] ->
                             case db_serv:delete_post(PostId) of
                                 ok ->
@@ -511,37 +492,37 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {ok, _User, _PostId} ->
                     send_response(Socket, Request, forbidden)
             end;
-        ["api", "toggle_like"] ->
-            case decode(Socket, Request, Body, fun json_term_to_binary/1) of
+        ["api", "toggle_post_like"] ->
+            case decode(Socket, Request, Body, toggle_post_like) of
                 {return, Result} ->
                     Result;
                 {ok, User, PostId} ->
-                    {ok, Likers} = db_serv:toggle_like(PostId, User#user.id),
-                    PayloadJsonTerm = #{<<"liked">> => lists:member(User#user.id, Likers),
-                                        <<"likesCount">> => length(Likers)},
-                    send_response(Socket, Request, {json, PayloadJsonTerm})
+                    {ok, Likers} = db_serv:toggle_post_like(PostId, User#user.id),
+                    JsonTerm = webapp_marshalling:encode(
+                                 toggle_post_like, #{user_id => User#user.id, likers => Likers}),
+                    send_response(Socket, Request, {json, JsonTerm})
             end;
         %% File sharing
-        ["api", "insert_file"] ->
-            case decode(Socket, Request, Body, fun json_term_to_file/1) of
+        ["api", "create_file"] ->
+            case decode(Socket, Request, Body, create_file) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, File} ->
                     UpdatedFile = File#file{uploader = UserId},
-                    case db_serv:insert_file(UpdatedFile) of
-                        {ok, InsertedFile} ->
-                            PayloadJsonTerm = file_to_json_term(InsertedFile),
-                            send_response(Socket, Request, {json, PayloadJsonTerm});
+                    case db_serv:create_file(UpdatedFile) of
+                        {ok, CreatedFile} ->
+                            JsonTerm = webapp_marshalling:encode(create_file, CreatedFile),
+                            send_response(Socket, Request, {json, JsonTerm});
                         {error, invalid_file} ->
                             send_response(Socket, Request, bad_request)
                     end
             end;
         ["api", "delete_file"] ->
-            case decode(Socket, Request, Body, fun json_term_to_integer/1) of
+            case decode(Socket, Request, Body, delete_file) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, FileId} ->
-                    case db_serv:lookup_files([FileId]) of
+                    case db_serv:read_files([FileId]) of
                         [#file{uploader = UserId}] ->
                             case db_serv:delete_file(FileId) of
                                 ok ->
@@ -553,14 +534,14 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {ok, _User, _fileId} ->
                     send_response(Socket, Request, forbidden)
             end;
-        ["api", "file_uploaded"] ->
-            case decode(Socket, Request, Body, fun json_term_to_integer/1) of
+        ["api", "file_is_uploaded"] ->
+            case decode(Socket, Request, Body, file_is_uploaded) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, FileId} ->
-                    case db_serv:lookup_files([FileId]) of
+                    case db_serv:read_files([FileId]) of
                         [#file{uploader = UserId}] ->
-                            case db_serv:file_uploaded(FileId) of
+                            case db_serv:file_is_uploaded(FileId) of
                                 ok ->
                                     send_response(Socket, Request, no_content);
                                 {error, not_found} ->
@@ -572,7 +553,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             end;
         %% Subscription handling
         ["api", "subscribe_on_changes"] ->
-            case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
+            case decode(Socket, Request, Body, subscribe_on_changes) of
                 {return, Result} ->
                     Result;
                 {ok, _User, PostIds} ->
@@ -584,19 +565,17 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             end;
         %% File uploading
         ["api", "upload_file"] ->
-            [PayloadJsonTerm] =
-                lists:map(fun(#{filename := Filename,
-                                unique_filename := UniqueFilename,
-                                content_type := ContentType}) ->
-                                  AbsPath = filename:join([<<"/tmp">>, UniqueFilename]),
-                                  #{<<"filename">> => Filename,
-                                    <<"absPath">> => AbsPath,
-                                    <<"contentType">> => ContentType}
-                          end, Body),
-            send_response(Socket, Request, {json, PayloadJsonTerm});
+            [#{filename := Filename,
+               unique_filename := UniqueFilename,
+               content_type := ContentType}] = Body,
+            JsonTerm = webapp_marshalling:encode(
+                         upload_file, #{filename => Filename,
+                                        absPath => filename:join([<<"/tmp">>, UniqueFilename]),
+                                        contentType => ContentType}),
+            send_response(Socket, Request, {json, JsonTerm});
         %% Read cache
         ["api", "upload_read_cache"] ->
-            case decode(Socket, Request, Body, fun json_term_to_binary_list/1) of
+            case decode(Socket, Request, Body, upload_read_cache) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
@@ -641,10 +620,10 @@ login(Socket, Request, Username, ClientResponse) ->
         {ok, MacAddress} = get_mac_address(Socket),
         {ok, #user{id = UserId, session_id = SessionId}} ?=
             db_user_serv:login(Username, MacAddress, PasswordSalt, PasswordHash),
-        PayloadJsonTerm = #{<<"userId">> => UserId,
-                            <<"username">> => Username,
-                            <<"sessionId">> => base64:encode(SessionId)},
-        send_response(Socket, Request, {json, PayloadJsonTerm})
+        JsonTerm = webapp_marshalling:encode(login, #{user_id => UserId,
+                                                      username => Username,
+                                                      session_id => SessionId}),
+        send_response(Socket, Request, {json, JsonTerm})
     else
         _ ->
             send_response(Socket, Request, forbidden)
@@ -655,10 +634,10 @@ switch_user(Socket, Request, Username, _PasswordSalt = not_set, _PasswordHash = 
     {ok, MacAddress} = get_mac_address(Socket),
     case db_user_serv:switch_user(Username, MacAddress) of
         {ok, #user{id = UserId, session_id = SessionId}} ->
-            PayloadJsonTerm = #{<<"userId">> => UserId,
-                                <<"username">> => Username,
-                                <<"sessionId">> => base64:encode(SessionId)},
-            send_response(Socket, Request, {json, PayloadJsonTerm});
+            JsonTerm = webapp_marshalling:encode(switch_user, #{user_id => UserId,
+                                                                username => Username,
+                                                                session_id => SessionId}),
+            send_response(Socket, Request, {json, JsonTerm});
         {error, failure} ->
             send_response(Socket, Request, forbidden)
     end;
@@ -694,11 +673,10 @@ switch_user(Socket, Request, Username, PasswordSalt, PasswordHash, ClientRespons
 switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt, PasswordHash) ->
     #user{id = UserId, session_id = SessionId} =
         db_user_serv:switch_user(Username, MacAddress, PasswordSalt, PasswordHash),
-    PayloadJsonTerm =
-        #{<<"userId">> => UserId,
-          <<"username">> => Username,
-          <<"sessionId">> => base64:encode(SessionId)},
-    send_response(Socket, Request, {json, PayloadJsonTerm}).
+    JsonTerm = webapp_marshalling:encode(switch_user, #{user_id => UserId,
+                                                        username => Username,
+                                                        session_id => SessionId}),
+    send_response(Socket, Request, {json, JsonTerm}).
 
 change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordHash) ->
     {ok, MacAddress} = get_mac_address(Socket),
@@ -735,293 +713,8 @@ count_read_replies(ReadPostIds, [#post{id = PostId}|Rest]) ->
     end.
 
 %%
-%% Marshalling: From JSON term
-%%
-
-json_term_to_integer(Int) when is_integer(Int) ->
-    {ok, Int};
-json_term_to_integer(_) ->
-    {error, invalid}.
-
-json_term_to_binary(Bin) when is_binary(Bin) ->
-    {ok, Bin};
-json_term_to_binary(_) ->
-    {error, invalid}.
-
-json_term_to_binary_list(List) when is_list(List) ->
-    json_term_to_binary_list(List, []);
-json_term_to_binary_list(_) ->
-    {error, invalid}.
-
-json_term_to_binary_list([], Acc) ->
-    {ok, lists:reverse(Acc)};
-json_term_to_binary_list([Bin|Rest], Acc) when is_binary(Bin) ->
-    json_term_to_binary_list(Rest, [Bin|Acc]);
-json_term_to_binary_list(_, _Acc) ->
-    {error, invalid}.
-
-json_term_to_bootstrap(#{<<"ssid">> := SSID}) when is_binary(SSID) ->
-    {ok, SSID};
-json_term_to_bootstrap(_) ->
-    {error, invalid}.
-
-json_term_to_login(#{<<"username">> := Username, <<"clientResponse">> := ClientResponse} = JsonTerm)
-  when is_binary(Username) andalso is_binary(ClientResponse) ->
-    case has_valid_keys([<<"username">>, <<"clientResponse">>], JsonTerm) of
-        true ->
-            {ok, {Username, base64:decode(ClientResponse)}};
-        false ->
-            {error, invalid}
-    end;
-json_term_to_login(_) ->
-    {error, invalid}.
-
-json_term_to_switch_user(#{<<"username">> := Username,
-                           <<"passwordSalt">> := PasswordSalt,
-                           <<"passwordHash">> := PasswordHash,
-                           <<"clientResponse">> := ClientResponse} = JsonTerm)
-  when is_binary(Username) andalso
-       (PasswordSalt == null orelse is_binary(PasswordSalt)) andalso
-       (PasswordHash == null orelse is_binary(PasswordHash)) andalso
-       (ClientResponse == null orelse is_binary(ClientResponse)) ->
-    case has_valid_keys([<<"username">>,
-                       <<"passwordSalt">>,
-                       <<"passwordHash">>,
-                       <<"clientResponse">>], JsonTerm) of
-        true ->
-            {ok, {Username, base64decode(PasswordSalt), base64decode(PasswordHash),
-                  base64decode(ClientResponse)}};
-        false ->
-            {error, invalid}
-    end;
-json_term_to_switch_user(_) ->
-    {error, invalid}.
-
-base64decode(null) ->
-    not_set;
-base64decode(Value) ->
-    base64:decode(Value).
-
-json_term_to_change_password(#{<<"passwordSalt">> := PasswordSalt,
-                               <<"passwordHash">> := PasswordHash} = JsonTerm)
-  when is_binary(PasswordHash) andalso is_binary(PasswordSalt) ->
-    case has_valid_keys([<<"passwordSalt">>, <<"passwordHash">>], JsonTerm) of
-        true ->
-            {ok, {base64:decode(PasswordSalt), base64:decode(PasswordHash)}};
-        false ->
-            {error, invalid}
-    end;
-json_term_to_change_password(_) ->
-    {error, invalid}.
-
-
-
-
-
-
-
-
-
-
-
-
-
-%% Top post
-json_term_to_post(#{<<"title">> := Title, <<"body">> := Body} = PostJsonTerm)
-  when is_binary(Title) andalso is_binary(Body) ->
-    case has_valid_keys([<<"title">>,
-                         <<"body">>,
-                         <<"created">>,
-                         <<"attachments">>], PostJsonTerm) of
-        true ->
-            case {maps:get(<<"created">>, PostJsonTerm, not_set),
-                  maps:get(<<"attachments">>, PostJsonTerm, [])} of
-                {Created, AttachmentsJsonTerm}
-                  when (Created == not_set orelse is_integer(Created)) andalso
-                       (AttachmentsJsonTerm == [] orelse is_list(AttachmentsJsonTerm)) ->
-                    case json_term_to_attachments(AttachmentsJsonTerm) of
-                        {ok, Attachments} ->
-                            {ok, #post{title = Title,
-                                       body = Body,
-                                       created = Created,
-                                       attachments = Attachments}};
-                        {error, invalid} ->
-                            {error, invalid}
-                    end;
-                _ ->
-                    {error, invalid}
-            end;
-        false ->
-            {error, invalid}
-    end;
-%% Reply post
-json_term_to_post(#{<<"parentPostId">> := ParentPostId,
-                    <<"topPostId">> := TopPostId,
-                    <<"body">> := Body} = PostJsonTerm)
-  when is_binary(ParentPostId) andalso
-       is_binary(TopPostId) andalso
-       is_binary(Body) ->
-    case has_valid_keys([<<"parentPostId">>,
-                       <<"topPostId">>,
-                       <<"body">>,
-                       <<"created">>,
-                       <<"attachments">>], PostJsonTerm) of
-        true ->
-            case {maps:get(<<"created">>, PostJsonTerm, not_set),
-                  maps:get(<<"attachments">>, PostJsonTerm, [])} of
-                {Created, AttachmentsJsonTerm}
-                  when (Created == not_set orelse is_integer(Created)) andalso
-                       (AttachmentsJsonTerm == [] orelse is_list(AttachmentsJsonTerm)) ->
-                    case json_term_to_attachments(AttachmentsJsonTerm) of
-                        {ok, Attachments} ->
-                            {ok, #post{parent_post_id = ParentPostId,
-                                       top_post_id = TopPostId,
-                                       body = Body,
-                                       created = Created,
-                                       attachments = Attachments}};
-                        {error, invalid} ->
-                            {error, invalid}
-                    end;
-
-                _ ->
-                    {error, invalid}
-            end;
-        false ->
-            {error, invalid}
-    end;
-json_term_to_post(_) ->
-    {error, invalid}.
-
-json_term_to_file(#{<<"filename">> := Filename,
-                    <<"size">> := Size,
-                    <<"contentType">> := ContentType,
-                    <<"isUploading">> := IsUploading} = FileJsonTerm)
-  when is_binary(Filename) andalso
-       is_integer(Size) andalso
-       is_binary(ContentType) andalso
-       is_boolean(IsUploading) ->
-    case has_valid_keys([<<"filename">>,
-                         <<"size">>,
-                         <<"contentType">>,
-                         <<"isUploading">>], FileJsonTerm) of
-        true ->
-            {ok, #file{filename = Filename,
-                       size = Size,
-                       content_type = ContentType,
-                       is_uploading = IsUploading}};
-        false ->
-            {error, invalid}
-    end.
-
-json_term_to_attachments(AttachmentsJsonTerm) ->
-    json_term_to_attachments(AttachmentsJsonTerm, []).
-
-json_term_to_attachments([], Acc) ->
-    {ok, lists:reverse(Acc)};
-json_term_to_attachments([AttachmentJsonTerm|Rest], Acc) ->
-    case json_term_to_attachment(AttachmentJsonTerm) of
-        {ok, Attachment} ->
-            json_term_to_attachments(Rest, [Attachment|Acc]);
-        {error, invalid} ->
-            {error, invalid}
-    end.
-
-json_term_to_attachment(#{<<"filename">> := Filename,
-                          <<"contentType">> := ContentType} = Attachment)
-  when is_binary(Filename) andalso is_binary(ContentType) ->
-    case has_valid_keys([<<"filename">>, <<"contentType">>], Attachment) of
-        true ->
-            {ok, {Filename, ContentType}};
-        false ->
-            {error, invalid}
-    end;
-json_term_to_attachment(_) ->
-    {error, invalid}.
-
-%%%
-%%% Marshalling: To JSON term
-%%%
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-post_to_json_term(#post{id = Id,
-                        title = Title,
-                        parent_post_id = ParentPostId,
-                        top_post_id = TopPostId,
-                        body = Body,
-                        author = AuthorId,
-                        created = Created,
-                        reply_count = ReplyCount,
-                        replies = Replies,
-                        likers = Likers,
-                        attachments = AttachmentsJsonTerm}, ReadPostIds) ->
-    {ok, #user{name = AuthorUsername}} = db_user_serv:get_user(AuthorId),
-    JsonTerm = #{<<"id">> => Id,
-                 <<"body">> => Body,
-                 <<"authorId">> => AuthorId,
-                 <<"authorUsername">> => AuthorUsername,
-                 <<"created">> => Created,
-                 <<"replyCount">> => ReplyCount,
-                 <<"replies">> => Replies,
-                 <<"likers">> => Likers,
-                 <<"attachments">> => attachments_to_json_term(AttachmentsJsonTerm),
-                 <<"isRead">> => lists:member(Id, ReadPostIds)},
-    add_optional_members([{<<"title">>, Title},
-                          {<<"parentPostId">>, ParentPostId},
-                          {<<"topPostId">>, TopPostId}], JsonTerm).
-
-file_to_json_term(#file{id = Id,
-                        filename = Filename,
-                        size = Size,
-                        uploaded_size = UploadedSize,
-                        content_type = ContentType,
-                        uploader = UploaderId,
-                        created = Created,
-                        is_uploading = IsUploading}) ->
-    {ok, #user{name = UploaderUsername}} = db_user_serv:get_user(UploaderId),
-    #{<<"id">> => Id,
-      <<"filename">> => Filename,
-      <<"size">> => Size,
-      <<"uploadedSize">> => UploadedSize,
-      <<"contentType">> => ContentType,
-      <<"uploaderId">> => UploaderId,
-      <<"uploaderUsername">> => UploaderUsername,
-      <<"created">> => Created,
-      <<"isUploading">> => IsUploading}.
-
-attachments_to_json_term([]) ->
-    [];
-attachments_to_json_term([Attachment|Rest]) ->
-    [attachment_to_json_term(Attachment)|attachments_to_json_term(Rest)].
-
-attachment_to_json_term({Filename, ContentType}) ->
-    #{<<"filename">> => Filename,
-      <<"contentType">> => ContentType}.
-
-%%
 %% Utilities
 %%
-
-add_optional_members([], JsonTerm) ->
-    JsonTerm;
-add_optional_members([{_Key, not_set}|Rest], JsonTerm) ->
-    add_optional_members(Rest, JsonTerm);
-add_optional_members([{Key, Value}|Rest], JsonTerm) ->
-    add_optional_members(Rest, maps:put(Key, Value, JsonTerm)).
 
 get_mac_address(Socket) ->
     case rester_socket:peername(Socket) of
@@ -1123,9 +816,6 @@ authenticate(_Request, false) ->
 authenticate(Request, true) ->
     {ok, #{<<"sessionId">> := SessionId}} = get_bespoke_cookie(Request),
     db_user_serv:get_user_from_session_id(base64:decode(SessionId)).
-
-has_valid_keys(PossibleKeys, Map) ->
-    lists:all(fun(Key) -> lists:member(Key, PossibleKeys) end, maps:keys(Map)).
 
 %%
 %% HTTP response (rest_util:response/3 is just too unwieldly)

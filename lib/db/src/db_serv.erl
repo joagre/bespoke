@@ -4,9 +4,9 @@
 -export([start_link/0, stop/0]).
 -export([get_user_id/0]).
 -export([create_message/3, read_top_messages/1, read_reply_messages/2, delete_message/2]).
--export([list_top_posts/0, lookup_posts/1, lookup_posts/2, lookup_post_ids/1, lookup_post_ids/2,
-         insert_post/1, delete_post/1, toggle_like/2]).
--export([list_files/0, lookup_files/1, insert_file/1, delete_file/1, file_uploaded/1]).
+-export([create_post/1, read_top_posts/0, read_posts/1, read_posts/2, read_post_ids/1,
+         read_post_ids/2, delete_post/1, toggle_post_like/2]).
+-export([create_file/1, read_files/0, read_files/1, delete_file/1, file_is_uploaded/1]).
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
 -export([message_handler/1]).
@@ -84,11 +84,6 @@ stop() ->
 get_user_id() ->
     serv:call(?MODULE, get_user_id).
 
-
-
-
-
-
 %%
 %% Exported: create_message
 %%
@@ -133,46 +128,46 @@ delete_message(UserId, MessageId) ->
     serv:call(?MODULE, {delete_message, UserId, MessageId}).
 
 %%
-%% Exported: list_top_posts
+%% Exported: create_post
 %%
 
--spec list_top_posts() -> [#post{}].
+-spec create_post(#post{}) -> {ok, #post{}} | {error, invalid_post}.
 
-list_top_posts() ->
-    serv:call(?MODULE, list_top_posts).
-
-%%
-%% Exported: lookup_posts
-%%
-
--spec lookup_posts([post_id()], flat | recursive) -> [#post{}].
-
-lookup_posts(PostIds) ->
-    lookup_posts(PostIds, flat).
-
-lookup_posts(PostIds, Mode) ->
-    serv:call(?MODULE, {lookup_posts, PostIds, Mode}).
+create_post(Post) ->
+    serv:call(?MODULE, {create_post, Post}).
 
 %%
-%% Exported: lookup_post_ids
+%% Exported: read_top_posts
 %%
 
--spec lookup_post_ids([post_id()], flat | recursive) -> [post_id()].
+-spec read_top_posts() -> [#post{}].
 
-lookup_post_ids(PostIds) ->
-    lookup_posts(PostIds, flat).
-
-lookup_post_ids(PostIds, Mode) ->
-    serv:call(?MODULE, {lookup_post_ids, PostIds, Mode}).
+read_top_posts() ->
+    serv:call(?MODULE, read_top_posts).
 
 %%
-%% Exported: insert_post
+%% Exported: read_posts
 %%
 
--spec insert_post(#post{}) -> {ok, #post{}} | {error, invalid_post}.
+-spec read_posts([post_id()], flat | recursive) -> [#post{}].
 
-insert_post(Post) ->
-    serv:call(?MODULE, {insert_post, Post}).
+read_posts(PostIds) ->
+    read_posts(PostIds, flat).
+
+read_posts(PostIds, Mode) ->
+    serv:call(?MODULE, {read_posts, PostIds, Mode}).
+
+%%
+%% Exported: read_post_ids
+%%
+
+-spec read_post_ids([post_id()], flat | recursive) -> [post_id()].
+
+read_post_ids(PostIds) ->
+    read_post_ids(PostIds, flat).
+
+read_post_ids(PostIds, Mode) ->
+    serv:call(?MODULE, {read_post_ids, PostIds, Mode}).
 
 %%
 %% delete_post
@@ -184,41 +179,41 @@ delete_post(PostId) ->
     serv:call(?MODULE, {delete_post, PostId}).
 
 %%
-%% Exported: toggle_like
+%% Exported: toggle_post_like
 %%
 
--spec toggle_like(post_id(), user_id()) ->
+-spec toggle_post_like(post_id(), user_id()) ->
           {ok, [user_id()]} | {error, not_found}.
 
-toggle_like(PostId, UserId) ->
-    serv:call(?MODULE, {toggle_like, PostId, UserId}).
+toggle_post_like(PostId, UserId) ->
+    serv:call(?MODULE, {toggle_post_like, PostId, UserId}).
 
 %%
-%% Exported: list_files
+%% Exported: create_file
 %%
 
--spec list_files() -> [#file{}].
+-spec create_file(#file{}) -> {ok, #file{}} | {error, invalid_file}.
 
-list_files() ->
-    serv:call(?MODULE, list_files).
-
-%%
-%% Exported: lookup_files
-%%
-
--spec lookup_files([file_id()]) -> [#file{}].
-
-lookup_files(FileIds) ->
-    serv:call(?MODULE, {lookup_files, FileIds}).
+create_file(File) ->
+    serv:call(?MODULE, {create_file, File}).
 
 %%
-%% Exported: insert_file
+%% Exported: read_files
 %%
 
--spec insert_file(#file{}) -> {ok, #file{}} | {error, invalid_file}.
+-spec read_files() -> [#file{}].
 
-insert_file(File) ->
-    serv:call(?MODULE, {insert_file, File}).
+read_files() ->
+    serv:call(?MODULE, read_files).
+
+%%
+%% Exported: read_files
+%%
+
+-spec read_files([file_id()]) -> [#file{}].
+
+read_files(FileIds) ->
+    serv:call(?MODULE, {read_files, FileIds}).
 
 %%
 %% delete_file
@@ -230,13 +225,13 @@ delete_file(FileId) ->
     serv:call(?MODULE, {delete_file, FileId}).
 
 %%
-%% file_uploaded
+%% file_is_uploaded
 %%
 
--spec file_uploaded(file_id()) -> ok | {error, not_found}.
+-spec file_is_uploaded(file_id()) -> ok | {error, not_found}.
 
-file_uploaded(FileId) ->
-    serv:call(?MODULE, {file_uploaded, FileId}).
+file_is_uploaded(FileId) ->
+    serv:call(?MODULE, {file_is_uploaded, FileId}).
 
 %%
 %% Exported: subscribe_on_changes
@@ -270,13 +265,11 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             ok = close_dbs(),
             {reply, From, ok};
+        %% User management
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),
             NextUserId = db_meta_db:read_next_user_id(),
             {reply, From, NextUserId};
-
-
-
         %% Direct messaging
         {call, From, {create_message, Message, BodyBlobs, AttachmentBlobs} = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -290,28 +283,24 @@ message_handler(S) ->
         {call, From, {delete_message, UserId, MessageId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:delete_message(UserId, MessageId)};
-
-
-
-
-
         %% Forum
-        {call, From, list_top_posts = Call} ->
+        {call, From, {create_post, Post} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            {reply, From, do_insert_post(Post)};
+
+        {call, From, read_top_posts = Call} ->
             ?log_debug("Call: ~p", [Call]),
             TopPosts = dets:match_object(?POST_DB, #post{top_post_id = not_set, _ = '_'}),
             SortedTopPosts = lists:sort(fun(PostA, PostB) ->
                                                 PostA#post.created > PostB#post.created
                                         end, TopPosts),
             {reply, From, SortedTopPosts};
-        {call, From, {lookup_posts, PostIds, Mode} = Call} ->
+        {call, From, {read_posts, PostIds, Mode} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, do_lookup_posts(PostIds, Mode)};
-        {call, From, {lookup_post_ids, PostIds, Mode} = Call} ->
+        {call, From, {read_post_ids, PostIds, Mode} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, do_lookup_post_ids(PostIds, Mode)};
-        {call, From, {insert_post, Post} = Call} ->
-            ?log_debug("Call: ~p", [Call]),
-            {reply, From, do_insert_post(Post)};
         {call, From, {delete_post, PostId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?POST_DB, PostId) of
@@ -329,7 +318,7 @@ message_handler(S) ->
                 [] ->
                     {reply, From, {error, not_found}}
             end;
-        {call, From, {toggle_like, PostId, UserId} = Call} ->
+        {call, From, {toggle_post_like, PostId, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?POST_DB, PostId) of
                 [#post{likers = Likers} = Post] ->
@@ -344,20 +333,25 @@ message_handler(S) ->
                 [] ->
                     {reply, From, {error, not_found}}
             end;
-        {call, From, list_files = Call} ->
+        %% File sharing
+        {call, From, {create_file, File} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            Files =
-                dets:foldl(fun(#file{is_uploading = true} = File, Acc) ->
-                                   [update_uploaded_size(File)|Acc];
-                              (File, Acc) ->
-                                   [File|Acc]
-                           end, [], ?FILE_DB),
-            SortedFiles =
-                lists:sort(fun(FileA, FileB) ->
-                                   FileA#file.created > FileB#file.created
-                           end, Files),
+            NextFileId = db_meta_db:read_next_file_id(),
+            CreatedFile = File#file{id = NextFileId, created = db:seconds_since_epoch()},
+            ok = dets:insert(?FILE_DB, CreatedFile),
+            {reply, From, {ok, CreatedFile}};
+        {call, From, read_files = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            Files = dets:foldl(fun(#file{is_uploading = true} = File, Acc) ->
+                                       [update_uploaded_size(File)|Acc];
+                                  (File, Acc) ->
+                                       [File|Acc]
+                               end, [], ?FILE_DB),
+            SortedFiles = lists:sort(fun(FileA, FileB) ->
+                                             FileA#file.created > FileB#file.created
+                                     end, Files),
             {reply, From, SortedFiles};
-        {call, From, {lookup_files, FileIds} = Call} ->
+        {call, From, {read_files, FileIds} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             Files =
                 lists:foldr(
@@ -371,15 +365,6 @@ message_handler(S) ->
                           FileA#file.created > FileB#file.created
                   end, Files),
             {reply, From, SortedFiles};
-        {call, From, {insert_file, File} = Call} ->
-            ?log_debug("Call: ~p", [Call]),
-            NextFileId = db_meta_db:read_next_file_id(),
-            InsertedFile = File#file{
-                             id = NextFileId,
-                             created = db:seconds_since_epoch()
-                            },
-            ok = dets:insert(?FILE_DB, InsertedFile),
-            {reply, From, {ok, InsertedFile}};
         {call, From, {delete_file, FileId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?FILE_DB, FileId) of
@@ -390,7 +375,7 @@ message_handler(S) ->
                 [] ->
                     {reply, From, {error, not_found}}
             end;
-        {call, From, {file_uploaded, FileId} = Call} ->
+        {call, From, {file_is_uploaded, FileId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             case dets:lookup(?FILE_DB, FileId) of
                 [File] ->
@@ -401,6 +386,7 @@ message_handler(S) ->
                 [] ->
                     {reply, From, {error, not_found}}
             end;
+        %% Subscription handling
         {call, From, {subscribe_on_changes, Subscriber, PostIds} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             SubscriptionId = make_ref(),
@@ -410,15 +396,16 @@ message_handler(S) ->
                                                    monitor_ref = monitor(process, Subscriber),
                                                    post_ids = PostIds}),
             {reply, From, SubscriptionId};
-        {call, From, sync = Call} ->
-            ?log_debug("Call: ~p", [Call]),
-            ok = sync_dbs(),
-            {reply, From, ok};
         {'DOWN', MonitorRef, process, Pid, _Reason} ->
             ?log_info("Subscriber died: ~w", [Pid]),
             true = ets:match_delete(?SUBSCRIPTION_DB,
                                     #subscription{monitor_ref = MonitorRef, _ = '_'}),
             noreply;
+        %% Misc messages
+        {call, From, sync = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            ok = sync_dbs(),
+            {reply, From, ok};
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             ok = close_dbs(),
             exit(Reason);
