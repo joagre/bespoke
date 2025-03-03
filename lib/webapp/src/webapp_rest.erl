@@ -787,19 +787,10 @@ decode(Socket, Request, Body, MarshallingFun, Authenticate) ->
                             case MarshallingFun of
                                 undefined ->
                                     {ok, User, ParsedBody};
-                                MarshallingType when is_atom(MarshallingType) ->
+                                MarshallingType ->
                                     case webapp_marshalling:decode(MarshallingType, ParsedBody) of
                                         {ok, DecodedBody} ->
                                             {ok, User, DecodedBody};
-                                        {error, Reason} ->
-                                            ?log_error(Reason),
-                                            {return, send_response(Socket, Request, bad_request)}
-                                    end;
-                                %% FIXME: remove when refactoring is done
-                                _ when is_function(MarshallingFun) ->
-                                    case MarshallingFun(ParsedBody) of
-                                        {ok, MarshalledBody} ->
-                                            {ok, User, MarshalledBody};
                                         {error, Reason} ->
                                             ?log_error(Reason),
                                             {return, send_response(Socket, Request, bad_request)}

@@ -9,11 +9,11 @@
 
 ## Web app
 
-* move all webapp marshalling into webapp_marshallingh.erl
-
 * Create db_user_db.erl etc for all
+
 * db_file_db.erl
 * db_post_db.erl
+
 * make sure to not marshall anything in db_serv.erl and db_user_serv.erl (you get it)
   * Move marshalling into webapp_rest.erl for post adn everything else too
 

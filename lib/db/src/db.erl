@@ -1,8 +1,8 @@
 % -*- fill-column: 100; -*-
 
 -module(db).
--export([open_disk/3, lookup_disk/2, insert_disk/2, delete_disk/2, dump_disk/1, sync_disk/1,
-         close_disk/1]).
+-export([open_disk/3, lookup_disk/2, foldl_disk/3, insert_disk/2, delete_disk/2, dump_disk/1,
+         sync_disk/1, close_disk/1]).
 -export([open_disk_index/2, lookup_disk_index/2, insert_disk_index/3, delete_disk_index/2,
          delete_disk_index/3, dump_disk_index/1, sync_disk_index/1, close_disk_index/1]).
 -export([open_ram/2, lookup_ram/2, foldl_ram/3, insert_ram/2, delete_ram/2, dump_ram/1,
@@ -29,6 +29,15 @@ open_disk(Name, Filename, KeyPos) ->
 
 lookup_disk(Name, Key) ->
     dets:lookup(Name, Key).
+
+%%
+%% Exported: foldl_disk
+%%
+
+-spec foldl_disk(fun((term(), term()) -> term()), term(), dets:tab_name()) -> term().
+
+foldl_disk(Fun, Acc, Name) ->
+    dets:foldl(Fun, Acc, Name).
 
 %%
 %% Exported: insert_disk
@@ -177,9 +186,9 @@ lookup_ram(Name, Key) ->
 %% Exported: foldl_ram
 %%
 
--spec foldl_ram(atom(), fun((term(), term()) -> term()), term()) -> term().
+-spec foldl_ram(fun((term(), term()) -> term()), term(), atom()) -> term().
 
-foldl_ram(Name, Fun, Acc) ->
+foldl_ram(Fun, Acc, Name) ->
     ets:foldl(Fun, Acc, Name).
 
 %%

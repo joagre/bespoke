@@ -118,13 +118,12 @@ get_challenge(Username) ->
 
 purge_challenges() ->
     Threshold = db:seconds_since_epoch() - ?CHALLENGE_TIMEOUT,
-    db:foldl_ram(?CHALLENGE_CACHE,
-                 fun(#challenge{username = Username, timestamp = Timestamp}, ok)
+    db:foldl_ram(fun(#challenge{username = Username, timestamp = Timestamp}, ok)
                        when Timestamp < Threshold ->
                          db:delete_ram(?CHALLENGE_CACHE, Username);
                     (_, ok) ->
                          ok
-                 end, ok).
+                 end, ok, ?CHALLENGE_CACHE).
 
 %%
 %% Exported: close

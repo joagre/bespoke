@@ -14,7 +14,6 @@
               title/0, body/0, seconds_since_epoch/0, content_type/0, file_id/0, file_size/0,
               subscription_id/0, monitor_ref/0]).
 
--include_lib("kernel/include/file.hrl").
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
 -include_lib("apptools/include/serv.hrl").
@@ -192,7 +191,7 @@ toggle_post_like(PostId, UserId) ->
 %% Exported: create_file
 %%
 
--spec create_file(#file{}) -> {ok, #file{}} | {error, invalid_file}.
+-spec create_file(#file{}) -> {ok, #file{}} | {error, term()}.
 
 create_file(File) ->
     serv:call(?MODULE, {create_file, File}).
@@ -287,7 +286,6 @@ message_handler(S) ->
         {call, From, {create_post, Post} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, do_insert_post(Post)};
-
         {call, From, read_top_posts = Call} ->
             ?log_debug("Call: ~p", [Call]),
             TopPosts = dets:match_object(?POST_DB, #post{top_post_id = not_set, _ = '_'}),
@@ -336,56 +334,19 @@ message_handler(S) ->
         %% File sharing
         {call, From, {create_file, File} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            NextFileId = db_meta_db:read_next_file_id(),
-            CreatedFile = File#file{id = NextFileId, created = db:seconds_since_epoch()},
-            ok = dets:insert(?FILE_DB, CreatedFile),
-            {reply, From, {ok, CreatedFile}};
+            {reply, From, db_file_db:create_file(File)};
         {call, From, read_files = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            Files = dets:foldl(fun(#file{is_uploading = true} = File, Acc) ->
-                                       [update_uploaded_size(File)|Acc];
-                                  (File, Acc) ->
-                                       [File|Acc]
-                               end, [], ?FILE_DB),
-            SortedFiles = lists:sort(fun(FileA, FileB) ->
-                                             FileA#file.created > FileB#file.created
-                                     end, Files),
-            {reply, From, SortedFiles};
+            {reply, From, db_file_db:read_files()};
         {call, From, {read_files, FileIds} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            Files =
-                lists:foldr(
-                  fun(FileId, Acc) ->
-                          [File] = dets:lookup(?FILE_DB, FileId),
-                          [update_uploaded_size(File)|Acc]
-                  end, [], FileIds),
-            SortedFiles =
-                lists:sort(
-                  fun(FileA, FileB) ->
-                          FileA#file.created > FileB#file.created
-                  end, Files),
-            {reply, From, SortedFiles};
+            {reply, From, db_file_db:read_files(FileIds)};
         {call, From, {delete_file, FileId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            case dets:lookup(?FILE_DB, FileId) of
-                [File] ->
-                    ok = dets:delete(?FILE_DB, FileId),
-                    ok = delete_file_on_disk(File),
-                    {reply, From, ok};
-                [] ->
-                    {reply, From, {error, not_found}}
-            end;
+            {reply, From, db_file_db:delete_file(FileId)};
         {call, From, {file_is_uploaded, FileId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            case dets:lookup(?FILE_DB, FileId) of
-                [File] ->
-                    UpdatedFile = File#file{is_uploading = false},
-                    ok = dets:insert(?FILE_DB, UpdatedFile),
-                    ok = move_file_on_disk(UpdatedFile),
-                    {reply, From, ok};
-                [] ->
-                    {reply, From, {error, not_found}}
-            end;
+            {reply, From, db_file_db:file_is_uploaded(FileId)};
         %% Subscription handling
         {call, From, {subscribe_on_changes, Subscriber, PostIds} = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -401,7 +362,7 @@ message_handler(S) ->
             true = ets:match_delete(?SUBSCRIPTION_DB,
                                     #subscription{monitor_ref = MonitorRef, _ = '_'}),
             noreply;
-        %% Misc messages
+        %% System
         {call, From, sync = Call} ->
             ?log_debug("Call: ~p", [Call]),
             ok = sync_dbs(),
@@ -606,65 +567,3 @@ inform_subscribers(PostId) ->
                       Acc
               end
       end, ok, ?SUBSCRIPTION_DB).
-
-%%
-%% List files
-%%
-
-update_uploaded_size(#file{id = FileId, is_uploading = true} = File) ->
-    TmpPath = ?BESPOKE_TMP_PATH,
-    TmpFilePathBeginning = filename:join([TmpPath, io_lib:format("file-~w-", [FileId])]),
-    case filelib:wildcard(TmpFilePathBeginning ++ "*") of
-        [TmpFilePath|_] ->
-            case file:read_file_info(TmpFilePath) of
-                {ok, FileInfo} ->
-                    File#file{uploaded_size = FileInfo#file_info.size};
-                {error, _} ->
-                    File
-            end;
-        [] ->
-            File
-    end;
-update_uploaded_size(File) ->
-    File.
-
-%%
-%% Delete file
-%%
-
-delete_file_on_disk(#file{id = FileId, filename = Filename}) ->
-    TmpPath = ?BESPOKE_TMP_PATH,
-    TmpFilePathBeginning = filename:join([TmpPath, io_lib:format("file-~w-", [FileId])]),
-    case filelib:wildcard(TmpFilePathBeginning ++ "*") of
-        [TmpFilePath] ->
-            ?log_info("Deleting ~s (if it exists)...", [TmpFilePath]),
-            _ = file:delete(TmpFilePath),
-            UploadedFilePath =
-                filename:join(
-                  [?BESPOKE_FILE_PATH,
-                   io_lib:format("~w-~s", [FileId, Filename])]),
-            ?log_info("Deleting ~s (if it exists)...", [UploadedFilePath]),
-            _ = file:delete(UploadedFilePath),
-            ok;
-        [] ->
-            ok
-    end.
-
-%%
-%% File uploaded
-%%
-
-move_file_on_disk(#file{id = FileId, filename = Filename}) ->
-    TmpPath = ?BESPOKE_TMP_PATH,
-    TmpFilePathBeginning =
-        filename:join([TmpPath, io_lib:format("file-~w-", [FileId])]),
-    case filelib:wildcard(TmpFilePathBeginning ++ "*") of
-        [TmpFilePath] ->
-            UploadedFilePath = filename:join(
-                                 [?BESPOKE_FILE_PATH,
-                                  io_lib:format("~w-~s", [FileId, Filename])]),
-            ?log_info("Moving ~s to ~s", [TmpFilePath, UploadedFilePath]),
-            ok = file:rename(TmpFilePath, UploadedFilePath);
-        [] ->
-            ok
-    end.
