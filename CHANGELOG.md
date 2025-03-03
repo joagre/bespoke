@@ -27,13 +27,13 @@
   files in the browser (until their signatures are changed)
 
 - SSL has been enabled with a self-signed certificate, or else Service Workers
-  refuse to start
+  refused to start
 
 - All HTML is now sanitized
 
 - File sharing has been added
 
-- Direct messaging has been added (unencrypted for now)
+- Direct messaging has been added
 
 ## [0.2.1]
 
