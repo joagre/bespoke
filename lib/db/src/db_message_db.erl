@@ -40,11 +40,11 @@
 
 open() ->
     maybe
-        {ok, _} ?= db:open_disk(?MESSAGE_DB, ?MESSAGE_FILE_PATH, #message.id),
-        {ok, _} ?= db:open_disk_index(?TOP_MESSAGE_DB, ?TOP_MESSAGE_FILE_PATH),
-        {ok, _} ?= db:open_disk_index(?REPLY_MESSAGE_DB, ?REPLY_MESSAGE_FILE_PATH),
-        {ok, _} ?= db:open_disk_index(?RECIPIENT_DB, ?RECIPIENT_FILE_PATH),
-        {ok, _} ?= db:open_disk_index(?ATTACHMENT_DB, ?ATTACHMENT_FILE_PATH),
+        {ok, _} ?= dets:open_file(?MESSAGE_DB, [{file, ?MESSAGE_FILE_PATH}, {keypos, #message.id}]),
+        {ok, _} ?= idets:open_file(?TOP_MESSAGE_DB, ?TOP_MESSAGE_FILE_PATH),
+        {ok, _} ?= idets:open_file(?REPLY_MESSAGE_DB, ?REPLY_MESSAGE_FILE_PATH),
+        {ok, _} ?= idets:open_file(?RECIPIENT_DB, ?RECIPIENT_FILE_PATH),
+        {ok, _} ?= idets:open_file(?ATTACHMENT_DB, ?ATTACHMENT_FILE_PATH),
         ok
     end.
 
@@ -55,11 +55,11 @@ open() ->
 -spec dump() -> [{dets:tab_name(), [term()]}].
 
 dump() ->
-    [{?MESSAGE_DB, db:dump_disk(?MESSAGE_DB)},
-     {?TOP_MESSAGE_DB, db:dump_disk_index(?TOP_MESSAGE_DB)},
-     {?REPLY_MESSAGE_DB, db:dump_disk_index(?REPLY_MESSAGE_DB)},
-     {?RECIPIENT_DB, db:dump_disk_index(?RECIPIENT_DB)},
-     {?ATTACHMENT_DB, db:dump_disk_index(?ATTACHMENT_DB)}].
+    [{?MESSAGE_DB, db:dets_dump(?MESSAGE_DB)},
+     {?TOP_MESSAGE_DB, idets:dump(?TOP_MESSAGE_DB)},
+     {?REPLY_MESSAGE_DB, idets:dump(?REPLY_MESSAGE_DB)},
+     {?RECIPIENT_DB, idets:dump(?RECIPIENT_DB)},
+     {?ATTACHMENT_DB, idets:dump(?ATTACHMENT_DB)}].
 
 %%
 %% Exported: sync
@@ -69,11 +69,11 @@ dump() ->
 
 sync() ->
     maybe
-        ok ?= db:sync_disk(?MESSAGE_DB),
-        ok ?= db:sync_disk_index(?TOP_MESSAGE_DB),
-        ok ?= db:sync_disk_index(?REPLY_MESSAGE_DB),
-        ok ?= db:sync_disk_index(?RECIPIENT_DB),
-        ok ?= db:sync_disk_index(?ATTACHMENT_DB)
+        ok ?= dets:sync(?MESSAGE_DB),
+        ok ?= idets:sync(?TOP_MESSAGE_DB),
+        ok ?= idets:sync(?REPLY_MESSAGE_DB),
+        ok ?= idets:sync(?RECIPIENT_DB),
+        ok ?= idets:sync(?ATTACHMENT_DB)
     end.
 
 %%
@@ -84,11 +84,11 @@ sync() ->
 
 close() ->
     maybe
-        ok ?= db:close_disk(?MESSAGE_DB),
-        ok ?= db:close_disk_index(?TOP_MESSAGE_DB),
-        ok ?= db:close_disk_index(?REPLY_MESSAGE_DB),
-        ok ?= db:close_disk_index(?RECIPIENT_DB),
-        ok ?= db:close_disk_index(?ATTACHMENT_DB)
+        ok ?= dets:close(?MESSAGE_DB),
+        ok ?= idets:close(?TOP_MESSAGE_DB),
+        ok ?= idets:close(?REPLY_MESSAGE_DB),
+        ok ?= idets:close(?RECIPIENT_DB),
+        ok ?= idets:close(?ATTACHMENT_DB)
     end.
 
 %%
@@ -109,7 +109,7 @@ create_message(#message{top_message_id = TopMessageId, author = Author} = Messag
                 ignore;
             %% Is a reply message!
             _ ->
-                db:lookup_disk_index(?RECIPIENT_DB, TopMessageId)
+                idets:lookup(?RECIPIENT_DB, TopMessageId)
         end,
     case RecipientMessageIds == ignore orelse lists:member(Author, RecipientMessageIds) of
         true ->
@@ -118,7 +118,7 @@ create_message(#message{top_message_id = TopMessageId, author = Author} = Messag
                                              created = db:seconds_since_epoch()
                                             },
             %% Update MESSAGE_DB
-            ok = db:insert_disk(?MESSAGE_DB, UpdatedMessage),
+            ok = dets:insert(?MESSAGE_DB, UpdatedMessage),
             case create_blobs(UpdatedMessage, BodyBlobs, AttachmentBlobs) of
                 ok ->
                     {ok, UpdatedMessage};
@@ -151,13 +151,13 @@ create_body_blobs(#message{id = MessageId, top_message_id = TopMessageId} = Mess
                 %% Is a top message!
                 not_set ->
                     %% Update TOP_MESSAGE_DB and RECIPIENT_DB
-                    ok = db:insert_disk_index(?TOP_MESSAGE_DB, UserId, MessageId),
-                    ok = db:insert_disk_index(?RECIPIENT_DB, MessageId, UserId);
+                    ok = idets:insert(?TOP_MESSAGE_DB, UserId, MessageId),
+                    ok = idets:insert(?RECIPIENT_DB, MessageId, UserId);
                 %% Is a reply message!
                 TopMessageId ->
                     %% Update REPLY_MESSAGE_DB and RECIPIENT_DB
-                    ok = db:insert_disk_index(?REPLY_MESSAGE_DB, TopMessageId, MessageId),
-                    ok = db:insert_disk_index(?RECIPIENT_DB, TopMessageId, UserId)
+                    ok = idets:insert(?REPLY_MESSAGE_DB, TopMessageId, MessageId),
+                    ok = idets:insert(?RECIPIENT_DB, TopMessageId, UserId)
             end,
             create_body_blobs(Message, MessageBlobPath, Rest);
         {error, Reason} ->
@@ -185,7 +185,7 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
     case file:rename(CurrentBlobPath, NewBlobPath) of
         ok ->
             %% Update ATTACHMENT_DB
-            ok = db:insert_disk_index(?ATTACHMENT_DB, MessageId, AttachmentId),
+            ok = idets:insert(?ATTACHMENT_DB, MessageId, AttachmentId),
             create_attachment_blobs(AttachmentId, Message, MessageBlobPath, Rest);
         {error, Reason} ->
             {error, Reason}
@@ -199,20 +199,20 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
           {ok, [{{#message{}, [db_serv:attachment_id()]}}]}.
 
 read_top_messages(UserId) ->
-    MessageIds = db:lookup_disk_index(?TOP_MESSAGE_DB, UserId),
+    MessageIds = idets:lookup(?TOP_MESSAGE_DB, UserId),
     {ok, read_messages(MessageIds)}.
 
 read_messages(MessageIds) ->
     Messages = sort_messages(lookup_messages(MessageIds)),
     lists:map(fun(#message{id = MessageId} = Message) ->
-                      AttachmentIds = db:lookup_disk_index(?ATTACHMENT_DB, MessageId),
+                      AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
                       {Message, AttachmentIds}
               end, Messages).
 
 lookup_messages([]) ->
     [];
 lookup_messages([MessageId|Rest]) ->
-    [Message] = db:lookup_disk(?MESSAGE_DB, MessageId),
+    [Message] = dets:lookup(?MESSAGE_DB, MessageId),
     [Message|lookup_messages(Rest)].
 
 %%
@@ -224,10 +224,10 @@ lookup_messages([MessageId|Rest]) ->
           {error, access_denied}.
 
 read_reply_messages(UserId, TopMessageId) ->
-    RecipientMessageIds = db:lookup_disk_index(?RECIPIENT_DB, UserId),
+    RecipientMessageIds = idets:lookup(?RECIPIENT_DB, UserId),
     case lists:member(TopMessageId, RecipientMessageIds) of
         true ->
-            MessageIds = db:lookup_disk_index(?REPLY_MESSAGE_DB, TopMessageId),
+            MessageIds = idets:lookup(?REPLY_MESSAGE_DB, TopMessageId),
             {ok, read_messages(MessageIds)};
         false ->
             {error, access_denied}
@@ -240,33 +240,33 @@ read_reply_messages(UserId, TopMessageId) ->
 -spec delete_message(db_serv:user_id(), db_serv:message_id()) -> ok | {error, access_denied}.
 
 delete_message(UserId, MessageId) ->
-    case db:lookup_disk(?MESSAGE_DB, MessageId) of
+    case dets:lookup(?MESSAGE_DB, MessageId) of
         [#message{top_message_id = TopMessageId, author = UserId} = Message] ->
             ok = delete_blobs(Message),
             %% Update MESSAGE_DB
-            ok = db:delete_disk(?MESSAGE_DB, MessageId),
+            ok = dets:delete(?MESSAGE_DB, MessageId),
             %% Update TOP_MESSAGE_DB
             case TopMessageId of
                 not_set ->
                     %% Is a top message!
-                    RecipientUserIds = db:lookup_disk_index(?RECIPIENT_DB, MessageId),
+                    RecipientUserIds = idets:lookup(?RECIPIENT_DB, MessageId),
                     %% Update TOP_MESSAGE_DB
                     lists:foreach(
                       fun(RecipientUserId) ->
-                              ok = db:delete_disk_index(?TOP_MESSAGE_DB, RecipientUserId, MessageId)
+                              ok = idets:delete(?TOP_MESSAGE_DB, RecipientUserId, MessageId)
                       end, RecipientUserIds),
                     %% Update REPLY_MESSAGE_DB
-                    ok = db:delete_disk_index(?REPLY_MESSAGE_DB, MessageId),
+                    ok = idets:delete(?REPLY_MESSAGE_DB, MessageId),
                     %% Update RECIPIENT_DB
-                    ok = db:delete_disk_index(?RECIPIENT_DB, MessageId);
+                    ok = idets:delete(?RECIPIENT_DB, MessageId);
                 _ ->
                     %% Is a reply message!
                     ok
             end,
             %% Update ATTACHMENT_DB
-            AttachmentIds = db:lookup_disk_index(?ATTACHMENT_DB, MessageId),
+            AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
             lists:foreach(fun(AttachmentId) ->
-                                  ok = db:delete_disk_index(?ATTACHMENT_DB, AttachmentId)
+                                  ok = idets:delete(?ATTACHMENT_DB, AttachmentId)
                           end, AttachmentIds);
         _ ->
             {error, access_denied}
@@ -276,9 +276,9 @@ delete_blobs(#message{id = MessageId, top_message_id = TopMessageId}) ->
     RecipientUserIds =
         case TopMessageId of
             not_set ->
-                db:lookup_disk_index(?RECIPIENT_DB, MessageId);
+                idets:lookup(?RECIPIENT_DB, MessageId);
             _ ->
-                db:lookup_disk_index(?RECIPIENT_DB, TopMessageId)
+                idets:lookup(?RECIPIENT_DB, TopMessageId)
         end,
     MessageBlobPath = filename:join([?BESPOKE_MESSAGE_PATH, ?i2b(MessageId)]),
     lists:foreach(
@@ -287,7 +287,7 @@ delete_blobs(#message{id = MessageId, top_message_id = TopMessageId}) ->
               ?log_info("Deleting body blob ~s", [BodyBlobPath]),
               case file:delete(BodyBlobPath) of
                   ok ->
-                      AttachmentIds = db:lookup_disk_index(?ATTACHMENT_DB, MessageId),
+                      AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
                       lists:foreach(
                         fun(AttachmentId) ->
                                 AttachmentBlobPath =

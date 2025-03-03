@@ -33,9 +33,10 @@
 
 open() ->
     maybe
-        {ok, _} ?= db:open_disk_index(?MESSAGE_READ_CACHE, ?MESSAGE_READ_FILE_PATH),
-        {ok, _} ?= db:open_disk_index(?POST_READ_CACHE, ?POST_READ_FILE_PATH),
-        db:open_ram(?CHALLENGE_CACHE, #challenge.username)
+        {ok, _} ?= idets:open_file(?MESSAGE_READ_CACHE, ?MESSAGE_READ_FILE_PATH),
+        {ok, _} ?= idets:open_file(?POST_READ_CACHE, ?POST_READ_FILE_PATH),
+        ?CHALLENGE_CACHE =
+            ets:new(?CHALLENGE_CACHE, [{keypos, #challenge.username}, named_table, public])
     end.
 
 %%
@@ -46,8 +47,8 @@ open() ->
 
 sync() ->
     maybe
-        ok ?= db:sync_disk_index(?MESSAGE_READ_CACHE),
-        ok ?= db:sync_disk_index(?POST_READ_CACHE)
+        ok ?= idets:sync(?MESSAGE_READ_CACHE),
+        ok ?= idets:sync(?POST_READ_CACHE)
     end.
 
 %%
@@ -58,7 +59,7 @@ sync() ->
 
 mark_messages(UserId, MessageIds) ->
     lists:foreach(fun(MessageId) ->
-                          ok = db:insert_disk_index(?MESSAGE_READ_CACHE, UserId, MessageId)
+                          ok = idets:insert(?MESSAGE_READ_CACHE, UserId, MessageId)
                   end, MessageIds).
 
 %%
@@ -68,7 +69,7 @@ mark_messages(UserId, MessageIds) ->
 -spec marked_messages(db_serv:user_id()) -> [db_serv:message_id()] | {error, term()}.
 
 marked_messages(UserId) ->
-    db:lookup_disk_index(?MESSAGE_READ_CACHE, UserId).
+    idets:lookup(?MESSAGE_READ_CACHE, UserId).
 
 %%
 %% Exported: mark_posts
@@ -78,7 +79,7 @@ marked_messages(UserId) ->
 
 mark_posts(UserId, PostIds) ->
     lists:foreach(fun(PostId) ->
-                          ok = db:insert_disk_index(?POST_READ_CACHE, UserId, PostId)
+                          ok = idets:insert(?POST_READ_CACHE, UserId, PostId)
                   end, PostIds).
 
 %%
@@ -88,7 +89,7 @@ mark_posts(UserId, PostIds) ->
 -spec marked_posts(db_serv:user_id()) -> [db_serv:post_id()] | {error, term()}.
 
 marked_posts(UserId) ->
-    db:lookup_disk_index(?POST_READ_CACHE, UserId).
+    idets:lookup(?POST_READ_CACHE, UserId).
 
 %%
 %% Exported: add_challenge
@@ -97,9 +98,10 @@ marked_posts(UserId) ->
 -spec add_challenge(db_serv:username(), webapp_crypto:challenge()) -> ok.
 
 add_challenge(Username, Challenge) ->
-    db:insert_ram(?CHALLENGE_CACHE, #challenge{username = Username,
-                                               challenge = Challenge,
-                                               timestamp = db:seconds_since_epoch()}).
+    true = ets:insert(?CHALLENGE_CACHE, #challenge{username = Username,
+                                                   challenge = Challenge,
+                                                   timestamp = db:seconds_since_epoch()}),
+    ok.
 
 %%
 %% Exported: get_challenge
@@ -109,7 +111,7 @@ add_challenge(Username, Challenge) ->
 
 get_challenge(Username) ->
     ok = purge_challenges(),
-    case db:lookup_ram(?CHALLENGE_CACHE, Username) of
+    case ets:lookup(?CHALLENGE_CACHE, Username) of
         [] ->
             {error, not_found};
         [#challenge{challenge = Challenge}] ->
@@ -118,12 +120,13 @@ get_challenge(Username) ->
 
 purge_challenges() ->
     Threshold = db:seconds_since_epoch() - ?CHALLENGE_TIMEOUT,
-    db:foldl_ram(fun(#challenge{username = Username, timestamp = Timestamp}, ok)
-                       when Timestamp < Threshold ->
-                         db:delete_ram(?CHALLENGE_CACHE, Username);
-                    (_, ok) ->
-                         ok
-                 end, ok, ?CHALLENGE_CACHE).
+    ets:foldl(fun(#challenge{username = Username, timestamp = Timestamp}, ok)
+                    when Timestamp < Threshold ->
+                      true = ets:delete(?CHALLENGE_CACHE, Username),
+                      ok;
+                 (_, ok) ->
+                      ok
+              end, ok, ?CHALLENGE_CACHE).
 
 %%
 %% Exported: close
@@ -133,7 +136,8 @@ purge_challenges() ->
 
 close() ->
     maybe
-        ok ?= db:close_disk_index(?MESSAGE_READ_CACHE),
-        ok ?= db:close_disk_index(?POST_READ_CACHE),
-        ok ?= db:close_ram_db(?CHALLENGE_CACHE)
+        ok ?= idets:close(?MESSAGE_READ_CACHE),
+        ok ?= idets:close(?POST_READ_CACHE),
+        true ?= ets:delete(?CHALLENGE_CACHE),
+        ok
     end.

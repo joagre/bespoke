@@ -17,7 +17,7 @@
 -spec open() -> ok | {error, term()}.
 
 open() ->
-    {ok, _} = db:open_disk(?META_DB, ?META_FILE_PATH, #meta.type),
+    {ok, _} = dets:open_file(?META_DB, [{file, ?META_FILE_PATH}, {keypos, #meta.type}]),
     case dets:lookup(?META_DB, basic) of
         [] ->
             dets:insert(?META_DB, #meta{});
@@ -29,10 +29,11 @@ open() ->
 %% Exported: dump
 %%
 
--spec dump() -> [{dets:tab_name(), [term()]}].
+-spec dump() -> [{dets:tab_name(), [#meta{}]}].
 
 dump() ->
-    [{?META_DB, [db:dump_disk(?META_DB)]}].
+    [Meta] = dets:lookup(?META_DB, basic),
+    [{?META_DB, [Meta]}].
 
 %%
 %% Exported: sync
@@ -41,7 +42,7 @@ dump() ->
 -spec sync() -> ok | {error, term()}.
 
 sync() ->
-    db:sync_disk_index(?META_DB).
+    dets:sync(?META_DB).
 
 %%
 %% Exported: close
@@ -50,7 +51,7 @@ sync() ->
 -spec close() -> ok | {error, term()}.
 
 close() ->
-    db:close_disk_index(?META_DB).
+    dets:close(?META_DB).
 
 %%
 %% Exported: read_host

@@ -249,6 +249,7 @@ subscribe_on_changes(PostIds) ->
 
 sync() ->
     serv:call(?MODULE, sync).
+
 %%
 %% Server
 %%
@@ -378,27 +379,25 @@ message_handler(S) ->
             noreply
     end.
 
-%%
-%% Database utilities
-%%
-
 open_dbs() ->
     ok = db_meta_db:open(),
     ok = db_message_db:open(),
-    {ok, _} = db:open_disk(?POST_DB, ?POST_FILE_PATH, #post.id),
-    {ok, _} = db:open_disk(?FILE_DB, ?FILE_FILE_PATH, #file.id),
-    db:open_ram(?SUBSCRIPTION_DB, #subscription.id).
+    {ok, _} = dets:open_file(?POST_DB, [{file, ?POST_FILE_PATH}, {keypos, #post.id}]),
+    ok = db_file_db:open(),
+    ?SUBSCRIPTION_DB =
+        ets:new(?SUBSCRIPTION_DB, [{keypos, #subscription.id}, named_table, public]),
+    ok.
 
 close_dbs() ->
-    _ = db:close_disk(?FILE_DB),
-    _ = db:close_disk(?POST_DB),
+    _ = db_file_db:close(),
+    _ = dets:close(?POST_DB),
     _ = db_message_db:close(),
     _ = db_meta_db:close(),
     ok.
 
 sync_dbs() ->
-    ok = db:sync_disk(?FILE_DB),
-    ok = db:sync_disk(?POST_DB),
+    ok = db_file_db:sync(),
+    ok = dets:sync(?POST_DB),
     ok = db_message_db:sync(),
     db_meta_db:sync().
 

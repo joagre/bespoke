@@ -19,17 +19,17 @@
 -spec open() -> ok.
 
 open() ->
-    {ok, _} = db:open_disk(?FILE_DB, ?FILE_FILE_PATH, #file.id),
+    {ok, _} = dets:open_file(?FILE_DB, [{file, ?FILE_FILE_PATH}, {keypos, #file.id}]),
     ok.
 
 %%
 %% Exported: dump
 %%
 
--spec dump() -> [{dets:tab_name(), [term()]}].
+-spec dump() -> [{dets:tab_name(), [#file{}]}].
 
 dump() ->
-    [{?FILE_DB, [db:dump_disk(?FILE_DB)]}].
+    [{?FILE_DB, db:dets_dump(?FILE_DB)}].
 
 %%
 %% Exported: sync
@@ -38,7 +38,7 @@ dump() ->
 -spec sync() -> ok | {error, term()}.
 
 sync() ->
-    db:sync_disk_index(?FILE_DB).
+    dets:sync(?FILE_DB).
 
 %%
 %% Exported: close
@@ -47,7 +47,7 @@ sync() ->
 -spec close() -> ok | {error, term()}.
 
 close() ->
-    db:close_disk_index(?FILE_DB).
+    dets:close(?FILE_DB).
 
 %%
 %% Exported: create_file
@@ -58,7 +58,7 @@ close() ->
 create_file(File) ->
     FileId = db_meta_db:read_next_file_id(),
     UpdatedFile = File#file{id = FileId, created = db:seconds_since_epoch()},
-    case db:insert_disk(?FILE_DB, UpdatedFile) of
+    case dets:insert(?FILE_DB, UpdatedFile) of
         ok ->
             {ok, UpdatedFile};
         {error, Reason} ->
@@ -72,11 +72,11 @@ create_file(File) ->
 -spec read_files() -> [{#file{}}].
 
 read_files() ->
-    Files = db:foldl_disk(fun(#file{is_uploading = true} = File, Acc) ->
-                                  [update_uploaded_size(File)|Acc];
-                             (File, Acc) ->
-                                  [File|Acc]
-                          end, [], ?FILE_DB),
+    Files = dets:foldl(fun(#file{is_uploading = true} = File, Acc) ->
+                               [update_uploaded_size(File)|Acc];
+                          (File, Acc) ->
+                               [File|Acc]
+                       end, [], ?FILE_DB),
     sort_files(Files).
 
 update_uploaded_size(#file{id = FileId, is_uploading = true} = File) ->
@@ -105,7 +105,7 @@ update_uploaded_size(File) ->
 read_files(FileIds) ->
     Files = lists:foldr(
               fun(FileId, Acc) ->
-                      [File] = db:lookup_disk(?FILE_DB, FileId),
+                      [File] = dets:lookup(?FILE_DB, FileId),
                       [update_uploaded_size(File)|Acc]
               end, [], FileIds),
     sort_files(Files).
@@ -117,9 +117,9 @@ read_files(FileIds) ->
 -spec delete_file(db_serv:file_id()) -> ok | {error, not_found}.
 
 delete_file(FileId) ->
-    case db:lookup_disk(?FILE_DB, FileId) of
+    case dets:lookup(?FILE_DB, FileId) of
         [File] ->
-            ok = db:delete_disk(?FILE_DB, FileId),
+            ok = dets:delete(?FILE_DB, FileId),
             ok = delete_file_on_disk(File);
         [] ->
             {error, not_found}
@@ -148,7 +148,7 @@ delete_file_on_disk(#file{id = FileId, filename = Filename}) ->
 -spec file_is_uploaded(db_serv:file_id()) -> ok | {error, not_found}.
 
 file_is_uploaded(FileId) ->
-    case db:lookup_disk(?FILE_DB, FileId) of
+    case dets:lookup(?FILE_DB, FileId) of
         [File] ->
             UpdatedFile = File#file{is_uploading = false},
             ok = dets:insert(?FILE_DB, UpdatedFile),

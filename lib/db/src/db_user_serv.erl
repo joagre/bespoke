@@ -150,7 +150,7 @@ user_db_to_list() ->
 
 init(Parent) ->
     %% Open User DB
-    {ok, _} = db:open_disk(?USER_DB, ?USER_FILE_PATH, #user.id),
+    {ok, _} = dets:open_file(?USER_DB, [{file, ?USER_FILE_PATH}, {keypos, #user.id}]),
     ?log_info("Database user server has been started"),
     {ok, #state{parent = Parent, word_list = init_word_list()}}.
 
@@ -311,7 +311,7 @@ message_handler(S) ->
     end.
 
 close_db() ->
-    _ = db:close_disk(?USER_DB),
+    _ = dets:close(?USER_DB),
     ok.
 
 %%

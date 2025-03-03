@@ -1,7 +1,8 @@
 % -*- fill-column: 100; -*-
 
--module(apptools_persistent_index).
--export([open/1, open/2, sync/1, insert/3, lookup/2, delete/2, delete/3, dump/1, close/1]).
+-module(idets).
+-export([open_file/1, open_file/2, sync/1, insert/3, lookup/2, delete/2, delete/3, dump/1,
+         close/1]).
 -export_type([index_name/0, index_tid/0, index/0, primary/0, secondary/0]).
 
 -type index_name() :: dets:tab_name().
@@ -14,14 +15,14 @@
 %% Exported: open
 %%
 
--spec open(file:name()) -> {ok, index_tid()} | {error, term()}.
+-spec open_file(file:name()) -> {ok, index_tid()} | {error, term()}.
 
-open(Filename) ->
+open_file(Filename) ->
     dets:open_file(Filename, [{type, bag}]).
 
--spec open(index_name(), file:name()) -> {ok, index_name()} | {error, term()}.
+-spec open_file(index_name(), file:name()) -> {ok, index_name()} | {error, term()}.
 
-open(Name, Filename) ->
+open_file(Name, Filename) ->
     dets:open_file(Name, [{type, bag}, {file, Filename}]).
 
 %%
