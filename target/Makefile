@@ -1,6 +1,6 @@
 BASE_DIR=/home/pi/bespoke
 JS_DIR=$(BASE_DIR)/lib/webapp/priv/docroot/js
-RUNTIME_DIR=/var/tmp/bespoke
+BESPOKE_RUNTIME_DIR=/var/tmp/bespoke
 
 # Top-level rules
 
@@ -9,7 +9,7 @@ all: bespoke-install
 bespoke-install: check-target create-env enable-bootstrap unpack-key restart
 
 bespoke-clean:
-	rm -rf $(RUNTIME_DIR)
+	rm -rf $(BESPOKE_RUNTIME_DIR)
 
 os-install: check-target create-env setup-change-ssid setup-dhcp install-toggle-interface install-bespoke-service install-wlan1-udev-rule blacklist-rfkill bespoke-install
 
@@ -22,16 +22,16 @@ check-target:
 	fi
 
 create-env:
-	mkdir -p $(RUNTIME_DIR)/tmp && \
-	mkdir -p $(RUNTIME_DIR)/message && \
-	mkdir -p $(RUNTIME_DIR)/attachment && \
-	mkdir -p $(RUNTIME_DIR)/file && \
-	mkdir -p $(RUNTIME_DIR)/log && \
-	mkdir -p $(RUNTIME_DIR)/db && \
-	touch $(RUNTIME_DIR)/bespoke.conf
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/db && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/tmp && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/message && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/post && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/file && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/log && \
+	touch $(BESPOKE_RUNTIME_DIR)/bespoke.conf
 
 enable-bootstrap:
-	touch $(RUNTIME_DIR)/bootstrap
+	touch $(BESPOKE_RUNTIME_DIR)/bootstrap
 
 unpack-key:
 	$(MAKE) -C $(BASE_DIR)/lib/webapp/priv/b3s.zone all

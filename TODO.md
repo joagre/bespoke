@@ -7,7 +7,6 @@
 
 ## Web app
 
-* Move post attachments to /var/tmp/bespoke/post/<post_id>/attachment/<filename>, ...
 * Add direct messaging frontend
 * Add Signal protocol under the hood
 * Later: Add an admin user
