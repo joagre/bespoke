@@ -15,7 +15,7 @@
 
 -record(state, {
                 subscriptions = #{} ::
-                  #{rester_socket() => {Request :: term(), db_serv:subscription_id()}}
+                  #{rester_socket() => {Request :: term(), db_subscription_db:subscription_id()}}
                }).
 
 %%

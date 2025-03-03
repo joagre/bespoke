@@ -10,7 +10,6 @@
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
 -export([message_handler/1]).
--export_type([subscription_id/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -21,20 +20,7 @@
 -define(POST_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "post.db")).
 -define(POST_DB, post_db).
 
-%% Subscription DB
--define(SUBSCRIPTION_DB, subscription_db).
-
--type subscription_id() :: reference().
--type monitor_ref() :: reference().
-
 -record(state, {parent :: pid()}).
-
--record(subscription, {
-                       id :: subscription_id() | '_',
-                       subscriber :: pid() | '_',
-                       monitor_ref :: monitor_ref(),
-                       post_ids :: [db:post_id()] | '_'
-                      }).
 
 %%
 %% Exported: start_link
@@ -216,7 +202,7 @@ file_is_uploaded(FileId) ->
 %% Exported: subscribe_on_changes
 %%
 
--spec subscribe_on_changes([db:post_id()]) -> subscription_id().
+-spec subscribe_on_changes([db:post_id()]) -> db_subscription_db:subscription_id().
 
 subscribe_on_changes(PostIds) ->
     serv:call(?MODULE, {subscribe_on_changes, self(), PostIds}).
@@ -331,23 +317,17 @@ message_handler(S) ->
         %% Subscription handling
         {call, From, {subscribe_on_changes, Subscriber, PostIds} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            SubscriptionId = make_ref(),
-            true = ets:insert(?SUBSCRIPTION_DB, #subscription{
-                                                   id = SubscriptionId,
-                                                   subscriber = Subscriber,
-                                                   monitor_ref = monitor(process, Subscriber),
-                                                   post_ids = PostIds}),
-            {reply, From, SubscriptionId};
+            {reply, From, db_subscription_db:subscribe(Subscriber, PostIds)};
         {'DOWN', MonitorRef, process, Pid, _Reason} ->
             ?log_info("Subscriber died: ~w", [Pid]),
-            true = ets:match_delete(?SUBSCRIPTION_DB,
-                                    #subscription{monitor_ref = MonitorRef, _ = '_'}),
+            ok = db_subscription_db:unsubscribe(MonitorRef),
             noreply;
-        %% System
+        %% Database management
         {call, From, sync = Call} ->
             ?log_debug("Call: ~p", [Call]),
             ok = sync_dbs(),
             {reply, From, ok};
+        %% System management
         {'EXIT', Pid, Reason} when S#state.parent == Pid ->
             ok = close_dbs(),
             exit(Reason);
@@ -364,11 +344,10 @@ open_dbs() ->
     ok = db_message_db:open(),
     {ok, _} = dets:open_file(?POST_DB, [{file, ?POST_FILE_PATH}, {keypos, #post.id}]),
     ok = db_file_db:open(),
-    ?SUBSCRIPTION_DB =
-        ets:new(?SUBSCRIPTION_DB, [{keypos, #subscription.id}, named_table, public]),
-    ok.
+    ok = db_subscription_db:open().
 
 close_dbs() ->
+    _ = db_subscription_db:close(),
     _ = db_file_db:close(),
     _ = dets:close(?POST_DB),
     _ = db_message_db:close(),
@@ -524,25 +503,8 @@ delete_all([PostId|Rest]) ->
 
 insert_and_inform(Post) when is_record(Post, post) ->
     ok = dets:insert(?POST_DB, Post),
-    inform_subscribers(Post#post.id).
+    db_subscription_db:inform_subscribers(Post#post.id).
 
 delete_and_inform(PostId) ->
     ok = dets:delete(?POST_DB, PostId),
-    inform_subscribers(PostId).
-
-inform_subscribers(PostId) ->
-    ets:foldl(
-      fun(#subscription{id = SubscriptionId,
-                        subscriber = Subscriber,
-                        monitor_ref = MonitorRef,
-                        post_ids = PostIds}, Acc) ->
-              case lists:member(PostId, PostIds) of
-                  true ->
-                      Subscriber ! {subscription_change, SubscriptionId, PostId},
-                      true = demonitor(MonitorRef),
-                      true = ets:delete(?SUBSCRIPTION_DB, SubscriptionId),
-                      Acc;
-                  false ->
-                      Acc
-              end
-      end, ok, ?SUBSCRIPTION_DB).
+    db_subscription_db:inform_subscribers(PostId).
