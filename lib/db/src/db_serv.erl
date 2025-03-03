@@ -18,15 +18,6 @@
 
 -record(state, {parent :: pid()}).
 
-
-%% REMOVE
--define(POST_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "post.db")).
--define(POST_DB, post_db).
-
-
-
-
-
 %%
 %% Exported: start_link
 %%
