@@ -2,29 +2,12 @@
 
 ## Captive portal mechanics
 
-* Make the captive portal mechanics work flawlessly. Study more
-  extensively how real-life captive portals answer to `http/https`
-  requests, `dns` lookups and `icmp` pings before and after the user
-  login phase.
+* Verify that the captive portal mechanics works flawlessly. Study more
+  extensively how real-life captive portals answer to `http/https` requests.
 
 ## Web app
 
-* Create db_user_db.erl etc for all
-
-* db_file_db.erl
-* db_post_db.erl
-
-* make sure to not marshall anything in db_serv.erl and db_user_serv.erl (you get it)
-  * Move marshalling into webapp_rest.erl for post adn everything else too
-
-
-
-* Move post attachments #post{} to /var/tmp/bespoke/post/<post_id>/attachment/<filename>, ...
-
-
-
-
-
+* Move post attachments to /var/tmp/bespoke/post/<post_id>/attachment/<filename>, ...
 * Add direct messaging frontend
 * Add Signal protocol under the hood
 * Later: Add an admin user
