@@ -195,8 +195,7 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
 %% Exported: read_top_messages
 %%
 
--spec read_top_messages(db:user_id()) ->
-          {ok, [{{#message{}, [db:attachment_id()]}}]}.
+-spec read_top_messages(db:user_id()) -> {ok, [{{#message{}, [db:attachment_id()]}}]}.
 
 read_top_messages(UserId) ->
     MessageIds = idets:lookup(?TOP_MESSAGE_DB, UserId),

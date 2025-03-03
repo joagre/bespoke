@@ -213,8 +213,7 @@ delete_all([PostId|Rest]) ->
 %% Exported: toggle_post_like
 %%
 
--spec toggle_post_like(db:post_id(), db:user_id()) ->
-          {ok, [db:user_id()]} | {error, not_found}.
+-spec toggle_post_like(db:post_id(), db:user_id()) -> {ok, [db:user_id()]} | {error, not_found}.
 
 toggle_post_like(PostId, UserId) ->
     case dets:lookup(?POST_DB, PostId) of

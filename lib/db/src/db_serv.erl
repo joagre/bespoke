@@ -2,13 +2,13 @@
 
 -module(db_serv).
 -export([start_link/0, stop/0]).
--export([get_user_id/0]).
--export([create_message/3, read_top_messages/1, read_reply_messages/2, delete_message/2]).
--export([create_post/1, read_top_posts/0, read_posts/1, read_posts/2, read_post_ids/1,
-         read_post_ids/2, delete_post/1, toggle_post_like/2]).
--export([create_file/1, read_files/0, read_files/1, delete_file/1, file_is_uploaded/1]).
--export([subscribe_on_changes/1]).
--export([sync/0]).
+-export([get_user_id/0,
+         create_message/3, read_top_messages/1, read_reply_messages/2, delete_message/2,
+         create_post/1, read_top_posts/0, read_posts/1, read_posts/2, read_post_ids/1,
+         read_post_ids/2, delete_post/1, toggle_post_like/2,
+         create_file/1, read_files/0, read_files/1, delete_file/1, file_is_uploaded/1,
+         subscribe_on_changes/1,
+         sync/0]).
 -export([message_handler/1]).
 
 -include_lib("apptools/include/log.hrl").
@@ -61,8 +61,7 @@ create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
 %% Exported: read_top_messages
 %%
 
--spec read_top_messages(db:user_id()) ->
-          {ok, [{{#message{}, [db:attachment_id()]}}]}.
+-spec read_top_messages(db:user_id()) -> {ok, [{{#message{}, [db:attachment_id()]}}]}.
 
 read_top_messages(UserId) ->
     serv:call(?MODULE, {read_top_messages, UserId}).
@@ -82,8 +81,7 @@ read_reply_messages(UserId, TopLevelMessageId) ->
 %% Exported: delete_message
 %%
 
--spec delete_message(db:user_id(), db:message_id()) ->
-          ok | {error, access_denied}.
+-spec delete_message(db:user_id(), db:message_id()) -> ok | {error, access_denied}.
 
 delete_message(UserId, MessageId) ->
     serv:call(?MODULE, {delete_message, UserId, MessageId}).
@@ -143,8 +141,7 @@ delete_post(PostId) ->
 %% Exported: toggle_post_like
 %%
 
--spec toggle_post_like(db:post_id(), db:user_id()) ->
-          {ok, [db:user_id()]} | {error, not_found}.
+-spec toggle_post_like(db:post_id(), db:user_id()) -> {ok, [db:user_id()]} | {error, not_found}.
 
 toggle_post_like(PostId, UserId) ->
     serv:call(?MODULE, {toggle_post_like, PostId, UserId}).
@@ -177,7 +174,7 @@ read_files(FileIds) ->
     serv:call(?MODULE, {read_files, FileIds}).
 
 %%
-%% delete_file
+%% Exported: delete_file
 %%
 
 -spec delete_file(db:file_id()) -> ok | {error, not_found}.

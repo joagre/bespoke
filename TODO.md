@@ -11,7 +11,7 @@
 * Add direct messaging frontend
 * Add Signal protocol under the hood
 * Later: Add an admin user
-* Later: Add Contacts - A new top level entry point in indexhtml
+* Later: Add Contacts - A new top level entry point in index.html
   - Make it possible to add/remove all username instances to Contacts with a
     single click
   - Mark all username instances in Contacts
