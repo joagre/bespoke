@@ -96,8 +96,8 @@ close() ->
 %%
 
 -spec create_message(#message{},
-                     [{db_serv:user_id(), main:filename()}],
-                     [[{db_serv:user_id(), main:filename()}]]) ->
+                     [{db:user_id(), main:filename()}],
+                     [[{db:user_id(), main:filename()}]]) ->
           {ok, #message{}} | {error, term()}.
 
 create_message(#message{top_message_id = TopMessageId, author = Author} = Message,
@@ -195,8 +195,8 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
 %% Exported: read_top_messages
 %%
 
--spec read_top_messages(db_serv:user_id()) ->
-          {ok, [{{#message{}, [db_serv:attachment_id()]}}]}.
+-spec read_top_messages(db:user_id()) ->
+          {ok, [{{#message{}, [db:attachment_id()]}}]}.
 
 read_top_messages(UserId) ->
     MessageIds = idets:lookup(?TOP_MESSAGE_DB, UserId),
@@ -219,8 +219,8 @@ lookup_messages([MessageId|Rest]) ->
 %% Exported: read_reply_messages
 %%
 
--spec read_reply_messages(db_serv:user_id(), db_serv:message_id()) ->
-          {ok, [{{#message{}, [db_serv:attachment_id()]}}]} |
+-spec read_reply_messages(db:user_id(), db:message_id()) ->
+          {ok, [{{#message{}, [db:attachment_id()]}}]} |
           {error, access_denied}.
 
 read_reply_messages(UserId, TopMessageId) ->
@@ -237,7 +237,7 @@ read_reply_messages(UserId, TopMessageId) ->
 %% Exported: delete_message
 %%
 
--spec delete_message(db_serv:user_id(), db_serv:message_id()) -> ok | {error, access_denied}.
+-spec delete_message(db:user_id(), db:message_id()) -> ok | {error, access_denied}.
 
 delete_message(UserId, MessageId) ->
     case dets:lookup(?MESSAGE_DB, MessageId) of

@@ -10,9 +10,7 @@
 -export([subscribe_on_changes/1]).
 -export([sync/0]).
 -export([message_handler/1]).
--export_type([ssid/0, host/0, user_id/0, username/0, message_id/0, attachment_id/0, post_id/0,
-              title/0, body/0, seconds_since_epoch/0, content_type/0, file_id/0, file_size/0,
-              subscription_id/0, monitor_ref/0]).
+-export_type([subscription_id/0]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -23,27 +21,9 @@
 -define(POST_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "post.db")).
 -define(POST_DB, post_db).
 
-%% File DB
--define(FILE_FILE_PATH, filename:join(?BESPOKE_DB_DIR, "file.db")).
--define(FILE_DB, file_db).
-
 %% Subscription DB
 -define(SUBSCRIPTION_DB, subscription_db).
 
-%% Types
--type ssid() :: binary().
--type host() :: binary().
--type user_id() :: integer().
--type username() :: binary().
--type message_id() :: integer().
--type attachment_id() :: integer().
--type post_id() :: binary().
--type title() :: binary().
--type body() :: binary().
--type seconds_since_epoch() :: integer().
--type content_type() :: binary().
--type file_id() :: integer().
--type file_size() :: integer().
 -type subscription_id() :: reference().
 -type monitor_ref() :: reference().
 
@@ -53,7 +33,7 @@
                        id :: subscription_id() | '_',
                        subscriber :: pid() | '_',
                        monitor_ref :: monitor_ref(),
-                       post_ids :: [post_id()] | '_'
+                       post_ids :: [db:post_id()] | '_'
                       }).
 
 %%
@@ -78,7 +58,7 @@ stop() ->
 %% Exported: get_user_id
 %%
 
--spec get_user_id() -> user_id().
+-spec get_user_id() -> db:user_id().
 
 get_user_id() ->
     serv:call(?MODULE, get_user_id).
@@ -88,8 +68,8 @@ get_user_id() ->
 %%
 
 -spec create_message(#message{},
-                     [{db_serv:user_id(), main:filename()}],
-                     [[{db_serv:user_id(), main:filename()}]]) ->
+                     [{db:user_id(), main:filename()}],
+                     [[{db:user_id(), main:filename()}]]) ->
           {ok, #message{}} | {error, file:posix() | access_denied}.
 
 create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
@@ -99,8 +79,8 @@ create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
 %% Exported: read_top_messages
 %%
 
--spec read_top_messages(db_serv:user_id()) ->
-          {ok, [{{#message{}, [db_serv:attachment_id()]}}]}.
+-spec read_top_messages(db:user_id()) ->
+          {ok, [{{#message{}, [db:attachment_id()]}}]}.
 
 read_top_messages(UserId) ->
     serv:call(?MODULE, {read_top_messages, UserId}).
@@ -109,8 +89,8 @@ read_top_messages(UserId) ->
 %% Exported: read_reply_messages
 %%
 
--spec read_reply_messages(db_serv:user_id(), db_serv:message_id()) ->
-          {ok, [{{#message{}, [db_serv:attachment_id()]}}]} |
+-spec read_reply_messages(db:user_id(), db:message_id()) ->
+          {ok, [{{#message{}, [db:attachment_id()]}}]} |
           {error, access_denied}.
 
 read_reply_messages(UserId, TopLevelMessageId) ->
@@ -120,7 +100,7 @@ read_reply_messages(UserId, TopLevelMessageId) ->
 %% Exported: delete_message
 %%
 
--spec delete_message(db_serv:user_id(), db_serv:message_id()) ->
+-spec delete_message(db:user_id(), db:message_id()) ->
           ok | {error, access_denied}.
 
 delete_message(UserId, MessageId) ->
@@ -148,7 +128,7 @@ read_top_posts() ->
 %% Exported: read_posts
 %%
 
--spec read_posts([post_id()], flat | recursive) -> [#post{}].
+-spec read_posts([db:post_id()], flat | recursive) -> [#post{}].
 
 read_posts(PostIds) ->
     read_posts(PostIds, flat).
@@ -160,7 +140,7 @@ read_posts(PostIds, Mode) ->
 %% Exported: read_post_ids
 %%
 
--spec read_post_ids([post_id()], flat | recursive) -> [post_id()].
+-spec read_post_ids([db:post_id()], flat | recursive) -> [db:post_id()].
 
 read_post_ids(PostIds) ->
     read_post_ids(PostIds, flat).
@@ -172,7 +152,7 @@ read_post_ids(PostIds, Mode) ->
 %% delete_post
 %%
 
--spec delete_post(post_id()) -> ok | {error, not_found}.
+-spec delete_post(db:post_id()) -> ok | {error, not_found}.
 
 delete_post(PostId) ->
     serv:call(?MODULE, {delete_post, PostId}).
@@ -181,8 +161,8 @@ delete_post(PostId) ->
 %% Exported: toggle_post_like
 %%
 
--spec toggle_post_like(post_id(), user_id()) ->
-          {ok, [user_id()]} | {error, not_found}.
+-spec toggle_post_like(db:post_id(), db:user_id()) ->
+          {ok, [db:user_id()]} | {error, not_found}.
 
 toggle_post_like(PostId, UserId) ->
     serv:call(?MODULE, {toggle_post_like, PostId, UserId}).
@@ -209,7 +189,7 @@ read_files() ->
 %% Exported: read_files
 %%
 
--spec read_files([file_id()]) -> [#file{}].
+-spec read_files([db:file_id()]) -> [#file{}].
 
 read_files(FileIds) ->
     serv:call(?MODULE, {read_files, FileIds}).
@@ -218,7 +198,7 @@ read_files(FileIds) ->
 %% delete_file
 %%
 
--spec delete_file(file_id()) -> ok | {error, not_found}.
+-spec delete_file(db:file_id()) -> ok | {error, not_found}.
 
 delete_file(FileId) ->
     serv:call(?MODULE, {delete_file, FileId}).
@@ -227,7 +207,7 @@ delete_file(FileId) ->
 %% file_is_uploaded
 %%
 
--spec file_is_uploaded(file_id()) -> ok | {error, not_found}.
+-spec file_is_uploaded(db:file_id()) -> ok | {error, not_found}.
 
 file_is_uploaded(FileId) ->
     serv:call(?MODULE, {file_is_uploaded, FileId}).
@@ -236,7 +216,7 @@ file_is_uploaded(FileId) ->
 %% Exported: subscribe_on_changes
 %%
 
--spec subscribe_on_changes([post_id()]) -> subscription_id().
+-spec subscribe_on_changes([db:post_id()]) -> subscription_id().
 
 subscribe_on_changes(PostIds) ->
     serv:call(?MODULE, {subscribe_on_changes, self(), PostIds}).

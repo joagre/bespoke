@@ -100,7 +100,7 @@ update_uploaded_size(File) ->
 %% Exported: read_files
 %%
 
--spec read_files([db_serv:file_id()]) -> [#file{}].
+-spec read_files([db:file_id()]) -> [#file{}].
 
 read_files(FileIds) ->
     Files = lists:foldr(
@@ -114,7 +114,7 @@ read_files(FileIds) ->
 %% Exported: delete_file
 %%
 
--spec delete_file(db_serv:file_id()) -> ok | {error, not_found}.
+-spec delete_file(db:file_id()) -> ok | {error, not_found}.
 
 delete_file(FileId) ->
     case dets:lookup(?FILE_DB, FileId) of
@@ -145,7 +145,7 @@ delete_file_on_disk(#file{id = FileId, filename = Filename}) ->
 %% Exported: file_is_uploaded
 %%
 
--spec file_is_uploaded(db_serv:file_id()) -> ok | {error, not_found}.
+-spec file_is_uploaded(db:file_id()) -> ok | {error, not_found}.
 
 file_is_uploaded(FileId) ->
     case dets:lookup(?FILE_DB, FileId) of

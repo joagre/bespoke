@@ -55,7 +55,7 @@ stop() ->
 %% Exported: get_user
 %%
 
--spec get_user(db_serv:user_id()) ->
+-spec get_user(db:user_id()) ->
           {ok, #user{}} | {error, not_found}.
 
 get_user(UserId) ->
@@ -65,7 +65,7 @@ get_user(UserId) ->
 %% Exported: get_user_from_username
 %%
 
--spec get_user_from_username(db_serv:username()) ->
+-spec get_user_from_username(db:username()) ->
           {ok, #user{}} | {error, not_found}.
 
 get_user_from_username(Username) ->
@@ -94,7 +94,7 @@ get_user_from_mac_address(MacAddress) ->
 %% Exported: insert_user
 %%
 
--spec insert_user(db_serv:username()) -> {ok, #user{}}.
+-spec insert_user(db:username()) -> {ok, #user{}}.
 
 insert_user(Username) ->
     serv:call(?MODULE, {insert_user, Username}).
@@ -103,7 +103,7 @@ insert_user(Username) ->
 %% Exported: login
 %%
 
--spec login(db_serv:username(), mac_address(), password_salt(), password_hash()) ->
+-spec login(db:username(), mac_address(), password_salt(), password_hash()) ->
           {ok, #user{}} | {error, failure}.
 
 login(Username, MacAddress, PasswordSalt, PasswordHash) ->
@@ -113,13 +113,13 @@ login(Username, MacAddress, PasswordSalt, PasswordHash) ->
 %% Exported: switch_user
 %%
 
--spec switch_user(db_serv:username(), mac_address()) ->
+-spec switch_user(db:username(), mac_address()) ->
           {ok, #user{}} | {error, failure}.
 
 switch_user(Username, MacAddress) ->
     serv:call(?MODULE, {switch_user, Username, MacAddress}).
 
--spec switch_user(db_serv:username(), mac_address(), password_salt(), password_hash()) ->
+-spec switch_user(db:username(), mac_address(), password_salt(), password_hash()) ->
           #user{}.
 
 switch_user(Username, MacAddress, PasswordSalt, PasswordHash) ->
@@ -129,7 +129,7 @@ switch_user(Username, MacAddress, PasswordSalt, PasswordHash) ->
 %% Exported: change_password
 %%
 
--spec change_password(db_serv:username(), mac_address(), password_salt(), password_hash()) ->
+-spec change_password(db:username(), mac_address(), password_salt(), password_hash()) ->
           ok | {error, failure}.
 
 change_password(Username, MacAddress, PasswordSalt, PasswordHash) ->
@@ -149,8 +149,7 @@ user_db_to_list() ->
 %%
 
 init(Parent) ->
-    %% Open User DB
-    {ok, _} = dets:open_file(?USER_DB, [{file, ?USER_FILE_PATH}, {keypos, #user.id}]),
+    ok = open_db(),
     ?log_info("Database user server has been started"),
     {ok, #state{parent = Parent, word_list = init_word_list()}}.
 
@@ -192,7 +191,7 @@ message_handler(S) ->
                     User = #user{id = db_serv:get_user_id(),
                                  name = generate_username(S#state.word_list),
                                  mac_address = MacAddress,
-                                 updated = timestamp(),
+                                 updated = db:seconds_since_epoch(),
                                  session_id = session_id()},
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, User};
@@ -209,7 +208,7 @@ message_handler(S) ->
             User = #user{id = db_serv:get_user_id(),
                          name = Username,
                          mac_address = <<"00:00:00:00:00:00">>,
-                         updated = timestamp(),
+                         updated = db:seconds_since_epoch(),
                          session_id = session_id()},
             ok = dets:insert(?USER_DB, User),
             {reply, From, {ok, User}};
@@ -221,7 +220,7 @@ message_handler(S) ->
                                             mac_address = MacAddress,
                                             password_salt = PasswordSalt,
                                             password_hash = PasswordHash,
-                                            updated = timestamp()},
+                                            updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, UpdatedUser),
                     {reply, From, {ok, UpdatedUser}};
                 [] ->
@@ -235,7 +234,7 @@ message_handler(S) ->
                 [#user{password_hash = not_set} = User] ->
                     UpdatedUser = User#user{session_id = session_id(),
                                             mac_address = MacAddress,
-                                            updated = timestamp()},
+                                            updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, UpdatedUser),
                     {reply, From, {ok, UpdatedUser}};
                 %% User *with* password exists
@@ -247,7 +246,7 @@ message_handler(S) ->
                                  name = Username,
                                  session_id = session_id(),
                                  mac_address = MacAddress,
-                                 updated = timestamp()},
+                                 updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, {ok, User}}
             end;
@@ -261,14 +260,14 @@ message_handler(S) ->
                                             mac_address = MacAddress,
                                             password_salt = PasswordSalt,
                                             password_hash = PasswordHash,
-                                            updated = timestamp()},
+                                            updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, UpdatedUser};
                 %% User *with* password exists
                 [User] ->
                     UpdatedUser = User#user{session_id = session_id(),
                                             mac_address = MacAddress,
-                                            updated = timestamp()},
+                                            updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, UpdatedUser};
                 %% Create new user *with* password
@@ -279,7 +278,7 @@ message_handler(S) ->
                                  mac_address = MacAddress,
                                  password_salt = PasswordSalt,
                                  password_hash = PasswordHash,
-                                 updated = timestamp()},
+                                 updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, User),
                     {reply, From, User}
             end;
@@ -309,6 +308,10 @@ message_handler(S) ->
             ?log_error("Unknown message: ~p", [UnknownMessage]),
             noreply
     end.
+
+open_db() ->
+    {ok, _} = dets:open_file(?USER_DB, [{file, ?USER_FILE_PATH}, {keypos, #user.id}]),
+    ok.
 
 close_db() ->
     _ = dets:close(?USER_DB),
@@ -376,9 +379,6 @@ is_valid_word(Word) ->
 %%
 %% Utilities
 %%
-
-timestamp() ->
-    os:system_time(second).
 
 session_id() ->
     crypto:strong_rand_bytes(?SESSION_ID_SIZE).

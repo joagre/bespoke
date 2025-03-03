@@ -57,7 +57,7 @@ close() ->
 %% Exported: read_host
 %%
 
--spec read_host() -> db_serv:host() | not_set.
+-spec read_host() -> db:host() | not_set.
 
 read_host() ->
     [#meta{host = Host}] = dets:lookup(?META_DB, basic),
@@ -67,7 +67,7 @@ read_host() ->
 %% Exported: read_next_user_id
 %%
 
--spec read_next_user_id() -> db_serv:user_id().
+-spec read_next_user_id() -> db:user_id().
 
 read_next_user_id() ->
     step_meta_id(#meta.next_user_id).
@@ -76,7 +76,7 @@ read_next_user_id() ->
 %% Exported: read_next_message_id
 %%
 
--spec read_next_message_id() -> db_serv:message_id().
+-spec read_next_message_id() -> db:message_id().
 
 read_next_message_id() ->
     step_meta_id(#meta.next_message_id).
@@ -85,7 +85,7 @@ read_next_message_id() ->
 %% Exported: read_next_attachment_id
 %%
 
--spec read_next_attachment_id() -> db_serv:attachment_id().
+-spec read_next_attachment_id() -> db:attachment_id().
 
 read_next_attachment_id() ->
     step_meta_id(#meta.next_attachment_id).
@@ -103,7 +103,7 @@ read_next_post_id() ->
 %% Exported: read_next_file_id
 %%
 
--spec read_next_file_id() -> db_serv:file_id().
+-spec read_next_file_id() -> db:file_id().
 
 read_next_file_id() ->
     step_meta_id(#meta.next_file_id).

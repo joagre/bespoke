@@ -20,7 +20,7 @@
 -define(CHALLENGE_CACHE, challenge_cache).
 -define(CHALLENGE_TIMEOUT, 5 * 60). % 5 minutes in seconds
 -record(challenge, {
-                    username :: db_serv:username(),
+                    username :: db:username(),
                     challenge :: webapp_crypto:challenge(),
                     timestamp :: db:seconds_since_epoch()
                    }).
@@ -36,7 +36,8 @@ open() ->
         {ok, _} ?= idets:open_file(?MESSAGE_READ_CACHE, ?MESSAGE_READ_FILE_PATH),
         {ok, _} ?= idets:open_file(?POST_READ_CACHE, ?POST_READ_FILE_PATH),
         ?CHALLENGE_CACHE =
-            ets:new(?CHALLENGE_CACHE, [{keypos, #challenge.username}, named_table, public])
+            ets:new(?CHALLENGE_CACHE, [{keypos, #challenge.username}, named_table, public]),
+        ok
     end.
 
 %%
@@ -55,7 +56,7 @@ sync() ->
 %% Exported: mark_messages
 %%
 
--spec mark_messages(db_serv:user_id(), [db_serv:message_id()]) -> ok.
+-spec mark_messages(db:user_id(), [db:message_id()]) -> ok.
 
 mark_messages(UserId, MessageIds) ->
     lists:foreach(fun(MessageId) ->
@@ -66,7 +67,7 @@ mark_messages(UserId, MessageIds) ->
 %% Exported: marked_messages
 %%
 
--spec marked_messages(db_serv:user_id()) -> [db_serv:message_id()] | {error, term()}.
+-spec marked_messages(db:user_id()) -> [db:message_id()] | {error, term()}.
 
 marked_messages(UserId) ->
     idets:lookup(?MESSAGE_READ_CACHE, UserId).
@@ -75,7 +76,7 @@ marked_messages(UserId) ->
 %% Exported: mark_posts
 %%
 
--spec mark_posts(db_serv:user_id(), [db_serv:post_id()]) -> ok.
+-spec mark_posts(db:user_id(), [db:post_id()]) -> ok.
 
 mark_posts(UserId, PostIds) ->
     lists:foreach(fun(PostId) ->
@@ -86,7 +87,7 @@ mark_posts(UserId, PostIds) ->
 %% Exported: marked_posts
 %%
 
--spec marked_posts(db_serv:user_id()) -> [db_serv:post_id()] | {error, term()}.
+-spec marked_posts(db:user_id()) -> [db:post_id()] | {error, term()}.
 
 marked_posts(UserId) ->
     idets:lookup(?POST_READ_CACHE, UserId).
@@ -95,7 +96,7 @@ marked_posts(UserId) ->
 %% Exported: add_challenge
 %%
 
--spec add_challenge(db_serv:username(), webapp_crypto:challenge()) -> ok.
+-spec add_challenge(db:username(), webapp_crypto:challenge()) -> ok.
 
 add_challenge(Username, Challenge) ->
     true = ets:insert(?CHALLENGE_CACHE, #challenge{username = Username,
@@ -107,7 +108,7 @@ add_challenge(Username, Challenge) ->
 %% Exported: get_challenge
 %%
 
--spec get_challenge(db_serv:username()) -> {ok, webapp_crypto:challenge()} | {error, not_found}.
+-spec get_challenge(db:username()) -> {ok, webapp_crypto:challenge()} | {error, not_found}.
 
 get_challenge(Username) ->
     ok = purge_challenges(),
