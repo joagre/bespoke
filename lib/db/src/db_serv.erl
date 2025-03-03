@@ -1,13 +1,19 @@
 % -*- fill-column: 100; -*-
 
 -module(db_serv).
--export([start_link/0, stop/0]).
--export([get_user_id/0,
+-export([start_link/0, stop/0,
+         %% User management
+         get_user_id/0,
+         %% Direct messaging
          create_message/3, read_top_messages/1, read_reply_messages/2, delete_message/2,
+         %% Forum
          create_post/1, read_top_posts/0, read_posts/1, read_posts/2, read_post_ids/1,
          read_post_ids/2, delete_post/1, toggle_post_like/2,
+         %% File sharing
          create_file/1, read_files/0, read_files/1, delete_file/1, file_is_uploaded/1,
+         %% Subscription management
          subscribe_on_changes/1,
+         %% Database management
          sync/0]).
 -export([message_handler/1]).
 
