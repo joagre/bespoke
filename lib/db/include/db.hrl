@@ -11,8 +11,8 @@
 -define(BESPOKE_FILE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "file")).
 
 %% System disk layout:
-%% ?BESPOKE_RUNTIME_DIR/db
-%%                     /tmp
+%% ?BESPOKE_RUNTIME_DIR/db/
+%%                     /tmp/
 
 -record(meta,
         {
@@ -72,7 +72,7 @@
         }).
 
 %% File sharing disk layout:
-%% ?BESPOKE_FILE_PATH/<file-id>-<filename>
+%% ?BESPOKE_FILE_PATH/<file-id>-<filename>, ...
 
 -record(file,
         {
