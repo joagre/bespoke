@@ -38,8 +38,8 @@
         }).
 
 %% Direct messaging disk layout:
-%% ?BESPOKE_MESSAGE_PATH/<message_id>/<user_id>, ...
-%%                                   /<user_id>-<attachment_id>-<filename>, ...
+%% ?BESPOKE_MESSAGE_PATH/<message_id>/<user_id>
+%%                                   /<user_id>-<attachment_id>-<filename>
 
 -record(message,
         {
@@ -51,7 +51,7 @@
         }).
 
 %% Forum disk layout:
-%% ?BESPOKE_POST_PATH/<post_id>/<attachment_id>-<filename>, ...
+%% ?BESPOKE_POST_PATH/<post_id>/<attachment_id>-<filename>
 
 -record(post,
         {
@@ -72,7 +72,7 @@
         }).
 
 %% File sharing disk layout:
-%% ?BESPOKE_FILE_PATH/<file-id>-<filename>, ...
+%% ?BESPOKE_FILE_PATH/<file-id>-<filename>
 
 -record(file,
         {
