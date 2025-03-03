@@ -1,11 +1,13 @@
+BESPOKE_RUNTIME_DIR=/var/tmp/bespoke
+
 all:
-	mkdir -p /var/tmp/bespoke/tmp && \
-	mkdir -p /var/tmp/bespoke/message && \
-	mkdir -p /var/tmp/bespoke/attachment && \
-	mkdir -p /var/tmp/bespoke/file && \
-	mkdir -p /var/tmp/bespoke/log && \
-	mkdir -p /var/tmp/bespoke/db && \
-	touch /var/tmp/bespoke/bespoke.conf && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/db && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/tmp && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/message && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/post && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/file && \
+	mkdir -p $(BESPOKE_RUNTIME_DIR)/log && \
+	touch $(BESPOKE_RUNTIME_DIR)/bespoke.conf && \
 	$(MAKE) -C external all && \
 	$(MAKE) -C lib all
 
@@ -29,7 +31,7 @@ clean:
 	rm -f .dialyzer.plt
 
 reset:
-	rm -rf /var/tmp/bespoke/* && \
+	rm -rf $(BESPOKE_RUNTIME_DIR)/* && \
 	$(MAKE) all
 
 mrproper: clean

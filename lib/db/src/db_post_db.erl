@@ -122,7 +122,7 @@ check_post(_) ->
     false.
 
 move_tmp_attachments(TmpAttachments, NewPostId) ->
-    NewPath = filename:join([?BESPOKE_ATTACHMENT_PATH, NewPostId]),
+    NewPath = filename:join([?BESPOKE_POST_PATH, NewPostId]),
     ok = file:make_dir(NewPath),
     TmpPath = ?BESPOKE_TMP_PATH,
     lists:map(

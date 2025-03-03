@@ -3,19 +3,21 @@
 -ifndef(DB_HRL).
 -define(DB_HRL, true).
 
-%% FIXME: Cleanup, see disk layout comment below
-%% /var/tmp/bespoke/db
-%% /var/tmp/bespoke/tmp
-%% /var/tmp/bespoke/message
-%% /var/tmp/bespoke/attachment
-%% /var/tmp/bespoke/file
-
 -define(BESPOKE_RUNTIME_DIR, "/var/tmp/bespoke").
+
 -define(BESPOKE_DB_DIR, filename:join(?BESPOKE_RUNTIME_DIR, "db")).
+
 -define(BESPOKE_TMP_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "tmp")).
+
 -define(BESPOKE_MESSAGE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "message")).
--define(BESPOKE_ATTACHMENT_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "attachment")).
+
+-define(BESPOKE_POST_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "post")).
+
 -define(BESPOKE_FILE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "file")).
+
+%% System disk layout:
+%% ?BESPOKE_RUNTIME_DIR/db
+%%                     /tmp
 
 -record(meta,
         {
@@ -40,10 +42,9 @@
          messages = [] :: [db:message_id()] | '_'
         }).
 
-%% Message disk layout:
-%% ?BESPOKE_MESSAGE_PATH/
-%%   <message_id>/<user_id>, ...
-%%   <message_id>/<user_id>-<attachment_id>, ...
+%% Direct messaging disk layout:
+%% ?BESPOKE_MESSAGE_PATH/<message_id>/<user_id>, ...
+%%                                   /<user_id>-<attachment_id>-<filename>, ...
 
 -record(message,
         {
@@ -53,6 +54,9 @@
          author = not_set :: db:user_id() | not_set,
          created = not_set :: db:seconds_since_epoch() | not_set
         }).
+
+%% Forum disk layout:
+%% ?BESPOKE_POST_PATH/attachment/<post_id>/<attachment_id>-<filename>, ...
 
 -record(post,
         {
@@ -71,6 +75,9 @@
          likers = [] :: [db:user_id()] | '_',
          attachments = [] :: [{main:filename(), db:content_type()}] | '_'
         }).
+
+%% File sharing disk layout:
+%% ?BESPOKE_FILE_PATH/<file-id>-<filename>
 
 -record(file,
         {
