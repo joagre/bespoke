@@ -4,15 +4,10 @@
 -define(DB_HRL, true).
 
 -define(BESPOKE_RUNTIME_DIR, "/var/tmp/bespoke").
-
 -define(BESPOKE_DB_DIR, filename:join(?BESPOKE_RUNTIME_DIR, "db")).
-
 -define(BESPOKE_TMP_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "tmp")).
-
 -define(BESPOKE_MESSAGE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "message")).
-
 -define(BESPOKE_POST_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "post")).
-
 -define(BESPOKE_FILE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "file")).
 
 %% System disk layout:
@@ -56,7 +51,7 @@
         }).
 
 %% Forum disk layout:
-%% ?BESPOKE_POST_PATH/attachment/<post_id>/<attachment_id>-<filename>, ...
+%% ?BESPOKE_POST_PATH/<post_id>/<attachment_id>-<filename>, ...
 
 -record(post,
         {
