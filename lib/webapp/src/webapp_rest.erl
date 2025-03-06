@@ -55,7 +55,7 @@ change_ssid(SSID) ->
     TargetBinDirPath = filename:join([BaseDirPath, "target/bin"]),
     ScriptPath = filename:join([TargetBinDirPath, "change_ssid.sh"]),
     Command = lists:flatten(io_lib:format("sudo bash ~s \"~s\" 2>&1; echo $?", [ScriptPath, SSID])),
-    ?log_info("Calling: ~s\n", [Command]),
+    ?log_info("Calling: ~s", [Command]),
     case string:trim(os:cmd(Command)) of
         "0" ->
             main:insert_config("SSID", ?b2l(SSID));
@@ -68,8 +68,8 @@ change_ssid(SSID) ->
 %% Exported: init callback
 %%
 
-init(_Socket, _Options) ->
-    %%?log_info("init: ~p", [Options]),
+init(_Socket, Options) ->
+    ?log_info("init: ~p", [Options]),
     {ok, #state{}}.
 
 %%
@@ -87,11 +87,11 @@ info(Socket, {subscription_change, SubscriptionId, PostId}, State) ->
                                            maps:remove(Socket, State#state.subscriptions)},
             {ok, UpdatedState};
         SpuriousSubscriptionId ->
-            ?log_error("Spurious subscription id ~p\n", [SpuriousSubscriptionId]),
+            ?log_error("Spurious subscription id ~p", [SpuriousSubscriptionId]),
             {ok, State}
     end;
-info(_Socket, _Info, State) ->
-    %%?log_info("info: ~p\n", [{Info, State}]),
+info(_Socket, Info, State) ->
+    ?log_info("info: ~p", [{Info, State}]),
     {ok, State}.
 
 %%
@@ -99,7 +99,7 @@ info(_Socket, _Info, State) ->
 %%
 
 close(_Socket, State) ->
-    %%?log_info("close: ~p\n", [State]),
+    ?log_info("close: ~p", [State]),
     {ok, State}.
 
 %%
@@ -107,7 +107,7 @@ close(_Socket, State) ->
 %%
 
 error(_Socket, Error, State) ->
-    ?log_error("error: ~p", [{Error, State}]),
+    ?log_error("**************************************************************************error: ~p", [{Error, State}]),
     {stop, normal, State}.
 
 %%
@@ -121,7 +121,8 @@ http_request(Socket, Request, Body, State) ->
     ?log_info("~s", [rester_http:format_request(Request)]),
     if
         size(Body) > 0 ->
-            ?log_info("Body = ~p", [Body]);
+            ok;
+            %%?log_info("Body = ~p", [Body]);
         true ->
             ok
     end,
@@ -130,7 +131,7 @@ http_request(Socket, Request, Body, State) ->
             Result
     catch
 	_Class:Reason:StackTrace ->
-	    ?log_error("http_request crashed: ~p\n~p\n", [Reason, StackTrace]),
+	    ?log_error("http_request crashed: ~p\n~p", [Reason, StackTrace]),
 	    erlang:error(Reason)
     end.
 
