@@ -108,7 +108,7 @@ close(_Socket, State) ->
 %%
 
 error(_Socket, Error, State) ->
-    ?log_error("**************************************************************************error: ~p", [{Error, State}]),
+    ?log_error("error: ~p", [{Error, State}]),
     {stop, normal, State}.
 
 %%
