@@ -1,4 +1,4 @@
-% -*- fill-column: 100; -*-
+% -*- fill-column:s 100; -*-
 
 -module(webapp_rest).
 -export([start_link/0, change_ssid/1]).
@@ -14,8 +14,8 @@
 -include("webapp_crypto.hrl").
 
 -record(state, {
-                subscriptions = #{} ::
-                  #{rester_socket() => {Request :: term(), db_subscription_db:subscription_id()}}
+                subscriptions = [] ::
+                  [{db_subscription_db:subscription_id(), Request :: term()}]
                }).
 
 %%
@@ -76,19 +76,20 @@ init(_Socket, Options) ->
 %% Exported: info callback
 %%
 
+info(_Socket, stop_subscription, State) ->
+    ?log_info("Subscription has been stopped"),
+    {stop, normal, State};
 info(Socket, {subscription_change, SubscriptionId, PostId}, State) ->
     ?log_info("Post ~s has been changed", [PostId]),
-    case maps:get(Socket, State#state.subscriptions, not_found) of
-        not_found ->
+    case lists:keytake(SubscriptionId, 1, State#state.subscriptions) of
+        false ->
+            ?log_error("Spurious subscription id ~p", [SubscriptionId]),
             {ok, State};
-        {Request, SubscriptionId} ->
-            send_response(Socket, Request, {json, PostId}),
-            UpdatedState = State#state{subscriptions =
-                                           maps:remove(Socket, State#state.subscriptions)},
-            {ok, UpdatedState};
-        SpuriousSubscriptionId ->
-            ?log_error("Spurious subscription id ~p", [SpuriousSubscriptionId]),
-            {ok, State}
+        {value, {SubscriptionId, Request}, RemainingSubscriptions} ->
+            _ = send_response(Socket, Request, {json, PostId}),
+            UpdatedState = State#state{subscriptions = RemainingSubscriptions},
+            ok = webapp_session_serv:subscription_ended(SubscriptionId),
+            {stop, normal, UpdatedState}
     end;
 info(_Socket, Info, State) ->
     ?log_info("info: ~p", [{Info, State}]),
@@ -268,6 +269,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                 0 ->
                     case filelib:is_regular(AbsFilePath) of
                         true ->
+                            ok = stop_subscriptions(Request, AbsFilePath),
                             send_response(
                               Socket, Request, [{content_type, {url, UriPath}}|
                                                 no_cache_headers(AbsFilePath)],
@@ -279,21 +281,36 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     GzippedAbsFilePath = AbsFilePath ++ ".gz",
                     case filelib:is_regular(GzippedAbsFilePath) of
                         true ->
-                            send_response(Socket, Request, [{content_type, {url, UriPath}},
-                                                            {"Content-Encoding", "gzip"}|
-                                                            no_cache_headers(GzippedAbsFilePath)],
+                            send_response(Socket, Request,
+                                          [{content_type, {url, UriPath}},
+                                           {"Content-Encoding", "gzip"}|
+                                           no_cache_headers(GzippedAbsFilePath)],
                                           {ok, {file, GzippedAbsFilePath}});
                         false ->
                             case filelib:is_regular(AbsFilePath) of
                                 true ->
-                                    send_response(Socket, Request, [{content_type, {url, UriPath}}|
-                                                                    no_cache_headers(AbsFilePath)],
+                                    send_response(Socket, Request,
+                                                  [{content_type, {url, UriPath}}|
+                                                   no_cache_headers(AbsFilePath)],
                                                   {ok, {file, AbsFilePath}});
                                 false ->
                                     send_response(Socket, Request, not_found)
                             end
                     end
             end
+    end.
+
+stop_subscriptions(Request, AbsFilePath) ->
+    case apptools_mime:mime_type(?l2b(AbsFilePath)) of
+        {ok, <<"text/html">>} ->
+            case get_bespoke_cookie(Request) of
+                {ok, #{<<"sessionId">> := SessionId}} ->
+                    webapp_session_serv:stop_subscriptions(SessionId);
+                _ ->
+                    ok
+            end;
+        _ ->
+            ok
     end.
 
 %%
@@ -557,11 +574,13 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case decode(Socket, Request, Body, subscribe_on_changes) of
                 {return, Result} ->
                     Result;
-                {ok, _User, PostIds} ->
+                {ok, #user{session_id = SessionId}, PostIds} ->
+                    ok = webapp_session_serv:stop_subscriptions(SessionId),
                     SubscriptionId = db_serv:subscribe_on_changes(PostIds),
-                    UpdatedState = State#state{subscriptions =
-                                                   maps:put(Socket, {Request, SubscriptionId},
-                                                            State#state.subscriptions)},
+                    ok = webapp_session_serv:subscription_started(SessionId, SubscriptionId),
+                    UpdatedState =
+                        State#state{subscriptions =
+                                        [{SubscriptionId, Request}|State#state.subscriptions]},
                     {ok, UpdatedState}
             end;
         %% File uploading
@@ -741,7 +760,7 @@ get_bespoke_cookie(Request) ->
     get_cookie("bespoke", (Request#http_request.headers)#http_chdr.cookie).
 
 get_cookie(_Name, []) ->
-    {errnor, not_found};
+    {error, not_found};
 get_cookie(Name, [Cookie|Rest]) ->
     case string:tokens(Cookie, "=") of
         [Name, Value] ->
@@ -806,8 +825,12 @@ decode(Socket, Request, Body, MarshallingFun, Authenticate) ->
 authenticate(_Request, false) ->
     {ok, no_user};
 authenticate(Request, true) ->
-    {ok, #{<<"sessionId">> := SessionId}} = get_bespoke_cookie(Request),
-    db_user_serv:get_user_from_session_id(base64:decode(SessionId)).
+    case get_bespoke_cookie(Request) of
+        {ok, #{<<"sessionId">> := SessionId}} ->
+            db_user_serv:get_user_from_session_id(base64:decode(SessionId));
+        {error, not_found} ->
+            {error, not_found}
+    end.
 
 %%
 %% HTTP response (rest_util:response/3 is just too unwieldly)
@@ -820,7 +843,7 @@ send_response(Socket, Request, Opts, {ok, Body}) ->
     ?log_info("Response: ~p", [Body]),
     rester_http_server:response_r(Socket, Request, 200, "OK", Body, Opts);
 send_response(Socket, Request, Opts, {json, JsonTerm}) ->
-    ?log_info("Response: ~p", [JsonTerm]),
+    ?log_info("JSON Response: ~p", [JsonTerm]),
     Body = json:encode(JsonTerm),
     rester_http_server:response_r(Socket, Request, 200, "OK", Body,
                                   [{content_type, "application/json"}|Opts]);

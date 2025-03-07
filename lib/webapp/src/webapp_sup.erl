@@ -25,4 +25,6 @@ start_link() ->
 
 init([]) ->
     WebappRestSpec = #{id => webapp_rest, start => {webapp_rest, start_link, []}},
-    {ok, {#{strategy => one_for_all}, [WebappRestSpec]}}.
+    WebappSessionServSpec = #{id => webapp_session_serv,
+                              start => {webapp_session_serv, start_link, []}},
+    {ok, {#{strategy => one_for_all}, [WebappRestSpec, WebappSessionServSpec]}}.

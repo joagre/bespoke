@@ -1,4 +1,4 @@
-% -*- fill-column: 100; -*-
+% -*- fill-cowelumn: 100; -*-
 
 -module(db_serv).
 -export([start_link/0, stop/0,
@@ -12,7 +12,7 @@
          %% File sharing
          create_file/1, read_files/0, read_files/1, delete_file/1, file_is_uploaded/1,
          %% Subscription management
-         subscribe_on_changes/1,
+         subscribe_on_changes/1, unsubscribe_on_changes/1,
          %% Database management
          sync/0]).
 -export([message_handler/1]).
@@ -207,6 +207,15 @@ subscribe_on_changes(PostIds) ->
     serv:call(?MODULE, {subscribe_on_changes, self(), PostIds}).
 
 %%
+%% Exported: unsubscribe_on_changes
+%%
+
+-spec unsubscribe_on_changes(db_subscription_db:subscription_id()) -> ok.
+
+unsubscribe_on_changes(SubscriptionId) ->
+    serv:call(?MODULE, {unsubscribe_on_changes, SubscriptionId}).
+
+%%
 %% Exported: sync
 %%
 
@@ -285,11 +294,14 @@ message_handler(S) ->
             {reply, From, db_file_db:file_is_uploaded(FileId)};
         %% Subscription management
         {call, From, {subscribe_on_changes, Subscriber, PostIds} = Call} ->
-            ?log_debug("Call: ~p", [Call]),
+            ?log_info("Call: ~p", [Call]),
             {reply, From, db_subscription_db:subscribe(Subscriber, PostIds)};
+        {call, From, {unsubscribe_on_changes, SubscriptionId} = Call} ->
+            ?log_info("Call: ~p", [Call]),
+            {reply, From, db_subscription_db:unsubscribe(SubscriptionId)};
         {'DOWN', MonitorRef, process, Pid, _Reason} ->
             ?log_info("Subscriber died: ~w", [Pid]),
-            ok = db_subscription_db:unsubscribe(MonitorRef),
+            ok = db_subscription_db:unsubscribe({monitor, MonitorRef}),
             noreply;
         %% Database management
         {call, From, sync = Call} ->

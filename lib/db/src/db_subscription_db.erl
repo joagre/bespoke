@@ -64,10 +64,13 @@ subscribe(Subscriber, PostIds) ->
 %% Exported: unsubscribe
 %%
 
--spec unsubscribe(monitor_ref()) -> ok.
+-spec unsubscribe({monitor, monitor_ref()} | reference()) -> ok.
 
-unsubscribe(MonitorRef) ->
+unsubscribe({monitor, MonitorRef}) ->
     true = ets:match_delete(?SUBSCRIPTION_DB, #subscription{monitor_ref = MonitorRef, _ = '_'}),
+    ok;
+unsubscribe(SubscriptionId) ->
+    true = ets:delete(?SUBSCRIPTION_DB, SubscriptionId),
     ok.
 
 %%
