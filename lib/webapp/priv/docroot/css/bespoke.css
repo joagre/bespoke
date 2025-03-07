@@ -111,12 +111,14 @@ input {
     overflow-y: scroll;
 }
 
-.post-meta-data {
+.post-meta-data,
+.message-meta-data {
     margin-top: 0.35em;
 }
 
 .post-divider,
-.parent-post-divider {
+.parent-post-divider,
+.message-divider {
     border-color: var(--uk-light-muted);
 }
 

@@ -1,0 +1,11 @@
+.message-link {
+    cursor: pointer;
+}
+
+#have-no-messages {
+    margin-top: 25%;
+}
+
+#messages {
+    margin-top: 1em;
+}

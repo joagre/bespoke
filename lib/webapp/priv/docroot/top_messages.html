@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Forum</title>
+    <title>Inbox</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css" />
     <link rel="stylesheet" href="css/bespoke.css" />
-    <link rel="stylesheet" href="css/top_posts.css" />
+    <link rel="stylesheet" href="css/top_messages.css" />
     <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
     <link rel="shortcut icon" href="/favicon/favicon.ico" />
@@ -18,7 +18,7 @@
     <script src="js/uhtml.min.js" defer></script>
     <script src="js/marked.min.js" defer></script>
     <script src="js/bespoke.js" defer></script>
-    <script src="js/top_posts.js" defer></script>
+    <script src="js/top_messages.js" defer></script>
   </head>
   <body hidden>
     <!-- Header -->
@@ -31,12 +31,12 @@
           </div>
           <!-- Title -->
           <div class="uk-width-expand">
-            <span class="uk-text-bold">Forum</span>
+            <span class="uk-text-bold">Inbox</span>
             <span class="uk-text-meta">(<span id="title-username"></span>)</span>
           </div>
           <!-- Toolbar -->
           <div>
-            <button onclick="TopPosts.clearScrollPosition(); Bespoke.gotoPage(event, 'add_top_post.html')" class="uk-icon-button" uk-icon="plus" uk-tooltip="Add post"></button>
+            <button onclick="TopMessages.clearScrollPosition(); Bespoke.gotoPage(event, 'write_top_message.html')" class="uk-icon-button" uk-icon="plus" uk-tooltip="Write message"></button>
           </div>
         </div>
       </div>
@@ -44,12 +44,12 @@
     <!-- Top container -->
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <div id="main-content">
-        <div id="have-no-posts" class="uk-flex uk-flex-1 uk-flex-center" hidden>
-          &lt;No posts have been created&gt;
+        <div id="have-no-messages" class="uk-flex uk-flex-1 uk-flex-center" hidden>
+          &lt;No messages in Inbox&gt;
         </div>
-        <!-- Have posts -->
-        <div id="have-posts" class="uk-margin-small-left uk-margin-small-right" hidden>
-          <div id="posts"></div>
+        <!-- Have messages -->
+        <div id="have-messages" class="uk-margin-small-left uk-margin-small-right" hidden>
+          <div id="messages"></div>
         </div>
       </div>
     </div>

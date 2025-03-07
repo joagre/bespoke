@@ -23,6 +23,8 @@
   - Mark all username instances in Contacts
   - Only users in Contacts are suggested when writing a new direct message
 * Later: Add destructive aging of forum posts, direct messages and files
+* Later: Rewrite the post record in db.hrl to not use lists for replies, likers
+  and attachments, i.e. use idets.erl tables instead in db_post_db.erl.
 
 ## Syncing
 

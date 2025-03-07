@@ -345,7 +345,9 @@ encode_message(#message{id = Id,
     JsonTerm = #{<<"id">> => Id,
                  <<"authorId">> => AuthorId,
                  <<"authorUsername">> => AuthorUsername,
-                 <<"created">> => Created},
+                 <<"created">> => Created,
+                 <<"readCount">> => 0,
+                 <<"replyCount">> => 0},
     add_optional_members([{<<"topMessageId">>, TopMessageId}], JsonTerm).
 
 encode_post(#post{id = Id,
