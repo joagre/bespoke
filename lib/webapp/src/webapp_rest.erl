@@ -13,6 +13,8 @@
 -include_lib("db/include/db.hrl").
 -include("webapp_crypto.hrl").
 
+-define(MAX_RECIPIENTS, 10).
+
 -record(state, {
                 subscriptions = [] ::
                   [{db_subscription_db:subscription_id(), Request :: term()}]
@@ -443,6 +445,16 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             ?log_error("/api/delete_message: ~p", [access_denied]),
                             send_response(Socket, Request, forbidden)
                     end
+            end;
+        ["api", "search_recipients"] ->
+            case decode(Socket, Request, Body, search_recipients) of
+                {return, Result} ->
+                    Result;
+                {ok, _User, #{ignore_recipients := IgnoreRecipients, query := Query}} ->
+                    Recipients =
+                        db_user_serv:search_recipients(IgnoreRecipients, Query, ?MAX_RECIPIENTS),
+                    JsonTerm = webapp_marshalling:encode(search_recipients, Recipients),
+                    send_response(Socket, Request, {json, JsonTerm})
             end;
         %% Forum
         ["api", "create_post"] ->

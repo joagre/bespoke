@@ -2,7 +2,7 @@
 
 -module(main).
 -export([start/0, stop/0, lookup_config/2, insert_config/2]).
--export_type([filename/0, file_path/0]).
+-export_type([filename/0, file_path/0, bstring/0]).
 
 -include_lib("apptools/include/shorthand.hrl").
 -include_lib("db/include/db.hrl").
@@ -12,6 +12,7 @@
 
 -type filename() :: binary().
 -type file_path() :: binary().
+-type bstring() :: binary().
 
 %%
 %% Exported: start

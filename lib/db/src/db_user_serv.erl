@@ -4,6 +4,7 @@
 -export([start_link/0, stop/0]).
 -export([get_user/1, get_user_from_username/1, get_user_from_session_id/1,
          get_user_from_mac_address/1,
+         search_recipients/3,
          insert_user/1,
          login/4, switch_user/2, switch_user/4, change_password/4,
          user_db_to_list/0]).
@@ -89,6 +90,16 @@ get_user_from_session_id(SessionId) ->
 
 get_user_from_mac_address(MacAddress) ->
     serv:call(?MODULE, {get_user_from_mac_address, MacAddress}).
+
+%%
+%% Exported: search_recipients
+%%
+
+-spec search_recipients([db:username()], main:bstring(), integer()) ->
+          [#{username => db:username(), user_id => db:user_id()}].
+
+search_recipients(IgnoreRecipients, Query, N) ->
+    serv:call(?MODULE, {search_recipients, IgnoreRecipients, Query, N}).
 
 %%
 %% Exported: insert_user
@@ -203,6 +214,10 @@ message_handler(S) ->
                     ok = dets:insert(?USER_DB, LastUpdatedUser),
                     {reply, From, LastUpdatedUser}
             end;
+        {call, From, {search_recipients, IgnoreRecipients, Query, N} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            Recipients = traverse_recipients(IgnoreRecipients, Query, N, dets:first(?USER_DB)),
+            {reply, From, Recipients};
         {call, From, {insert_user, Username} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             User = #user{id = db_serv:get_user_id(),
@@ -316,6 +331,27 @@ open_db() ->
 close_db() ->
     _ = dets:close(?USER_DB),
     ok.
+
+traverse_recipients(IgnoreRecipients, Query, N, UserId) ->
+    case dets:next(?USER_DB, UserId) of
+        '$end_of_table' ->
+            [];
+        {ok, #user{name = Username}} ->
+            case lists:member(Username, IgnoreRecipients) of
+                true ->
+                    traverse_recipients(IgnoreRecipients, Query, N, UserId);
+                false ->
+                    case binary:match(Username, Query) of
+                        nomatch ->
+                            traverse_recipients(IgnoreRecipients, Query, N, UserId);
+                        _ when N =:= 0 ->
+                            [];
+                        _ ->
+                            [#{username => Username, user_id => UserId}|
+                             traverse_recipients(IgnoreRecipients, Query, N - 1, UserId)]
+                    end
+            end
+    end.
 
 %%
 %% Generate username

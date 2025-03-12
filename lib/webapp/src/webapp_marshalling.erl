@@ -15,6 +15,7 @@
                        create_message |
                        read_reply_messages |
                        delete_message |
+                       search_recipients |
                        create_file |
                        delete_file |
                        create_post |
@@ -33,6 +34,7 @@
                        read_reply_messages |
                        read_top_messages |
                        delete_message |
+                       search_recipients |
                        read_files |
                        create_file |
                        create_post |
@@ -97,6 +99,20 @@ decode(read_reply_messages, JsonTerm) ->
     decode_integer_list(JsonTerm);
 decode(delete_message, MessageId) ->
     decode_integer(MessageId);
+decode(search_recipients , #{<<"ignoreRecipients">> := IgnoreRecipients,
+                             <<"query">> := Query} = JsonTerm)
+  when is_list(IgnoreRecipients) andalso is_binary(Query) ->
+    case valid_keys([<<"ignoreRecipients">>, <<"query">>], JsonTerm) of
+        true ->
+            case decode_binary_list(IgnoreRecipients) of
+                {ok, IgnoreRecipients} ->
+                    {ok, #{ignore_recipients => IgnoreRecipients, query => Query}};
+                {error, Reason} ->
+                    {error, Reason}
+            end;
+        false ->
+            {error, invalid}
+    end;
 decode(create_file, JsonTerm) ->
     decode_file(JsonTerm);
 decode(delete_file, JsonTerm) ->
@@ -310,6 +326,8 @@ encode(read_reply_messages, ReplyMessages) ->
                       EncodedMessage = encode_message(Message),
                       EncodedMessage#{<<"attachmentIds">> => AttachmentIds}
               end, ReplyMessages);
+encode(search_recipients, Recipients) ->
+    encode_recipients(Recipients);
 encode(create_post, {Post, ReadPostIds}) ->
     encode_post(Post, ReadPostIds);
 encode(create_file, File) ->
@@ -349,6 +367,14 @@ encode_message(#message{id = Id,
                  <<"readCount">> => 0,
                  <<"replyCount">> => 0},
     add_optional_members([{<<"topMessageId">>, TopMessageId}], JsonTerm).
+
+encode_recipients([]) ->
+    [];
+encode_recipients([Recipient|Rest]) ->
+    [encode_recipient(Recipient)|encode_recipients(Rest)].
+
+encode_recipient(#{user_id := UserId, username := Username}) ->
+    #{<<"userId">> => UserId, <<"username">> => Username}.
 
 encode_post(#post{id = Id,
                   title = Title,
