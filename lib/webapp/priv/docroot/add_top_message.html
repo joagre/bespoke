@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css" />
     <link rel="stylesheet" href="css/bespoke.css" />
+    <link rel="stylesheet" href="css/add_top_message.css" />
     <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
     <link rel="shortcut icon" href="/favicon/favicon.ico" />
@@ -43,8 +44,19 @@
       <!-- Form -->
       <div class="uk-flex uk-flex-1 uk-margin-small-left uk-margin-small-right">
         <form class="uk-flex uk-flex-1 uk-flex-column uk-margin-small-top">
+          <!-- Recipients -->
+          <div class="uk-inline">
+            <div class="uk-search uk-search-default">
+              <span uk-search-icon></span>
+              <input id="form-recipient-input" class="uk-search-input" type="search" placeholder="Search recipient... " autocomplete="off">
+            </div>
+            <div id="form-recipient-dropdown" class="uk-padding-small" uk-dropdown="mode: click; pos: bottom-justify">
+              <ul id="form-recipient-list" class="uk-nav uk-dropdown-nav"></ul>
+            </div>
+          </div>
+          <div id="form-selected-recipients" class="uk-margin-small-top" hidden></div>
           <!-- Title text -->
-          <input class="uk-input" placeholder="Enter title" id="form-title" type="text">
+          <input class="uk-input uk-margin-top" placeholder="Enter title" id="form-title" type="text">
           <!-- Body text -->
           <textarea class="uk-flex-1 uk-margin-top uk-textarea uk-margin-small-bottom" placeholder="Enter body" id="form-body" style="flex-grow: 1; min-height: 0;"></textarea>
         </form>
