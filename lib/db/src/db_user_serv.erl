@@ -216,8 +216,11 @@ message_handler(S) ->
             end;
         {call, From, {search_recipients, IgnoreRecipients, Query, N} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            Recipients = traverse_recipients(IgnoreRecipients, Query, N, dets:first(?USER_DB)),
-            {reply, From, Recipients};
+            Recipients = filter_recipients(IgnoreRecipients, Query, N, dets:first(?USER_DB)),
+            SortedRecipients = lists:sort(fun(#{username := Username1}, #{username := Username2}) ->
+                                                  Username1 < Username2
+                                          end, Recipients),
+            {reply, From, SortedRecipients};
         {call, From, {insert_user, Username} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             User = #user{id = db_serv:get_user_id(),
@@ -332,25 +335,23 @@ close_db() ->
     _ = dets:close(?USER_DB),
     ok.
 
-traverse_recipients(IgnoreRecipients, Query, N, UserId) ->
-    case dets:next(?USER_DB, UserId) of
-        '$end_of_table' ->
-            [];
-        {ok, #user{name = Username}} ->
-            case lists:member(Username, IgnoreRecipients) of
-                true ->
-                    traverse_recipients(IgnoreRecipients, Query, N, UserId);
-                false ->
-                    case binary:match(Username, Query) of
-                        nomatch ->
-                            traverse_recipients(IgnoreRecipients, Query, N, UserId);
-                        _ when N =:= 0 ->
-                            [];
-                        _ ->
-                            [#{username => Username, user_id => UserId}|
-                             traverse_recipients(IgnoreRecipients, Query, N - 1, UserId)]
-                    end
-            end
+filter_recipients(_IgnoreRecipients, _Query, 0, _UserId) ->
+    [];
+filter_recipients(_IgnoreRecipients, _Query, _N, '$end_of_table') ->
+    [];
+filter_recipients(IgnoreRecipients, Query, N, UserId) ->
+    [#user{name = Username}] = dets:lookup(?USER_DB, UserId),
+    case lists:member(Username, IgnoreRecipients) of
+        false ->
+            case binary:match(Username, Query) of
+                nomatch ->
+                    filter_recipients(IgnoreRecipients, Query, N, dets:next(?USER_DB, UserId));
+                _ ->
+                    [#{username => Username, user_id => UserId}|
+                     filter_recipients(IgnoreRecipients, Query, N - 1, dets:next(?USER_DB, UserId))]
+            end;
+        true ->
+            filter_recipients(IgnoreRecipients, Query, N, dets:next(?USER_DB, UserId))
     end.
 
 %%
