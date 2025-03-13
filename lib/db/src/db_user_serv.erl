@@ -96,10 +96,10 @@ get_user_from_mac_address(MacAddress) ->
 %%
 
 -spec search_recipients([db:username()], main:bstring(), integer()) ->
-          [#{username => db:username(), user_id => db:user_id()}].
+          [#{username => db:username(), user_id => db:user_id(), ignored => boolean()}].
 
-search_recipients(IgnoreRecipients, Query, N) ->
-    serv:call(?MODULE, {search_recipients, IgnoreRecipients, Query, N}).
+search_recipients(IgnoredUsernames, Query, N) ->
+    serv:call(?MODULE, {search_recipients, IgnoredUsernames, Query, N}).
 
 %%
 %% Exported: insert_user
@@ -214,12 +214,22 @@ message_handler(S) ->
                     ok = dets:insert(?USER_DB, LastUpdatedUser),
                     {reply, From, LastUpdatedUser}
             end;
-        {call, From, {search_recipients, IgnoreRecipients, Query, N} = Call} ->
+        {call, From, {search_recipients, IgnoredUsernames, Query, N} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            Recipients = filter_recipients(IgnoreRecipients, Query, N, dets:first(?USER_DB)),
+            Recipients = get_recipients(IgnoredUsernames, Query, N, dets:first(?USER_DB)),
+            IgnoredRecipients =
+                lists:foldl(
+                  fun(Username, Acc) ->
+                          case dets:match_object(?USER_DB, #user{name = Username, _ = '_'}) of
+                              [#user{id = UserId}] ->
+                                  [#{username => Username, user_id => UserId, ignored => true}|Acc];
+                              [] ->
+                                  Acc
+                          end
+                  end, [], IgnoredUsernames),
             SortedRecipients = lists:sort(fun(#{username := Username1}, #{username := Username2}) ->
                                                   Username1 < Username2
-                                          end, Recipients),
+                                          end, Recipients ++ IgnoredRecipients),
             {reply, From, SortedRecipients};
         {call, From, {insert_user, Username} = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -335,23 +345,23 @@ close_db() ->
     _ = dets:close(?USER_DB),
     ok.
 
-filter_recipients(_IgnoreRecipients, _Query, 0, _UserId) ->
+get_recipients(_IgnoredUsernames, _Query, 0, _UserId) ->
     [];
-filter_recipients(_IgnoreRecipients, _Query, _N, '$end_of_table') ->
+get_recipients(_IgnoredUsernames, _Query, _N, '$end_of_table') ->
     [];
-filter_recipients(IgnoreRecipients, Query, N, UserId) ->
+get_recipients(IgnoredUsernames, Query, N, UserId) ->
     [#user{name = Username}] = dets:lookup(?USER_DB, UserId),
-    case lists:member(Username, IgnoreRecipients) of
+    case lists:member(Username, IgnoredUsernames) of
         false ->
             case binary:match(Username, Query) of
                 nomatch ->
-                    filter_recipients(IgnoreRecipients, Query, N, dets:next(?USER_DB, UserId));
+                    get_recipients(IgnoredUsernames, Query, N, dets:next(?USER_DB, UserId));
                 _ ->
-                    [#{username => Username, user_id => UserId}|
-                     filter_recipients(IgnoreRecipients, Query, N - 1, dets:next(?USER_DB, UserId))]
+                    [#{username => Username, user_id => UserId, ignored => false}|
+                     get_recipients(IgnoredUsernames, Query, N - 1, dets:next(?USER_DB, UserId))]
             end;
         true ->
-            filter_recipients(IgnoreRecipients, Query, N, dets:next(?USER_DB, UserId))
+            get_recipients(IgnoredUsernames, Query, N, dets:next(?USER_DB, UserId))
     end.
 
 %%

@@ -99,14 +99,14 @@ decode(read_reply_messages, JsonTerm) ->
     decode_integer_list(JsonTerm);
 decode(delete_message, MessageId) ->
     decode_integer(MessageId);
-decode(search_recipients , #{<<"ignoreRecipients">> := IgnoreRecipients,
+decode(search_recipients , #{<<"ignoredUsernames">> := IgnoredUsernames,
                              <<"query">> := Query} = JsonTerm)
-  when is_list(IgnoreRecipients) andalso is_binary(Query) ->
-    case valid_keys([<<"ignoreRecipients">>, <<"query">>], JsonTerm) of
+  when is_list(IgnoredUsernames) andalso is_binary(Query) ->
+    case valid_keys([<<"ignoredUsernames">>, <<"query">>], JsonTerm) of
         true ->
-            case decode_binary_list(IgnoreRecipients) of
-                {ok, IgnoreRecipients} ->
-                    {ok, #{ignore_recipients => IgnoreRecipients, query => Query}};
+            case decode_binary_list(IgnoredUsernames) of
+                {ok, IgnoredUsernames} ->
+                    {ok, #{ignored_usernames => IgnoredUsernames, query => Query}};
                 {error, Reason} ->
                     {error, Reason}
             end;
@@ -373,8 +373,12 @@ encode_recipients([]) ->
 encode_recipients([Recipient|Rest]) ->
     [encode_recipient(Recipient)|encode_recipients(Rest)].
 
-encode_recipient(#{user_id := UserId, username := Username}) ->
-    #{<<"userId">> => UserId, <<"username">> => Username}.
+encode_recipient(#{user_id := UserId,
+                   username := Username,
+                   ignored := Ignored}) ->
+    #{<<"userId">> => UserId,
+      <<"username">> => Username,
+      <<"ignored">> => Ignored}.
 
 encode_post(#post{id = Id,
                   title = Title,

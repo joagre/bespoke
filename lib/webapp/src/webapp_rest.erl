@@ -450,9 +450,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case decode(Socket, Request, Body, search_recipients) of
                 {return, Result} ->
                     Result;
-                {ok, _User, #{ignore_recipients := IgnoreRecipients, query := Query}} ->
+                {ok, _User, #{ignored_usernames := IgnoredUsernames, query := Query}} ->
                     Recipients =
-                        db_user_serv:search_recipients(IgnoreRecipients, Query, ?MAX_RECIPIENTS),
+                        db_user_serv:search_recipients(IgnoredUsernames, Query, ?MAX_RECIPIENTS),
                     JsonTerm = webapp_marshalling:encode(search_recipients, Recipients),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
