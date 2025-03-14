@@ -130,8 +130,10 @@ upload_blob(UserId, FilePath) ->
     {ok, ContentType} =
         apptools_mime:mime_type(string:slice(filename:extension(OriginFilename), 1)),
     ContentTypeSize = byte_size(ContentType),
-    Header = <<FilenameSize:32/unsigned-integer, OriginFilename:FilenameSize/binary,
-               ContentTypeSize:32/integer, ContentType:ContentTypeSize/binary>>,
+    Header = <<FilenameSize:16/unsigned-integer,
+               ContentTypeSize:16/unsigned-integer,
+               OriginFilename:FilenameSize/binary,
+               ContentType:ContentTypeSize/binary>>,
     TmpFilePath = webapp_client:prepend_file_header(FilePath, Header),
     #{<<"absPath">> := <<"/tmp/", Filename/binary>>} =
         webapp_client:http_multipart_post("http://localhost/api/upload_file", TmpFilePath),

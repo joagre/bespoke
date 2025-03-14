@@ -15,7 +15,14 @@
   4 add_reply_message.html
     * add_attachments.html DONE
 
+
+* Rearrange commenting in javacript files
+* Rename auth.js -> crypto.js etc
+
+
 * Add Signal protocol under the hood
+
+
 * Later: Add an admin user
 * Later: Add Contacts - A new top level entry point in index.html
   - Make it possible to add/remove all username instances to Contacts with a
