@@ -8,23 +8,30 @@
 
 * Add direct messaging frontend
 
-  1 top_messages.html
-  2 add_top_message.html
-    * add_attachments.html DONE
-  3 message.html (flat)
-  4 add_reply_message.html
-    * add_attachments.html DONE
+  * update add_attachments.js to load locally
+  * update add_top_post.html to use progress and uploade from indexdb
+  * update add_reply_post.html to use progress and uploade from indexdb
+  * clean out file uploding from add_attachments.js
+  * add_top_message.js done?
+  * conclude top_messages.js
+  * write message.js
+  * write add_reply_message.js
 
+* Refactoring of js:
+  * Rearrange commenting in javacript files
+  * mark_messages -> mark_messages_as_read
+  * rip apart bespoke.js
 
-* Rearrange commenting in javacript files
-* Rename auth.js -> crypto.js etc
-* mark_messages -> mark_messages_as_read
-* rip apart bespoke.js
+* Check iphone
+
+* Verify that the whole enchilda works on Pi
+
+* Build release
+
 
 
 
 * Add Signal protocol under the hood
-
 
 * Later: Add an admin user
 * Later: Add Contacts - A new top level entry point in index.html
