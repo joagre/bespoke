@@ -4,6 +4,7 @@
 
 * Verify that the captive portal mechanics works flawlessly. Study more
   extensively how real-life captive portals answer to `http/https` requests.
+
 ## Web app
 
 * Add direct messaging frontend
