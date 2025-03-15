@@ -18,6 +18,9 @@
 
 * Rearrange commenting in javacript files
 * Rename auth.js -> crypto.js etc
+* mark_messages -> mark_messages_as_read
+* rip apart bespoke.js
+
 
 
 * Add Signal protocol under the hood
