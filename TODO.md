@@ -8,14 +8,17 @@
 
 * Add direct messaging frontend
 
-  * update add_attachments.js to load locally
-  * update add_top_post.html to use progress and uploade from indexdb
-  * update add_reply_post.html to use progress and uploade from indexdb
-  * clean out file uploding from add_attachments.js
-  * add_top_message.js done?
   * conclude top_messages.js
   * write message.js
   * write add_reply_message.js
+
+  * update add_top_post.html to use progress and uploade from indexdb
+  * update add_reply_post.html to use progress and uploade from indexdb
+
+  * clean add_attachments.js to load locally
+    * clean out file uploding from add_attachments.js
+
+  * Make sure all innerHtml is sanitized + in uhtml use
 
 * Refactoring of js:
   * Rearrange commenting in javacript files (take inspiration from add_top_message.js)
