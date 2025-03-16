@@ -69,7 +69,7 @@ create_file(File) ->
 %% Exported: read_files
 %%
 
--spec read_files() -> [{#file{}}].
+-spec read_files() -> {ok, [{#file{}}]}.
 
 read_files() ->
     Files = dets:foldl(fun(#file{is_uploading = true} = File, Acc) ->
@@ -77,7 +77,7 @@ read_files() ->
                           (File, Acc) ->
                                [File|Acc]
                        end, [], ?FILE_DB),
-    sort_files(Files).
+    {ok, sort_files(Files)}.
 
 update_uploaded_size(#file{id = FileId, is_uploading = true} = File) ->
     TmpPath = ?BESPOKE_TMP_PATH,
@@ -100,7 +100,7 @@ update_uploaded_size(File) ->
 %% Exported: read_files
 %%
 
--spec read_files([db:file_id()]) -> [#file{}].
+-spec read_files([db:file_id()]) -> {ok, [#file{}]}.
 
 read_files(FileIds) ->
     Files = lists:foldr(
@@ -108,7 +108,7 @@ read_files(FileIds) ->
                       [File] = dets:lookup(?FILE_DB, FileId),
                       [update_uploaded_size(File)|Acc]
               end, [], FileIds),
-    sort_files(Files).
+    {ok, sort_files(Files)}.
 
 %%
 %% Exported: delete_file

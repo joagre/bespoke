@@ -220,8 +220,21 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, _Body} ->
-                    {ok, TopMessages} = db_serv:read_top_messages(UserId),
-                    JsonTerm = webapp_marshalling:encode(read_top_messages, TopMessages),
+                    ReadMessageIds = webapp_cache:marked_messages(UserId),
+                    {ok, TopMessageBundles} = db_serv:read_top_messages(UserId),
+                    UpdatedTopMessageBundles =
+                        lists:map(
+                          fun(#{message := #message{id = MessageId} = Message,
+                                reply_message_ids := ReplyMessageIds,
+                                attachment_ids := AttachmentIds}) ->
+                                  #{message => Message,
+                                    attachment_ids => AttachmentIds,
+                                    reply_count => length(ReplyMessageIds),
+                                    is_read => is_message_read([MessageId|ReplyMessageIds],
+                                                               ReadMessageIds)}
+                          end, TopMessageBundles),
+                    JsonTerm =
+                        webapp_marshalling:encode(read_top_messages, UpdatedTopMessageBundles),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
         %% Forum
@@ -230,18 +243,17 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, _Body} ->
-                    TopPosts = db_serv:read_top_posts(),
                     ReadPostIds = webapp_cache:marked_posts(UserId),
-                    AdornedTopPosts =
+                    {ok, TopPosts} = db_serv:read_top_posts(),
+                    UpdatedTopPosts =
                         lists:map(fun(#post{id = PostId} = Post) ->
-                                          Posts = db_serv:read_posts([Post#post.id], recursive),
-                                          ReplyPosts = lists:keydelete(PostId, #post.id, Posts),
+                                          {ok, AllPosts} = db_serv:read_posts([PostId], recursive),
+                                          ReplyPosts = lists:keydelete(PostId, #post.id, AllPosts),
                                           ReadCount = count_read_replies(ReadPostIds, ReplyPosts),
                                           {Post, ReadCount}
                                   end, TopPosts),
-                    JsonTerm = webapp_marshalling:encode(
-                                 read_top_posts, #{read_post_ids => ReadPostIds,
-                                                   adorned_top_posts => AdornedTopPosts}),
+                    JsonTerm = webapp_marshalling:encode(read_top_posts,
+                                                         {ReadPostIds, UpdatedTopPosts}),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
         %% File sharing
@@ -250,7 +262,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, _User, _Body} ->
-                    Files = db_serv:read_files(),
+                    {ok, Files} = db_serv:read_files(),
                     JsonTerm = webapp_marshalling:encode(read_files, Files),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
@@ -365,9 +377,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     end,
                     Challenge = webapp_crypto:generate_challenge(),
                     JsonTerm =
-                        webapp_marshalling:encode(generate_challenge,
-                                                  #{password_salt => PasswordSalt,
-                                                    challenge => Challenge}),
+                        webapp_marshalling:encode(generate_challenge, {PasswordSalt, Challenge}),
                     ok = webapp_cache:add_challenge(Username, Challenge),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
@@ -375,7 +385,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case decode(Socket, Request, Body, login, false) of
                 {return, Result} ->
                     Result;
-                {ok, no_user, #{username := Username, client_response := ClientResponse}} ->
+                {ok, no_user, {Username, ClientResponse}} ->
                     login(Socket, Request, Username, ClientResponse)
             end;
         ["api", "switch_user"] ->
@@ -393,7 +403,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case decode(Socket, Request, Body, change_password) of
                 {return, Result} ->
                     Result;
-                {ok, User, #{password_salt := PasswordSalt, password_hash := PasswordHash}} ->
+                {ok, User, {PasswordSalt, PasswordHash}} ->
                     change_password(Socket, Request, User, PasswordSalt, PasswordHash)
             end;
         %% Direct messaging
@@ -450,7 +460,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case decode(Socket, Request, Body, search_recipients) of
                 {return, Result} ->
                     Result;
-                {ok, _User, #{ignored_usernames := IgnoredUsernames, query := Query}} ->
+                {ok, _User, {IgnoredUsernames, Query}} ->
                     Recipients =
                         db_user_serv:search_recipients(IgnoredUsernames, Query, ?MAX_RECIPIENTS),
                     JsonTerm = webapp_marshalling:encode(search_recipients, Recipients),
@@ -479,9 +489,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
                     ReadPostIds = webapp_cache:marked_posts(UserId),
-                    Posts = db_serv:read_posts(PostIds),
-                    JsonTerm = webapp_marshalling:encode(read_posts, #{read_post_ids => ReadPostIds,
-                                                                       posts => Posts}),
+                    {ok, Posts} = db_serv:read_posts(PostIds),
+                    JsonTerm = webapp_marshalling:encode(read_posts, {ReadPostIds, Posts}),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
         ["api", "read_recursive_posts"] ->
@@ -490,10 +499,9 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
                     ReadPostIds = webapp_cache:marked_posts(UserId),
-                    Posts = db_serv:read_posts(PostIds, recursive),
+                    {ok, Posts} = db_serv:read_posts(PostIds, recursive),
                     JsonTerm = webapp_marshalling:encode(
-                                 read_recursive_posts, #{read_post_ids => ReadPostIds,
-                                                         posts => Posts}),
+                                 read_recursive_posts, {ReadPostIds, Posts}),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
         ["api", "read_recursive_post_ids"] ->
@@ -501,7 +509,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, _User, PostIds} ->
-                    PostIds = db_serv:read_post_ids(PostIds, recursive),
+                    {ok, PostIds} = db_serv:read_post_ids(PostIds, recursive),
                     JsonTerm = webapp_marshalling:encode(read_recursive_post_ids, PostIds),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
@@ -511,7 +519,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, #user{name = Username}, PostId} ->
                     case db_serv:read_posts([PostId]) of
-                        [#post{author = Username}] ->
+                        {ok, [#post{author = Username}]} ->
                             case db_serv:delete_post(PostId) of
                                 ok ->
                                     send_response(Socket, Request, no_content);
@@ -529,7 +537,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {ok, User, PostId} ->
                     {ok, Likers} = db_serv:toggle_post_like(PostId, User#user.id),
                     JsonTerm = webapp_marshalling:encode(
-                                 toggle_post_like, #{user_id => User#user.id, likers => Likers}),
+                                 toggle_post_like, {User#user.id, Likers}),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
         %% File sharing
@@ -552,14 +560,12 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, FileId} ->
-                    case db_serv:read_files([FileId]) of
-                        [#file{uploader = UserId}] ->
-                            case db_serv:delete_file(FileId) of
-                                ok ->
-                                    send_response(Socket, Request, no_content);
-                                {error, not_found} ->
-                                    send_response(Socket, Request, not_found)
-                            end
+                    {ok, [#file{uploader = UserId}]} = db_serv:read_files([FileId]),
+                    case db_serv:delete_file(FileId) of
+                        ok ->
+                            send_response(Socket, Request, no_content);
+                        {error, not_found} ->
+                            send_response(Socket, Request, not_found)
                     end;
                 {ok, _User, _fileId} ->
                     send_response(Socket, Request, forbidden)
@@ -569,14 +575,12 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, FileId} ->
-                    case db_serv:read_files([FileId]) of
-                        [#file{uploader = UserId}] ->
-                            case db_serv:file_is_uploaded(FileId) of
-                                ok ->
-                                    send_response(Socket, Request, no_content);
-                                {error, not_found} ->
-                                    send_response(Socket, Request, not_found)
-                            end
+                    {ok, [#file{uploader = UserId}]} = db_serv:read_files([FileId]),
+                    case db_serv:file_is_uploaded(FileId) of
+                        ok ->
+                            send_response(Socket, Request, no_content);
+                        {error, not_found} ->
+                            send_response(Socket, Request, not_found)
                     end;
                 {ok, _User, _fileId} ->
                     send_response(Socket, Request, forbidden)
@@ -742,6 +746,16 @@ count_read_replies(ReadPostIds, [#post{id = PostId}|Rest]) ->
             1 + count_read_replies(ReadPostIds, Rest);
         false ->
             count_read_replies(ReadPostIds, Rest)
+    end.
+
+is_message_read([], _ReadMessageIds) ->
+    true;
+is_message_read([MessageId|Rest], ReadMessageIds) ->
+    case lists:member(MessageId, ReadMessageIds) of
+        true ->
+            is_message_read(Rest, ReadMessageIds);
+        false ->
+            false
     end.
 
 %%

@@ -139,18 +139,21 @@ move_tmp_attachments(TmpAttachments, NewPostId) ->
 %% Exported: read_top_posts
 %%
 
--spec read_top_posts() -> [#post{}].
+-spec read_top_posts() -> {ok, [#post{}]}.
 
 read_top_posts() ->
-    sort_posts(dets:match_object(?POST_DB, #post{top_post_id = not_set, _ = '_'})).
+    {ok, sort_posts(dets:match_object(?POST_DB, #post{top_post_id = not_set, _ = '_'}))}.
 
 %%
 %% Exported: read_posts
 %%
 
--spec read_posts([db:post_id()], flat | recursive) -> [#post{}].
+-spec read_posts([db:post_id()], flat | recursive) -> {ok, [#post{}]}.
 
 read_posts(PostIds, Mode) ->
+    {ok, do_read_posts(PostIds, Mode)}.
+
+do_read_posts(PostIds, Mode) ->
     Posts =
         lists:foldr(
           fun(PostId, Acc) ->
@@ -158,7 +161,7 @@ read_posts(PostIds, Mode) ->
                       [Post] when Mode == flat ->
                           [Post|Acc];
                       [Post] when Mode == recursive ->
-                          Replies = read_posts(Post#post.replies, Mode),
+                          Replies = do_read_posts(Post#post.replies, Mode),
                           [Post|Acc] ++ Replies
                   end
           end, [], PostIds),
@@ -168,18 +171,18 @@ read_posts(PostIds, Mode) ->
 %% Exported: read_post_ids
 %%
 
--spec read_post_ids([db:post_id()], flat | recursive) -> [db:post_id()].
+-spec read_post_ids([db:post_id()], flat | recursive) -> {ok, [db:post_id()]}.
 
 read_post_ids(PostIds, Mode) ->
-    lists:foldr(fun(PostId, Acc) ->
-                        case dets:lookup(?POST_DB, PostId) of
-                            [Post] when Mode == flat ->
-                                [Post#post.id|Acc];
-                            [Post] when Mode == recursive ->
-                                Replies = read_post_ids(Post#post.replies, Mode),
-                                [Post#post.id|Acc] ++ Replies
-                        end
-                end, [], PostIds).
+    {ok, lists:foldr(fun(PostId, Acc) ->
+                             case dets:lookup(?POST_DB, PostId) of
+                                 [Post] when Mode == flat ->
+                                     [Post#post.id|Acc];
+                                 [Post] when Mode == recursive ->
+                                     Replies = read_post_ids(Post#post.replies, Mode),
+                                     [Post#post.id|Acc] ++ Replies
+                             end
+                     end, [], PostIds)}.
 
 %%
 %% Exported: delete_post

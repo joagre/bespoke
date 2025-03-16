@@ -59,7 +59,7 @@ decode(login, #{<<"username">> := Username, <<"clientResponse">> := ClientRespon
   when is_binary(Username) andalso is_binary(ClientResponse) ->
     case valid_keys([<<"username">>, <<"clientResponse">>], JsonTerm) of
         true ->
-            {ok, #{username => Username, client_response => base64:decode(ClientResponse)}};
+            {ok, {Username, base64:decode(ClientResponse)}};
         false ->
             {error, invalid}
     end;
@@ -88,8 +88,7 @@ decode(change_password, #{<<"passwordSalt">> := PasswordSalt,
   when is_binary(PasswordHash) andalso is_binary(PasswordSalt) ->
     case valid_keys([<<"passwordSalt">>, <<"passwordHash">>], JsonTerm) of
         true ->
-            {ok, #{password_salt => base64:decode(PasswordSalt),
-                   password_hash => base64:decode(PasswordHash)}};
+            {ok, {base64:decode(PasswordSalt), base64:decode(PasswordHash)}};
         false ->
             {error, invalid}
     end;
@@ -106,7 +105,7 @@ decode(search_recipients , #{<<"ignoredUsernames">> := IgnoredUsernames,
         true ->
             case decode_binary_list(IgnoredUsernames) of
                 {ok, IgnoredUsernames} ->
-                    {ok, #{ignored_usernames => IgnoredUsernames, query => Query}};
+                    {ok, {IgnoredUsernames, Query}};
                 {error, Reason} ->
                     {error, Reason}
             end;
@@ -303,7 +302,7 @@ decode_attachment(_) ->
 
 encode(get_ssid, SSID) ->
     ?l2b(SSID);
-encode(generate_challenge, #{password_salt := PasswordSalt, challenge := Challenge}) ->
+encode(generate_challenge, {PasswordSalt, Challenge}) ->
     #{<<"passwordSalt">> => base64:encode(PasswordSalt),
       <<"challenge">> => base64:encode(Challenge)};
 encode(switch_user, #{user_id := UserId, username := Username, session_id := SessionId}) ->
@@ -316,11 +315,16 @@ encode(login, #{user_id := UserId, username := Username, session_id := SessionId
     #{<<"userId">> => UserId,
       <<"username">> => Username,
       <<"sessionId">> => base64:encode(SessionId)};
-encode(read_top_messages, TopMessages) ->
-    lists:map(fun({Message, AttachmentIds}) ->
+encode(read_top_messages, TopMessageBundles) ->
+    lists:map(fun(#{message := Message,
+                    attachment_ids := AttachmentIds,
+                    reply_count := ReplyCount,
+                    is_read := IsRead}) ->
                       EncodedMessage = encode_message(Message),
-                      EncodedMessage#{<<"attachmentIds">> => AttachmentIds}
-              end, TopMessages);
+                      EncodedMessage#{<<"attachmentIds">> => AttachmentIds,
+                                      <<"replyCount">> => ReplyCount,
+                                      <<"isRead">> => IsRead}
+              end, TopMessageBundles);
 encode(read_reply_messages, ReplyMessages) ->
     lists:map(fun({Message, AttachmentIds}) ->
                       EncodedMessage = encode_message(Message),
@@ -334,18 +338,18 @@ encode(create_file, File) ->
     encode_file(File);
 encode(read_files, Files) ->
     lists:map(fun(File) -> encode_file(File) end, Files);
-encode(read_top_posts, #{read_post_ids := ReadPostIds, adorned_top_posts := AdornedTopPosts}) ->
+encode(read_top_posts, {ReadPostIds, TopPosts}) ->
     lists:map(fun({Post, ReadCount}) ->
                       PostJsonTerm = encode_post(Post, ReadPostIds),
                       maps:put(<<"readCount">>, ReadCount, PostJsonTerm)
-              end, AdornedTopPosts);
-encode(read_posts, #{read_post_ids := ReadPostIds, posts := Posts}) ->
+              end, TopPosts);
+encode(read_posts, {ReadPostIds, Posts}) ->
     lists:map(fun(Post) -> encode_post(Post, ReadPostIds) end, Posts);
-encode(read_recursive_posts, #{read_post_ids := ReadPostIds, posts := Posts}) ->
+encode(read_recursive_posts, {ReadPostIds, Posts}) ->
     lists:map(fun(Post) -> encode_post(Post, ReadPostIds) end, Posts);
 encode(read_recursive_post_ids, PostIds) ->
     PostIds;
-encode(toggle_post_like, #{user_id := UserId, likers := Likers}) ->
+encode(toggle_post_like, {UserId, Likers}) ->
     #{<<"liked">> => lists:member(UserId, Likers),
       <<"likesCount">> => length(Likers)};
 encode(upload_file, #{filename := Filename,

@@ -67,7 +67,9 @@ create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
 %% Exported: read_top_messages
 %%
 
--spec read_top_messages(db:user_id()) -> {ok, [{{#message{}, [db:attachment_id()]}}]}.
+-spec read_top_messages(db:user_id()) -> {ok, [#{message => #message{},
+                                                 reply_message_ids => [db:message_id()],
+                                                 attachment_ids => [db:attachment_id()]}]}.
 
 read_top_messages(UserId) ->
     serv:call(?MODULE, {read_top_messages, UserId}).
@@ -105,7 +107,7 @@ create_post(Post) ->
 %% Exported: read_top_posts
 %%
 
--spec read_top_posts() -> [#post{}].
+-spec read_top_posts() -> {ok, [#post{}]}.
 
 read_top_posts() ->
     serv:call(?MODULE, read_top_posts).
@@ -114,7 +116,7 @@ read_top_posts() ->
 %% Exported: read_posts
 %%
 
--spec read_posts([db:post_id()], flat | recursive) -> [#post{}].
+-spec read_posts([db:post_id()], flat | recursive) -> {ok, [#post{}]}.
 
 read_posts(PostIds) ->
     read_posts(PostIds, flat).
@@ -126,7 +128,7 @@ read_posts(PostIds, Mode) ->
 %% Exported: read_post_ids
 %%
 
--spec read_post_ids([db:post_id()], flat | recursive) -> [db:post_id()].
+-spec read_post_ids([db:post_id()], flat | recursive) -> {ok, [db:post_id()]}.
 
 read_post_ids(PostIds) ->
     read_post_ids(PostIds, flat).
@@ -165,7 +167,7 @@ create_file(File) ->
 %% Exported: read_files
 %%
 
--spec read_files() -> [#file{}].
+-spec read_files() -> {ok, [#file{}]}.
 
 read_files() ->
     serv:call(?MODULE, read_files).
@@ -174,7 +176,7 @@ read_files() ->
 %% Exported: read_files
 %%
 
--spec read_files([db:file_id()]) -> [#file{}].
+-spec read_files([db:file_id()]) -> {ok, [#file{}]}.
 
 read_files(FileIds) ->
     serv:call(?MODULE, {read_files, FileIds}).

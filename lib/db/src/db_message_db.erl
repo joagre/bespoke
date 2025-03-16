@@ -194,11 +194,20 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
 %% Exported: read_top_messages
 %%
 
--spec read_top_messages(db:user_id()) -> {ok, [{{#message{}, [db:attachment_id()]}}]}.
+-spec read_top_messages(db:user_id()) -> {ok, [#{message => #message{},
+                                                 reply_message_ids => [db:message_id()],
+                                                 attachment_ids => [db:attachment_id()]}]}.
 
 read_top_messages(UserId) ->
-    MessageIds = idets:lookup(?TOP_MESSAGE_DB, UserId),
-    {ok, read_messages(MessageIds)}.
+    TopMessageIds = idets:lookup(?TOP_MESSAGE_DB, UserId),
+    TopMessages =
+        lists:map(fun({Message, AttachmentIds}) ->
+                          ReplyMessageIds = idets:lookup(?REPLY_MESSAGE_DB, Message#message.id),
+                          #{message => Message,
+                            reply_message_ids => ReplyMessageIds,
+                            attachment_ids => AttachmentIds}
+                  end, read_messages(TopMessageIds)),
+    {ok, TopMessages}.
 
 read_messages(MessageIds) ->
     Messages = sort_messages(lookup_messages(MessageIds)),
@@ -218,7 +227,7 @@ lookup_messages([MessageId|Rest]) ->
 %%
 
 -spec read_reply_messages(db:user_id(), db:message_id()) ->
-          {ok, [{{#message{}, [db:attachment_id()]}}]} |
+          {ok, [{#message{}, [db:attachment_id()]}]} |
           {error, access_denied}.
 
 read_reply_messages(UserId, TopMessageId) ->

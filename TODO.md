@@ -8,19 +8,11 @@
 ## Web app
 
 * Add direct messaging frontend
-
-  * conclude top_messages.js
-  * write top_message.js
-    * unblobify
-  * write add_reply_message.js
-
+  * message.html
+  * add_reply_message.js
   * update add_top_post.html to use progress and uploade from indexdb
   * update add_reply_post.html to use progress and uploade from indexdb
-
-  * clean add_attachments.js to load locally
-    * clean out file uploding from add_attachments.js
-
-  * Make sure all innerHtml is sanitized + in uhtml use
+  * clean out file uploding from add_attachments.js
 
 * Refactoring of js:
   * Rearrange commenting in javacript files (take inspiration from add_top_message.js)
@@ -32,9 +24,6 @@
 * Verify that the whole enchilda works on Pi
 
 * Build release
-
-
-
 
 * Add Signal protocol under the hood
 
