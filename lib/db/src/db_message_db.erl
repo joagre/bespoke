@@ -115,8 +115,7 @@ create_message(#message{top_message_id = TopMessageId, author = Author} = Messag
         true ->
             MessageId = db_meta_db:read_next_message_id(),
             UpdatedMessage = Message#message{id = MessageId,
-                                             created = db:seconds_since_epoch()
-                                            },
+                                             created = db:seconds_since_epoch()},
             %% Update MESSAGE_DB
             ok = dets:insert(?MESSAGE_DB, UpdatedMessage),
             case create_blobs(UpdatedMessage, BodyBlobs, AttachmentBlobs) of

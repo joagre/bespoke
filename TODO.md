@@ -10,7 +10,8 @@
 * Add direct messaging frontend
 
   * conclude top_messages.js
-  * write message.js
+  * write top_message.js
+    * unblobify
   * write add_reply_message.js
 
   * update add_top_post.html to use progress and uploade from indexdb

@@ -56,7 +56,7 @@
 -record(post,
         {
          id = not_set :: db:post_id() | not_set | '_',
-         %% Note: Mandatory for top posts and disallowed for reply posts
+         %% Note: Disallowed for reply posts and mandatory for top posts
          title = not_set :: db:title() | not_set | '_',
          %% Note: Disallowed for top posts and mandatory for reply posts
          parent_post_id = not_set :: db:post_id() | not_set | '_',
