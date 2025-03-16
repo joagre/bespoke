@@ -1,8 +1,13 @@
 % -*- fill-column: 100; -*-
 
 -module(webapp_cache).
--export([open/0, sync/0, mark_messages/2, marked_messages/1, mark_posts/2, marked_posts/1,
-         add_challenge/2, get_challenge/1, close/0]).
+-export([open/0, sync/0]).
+%% Message read cache
+-export([mark_messages_as_read/2, list_read_messages/1]).
+%% Post read cache
+-export([mark_posts_as_read/2, list_read_posts/1]).
+%% Challenge cache
+-export([add_challenge/2, get_challenge/1, close/0]).
 
 -include_lib("db/include/db.hrl").
 
@@ -53,43 +58,43 @@ sync() ->
     end.
 
 %%
-%% Exported: mark_messages
+%% Exported: mark_messages_as_read
 %%
 
--spec mark_messages(db:user_id(), [db:message_id()]) -> ok.
+-spec mark_messages_as_read(db:user_id(), [db:message_id()]) -> ok.
 
-mark_messages(UserId, MessageIds) ->
+mark_messages_as_read(UserId, MessageIds) ->
     lists:foreach(fun(MessageId) ->
                           ok = idets:insert(?MESSAGE_READ_CACHE, UserId, MessageId)
                   end, MessageIds).
 
 %%
-%% Exported: marked_messages
+%% Exported: list_read_messages
 %%
 
--spec marked_messages(db:user_id()) -> [db:message_id()] | {error, term()}.
+-spec list_read_messages(db:user_id()) -> [db:message_id()] | {error, term()}.
 
-marked_messages(UserId) ->
+list_read_messages(UserId) ->
     idets:lookup(?MESSAGE_READ_CACHE, UserId).
 
 %%
-%% Exported: mark_posts
+%% Exported: mark_posts_as_read
 %%
 
--spec mark_posts(db:user_id(), [db:post_id()]) -> ok.
+-spec mark_posts_as_read(db:user_id(), [db:post_id()]) -> ok.
 
-mark_posts(UserId, PostIds) ->
+mark_posts_as_read(UserId, PostIds) ->
     lists:foreach(fun(PostId) ->
                           ok = idets:insert(?POST_READ_CACHE, UserId, PostId)
                   end, PostIds).
 
 %%
-%% Exported: marked_posts
+%% Exported: list_read_posts
 %%
 
--spec marked_posts(db:user_id()) -> [db:post_id()] | {error, term()}.
+-spec list_read_posts(db:user_id()) -> [db:post_id()] | {error, term()}.
 
-marked_posts(UserId) ->
+list_read_posts(UserId) ->
     idets:lookup(?POST_READ_CACHE, UserId).
 
 %%

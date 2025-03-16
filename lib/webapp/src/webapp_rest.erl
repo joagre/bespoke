@@ -220,7 +220,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, _Body} ->
-                    ReadMessageIds = webapp_cache:marked_messages(UserId),
+                    ReadMessageIds = webapp_cache:list_read_messages(UserId),
                     {ok, TopMessageBundles} = db_serv:read_top_messages(UserId),
                     UpdatedTopMessageBundles =
                         lists:map(
@@ -243,7 +243,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, _Body} ->
-                    ReadPostIds = webapp_cache:marked_posts(UserId),
+                    ReadPostIds = webapp_cache:list_read_posts(UserId),
                     {ok, TopPosts} = db_serv:read_top_posts(),
                     UpdatedTopPosts =
                         lists:map(fun(#post{id = PostId} = Post) ->
@@ -475,7 +475,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     UpdatedPost = Post#post{author = UserId},
                     case db_serv:create_post(UpdatedPost) of
                         {ok, CreatedPost} ->
-                            ReadPostIds = webapp_cache:marked_posts(UserId),
+                            ReadPostIds = webapp_cache:list_read_posts(UserId),
                             JsonTerm = webapp_marshalling:encode(
                                          create_post, {CreatedPost, ReadPostIds}),
                             send_response(Socket, Request, {json, JsonTerm});
@@ -488,7 +488,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
-                    ReadPostIds = webapp_cache:marked_posts(UserId),
+                    ReadPostIds = webapp_cache:list_read_posts(UserId),
                     {ok, Posts} = db_serv:read_posts(PostIds),
                     JsonTerm = webapp_marshalling:encode(read_posts, {ReadPostIds, Posts}),
                     send_response(Socket, Request, {json, JsonTerm})
@@ -498,7 +498,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
-                    ReadPostIds = webapp_cache:marked_posts(UserId),
+                    ReadPostIds = webapp_cache:list_read_posts(UserId),
                     {ok, Posts} = db_serv:read_posts(PostIds, recursive),
                     JsonTerm = webapp_marshalling:encode(
                                  read_recursive_posts, {ReadPostIds, Posts}),
@@ -615,7 +615,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
-                    ok = webapp_cache:mark_posts(UserId, PostIds),
+                    ok = webapp_cache:mark_posts_as_read(UserId, PostIds),
                     send_response(Socket, Request, no_content)
             end;
         _ ->
