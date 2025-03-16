@@ -17,7 +17,8 @@
 * Refactoring of js:
   * Rearrange commenting in javacript files (take inspiration from add_top_message.js)
   * mark_messages -> mark_messages_as_read
-  * rip apart bespoke.js
+  * marked_messages -> list_read_messages
+  ...
 
 * Check iphone
 
