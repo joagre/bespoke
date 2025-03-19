@@ -2,7 +2,7 @@
 
 -module(db_message_db).
 -export([open/0, dump/0, sync/0, close/0, create_message/3, read_top_messages/1,
-         read_reply_messages/2, delete_message/2]).
+         read_messages/1, read_reply_messages/2, delete_message/2]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -97,8 +97,10 @@ close() ->
 
 -spec create_message(#message{},
                      [{db:user_id(), main:filename()}],
-                     [[{db:user_id(), main:filename()}]]) ->
-          {ok, #message{}} | {error, term()}.
+                     [[#{user_id => db:user_id(),
+                         metadata => main:filename(),
+                         filename => main:filename()}]]) ->
+          {ok, #message{}} | {error, file:posix() | access_denied}.
 
 create_message(#message{top_message_id = TopMessageId, author = Author} = Message,
                BodyBlobs, AttachmentBlobs) ->
@@ -177,7 +179,9 @@ create_attachment_blobs(Message, MessageBlobPath, [AttachmentBlobs|Rest]) ->
 create_attachment_blobs(_AttachmentId, _Message, _MessageBlobPath, []) ->
     ok;
 create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, MessageBlobPath,
-                        [{UserId, BlobFilename}|Rest]) ->
+                        [#{user_id := UserId,
+                           metadata := MetadataFilename,
+                           filename := BlobFilename}|Rest]) ->
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     NewBlobPath = filename:join([MessageBlobPath, io_lib:format("~w-~w", [UserId, AttachmentId])]),
     ?log_info("Renaming attachment blob ~s to ~s", [CurrentBlobPath, NewBlobPath]),
@@ -185,6 +189,13 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
         ok ->
             %% Update ATTACHMENT_DB
             ok = idets:insert(?ATTACHMENT_DB, MessageId, AttachmentId),
+            CurrentMetadataBlobPath = filename:join([?BESPOKE_TMP_PATH, MetadataFilename]),
+            NewMetadataBlobPath =
+                filename:join([MessageBlobPath,
+                               io_lib:format("~w-~w.dat", [UserId, AttachmentId])]),
+            ?log_info("Renaming attachment metadata blob ~s to ~s",
+                      [CurrentMetadataBlobPath, NewMetadataBlobPath]),
+            ok = file:rename(CurrentMetadataBlobPath, NewMetadataBlobPath),
             create_attachment_blobs(AttachmentId, Message, MessageBlobPath, Rest);
         {error, Reason} ->
             {error, Reason}
@@ -195,26 +206,35 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
 %%
 
 -spec read_top_messages(db:user_id()) -> {ok, [#{message => #message{},
-                                                 reply_message_ids => [db:message_id()],
-                                                 attachment_ids => [db:attachment_id()]}]}.
+                                                 attachment_ids => [db:attachment_id()],
+                                                 reply_message_ids => [db:message_id()]}]}.
 
 read_top_messages(UserId) ->
     TopMessageIds = idets:lookup(?TOP_MESSAGE_DB, UserId),
-    TopMessages =
-        lists:map(fun({Message, AttachmentIds}) ->
-                          ReplyMessageIds = idets:lookup(?REPLY_MESSAGE_DB, Message#message.id),
-                          #{message => Message,
-                            reply_message_ids => ReplyMessageIds,
-                            attachment_ids => AttachmentIds}
-                  end, read_messages(TopMessageIds)),
-    {ok, TopMessages}.
+    {ok, MessageBundles} = read_messages(TopMessageIds),
+    UpdatedMessageBundles =
+        lists:map(
+          fun(#{message := #message{id = MessageId}} = MessageBundle) ->
+                  ReplyMessageIds = idets:lookup(?REPLY_MESSAGE_DB, MessageId),
+                  MessageBundle#{reply_message_ids => ReplyMessageIds}
+          end, MessageBundles),
+    {ok, UpdatedMessageBundles}.
+
+%%
+%% Exported: read_messages
+%%
+
+-spec read_messages([db:message_id()]) -> {ok, [#{message => #message{},
+                                                  attachment_ids => [db:attachment_id()]}]}.
 
 read_messages(MessageIds) ->
     Messages = sort_messages(lookup_messages(MessageIds)),
-    lists:map(fun(#message{id = MessageId} = Message) ->
-                      AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
-                      {Message, AttachmentIds}
-              end, Messages).
+    MessageBundles =
+        lists:map(fun(#message{id = MessageId} = Message) ->
+                          AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
+                          #{message => Message, attachment_ids => AttachmentIds}
+                  end, Messages),
+    {ok, MessageBundles}.
 
 lookup_messages([]) ->
     [];
@@ -227,7 +247,8 @@ lookup_messages([MessageId|Rest]) ->
 %%
 
 -spec read_reply_messages(db:user_id(), db:message_id()) ->
-          {ok, [{#message{}, [db:attachment_id()]}]} |
+          {ok, [#{message => #message{},
+                  attachment_ids => [db:attachment_id()]}]} |
           {error, access_denied}.
 
 read_reply_messages(UserId, TopMessageId) ->

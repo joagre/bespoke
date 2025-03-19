@@ -13,6 +13,7 @@
                        switch_user |
                        change_password |
                        create_message |
+                       read_message |
                        read_reply_messages |
                        delete_message |
                        search_recipients |
@@ -25,12 +26,14 @@
                        delete_post |
                        toggle_post_like |
                        subscribe_on_changes |
-                       upload_read_cache.
+                       mark_messages_as_read |
+                       mark_posts_as_read.
 
 -type encode_type() :: get_ssid |
                        generate_challenge |
-                       create_message |
                        login |
+                       create_message |
+                       read_message |
                        read_reply_messages |
                        read_top_messages |
                        delete_message |
@@ -93,7 +96,9 @@ decode(change_password, #{<<"passwordSalt">> := PasswordSalt,
             {error, invalid}
     end;
 decode(create_message, JsonTerm) ->
-    decode_message(JsonTerm);
+    decode_message_bundle(JsonTerm);
+decode(read_messages, JsonTerm) ->
+    decode_integer_list(JsonTerm);
 decode(read_reply_messages, JsonTerm) ->
     decode_integer_list(JsonTerm);
 decode(delete_message, MessageId) ->
@@ -132,12 +137,14 @@ decode(toggle_post_like, JsonTerm) ->
     decode_binary(JsonTerm);
 decode(subscribe_on_changes, JsonTerm) ->
     decode_binary_list(JsonTerm);
-decode(upload_read_cache, JsonTerm) ->
+decode(mark_messages_as_read, JsonTerm) ->
+    decode_integer_list(JsonTerm);
+decode(mark_posts_as_read, JsonTerm) ->
     decode_binary_list(JsonTerm);
 decode(_, _) ->
     {error, invalid}.
 
-decode_message(#{<<"bodyBlobs">> := BodyBlobs} = JsonTerm) ->
+decode_message_bundle(#{<<"bodyBlobs">> := BodyBlobs} = JsonTerm) ->
     case valid_keys([<<"topMessageId">>,
                      <<"bodyBlobs">>,
                      <<"attachmentBlobs">>], JsonTerm) of
@@ -145,8 +152,8 @@ decode_message(#{<<"bodyBlobs">> := BodyBlobs} = JsonTerm) ->
             TopMessageId = maps:get(<<"topMessageId">>, JsonTerm, not_set),
             AttachmentBlobs = maps:get(<<"attachmentBlobs">>, JsonTerm, []),
             maybe
-                {ok, DecodedBodyBlobs} ?= decode_blobs(BodyBlobs),
-                {ok, DecodedAttachmentBlobs} ?= decode_nested_blobs(AttachmentBlobs),
+                {ok, DecodedBodyBlobs} ?= decode_body_blobs(BodyBlobs),
+                {ok, DecodedAttachmentBlobs} ?= decode_attachment_blobs(AttachmentBlobs),
                 {ok, #{message => #message{top_message_id = TopMessageId},
                        body_blobs => DecodedBodyBlobs,
                        attachment_blobs => DecodedAttachmentBlobs}}
@@ -158,30 +165,46 @@ decode_message(#{<<"bodyBlobs">> := BodyBlobs} = JsonTerm) ->
             {error, invalid}
     end.
 
-decode_blobs(Blobs) ->
-    decode_blobs(Blobs, []).
+decode_body_blobs(Blobs) ->
+    decode_body_blobs(Blobs, []).
 
-decode_blobs([], Acc) ->
+decode_body_blobs([], Acc) ->
     {ok, lists:reverse(Acc)};
-decode_blobs([#{<<"userId">> := UserId, <<"filename">> := Filename}|Rest], Acc)
+decode_body_blobs([#{<<"userId">> := UserId, <<"filename">> := Filename}|Rest], Acc)
   when is_integer(UserId), is_binary(Filename) ->
-    decode_blobs(Rest, [{UserId, Filename}|Acc]);
-decode_blobs(_, _) ->
+    decode_body_blobs(Rest, [{UserId, Filename}|Acc]);
+decode_body_blobs(_, _) ->
     {error, invalid}.
 
-decode_nested_blobs(NestedBlobs) ->
-    decode_nested_blobs(NestedBlobs, []).
+decode_attachment_blobs(NestedBlobs) ->
+    decode_attachment_blobs(NestedBlobs, []).
 
-decode_nested_blobs([], Acc) ->
+decode_attachment_blobs([], Acc) ->
     {ok, lists:reverse(Acc)};
-decode_nested_blobs([Blobs|Rest], Acc) ->
-    case decode_blobs(Blobs) of
+decode_attachment_blobs([Blobs|Rest], Acc) ->
+    case decode_nested_attachment_blobs(Blobs) of
         {ok, DecodedBlobs} ->
-            decode_nested_blobs(Rest, [DecodedBlobs|Acc]);
+            decode_attachment_blobs(Rest, [DecodedBlobs|Acc]);
         Error ->
             Error
     end;
-decode_nested_blobs(_, _) ->
+decode_attachment_blobs(_, _) ->
+    {error, invalid}.
+
+
+decode_nested_attachment_blobs(Blobs) ->
+    decode_nested_attachment_blobs(Blobs, []).
+
+decode_nested_attachment_blobs([], Acc) ->
+    {ok, lists:reverse(Acc)};
+decode_nested_attachment_blobs([#{<<"userId">> := UserId,
+                                  <<"metadata">> := Metadata,
+                                  <<"filename">> := Filename}|Rest], Acc)
+  when is_integer(UserId), is_binary(Metadata), is_binary(Filename) ->
+    decode_nested_attachment_blobs(Rest, [#{user_id => UserId,
+                                            metadata => Metadata,
+                                            filename => Filename}|Acc]);
+decode_nested_attachment_blobs(_, _) ->
     {error, invalid}.
 
 decode_file(#{<<"filename">> := Filename,
@@ -309,13 +332,13 @@ encode(switch_user, #{user_id := UserId, username := Username, session_id := Ses
     #{<<"userId">> => UserId,
       <<"username">> => Username,
       <<"sessionId">> => base64:encode(SessionId)};
-encode(create_message, Message) ->
-    encode_message(Message);
 encode(login, #{user_id := UserId, username := Username, session_id := SessionId}) ->
     #{<<"userId">> => UserId,
       <<"username">> => Username,
       <<"sessionId">> => base64:encode(SessionId)};
-encode(read_top_messages, TopMessageBundles) ->
+encode(create_message, Message) ->
+    encode_message(Message);
+encode(read_top_messages, MessageBundles) ->
     lists:map(fun(#{message := Message,
                     attachment_ids := AttachmentIds,
                     reply_count := ReplyCount,
@@ -324,12 +347,11 @@ encode(read_top_messages, TopMessageBundles) ->
                       EncodedMessage#{<<"attachmentIds">> => AttachmentIds,
                                       <<"replyCount">> => ReplyCount,
                                       <<"isRead">> => IsRead}
-              end, TopMessageBundles);
-encode(read_reply_messages, ReplyMessages) ->
-    lists:map(fun({Message, AttachmentIds}) ->
-                      EncodedMessage = encode_message(Message),
-                      EncodedMessage#{<<"attachmentIds">> => AttachmentIds}
-              end, ReplyMessages);
+              end, MessageBundles);
+encode(read_messages, MessageBundles) ->
+    encode_read_messages(MessageBundles);
+encode(read_reply_messages, MessageBundles) ->
+    encode_read_messages(MessageBundles);
 encode(search_recipients, Recipients) ->
     encode_recipients(Recipients);
 encode(create_post, {Post, ReadPostIds}) ->
@@ -367,10 +389,16 @@ encode_message(#message{id = Id,
     JsonTerm = #{<<"id">> => Id,
                  <<"authorId">> => AuthorId,
                  <<"authorUsername">> => AuthorUsername,
-                 <<"created">> => Created,
-                 <<"readCount">> => 0,
-                 <<"replyCount">> => 0},
+                 <<"created">> => Created},
     add_optional_members([{<<"topMessageId">>, TopMessageId}], JsonTerm).
+
+encode_read_messages(MessagesBundles) ->
+    lists:map(fun(#{message := Message,
+                    attachment_ids := AttachmentIds,
+                    is_read := IsRead}) ->
+                      EncodedMessage = encode_message(Message),
+                      EncodedMessage#{<<"attachmentIds">> => AttachmentIds, <<"isRead">> => IsRead}
+              end, MessagesBundles).
 
 encode_recipients([]) ->
     [];

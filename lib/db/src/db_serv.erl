@@ -1,11 +1,12 @@
-% -*- fill-cowelumn: 100; -*-
+% -*- fill-column: 100; -*-
 
 -module(db_serv).
 -export([start_link/0, stop/0,
          %% User management
          get_user_id/0,
          %% Direct messaging
-         create_message/3, read_top_messages/1, read_reply_messages/2, delete_message/2,
+         create_message/3, read_top_messages/1, read_messages/1, read_reply_messages/2,
+         delete_message/2,
          %% Forum
          create_post/1, read_top_posts/0, read_posts/1, read_posts/2, read_post_ids/1,
          read_post_ids/2, delete_post/1, toggle_post_like/2,
@@ -57,7 +58,9 @@ get_user_id() ->
 
 -spec create_message(#message{},
                      [{db:user_id(), main:filename()}],
-                     [[{db:user_id(), main:filename()}]]) ->
+                     [[#{user_id => db:user_id(),
+                         metadata => main:filename(),
+                         filename => main:filename()}]]) ->
           {ok, #message{}} | {error, file:posix() | access_denied}.
 
 create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
@@ -68,18 +71,29 @@ create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
 %%
 
 -spec read_top_messages(db:user_id()) -> {ok, [#{message => #message{},
-                                                 reply_message_ids => [db:message_id()],
-                                                 attachment_ids => [db:attachment_id()]}]}.
+                                                 attachment_ids => [db:attachment_id()],
+                                                 reply_message_ids => [db:message_id()]}]}.
 
 read_top_messages(UserId) ->
     serv:call(?MODULE, {read_top_messages, UserId}).
+
+%%
+%% Exported: read_messages
+%%
+
+-spec read_messages([db:message_id()]) -> {ok, [#{message => #message{},
+                                                  attachment_ids => [db:attachment_id()]}]}.
+
+read_messages(MessageIds) ->
+    serv:call(?MODULE, {read_messages, MessageIds}).
 
 %%
 %% Exported: read_reply_messages
 %%
 
 -spec read_reply_messages(db:user_id(), db:message_id()) ->
-          {ok, [{{#message{}, [db:attachment_id()]}}]} |
+          {ok, [#{message => #message{},
+                  attachment_ids => [db:attachment_id()]}]} |
           {error, access_denied}.
 
 read_reply_messages(UserId, TopLevelMessageId) ->
@@ -253,6 +267,9 @@ message_handler(S) ->
         {call, From, {read_top_messages, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:read_top_messages(UserId)};
+        {call, From, {read_messages, MessageIds} = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            {reply, From, db_message_db:read_messages(MessageIds)};
         {call, From, {read_reply_messages, UserId, TopMessageId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_message_db:read_reply_messages(UserId, TopMessageId)};

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title id="head-title">Post</title>
+    <title>Message</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css" />
@@ -18,10 +18,9 @@
     <script src="js/purify.min.js" defer></script>
     <script src="js/marked.min.js" defer></script>
     <script src="js/bespoke.js" defer></script>
-    <script src="js/file_db.js" defer></script>
-    <script src="js/top_posts.js" defer></script>
-    <script src="js/add_reply_post.js" defer></script>
-    <script src="js/post.js" defer></script>
+    <script src="js/crypto.js" defer></script>
+    <script src="js/add_reply_message.js" defer></script>
+    <script src="js/message.js" defer></script>
   </head>
   <body hidden>
     <!-- Header -->
@@ -30,13 +29,12 @@
         <div class="sticky-header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-background-default">
           <!-- Go back -->
           <div>
-            <button  onclick="Bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
+            <button  onclick="Bespoke.gotoPage(event, 'top_messages.html')" data-back-destination="top_messages.html" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
           </div>
           <!-- Title -->
           <div class="uk-width-expand">
-            <span id="header-title" class="uk-text-bold"></span>
+            <span class="uk-text-bold">Message</span>
             <span class="uk-text-meta">(<span id="title-username"></span>)</span>
-            <span id="header-reply-level" class="uk-text-meta"></span>
           </div>
           <!-- Toolbar -->
           <div>
@@ -47,10 +45,10 @@
     </div>
     <!-- Top container -->
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
-      <!-- Parent post and replies -->
+      <!-- Parent message and replies -->
       <div id="main-content" class="uk-margin-small-left uk-margin-small-right uk-margin-top">
-        <!-- Parent post -->
-        <div id="parent-post">
+        <!-- Parent message -->
+        <div id="parent-message">
           <!-- Parent title -->
           <div id="parent-title"></div>
           <!-- Parent body -->
@@ -58,32 +56,31 @@
           <div id="parent-attachments"></div>
           <div class="uk-flex uk-flex-between uk-flex-middle">
             <!-- Parent meta-data -->
-            <div class="post-meta-data uk-text-meta">
+            <div class="message-meta-data uk-text-meta">
               <span id="parent-author"></span> •
               <span id="parent-age"></span> •
-              <button onclick="Post.toggleLike(event)" class="toolbar-button" id="parent-like-icon" uk-icon="icon: heart"></button> <span id="parent-likes-count"></span> •
               <span uk-icon="comment"></span> <span id="parent-replies"></span>
             </div>
             <!-- Parent actions -->
             <div>
-              <button id="parent-delete" onclick="Post.openDeletePostDialog(event)" data-post-id="0" class="toolbar-button" uk-icon="trash" uk-tooltip="Delete"></button>
-              <button onclick="Bespoke.gotoPage(event, 'add_reply_post.html')" class="toolbar-button" uk-icon="reply" uk-tooltip="Reply"></button>
+              <button id="parent-delete" onclick="Message.openDeleteMessageDialog(event)" data-message-id="0" class="toolbar-button" uk-icon="trash" uk-tooltip="Delete"></button>
+              <button onclick="Bespoke.gotoPage(event, 'add_reply_message.html')" class="toolbar-button" uk-icon="reply" uk-tooltip="Reply"></button>
             </div>
           </div>
-          <hr class="uk-margin-small parent-post-divider">
+          <hr class="uk-margin-small message-divider">
         </div>
         <!-- Replies -->
         <div id="replies"></div>
       </div>
     </div>
-    <!-- Dialog to delete a post -->
-    <div id="delete-post-dialog" uk-modal>
+    <!-- Dialog to delete a message -->
+    <div id="delete-message-dialog" uk-modal>
       <div class="uk-modal-dialog uk-modal-body">
-        <h2 class="uk-modal-title">Delete Post</h2>
-        <p id="delete-post-body"></p>
+        <h2 class="uk-modal-title">Delete Message</h2>
+        <p id="delete-message-body"></p>
         <p class="uk-text-right">
           <button class="uk-button uk-button-default uk-modal-close" type="button">No</button>
-          <button class="uk-button uk-button-danger" onclick="Post.deletePost(event)">Yes</button>
+          <button class="uk-button uk-button-danger" onclick="Message.deleteMessage(event)">Yes</button>
       </div>
     </div>
   </body>

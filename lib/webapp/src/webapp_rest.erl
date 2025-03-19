@@ -225,8 +225,8 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     UpdatedTopMessageBundles =
                         lists:map(
                           fun(#{message := #message{id = MessageId} = Message,
-                                reply_message_ids := ReplyMessageIds,
-                                attachment_ids := AttachmentIds}) ->
+                                attachment_ids := AttachmentIds,
+                                reply_message_ids := ReplyMessageIds}) ->
                                   #{message => Message,
                                     attachment_ids => AttachmentIds,
                                     reply_count => length(ReplyMessageIds),
@@ -249,7 +249,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                         lists:map(fun(#post{id = PostId} = Post) ->
                                           {ok, AllPosts} = db_serv:read_posts([PostId], recursive),
                                           ReplyPosts = lists:keydelete(PostId, #post.id, AllPosts),
-                                          ReadCount = count_read_replies(ReadPostIds, ReplyPosts),
+                                          ReadCount = count_read_post_replies(ReadPostIds, ReplyPosts),
                                           {Post, ReadCount}
                                   end, TopPosts),
                     JsonTerm = webapp_marshalling:encode(read_top_posts,
@@ -428,15 +428,40 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             send_response(Socket, Request, bad_request)
                     end
             end;
+        ["api", "read_messages"] ->
+            case decode(Socket, Request, Body, read_messages) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, MessageIds} ->
+                    ReadMessageIds = webapp_cache:list_read_messages(UserId),
+                    {ok, MessageBundles} = db_serv:read_messages(MessageIds),
+                    UpdatedMessageBundles =
+                        lists:map(
+                          fun(#{message := #message{id = MessageId}} = MessageBundle) ->
+                                  MessageBundle#{is_read =>
+                                                     is_message_read([MessageId], ReadMessageIds)}
+                          end, MessageBundles),
+                    JsonTerm = webapp_marshalling:encode(read_messages, UpdatedMessageBundles),
+                    send_response(Socket, Request, {json, JsonTerm})
+            end;
         ["api", "read_reply_messages"] ->
             case decode(Socket, Request, Body, read_reply_messages) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, MessageIds} ->
                     case db_serv:read_reply_messages(UserId, MessageIds) of
-                        {ok, ReplyMessages} ->
-                            JsonTerm = webapp_marshalling:encode(read_reply_messages,
-                                                                 ReplyMessages),
+                        {ok, MessageBundles} ->
+                            ReadMessageIds = webapp_cache:list_read_messages(UserId),
+                            UpdatedMessageBundles =
+                                lists:map(
+                                  fun(#{message := #message{id = MessageId}} = MessageBundle) ->
+                                          MessageBundle#{is_read =>
+                                                             is_message_read([MessageId],
+                                                                             ReadMessageIds)}
+                                  end, MessageBundles),
+                            JsonTerm =
+                                webapp_marshalling:encode(read_reply_messages,
+                                                          UpdatedMessageBundles),
                             send_response(Socket, Request, {json, JsonTerm});
                         {error, Reason} ->
                             ?log_error("/api/read_messages: ~p", [Reason]),
@@ -609,9 +634,18 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                         absPath => filename:join([<<"/tmp">>, UniqueFilename]),
                                         contentType => ContentType}),
             send_response(Socket, Request, {json, JsonTerm});
-        %% Read cache
-        ["api", "upload_read_cache"] ->
-            case decode(Socket, Request, Body, upload_read_cache) of
+        %% Mark messages as read
+        ["api", "mark_messages_as_read"] ->
+            case decode(Socket, Request, Body, mark_messages_as_read) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, MessageIds} ->
+                    ok = webapp_cache:mark_messages_as_read(UserId, MessageIds),
+                    send_response(Socket, Request, no_content)
+            end;
+        %% Mark posts as read
+        ["api", "mark_posts_as_read"] ->
+            case decode(Socket, Request, Body, mark_posts_as_read) of
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, PostIds} ->
@@ -738,14 +772,14 @@ redirect_to_loader(Socket, Request) ->
 %% Read cache
 %%
 
-count_read_replies(_ReadPostIds, []) ->
+count_read_post_replies(_ReadPostIds, []) ->
     0;
-count_read_replies(ReadPostIds, [#post{id = PostId}|Rest]) ->
+count_read_post_replies(ReadPostIds, [#post{id = PostId}|Rest]) ->
     case lists:member(PostId, ReadPostIds) of
         true ->
-            1 + count_read_replies(ReadPostIds, Rest);
+            1 + count_read_post_replies(ReadPostIds, Rest);
         false ->
-            count_read_replies(ReadPostIds, Rest)
+            count_read_post_replies(ReadPostIds, Rest)
     end.
 
 is_message_read([], _ReadMessageIds) ->

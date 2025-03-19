@@ -39,7 +39,8 @@
 
 %% Direct messaging disk layout:
 %% ?BESPOKE_MESSAGE_PATH/<message_id>/<user_id>
-%%                                   /<user_id>-<attachment_id>-<filename>
+%%                                   /<user_id>-<attachment_id>
+%%                                   /<user_id>-<attachment_id>.dat
 
 -record(message,
         {
@@ -72,7 +73,7 @@
         }).
 
 %% File sharing disk layout:
-%% ?BESPOKE_FILE_PATH/<file-id>-<filename>
+%% ?BESPOKE_FILE_PATH/<file_id>-<filename>
 
 -record(file,
         {
