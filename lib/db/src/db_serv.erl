@@ -82,7 +82,8 @@ read_top_messages(UserId) ->
 %%
 
 -spec read_messages([db:message_id()]) -> {ok, [#{message => #message{},
-                                                  attachment_ids => [db:attachment_id()]}]}.
+                                                  attachment_ids => [db:attachment_id()],
+                                                  reply_message_ids => [db:message_id()]}]}.
 
 read_messages(MessageIds) ->
     serv:call(?MODULE, {read_messages, MessageIds}).

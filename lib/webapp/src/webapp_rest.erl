@@ -224,14 +224,14 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     {ok, TopMessageBundles} = db_serv:read_top_messages(UserId),
                     UpdatedTopMessageBundles =
                         lists:map(
-                          fun(#{message := #message{id = MessageId} = Message,
-                                attachment_ids := AttachmentIds,
-                                reply_message_ids := ReplyMessageIds}) ->
-                                  #{message => Message,
-                                    attachment_ids => AttachmentIds,
-                                    reply_count => length(ReplyMessageIds),
-                                    is_read => is_message_read([MessageId|ReplyMessageIds],
-                                                               ReadMessageIds)}
+                          fun(#{message := #message{id = MessageId},
+                                reply_message_ids := ReplyMessageIds} = MessageBundle) ->
+                                  UpdatedMessageBundle =
+                                      maps:remove(reply_message_ids, MessageBundle),
+                                  UpdatedMessageBundle#
+                                      {reply_count => length(ReplyMessageIds),
+                                       is_read => is_message_read([MessageId|ReplyMessageIds],
+                                                                  ReadMessageIds)}
                           end, TopMessageBundles),
                     JsonTerm =
                         webapp_marshalling:encode(read_top_messages, UpdatedTopMessageBundles),
@@ -437,9 +437,26 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     {ok, MessageBundles} = db_serv:read_messages(MessageIds),
                     UpdatedMessageBundles =
                         lists:map(
-                          fun(#{message := #message{id = MessageId}} = MessageBundle) ->
-                                  MessageBundle#{is_read =>
-                                                     is_message_read([MessageId], ReadMessageIds)}
+                          fun(#{message := #message{
+                                              id = MessageId,
+                                              top_message_id = TopMessageId}} = MessageBundle) ->
+                                  case TopMessageId of
+                                      not_set ->
+                                          UpdatedMessageBundle =
+                                              maps:remove(reply_message_ids, MessageBundle),
+                                          ReplyMessageIds =
+                                              maps:get(reply_message_ids, MessageBundle, []),
+                                          UpdatedMessageBundle#
+                                              {reply_count =>
+                                                   length(ReplyMessageIds),
+                                               is_read =>
+                                                   is_message_read([MessageId|ReplyMessageIds],
+                                                                   ReadMessageIds)};
+                                      _ ->
+                                          MessageBundle#
+                                              {is_read =>
+                                                   is_message_read([MessageId], ReadMessageIds)}
+                                  end
                           end, MessageBundles),
                     JsonTerm = webapp_marshalling:encode(read_messages, UpdatedMessageBundles),
                     send_response(Socket, Request, {json, JsonTerm})

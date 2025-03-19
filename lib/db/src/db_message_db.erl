@@ -211,21 +211,15 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
 
 read_top_messages(UserId) ->
     TopMessageIds = idets:lookup(?TOP_MESSAGE_DB, UserId),
-    {ok, MessageBundles} = read_messages(TopMessageIds),
-    UpdatedMessageBundles =
-        lists:map(
-          fun(#{message := #message{id = MessageId}} = MessageBundle) ->
-                  ReplyMessageIds = idets:lookup(?REPLY_MESSAGE_DB, MessageId),
-                  MessageBundle#{reply_message_ids => ReplyMessageIds}
-          end, MessageBundles),
-    {ok, UpdatedMessageBundles}.
+    read_messages(TopMessageIds).
 
 %%
 %% Exported: read_messages
 %%
 
 -spec read_messages([db:message_id()]) -> {ok, [#{message => #message{},
-                                                  attachment_ids => [db:attachment_id()]}]}.
+                                                  attachment_ids => [db:attachment_id()],
+                                                  reply_message_ids => [db:message_id()]}]}.
 
 read_messages(MessageIds) ->
     Messages = sort_messages(lookup_messages(MessageIds)),
@@ -234,13 +228,22 @@ read_messages(MessageIds) ->
                           AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
                           #{message => Message, attachment_ids => AttachmentIds}
                   end, Messages),
-    {ok, MessageBundles}.
+    {ok, add_reply_message_ids(MessageBundles)}.
 
 lookup_messages([]) ->
     [];
 lookup_messages([MessageId|Rest]) ->
     [Message] = dets:lookup(?MESSAGE_DB, MessageId),
     [Message|lookup_messages(Rest)].
+
+add_reply_message_ids(MessageBundles) ->
+    lists:map(
+      fun(#{message := #message{id = MessageId, top_message_id = not_set}} = MessageBundle) ->
+              ReplyMessageIds = idets:lookup(?REPLY_MESSAGE_DB, MessageId),
+              MessageBundle#{reply_message_ids => ReplyMessageIds};
+         (MessageBundle) ->
+              MessageBundle
+      end, MessageBundles).
 
 %%
 %% Exported: read_reply_messages
@@ -256,7 +259,7 @@ read_reply_messages(UserId, TopMessageId) ->
     case lists:member(TopMessageId, RecipientMessageIds) of
         true ->
             MessageIds = idets:lookup(?REPLY_MESSAGE_DB, TopMessageId),
-            {ok, read_messages(MessageIds)};
+            read_messages(MessageIds);
         false ->
             {error, access_denied}
     end.

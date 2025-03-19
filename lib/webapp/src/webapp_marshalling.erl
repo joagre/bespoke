@@ -339,19 +339,11 @@ encode(login, #{user_id := UserId, username := Username, session_id := SessionId
 encode(create_message, Message) ->
     encode_message(Message);
 encode(read_top_messages, MessageBundles) ->
-    lists:map(fun(#{message := Message,
-                    attachment_ids := AttachmentIds,
-                    reply_count := ReplyCount,
-                    is_read := IsRead}) ->
-                      EncodedMessage = encode_message(Message),
-                      EncodedMessage#{<<"attachmentIds">> => AttachmentIds,
-                                      <<"replyCount">> => ReplyCount,
-                                      <<"isRead">> => IsRead}
-              end, MessageBundles);
+    encode_message_bundles(MessageBundles);
 encode(read_messages, MessageBundles) ->
-    encode_read_messages(MessageBundles);
+    encode_message_bundles(MessageBundles);
 encode(read_reply_messages, MessageBundles) ->
-    encode_read_messages(MessageBundles);
+    encode_message_bundles(MessageBundles);
 encode(search_recipients, Recipients) ->
     encode_recipients(Recipients);
 encode(create_post, {Post, ReadPostIds}) ->
@@ -392,8 +384,16 @@ encode_message(#message{id = Id,
                  <<"created">> => Created},
     add_optional_members([{<<"topMessageId">>, TopMessageId}], JsonTerm).
 
-encode_read_messages(MessagesBundles) ->
+encode_message_bundles(MessagesBundles) ->
     lists:map(fun(#{message := Message,
+                    attachment_ids := AttachmentIds,
+                    reply_count := ReplyCount,
+                    is_read := IsRead}) ->
+                      EncodedMessage = encode_message(Message),
+                      EncodedMessage#{<<"attachmentIds">> => AttachmentIds,
+                                      <<"replyCount">> => ReplyCount,
+                                      <<"isRead">> => IsRead};
+                 (#{message := Message,
                     attachment_ids := AttachmentIds,
                     is_read := IsRead}) ->
                       EncodedMessage = encode_message(Message),
