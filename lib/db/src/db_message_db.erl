@@ -108,16 +108,17 @@ create_message(#message{top_message_id = TopMessageId, author = Author} = Messag
         case TopMessageId of
             %% Is a top message!
             not_set ->
-                ignore;
+                [];
             %% Is a reply message!
             _ ->
                 idets:lookup(?RECIPIENT_DB, TopMessageId)
         end,
-    case RecipientMessageIds == ignore orelse lists:member(Author, RecipientMessageIds) of
+    case TopMessageId == not_set orelse lists:member(Author, RecipientMessageIds) of
         true ->
             MessageId = db_meta_db:read_next_message_id(),
             UpdatedMessage = Message#message{id = MessageId,
                                              created = db:seconds_since_epoch()},
+
             %% Update MESSAGE_DB
             ok = dets:insert(?MESSAGE_DB, UpdatedMessage),
             case create_blobs(UpdatedMessage, BodyBlobs, AttachmentBlobs) of
@@ -182,6 +183,7 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
                         [#{user_id := UserId,
                            metadata := MetadataFilename,
                            filename := BlobFilename}|Rest]) ->
+    %% Rename attachment blob
     CurrentBlobPath = filename:join([?BESPOKE_TMP_PATH, BlobFilename]),
     NewBlobPath = filename:join([MessageBlobPath, io_lib:format("~w-~w", [UserId, AttachmentId])]),
     ?log_info("Renaming attachment blob ~s to ~s", [CurrentBlobPath, NewBlobPath]),
@@ -189,6 +191,8 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
         ok ->
             %% Update ATTACHMENT_DB
             ok = idets:insert(?ATTACHMENT_DB, MessageId, AttachmentId),
+
+            %% Rename metadata blob
             CurrentMetadataBlobPath = filename:join([?BESPOKE_TMP_PATH, MetadataFilename]),
             NewMetadataBlobPath =
                 filename:join([MessageBlobPath,
@@ -272,42 +276,76 @@ read_reply_messages(UserId, TopMessageId) ->
 
 delete_message(UserId, MessageId) ->
     case dets:lookup(?MESSAGE_DB, MessageId) of
-        [#message{top_message_id = TopMessageId, author = UserId} = Message] ->
-            ok = delete_blobs(Message),
-            %% Update MESSAGE_DB
-            ok = dets:delete(?MESSAGE_DB, MessageId),
-            %% Update TOP_MESSAGE_DB
-            case TopMessageId of
-                not_set ->
-                    %% Is a top message!
-                    RecipientUserIds = idets:lookup(?RECIPIENT_DB, MessageId),
-                    %% Update TOP_MESSAGE_DB
-                    lists:foreach(
-                      fun(RecipientUserId) ->
-                              ok = idets:delete(?TOP_MESSAGE_DB, RecipientUserId, MessageId)
-                      end, RecipientUserIds),
-                    %% Update REPLY_MESSAGE_DB
-                    ok = idets:delete(?REPLY_MESSAGE_DB, MessageId),
-                    %% Update RECIPIENT_DB
-                    ok = idets:delete(?RECIPIENT_DB, MessageId);
-                _ ->
-                    %% Is a reply message!
-                    ok
-            end,
-            %% Update ATTACHMENT_DB
-            AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
-            lists:foreach(fun(AttachmentId) ->
-                                  ok = idets:delete(?ATTACHMENT_DB, AttachmentId)
-                          end, AttachmentIds);
+        %% Is a top message!
+        [#message{top_message_id = not_set, author = UserId} = Message] ->
+            %% Remove all reply messages
+            ReplyMessageIds = idets:lookup(?REPLY_MESSAGE_DB, MessageId),
+            lists:foreach(fun(ReplyMessageId) ->
+                                  [ReplyMessage] = dets:lookup(?MESSAGE_DB, ReplyMessageId),
+                                  ok = delete_message(ReplyMessage)
+                          end, ReplyMessageIds),
+
+            %% Remove top message
+            ok = delete_message(Message);
+        %% Is a reply message!
+        [#message{author = UserId} = Message] ->
+            ok = delete_message(Message);
         _ ->
             {error, access_denied}
     end.
 
+%% Is top message!
+delete_message(#message{id = MessageId, top_message_id = not_set} = Message) ->
+    ok = delete_blobs(Message),
+
+    %% Update MESSAGE_DB
+    ok = dets:delete(?MESSAGE_DB, MessageId),
+
+    %% Update TOP_MESSAGE_DB
+    RecipientUserIds = idets:lookup(?RECIPIENT_DB, MessageId),
+
+
+    lists:foreach(
+      fun(RecipientUserId) ->
+              ok = idets:delete(?TOP_MESSAGE_DB, RecipientUserId, MessageId)
+      end, RecipientUserIds),
+
+    ?log_info("TOP_MESSAGE_DB after delete: ~p", [idets:dump(?TOP_MESSAGE_DB)]),
+
+
+    %% Update REPLY_MESSAGE_DB
+    ok = idets:delete(?REPLY_MESSAGE_DB, MessageId),
+
+    %% Update RECIPIENT_DB
+    ok = idets:delete(?RECIPIENT_DB, MessageId),
+
+    %% Update ATTACHMENT_DB
+    AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
+    lists:foreach(fun(AttachmentId) ->
+                          ok = idets:delete(?ATTACHMENT_DB, AttachmentId)
+                  end, AttachmentIds);
+%% Is reply message!
+delete_message(#message{id = MessageId, top_message_id = TopMessageId} = Message) ->
+    ok = delete_blobs(Message),
+
+    %% Update REPLY_MESSAGE_DB
+    ok = idets:delete(?REPLY_MESSAGE_DB, TopMessageId, MessageId),
+
+    %% Update ATTACHMENT_DB
+    AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
+    lists:foreach(fun(AttachmentId) ->
+                          ok = idets:delete(?ATTACHMENT_DB, AttachmentId)
+                  end, AttachmentIds);
+delete_message(_Message) ->
+    {error, access_denied}.
+
 delete_blobs(#message{id = MessageId, top_message_id = TopMessageId}) ->
     RecipientUserIds =
         case TopMessageId of
+            %% Is a top message!
             not_set ->
                 idets:lookup(?RECIPIENT_DB, MessageId);
+            %% Is a reply message!
             _ ->
                 idets:lookup(?RECIPIENT_DB, TopMessageId)
         end,
