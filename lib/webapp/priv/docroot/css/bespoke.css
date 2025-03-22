@@ -118,7 +118,7 @@ input {
 
 .post-divider,
 .parent-post-divider,
-.message-divider,
+.message-divider {
     border-color: var(--uk-light-muted);
 }
 
