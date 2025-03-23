@@ -15,7 +15,10 @@
   * clean out file uploding from add_attachments.js
 
 * Refactoring of js:
-  * Rearrange commenting in javacript files (take inspiration from add_top_message.js)
+  * Rearrange commenting in javacript files (take inspiration from add_top_message.js etc)
+
+* Refactoring of erl:
+  * Rearrange commenting in erlang files (take inspiration from add_top_message.js etc)
 
 * Check iphone
 

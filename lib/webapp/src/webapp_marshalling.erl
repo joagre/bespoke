@@ -387,11 +387,13 @@ encode_message(#message{id = Id,
 encode_message_bundles(MessagesBundles) ->
     lists:map(fun(#{message := Message,
                     attachment_ids := AttachmentIds,
-                    reply_count := ReplyCount,
+                    reply_message_ids := ReplyMessageIds,
+                    read_count := ReadCount,
                     is_read := IsRead}) ->
                       EncodedMessage = encode_message(Message),
                       EncodedMessage#{<<"attachmentIds">> => AttachmentIds,
-                                      <<"replyCount">> => ReplyCount,
+                                      <<"replyMessageIds">> => ReplyMessageIds,
+                                      <<"readCount">> => ReadCount,
                                       <<"isRead">> => IsRead};
                  (#{message := Message,
                     attachment_ids := AttachmentIds,

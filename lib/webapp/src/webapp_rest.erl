@@ -226,12 +226,13 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                         lists:map(
                           fun(#{message := #message{id = MessageId},
                                 reply_message_ids := ReplyMessageIds} = MessageBundle) ->
-                                  UpdatedMessageBundle =
-                                      maps:remove(reply_message_ids, MessageBundle),
-                                  UpdatedMessageBundle#
-                                      {reply_count => length(ReplyMessageIds),
-                                       is_read => is_message_read([MessageId|ReplyMessageIds],
-                                                                  ReadMessageIds)}
+                                  {ok, AllMessages} = db_serv:read_messages(ReplyMessageIds),
+                                  ReplyMessages =
+                                      lists:keydelete(MessageId, #message.id, AllMessages),
+                                  ReadCount = count_read_replies(ReadMessageIds, ReplyMessages),
+                                  IsRead = is_read([MessageId|ReplyMessageIds], ReadMessageIds),
+                                  MessageBundle#{read_count => ReadCount,
+                                                 is_read => IsRead}
                           end, TopMessageBundles),
                     JsonTerm =
                         webapp_marshalling:encode(read_top_messages, UpdatedTopMessageBundles),
@@ -249,7 +250,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                         lists:map(fun(#post{id = PostId} = Post) ->
                                           {ok, AllPosts} = db_serv:read_posts([PostId], recursive),
                                           ReplyPosts = lists:keydelete(PostId, #post.id, AllPosts),
-                                          ReadCount = count_read_post_replies(ReadPostIds, ReplyPosts),
+                                          ReadCount = count_read_replies(ReadPostIds, ReplyPosts),
                                           {Post, ReadCount}
                                   end, TopPosts),
                     JsonTerm = webapp_marshalling:encode(read_top_posts,
@@ -442,20 +443,21 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                                               top_message_id = TopMessageId}} = MessageBundle) ->
                                   case TopMessageId of
                                       not_set ->
-                                          UpdatedMessageBundle =
-                                              maps:remove(reply_message_ids, MessageBundle),
                                           ReplyMessageIds =
                                               maps:get(reply_message_ids, MessageBundle, []),
-                                          UpdatedMessageBundle#
-                                              {reply_count =>
-                                                   length(ReplyMessageIds),
-                                               is_read =>
-                                                   is_message_read([MessageId|ReplyMessageIds],
-                                                                   ReadMessageIds)};
+                                          {ok, AllMessages} =
+                                              db_serv:read_messages(ReplyMessageIds),
+                                          ReplyMessages =
+                                              lists:keydelete(MessageId, #message.id, AllMessages),
+                                          ReadCount =
+                                              count_read_replies(ReadMessageIds, ReplyMessages),
+                                          IsRead = is_read([MessageId|ReplyMessageIds],
+                                                           ReadMessageIds),
+                                          MessageBundle#{read_count => ReadCount,
+                                                         is_read => IsRead};
                                       _ ->
-                                          MessageBundle#
-                                              {is_read =>
-                                                   is_message_read([MessageId], ReadMessageIds)}
+                                          IsRead = is_read([MessageId], ReadMessageIds),
+                                          MessageBundle#{is_read => IsRead}
                                   end
                           end, MessageBundles),
                     JsonTerm = webapp_marshalling:encode(read_messages, UpdatedMessageBundles),
@@ -472,9 +474,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                             UpdatedMessageBundles =
                                 lists:map(
                                   fun(#{message := #message{id = MessageId}} = MessageBundle) ->
-                                          MessageBundle#{is_read =>
-                                                             is_message_read([MessageId],
-                                                                             ReadMessageIds)}
+                                          IsRead = is_read([MessageId], ReadMessageIds),
+                                          MessageBundle#{is_read => IsRead}
                                   end, MessageBundles),
                             JsonTerm =
                                 webapp_marshalling:encode(read_reply_messages,
@@ -789,22 +790,29 @@ redirect_to_loader(Socket, Request) ->
 %% Read cache
 %%
 
-count_read_post_replies(_ReadPostIds, []) ->
+count_read_replies(_ReadPostIds, []) ->
     0;
-count_read_post_replies(ReadPostIds, [#post{id = PostId}|Rest]) ->
-    case lists:member(PostId, ReadPostIds) of
-        true ->
-            1 + count_read_post_replies(ReadPostIds, Rest);
-        false ->
-            count_read_post_replies(ReadPostIds, Rest)
-    end.
-
-is_message_read([], _ReadMessageIds) ->
-    true;
-is_message_read([MessageId|Rest], ReadMessageIds) ->
+count_read_replies(ReadMessageIds, [#{message := #message{id = MessageId}}|Rest]) ->
     case lists:member(MessageId, ReadMessageIds) of
         true ->
-            is_message_read(Rest, ReadMessageIds);
+            1 + count_read_replies(ReadMessageIds, Rest);
+        false ->
+            count_read_replies(ReadMessageIds, Rest)
+    end;
+count_read_replies(ReadPostIds, [#post{id = PostId}|Rest]) ->
+    case lists:member(PostId, ReadPostIds) of
+        true ->
+            1 + count_read_replies(ReadPostIds, Rest);
+        false ->
+            count_read_replies(ReadPostIds, Rest)
+    end.
+
+is_read([], _ReadMessageIds) ->
+    true;
+is_read([MessageId|Rest], ReadMessageIds) ->
+    case lists:member(MessageId, ReadMessageIds) of
+        true ->
+            is_read(Rest, ReadMessageIds);
         false ->
             false
     end.

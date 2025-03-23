@@ -260,7 +260,9 @@ add_reply_message_ids(MessageBundles) ->
 
 read_reply_messages(UserId, TopMessageId) ->
     RecipientMessageIds = idets:lookup(?RECIPIENT_DB, UserId),
-    case lists:member(TopMessageId, RecipientMessageIds) of
+    [TopMessage] = dets:lookup(?MESSAGE_DB, TopMessageId),
+    case UserId == TopMessage#message.author orelse
+        lists:member(TopMessageId, RecipientMessageIds) of
         true ->
             MessageIds = idets:lookup(?REPLY_MESSAGE_DB, TopMessageId),
             read_messages(MessageIds);
