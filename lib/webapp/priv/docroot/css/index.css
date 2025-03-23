@@ -2,6 +2,10 @@
     opacity: 0.5;
 }
 
+#unread-messages-counter {
+    color: var(--uk-warning);
+}
+
 #unread-posts-counter {
     color: var(--uk-warning);
 }
