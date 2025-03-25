@@ -7,6 +7,7 @@
     --uk-warning: #faa05a;
     --uk-danger: #f0506e;
     --uk-meta: #666;
+
     /* Custom colors */
     --uk-light-primary: #70BAF3;
     --uk-light-danger: #f58a9a;
@@ -20,12 +21,18 @@ html {
 
 html, body {
     font-family: "Gill Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
     /* font-family: "Courier New", Courier, monospace; */
+
     /* font-family: "Andale Mono", monospace; */
+
     /* font-family: "Lucida Console", Monaco, monospace; */
+
     /* font-family: Monaco, "Lucida Console", monospace; */
+
     margin: 0;
     padding: 0;
+
     /* Jesus wept: https://stackoverflow.com/a/58048556 */
     height: 100%;
 }
@@ -67,7 +74,7 @@ input {
 /* Footer and header styling */
 
 .header {
-    padding: 0.5em 0.5em 0.5em 0.5em;
+    padding: 0.5em;
     margin-bottom: 1em;
     opacity: 1;
 }
@@ -81,13 +88,13 @@ input {
 }
 
 .sticky-header {
-    padding: 0.5em 0.5em 0.5em 0.5em;
+    padding: 0.5em;
     opacity: 1;
 }
 
 .footer {
     margin-top: 0.75em;
-    padding: 0.5em 0.5em 0.5em 0.5em;
+    padding: 0.5em;
 }
 
 /* Post styling */
@@ -127,31 +134,36 @@ input {
     font-weight: bold;
 }
 
-Can I make sure that the last p has no margin-bottom?
-
-
-#parent-body p,
+/* SPECIFICITY 0,1,0 */
 .quote-body p,
-.reply-body p,
+.reply-body p {
     margin-top: 0.25em;
     margin-bottom: 0.25em;
 }
 
-#parent-body p:first-child,
+/* SPECIFICITY 0,1,1 */
 .quote-body p:first-child,
 .reply-body p:first-child {
     margin-top: 0;
 }
 
-#parent-body p:last-child,
 .quote-body p:last-child,
 .reply-body p:last-child {
     margin-bottom: 0;
 }
 
-#parent-body p:last-child,
-.quote-body p:last-child,
-.reply-body p:last-child {
+/* SPECIFICITY 1,0,0 */
+#parent-body p {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+}
+
+/* SPECIFICITY 1,0,1 */
+#parent-body p:first-child {
+    margin-top: 0;
+}
+
+#parent-body p:last-child {
     margin-bottom: 0;
 }
 
@@ -162,7 +174,7 @@ Can I make sure that the last p has no margin-bottom?
 }
 
 .attachment-item:first-child {
-    margin: 0.25em 0 0.25em 0;
+    margin: 0.25em 0
 }
 
 .attachment-content {
