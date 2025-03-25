@@ -72,7 +72,9 @@ create_message(Message, MessageBodyBlobs, MessageAttachmentBlobs) ->
 
 -spec read_top_messages(db:user_id()) -> {ok, [#{message => #message{},
                                                  attachment_ids => [db:attachment_id()],
-                                                 reply_message_ids => [db:message_id()]}]}.
+                                                 reply_message_ids => [db:message_id()],
+                                                 recipients => [#{user_id => db:user_id(),
+                                                                  username => db:username()}]}]}.
 
 read_top_messages(UserId) ->
     serv:call(?MODULE, {read_top_messages, UserId}).
@@ -83,7 +85,9 @@ read_top_messages(UserId) ->
 
 -spec read_messages([db:message_id()]) -> {ok, [#{message => #message{},
                                                   attachment_ids => [db:attachment_id()],
-                                                  reply_message_ids => [db:message_id()]}]}.
+                                                  reply_message_ids => [db:message_id()],
+                                                  recipients => [#{user_id => db:user_id(),
+                                                                   username => db:username()}]}]}.
 
 read_messages(MessageIds) ->
     serv:call(?MODULE, {read_messages, MessageIds}).

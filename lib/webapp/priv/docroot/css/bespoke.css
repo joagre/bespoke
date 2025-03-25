@@ -127,6 +127,9 @@ input {
     font-weight: bold;
 }
 
+Can I make sure that the last p has no margin-bottom?
+
+
 #parent-body p,
 .quote-body p,
 .reply-body p,
@@ -136,8 +139,14 @@ input {
 
 #parent-body p:first-child,
 .quote-body p:first-child,
-.reply-body p:first-child,
+.reply-body p:first-child {
     margin-top: 0;
+}
+
+#parent-body p:last-child,
+.quote-body p:last-child,
+.reply-body p:last-child {
+    margin-bottom: 0;
 }
 
 #parent-body p:last-child,

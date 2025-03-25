@@ -211,7 +211,9 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
 
 -spec read_top_messages(db:user_id()) -> {ok, [#{message => #message{},
                                                  attachment_ids => [db:attachment_id()],
-                                                 reply_message_ids => [db:message_id()]}]}.
+                                                 reply_message_ids => [db:message_id()],
+                                                 recipients => [#{user_id => db:user_id(),
+                                                                  username => db:username()}]}]}.
 
 read_top_messages(UserId) ->
     TopMessageIds = idets:lookup(?TOP_MESSAGE_DB, UserId),
@@ -223,7 +225,9 @@ read_top_messages(UserId) ->
 
 -spec read_messages([db:message_id()]) -> {ok, [#{message => #message{},
                                                   attachment_ids => [db:attachment_id()],
-                                                  reply_message_ids => [db:message_id()]}]}.
+                                                  reply_message_ids => [db:message_id()],
+                                                  recipients => [#{user_id => db:user_id(),
+                                                                   username => db:username()}]}]}.
 
 read_messages(MessageIds) ->
     Messages = sort_messages(lookup_messages(MessageIds)),
@@ -232,7 +236,7 @@ read_messages(MessageIds) ->
                           AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
                           #{message => Message, attachment_ids => AttachmentIds}
                   end, Messages),
-    {ok, add_reply_message_ids(MessageBundles)}.
+    {ok, add_top_message_info(MessageBundles)}.
 
 lookup_messages([]) ->
     [];
@@ -240,11 +244,18 @@ lookup_messages([MessageId|Rest]) ->
     [Message] = dets:lookup(?MESSAGE_DB, MessageId),
     [Message|lookup_messages(Rest)].
 
-add_reply_message_ids(MessageBundles) ->
+add_top_message_info(MessageBundles) ->
     lists:map(
       fun(#{message := #message{id = MessageId, top_message_id = not_set}} = MessageBundle) ->
               ReplyMessageIds = idets:lookup(?REPLY_MESSAGE_DB, MessageId),
-              MessageBundle#{reply_message_ids => ReplyMessageIds};
+              RecipientUserIds = idets:lookup(?RECIPIENT_DB, MessageId),
+              Recipients = lists:map(
+                             fun(UserId) ->
+                                     {ok, #user{name = Username}} = db_user_serv:get_user(UserId),
+                                     #{user_id => UserId, username => Username}
+                             end, RecipientUserIds),
+              MessageBundle#{reply_message_ids => ReplyMessageIds,
+                             recipients => Recipients};
          (MessageBundle) ->
               MessageBundle
       end, MessageBundles).

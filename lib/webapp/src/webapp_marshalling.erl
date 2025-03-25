@@ -388,11 +388,13 @@ encode_message_bundles(MessagesBundles) ->
     lists:map(fun(#{message := Message,
                     attachment_ids := AttachmentIds,
                     reply_message_ids := ReplyMessageIds,
+                    recipients := Recipients,
                     read_count := ReadCount,
                     is_read := IsRead}) ->
                       EncodedMessage = encode_message(Message),
                       EncodedMessage#{<<"attachmentIds">> => AttachmentIds,
                                       <<"replyMessageIds">> => ReplyMessageIds,
+                                      <<"recipients">> => encode_recipients(Recipients),
                                       <<"readCount">> => ReadCount,
                                       <<"isRead">> => IsRead};
                  (#{message := Message,
@@ -412,7 +414,10 @@ encode_recipient(#{user_id := UserId,
                    ignored := Ignored}) ->
     #{<<"userId">> => UserId,
       <<"username">> => Username,
-      <<"ignored">> => Ignored}.
+      <<"ignored">> => Ignored};
+encode_recipient(#{user_id := UserId,
+                   username := Username}) ->
+    #{<<"userId">> => UserId, <<"username">> => Username}.
 
 encode_post(#post{id = Id,
                   title = Title,
