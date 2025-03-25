@@ -1,0 +1,12 @@
+.substring {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.recipient {
+    cursor: pointer;
+}
+
+.no-uppercase {
+  text-transform: none !important;
+}
