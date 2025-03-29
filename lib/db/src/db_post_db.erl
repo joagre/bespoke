@@ -239,7 +239,7 @@ toggle_post_like(PostId, UserId) ->
 
 sort_posts(Posts) ->
     lists:sort(fun(PostA, PostB) ->
-                       PostA#post.created =< PostB#post.created
+                       PostA#post.created > PostB#post.created
                end, Posts).
 
 delete_and_inform(PostId) ->
