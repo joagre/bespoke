@@ -217,7 +217,8 @@ create_attachment_blobs(AttachmentId, #message{id = MessageId} = Message, Messag
 
 read_top_messages(UserId) ->
     TopMessageIds = idets:lookup(?TOP_MESSAGE_DB, UserId),
-    read_messages(TopMessageIds).
+    {ok, TopMessages} = read_messages(TopMessageIds),
+    {ok, reverse_sort_messages(TopMessages)}.
 
 %%
 %% Exported: read_messages
@@ -230,7 +231,7 @@ read_top_messages(UserId) ->
                                                                    username => db:username()}]}]}.
 
 read_messages(MessageIds) ->
-    Messages = sort_messages(lookup_messages(MessageIds)),
+    Messages = lookup_messages(MessageIds),
     MessageBundles =
         lists:map(fun(#message{id = MessageId} = Message) ->
                           AttachmentIds = idets:lookup(?ATTACHMENT_DB, MessageId),
@@ -276,7 +277,8 @@ read_reply_messages(UserId, TopMessageId) ->
         lists:member(TopMessageId, RecipientMessageIds) of
         true ->
             MessageIds = idets:lookup(?REPLY_MESSAGE_DB, TopMessageId),
-            read_messages(MessageIds);
+            {ok, ReplyMessages} = read_messages(MessageIds),
+            {ok, sort_messages(ReplyMessages)};
         false ->
             {error, access_denied}
     end.
@@ -397,8 +399,17 @@ delete_blobs(#message{id = MessageId, top_message_id = TopMessageId}) ->
 %%
 
 sort_messages(Messages) ->
-    lists:sort(fun(MessageA, MessageB) ->
-                       MessageA#message.created > MessageB#message.created
+    lists:sort(fun(MessageBundleA, MessageBundleB) ->
+                       #message{created= CreatedA} = maps:get(message, MessageBundleA),
+                       #message{created= CreatedB} = maps:get(message, MessageBundleB),
+                       CreatedA < CreatedB
+               end, Messages).
+
+reverse_sort_messages(Messages) ->
+    lists:sort(fun(MessageBundleA, MessageBundleB) ->
+                       #message{created= CreatedA} = maps:get(message, MessageBundleA),
+                       #message{created= CreatedB} = maps:get(message, MessageBundleB),
+                       CreatedA > CreatedB
                end, Messages).
 
 make_dir(DirPath) ->
