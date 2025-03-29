@@ -100,7 +100,7 @@ decode(create_message, JsonTerm) ->
 decode(read_messages, JsonTerm) ->
     decode_integer_list(JsonTerm);
 decode(read_reply_messages, JsonTerm) ->
-    decode_integer_list(JsonTerm);
+    decode_integer(JsonTerm);
 decode(delete_message, MessageId) ->
     decode_integer(MessageId);
 decode(search_recipients , #{<<"ignoredUsernames">> := IgnoredUsernames,

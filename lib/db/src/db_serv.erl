@@ -101,8 +101,8 @@ read_messages(MessageIds) ->
                   attachment_ids => [db:attachment_id()]}]} |
           {error, access_denied}.
 
-read_reply_messages(UserId, TopLevelMessageId) ->
-    serv:call(?MODULE, {read_reply_messages, UserId, TopLevelMessageId}).
+read_reply_messages(UserId, TopMessageId) ->
+    serv:call(?MODULE, {read_reply_messages, UserId, TopMessageId}).
 
 %%
 %% Exported: delete_message

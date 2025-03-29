@@ -467,8 +467,8 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case decode(Socket, Request, Body, read_reply_messages) of
                 {return, Result} ->
                     Result;
-                {ok, #user{id = UserId}, MessageIds} ->
-                    case db_serv:read_reply_messages(UserId, MessageIds) of
+                {ok, #user{id = UserId}, TopMessageId} ->
+                    case db_serv:read_reply_messages(UserId, TopMessageId) of
                         {ok, MessageBundles} ->
                             ReadMessageIds = webapp_cache:list_read_messages(UserId),
                             UpdatedMessageBundles =
