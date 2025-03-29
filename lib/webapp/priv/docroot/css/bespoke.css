@@ -129,6 +129,7 @@ input {
     border-color: var(--uk-light-muted);
 }
 
+#top-title,
 #parent-title {
     font-size: 110%;
     font-weight: bold;
@@ -153,16 +154,19 @@ input {
 }
 
 /* SPECIFICITY 1,0,0 */
+#top-body p,
 #parent-body p {
     margin-top: 0.25em;
     margin-bottom: 0.25em;
 }
 
 /* SPECIFICITY 1,0,1 */
+#top-body p:first-child,
 #parent-body p:first-child {
     margin-top: 0;
 }
 
+#top-body p:last-child,
 #parent-body p:last-child {
     margin-bottom: 0;
 }

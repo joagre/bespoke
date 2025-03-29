@@ -45,24 +45,24 @@
     </div>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <div id="main-content" class="uk-margin-small-left uk-margin-small-right uk-margin-top">
-        <!-- Parent message -->
-        <div id="parent-message">
-          <!-- Parent title -->
-          <div id="parent-title"></div>
-          <div class="uk-text-meta" id="parent-recipients"></div>
-          <!-- Parent body -->
-          <div id="parent-body"></div>
-          <div id="parent-attachments"></div>
+        <!-- Top message -->
+        <div id="top-message">
+          <!-- Top title -->
+          <div id="top-title"></div>
+          <div class="uk-text-meta" id="top-recipients"></div>
+          <!-- Top body -->
+          <div id="top-body"></div>
+          <div id="top-attachments"></div>
           <div class="uk-flex uk-flex-between uk-flex-middle">
-            <!-- Parent meta-data -->
+            <!-- Top meta-data -->
             <div class="message-meta-data uk-text-meta">
-              <span id="parent-author"></span> •
-              <span id="parent-age"></span> •
-              <span uk-icon="comment"></span> <span id="parent-replies"></span>
+              <span id="top-author"></span> •
+              <span id="top-age"></span> •
+              <span uk-icon="comment"></span> <span id="top-replies"></span>
             </div>
-            <!-- Parent actions -->
+            <!-- Top actions -->
             <div>
-              <button id="parent-delete" onclick="Message.openDeleteDialog(event)" data-message-id="0" class="toolbar-button" uk-icon="trash" uk-tooltip="Delete"></button>
+              <button id="top-delete" onclick="Message.openDeleteDialog(event)" data-message-id="0" class="toolbar-button" uk-icon="trash" uk-tooltip="Delete"></button>
               <button onclick="Bespoke.gotoPage(event, 'add_reply_message.html')" class="toolbar-button" uk-icon="reply" uk-tooltip="Reply"></button>
             </div>
           </div>
