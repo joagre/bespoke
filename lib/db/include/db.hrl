@@ -46,8 +46,6 @@
         {
          id = not_set :: db:message_id() | not_set,
          %% Note: Disallowed for top messages and mandatory for reply messages
-%%         parent_message_id = not_set :: db:message_id() | not_set,
-         %% Note: Disallowed for top messages and mandatory for reply messages
          top_message_id = not_set :: db:message_id() | not_set,
          author = not_set :: db:user_id() | not_set,
          created = not_set :: db:seconds_since_epoch() | not_set

@@ -23,7 +23,7 @@
     <script src="js/crypto.js" defer></script>
     <script src="js/file_db.js" defer></script>
     <script src="js/add_attachments.js" defer></script>
-    <script src="js/top_messages.js" defer></script>
+    <script src="js/message_lib.js" defer></script>
     <script src="js/add_reply_message.js" defer></script>
   </head>
   <body>
@@ -57,16 +57,16 @@
       </div>
       <div class="uk-flex uk-flex-1 uk-flex-column uk-margin-small-left uk-margin-small-right">
         <!-- Top title -->
-        <div id="top-title" class="uk-text-bold"></div>
+        <div id="parent-title" class="uk-text-bold"></div>
         <!-- Top quote -->
         <div class="uk-text-meta">
           <div class="quote" onclick="AddReplyMessage.toggleQuote(event)" uk-tooltip="Quote">
             <span id="quote-action" class="uk-icon-link" uk-icon="chevron-down"></span>
-            In reply to <span id="top-author"></span>
+            In reply to <span id="parent-author"></span>
           </div>
           <div class="uk-card uk-card-body uk-card-default uk-card-small uk-text-meta uk-margin-small-bottom quote-card" hidden>
             <!-- Top body -->
-            <div id="top-body"></div>
+            <div id="parent-body"></div>
           </div>
         </div>
         <!-- Form -->
@@ -83,7 +83,7 @@
           </div>
           <div id="form-selected-recipients" class="uk-margin-small-top" hidden></div>
           <!-- Body text -->
-          <textarea class="uk-flex-1 uk-margin-small-top uk-textarea uk-margin-small-bottom" placeholder="Enter body" id="form-body" style="flex-grow: 1; min-height: 0;"></textarea>
+          <textarea class="uk-flex-1 uk-margin-top uk-textarea uk-margin-small-bottom" placeholder="Enter body" id="form-body" style="flex-grow: 1; min-height: 0;"></textarea>
         </form>
       </div>
     </div>

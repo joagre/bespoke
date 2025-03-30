@@ -19,7 +19,8 @@
     <script src="js/marked.min.js" defer></script>
     <script src="js/bespoke.js" defer></script>
     <script src="js/crypto.js" defer></script>
-    <script src="js/top_messages.js" defer></script>
+    <script src="js/message_lib.js" defer></script>
+    <script src="js/add_reply_message.js" defer></script>
     <script src="js/message.js" defer></script>
   </head>
   <body hidden>
@@ -63,7 +64,7 @@
             <!-- Top actions -->
             <div>
               <button id="top-delete" onclick="Message.openDeleteDialog(event)" data-message-id="0" class="toolbar-button" uk-icon="trash" uk-tooltip="Delete"></button>
-              <button onclick="Bespoke.gotoPage(event, 'add_reply_message.html')" class="toolbar-button" uk-icon="reply" uk-tooltip="Reply"></button>
+              <button id="top-add-reply" onclick="AddReplyMessage.gotoAddReplyPage(event)" data-message-id="0" class="toolbar-button" uk-icon="reply" uk-tooltip="Reply"></button>
             </div>
           </div>
           <hr class="uk-margin-small message-divider">
