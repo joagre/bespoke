@@ -145,16 +145,19 @@ decode(_, _) ->
     {error, invalid}.
 
 decode_message_bundle(#{<<"bodyBlobs">> := BodyBlobs} = JsonTerm) ->
-    case valid_keys([<<"topMessageId">>,
+    case valid_keys([<<"parentMessageId">>,
+                     <<"topMessageId">>,
                      <<"bodyBlobs">>,
                      <<"attachmentBlobs">>], JsonTerm) of
         true ->
+            ParentMessageId = maps:get(<<"parentMessageId">>, JsonTerm, not_set),
             TopMessageId = maps:get(<<"topMessageId">>, JsonTerm, not_set),
             AttachmentBlobs = maps:get(<<"attachmentBlobs">>, JsonTerm, []),
             maybe
                 {ok, DecodedBodyBlobs} ?= decode_body_blobs(BodyBlobs),
                 {ok, DecodedAttachmentBlobs} ?= decode_attachment_blobs(AttachmentBlobs),
-                {ok, #{message => #message{top_message_id = TopMessageId},
+                {ok, #{message => #message{parent_message_id = ParentMessageId,
+                                           top_message_id = TopMessageId},
                        body_blobs => DecodedBodyBlobs,
                        attachment_blobs => DecodedAttachmentBlobs}}
             else
@@ -374,6 +377,7 @@ encode(upload_file, #{filename := Filename,
       <<"contentType">> => ContentType}.
 
 encode_message(#message{id = Id,
+                        parent_message_id = ParentMessageId,
                         top_message_id = TopMessageId,
                         author = AuthorId,
                         created = Created}) ->
@@ -382,7 +386,8 @@ encode_message(#message{id = Id,
                  <<"authorId">> => AuthorId,
                  <<"authorUsername">> => AuthorUsername,
                  <<"created">> => Created},
-    add_optional_members([{<<"topMessageId">>, TopMessageId}], JsonTerm).
+    add_optional_members([{<<"parentMessageId">>, ParentMessageId},
+                          {<<"topMessageId">>, TopMessageId}], JsonTerm).
 
 encode_message_bundles(MessagesBundles) ->
     lists:map(fun(#{message := Message,
