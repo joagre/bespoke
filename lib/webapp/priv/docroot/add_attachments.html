@@ -36,7 +36,7 @@
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
         <div>
-          <button onclick="Bespoke.gotoPage(event)" data-back-destination="" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
+          <button onclick="Bespoke.gotoPage(event)" data-back-destination="" class="uk-icon-button needs-action" uk-icon="arrow-left" uk-tooltip="Go back"></button>
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
@@ -47,7 +47,7 @@
         <div>
           <div uk-form-custom>
             <input id="file-upload" type="file" multiple>
-            <button class="uk-icon-button" type="button" uk-icon="icon: plus" uk-tooltip="Add attachment"></button>
+            <button class="uk-icon-button needs-action" type="button" uk-icon="icon: plus" uk-tooltip="Add attachment"></button>
           </div>
           <button onclick="AddAttachments.removeAttachment(event)" id="remove-button" class="uk-icon-button button-toggle" uk-icon="trash" uk-tooltip="Delete attachment" disabled></button>
         </div>

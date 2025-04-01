@@ -199,6 +199,16 @@ a.uk-icon-button {
   border: 1px solid var(--uk-primary);
 }
 
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.needs-action {
+  animation: pulse 1s infinite;
+}
+
 button.uk-icon-button[disabled] {
   border: 2px dashed var(--uk-light-muted);
   cursor: not-allowed;

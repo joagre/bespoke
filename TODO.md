@@ -8,11 +8,23 @@
 ## Web app
 
 * Add direct messaging frontend
-  * message.html
-  * add_reply_message.js
-  * update add_top_post.html to use progress and uploade from indexdb
-  * update add_reply_post.html to use progress and uploade from indexdb
+  * update add_top_post.html to use progress and upload from indexdb
+  * update add_reply_post.html to use progress and upload from indexdb
   * clean out file uploding from add_attachments.js
+
+message_lib.js
+add_top_message.js
+add_reply_message.js
+message.js
+top_messages.js
+has_been_read_divider.js
+progress.js
+
+
+add_top_post.js
+add_reply_post.js
+add_attachments.js
+
 
 * Refactoring of js:
   * Rearrange commenting in javacript files (take inspiration from add_top_message.js etc)
