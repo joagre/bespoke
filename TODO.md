@@ -7,11 +7,6 @@
 
 ## Web app
 
-* Add direct messaging frontend
-  * update add_top_post.html to use progress and upload from indexdb
-  * update add_reply_post.html to use progress and upload from indexdb
-  * clean out file uploding from add_attachments.js
-
 message_lib.js
 add_top_message.js
 add_reply_message.js
@@ -22,18 +17,11 @@ progress.js
 add_top_post.js
 add_reply_post.js
 post_lib.js
-
-
 top_posts.js
+
+
 post.js
-
-add_attachments.js
-
-
-
-
-
-make sure that no extra includes are done after cleanup
+add_attachments.js clean out
 
 resten...
 
