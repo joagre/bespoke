@@ -19,12 +19,24 @@ message.js
 top_messages.js
 has_been_read_divider.js
 progress.js
-
-
 add_top_post.js
+
+
+
+
 add_reply_post.js
+  post_lib.js?
+
+
 add_attachments.js
 
+
+top_posts.js
+post.js
+
+make sure that no extra includes are done after cleanup
+
+resten...
 
 * Refactoring of js:
   * Rearrange commenting in javacript files (take inspiration from add_top_message.js etc)
