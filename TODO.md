@@ -28,14 +28,13 @@ index.js
 bootstrap.js
 change_password.js
 loader.js
-
-
-
-
-
 login.js
 switch_user.js
 files.js
+
+
+
+
 
 bespoke.js
 
