@@ -13,18 +13,20 @@
 * Check iphone
 * Verify that the whole enchilda works on Pi
 * Build release
+* Extend reddit extraction to include media
 
-* Later: Add Signal protocol under the hood
-* Later: Add an admin user
-* Later: Add Contacts - A new top level entry point in index.html
+* Add Signal protocol under the hood
+* Add an admin user
+
+* Maybe: Add Contacts - A new top level entry point in index.html
   - Make it possible to add/remove all username instances to Contacts with a
     single click
   - Mark all username instances in Contacts
   - Only users in Contacts are suggested when writing a new direct message
-* Later: Add destructive aging of forum posts, direct messages and files
-* Later: Rewrite the post record in db.hrl to not use lists for replies, likers
+* Maybe: Add destructive aging of forum posts, direct messages and files
+* Maybe: Rewrite the post record in db.hrl to not use lists for replies, likers
   and attachments, i.e. use idets.erl tables instead in db_post_db.erl.
 
 ## Syncing
 
-- Later: Smart database syncing between B3S devices
+- Smart database syncing between B3S devices
