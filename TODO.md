@@ -19,9 +19,28 @@ add_reply_post.js
 post_lib.js
 top_posts.js
 post.js
+add_attachments.js
+file_db.js
+crypto.js
+crypto_worker.js
+sw.js
+index.js
+bootstrap.js
+change_password.js
 
 
-add_attachments.js clean out
+
+
+loader.js
+login.js
+switch_user.js
+files.js
+
+bespoke.js
+
+
+
+
 
 resten...
 
