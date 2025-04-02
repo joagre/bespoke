@@ -2,8 +2,9 @@
 
 ## Captive portal mechanics
 
-* Verify that the captive portal mechanics works flawlessly. Study more
-  extensively how real-life captive portals answer to `http/https` requests.
+## Misc
+
+- /README.md: Add a small video instead of a screenshot
 
 ## Web app
 
@@ -27,7 +28,3 @@
 ## Syncing
 
 - Later: Smart database syncing between B3S devices
-
-## Misc
-
-- /README.md: Add a small video instead of a screenshot
