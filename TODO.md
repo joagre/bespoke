@@ -7,57 +7,13 @@
 
 ## Web app
 
-message_lib.js
-add_top_message.js
-add_reply_message.js
-message.js
-top_messages.js
-has_been_read_divider.js
-progress.js
-add_top_post.js
-add_reply_post.js
-post_lib.js
-top_posts.js
-post.js
-add_attachments.js
-file_db.js
-crypto.js
-crypto_worker.js
-sw.js
-index.js
-bootstrap.js
-change_password.js
-loader.js
-login.js
-switch_user.js
-files.js
-
-
-
-
-
-bespoke.js
-
-
-
-
-
-resten...
-
-* Refactoring of js:
-  * Rearrange commenting in javacript files (take inspiration from add_top_message.js etc)
-
 * Refactoring of erl:
   * Rearrange commenting in erlang files (take inspiration from add_top_message.js etc)
-
 * Check iphone
-
 * Verify that the whole enchilda works on Pi
-
 * Build release
 
-* Add Signal protocol under the hood
-
+* Later: Add Signal protocol under the hood
 * Later: Add an admin user
 * Later: Add Contacts - A new top level entry point in index.html
   - Make it possible to add/remove all username instances to Contacts with a
