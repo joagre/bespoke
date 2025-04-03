@@ -2,7 +2,7 @@
 
 -module(db_post_db).
 -export([open/0, dump/0, sync/0, close/0, create_post/1, read_top_posts/0, read_posts/2,
-         read_post_ids/2, delete_post/1, toggle_post_like/2]).
+         read_post_ids/2, delete_post/2, toggle_post_like/2]).
 
 -include_lib("apptools/include/shorthand.hrl").
 -include_lib("apptools/include/log.hrl").
@@ -188,21 +188,21 @@ read_post_ids(PostIds, Mode) ->
 %% Exported: delete_post
 %%
 
--spec delete_post(db:post_id()) -> ok | {error, not_found}.
+-spec delete_post(db:user_id(), db:post_id()) -> ok | {error, access_denied}.
 
-delete_post(PostId) ->
+delete_post(UserId, PostId) ->
     case dets:lookup(?POST_DB, PostId) of
-        [#post{parent_post_id = ParentPostId}] when ParentPostId /= not_set ->
+        [#post{parent_post_id = ParentPostId, author = UserId}] when ParentPostId /= not_set ->
             [ParentPost] = dets:lookup(?POST_DB, ParentPostId),
             ok = insert_and_inform(
                    ParentPost#post{replies = lists:delete(PostId, ParentPost#post.replies)}),
             N = delete_all([PostId]),
             update_parent_count(ParentPost#post.id, -N);
-        [_TopPost] ->
+        [#post{author = UserId}] ->
             _N = delete_all([PostId]),
             ok;
-        [] ->
-            {error, not_found}
+        _ ->
+            {error, access_denied}
     end.
 
 delete_all([]) ->

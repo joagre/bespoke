@@ -9,7 +9,7 @@
          delete_message/2,
          %% Forum
          create_post/1, read_top_posts/0, read_posts/1, read_posts/2, read_post_ids/1,
-         read_post_ids/2, delete_post/1, toggle_post_like/2,
+         read_post_ids/2, delete_post/2, toggle_post_like/2,
          %% File sharing
          create_file/1, read_files/0, read_files/1, delete_file/1, file_is_uploaded/1,
          %% Subscription management
@@ -159,10 +159,10 @@ read_post_ids(PostIds, Mode) ->
 %% Exported: delete_post
 %%
 
--spec delete_post(db:post_id()) -> ok | {error, not_found}.
+-spec delete_post(db:user_id(), db:post_id()) -> ok | {error, access_denied}.
 
-delete_post(PostId) ->
-    serv:call(?MODULE, {delete_post, PostId}).
+delete_post(UserId, PostId) ->
+    serv:call(?MODULE, {delete_post, UserId, PostId}).
 
 %%
 %% Exported: toggle_post_like
@@ -294,9 +294,9 @@ message_handler(S) ->
         {call, From, {read_post_ids, PostIds, Mode} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, read_post_ids(PostIds, Mode)};
-        {call, From, {delete_post, PostId} = Call} ->
+        {call, From, {delete_post, UserId, PostId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            {reply, From, db_post_db:delete_post(PostId)};
+            {reply, From, db_post_db:delete_post(UserId, PostId)};
         {call, From, {toggle_post_like, PostId, UserId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_post_db:toggle_post_like(PostId, UserId)};

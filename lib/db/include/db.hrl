@@ -75,7 +75,7 @@
          replies = [] :: [db:post_id()] | '_',
          likers = [] :: [db:user_id()] | '_',
          attachments = [] :: [{main:filename(), db:content_type()}] | '_',
-         extra = #{} :: map()
+         extra = #{} :: map() | '_'
         }).
 
 %% File sharing disk layout:

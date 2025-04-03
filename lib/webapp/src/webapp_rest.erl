@@ -560,18 +560,13 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case decode(Socket, Request, Body, delete_post) of
                 {return, Result} ->
                     Result;
-                {ok, #user{name = Username}, PostId} ->
-                    case db_serv:read_posts([PostId]) of
-                        {ok, [#post{author = Username}]} ->
-                            case db_serv:delete_post(PostId) of
-                                ok ->
-                                    send_response(Socket, Request, no_content);
-                                {error, not_found} ->
-                                    send_response(Socket, Request, not_found)
-                            end
-                    end;
-                {ok, _User, _PostId} ->
-                    send_response(Socket, Request, forbidden)
+                {ok, #user{id = UserId}, PostId} ->
+                    case db_serv:delete_post(UserId, PostId) of
+                        ok ->
+                            send_response(Socket, Request, no_content);
+                        {error, access_denied} ->
+                            send_response(Socket, Request, forbidden)
+                    end
             end;
         ["api", "toggle_post_like"] ->
             case decode(Socket, Request, Body, toggle_post_like) of

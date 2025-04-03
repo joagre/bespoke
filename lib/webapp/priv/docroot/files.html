@@ -20,7 +20,7 @@
     <script src="js/bespoke.js" defer></script>
     <script src="js/files.js" defer></script>
   </head>
-  <body>
+  <body hidden>
     <!-- Header -->
     <div class="sticky-header-container">
       <div class="uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
@@ -37,7 +37,7 @@
           <!-- Toolbar -->
           <div uk-form-custom>
             <input id="file-upload" type="file" multiple>
-            <button class="uk-icon-button" type="button" uk-icon="icon: plus" uk-tooltip="Upload file"></button>
+            <button id="add-button" class="uk-icon-button" type="button" uk-icon="icon: plus" uk-tooltip="Upload file"></button>
           </div>
         </div>
       </div>
