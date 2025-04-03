@@ -36,7 +36,7 @@
          password_hash = not_set :: db_user_serv:password_hash() | not_set | '_',
          updated :: db:seconds_since_epoch() | '_',
          messages = [] :: [db:message_id()] | '_',
-         extra = #{} :: map()
+         extra = #{} :: map() | '_'
         }).
 
 %% Direct messaging disk layout:

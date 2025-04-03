@@ -231,9 +231,12 @@ a.button-toggle:not([disabled]) {
 
 /* Notification styling */
 
-.notification-content {
-    border: 1px solid var(--uk-secondary);
-    border-radius: 0.25em;
+.uk-border-rounded {
+  border-radius: 0.5em; /* slightly more rounded, adjust to your liking */
+}
+
+.uk-box-shadow-small {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* subtle shadow */
 }
 
 /* Overlay styling */
