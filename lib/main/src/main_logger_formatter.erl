@@ -4,9 +4,8 @@
 -behaviour(logger_formatter).
 -export([check_config/1, format/2]).
 
--define(RED, "\e[31m").
--define(YELLOW, "\e[33m").
--define(GREEN, "\e[32m").
+-define(ERROR, "\e[1;31m").
+-define(INFO, "\e[33m").
 -define(RESET, "\e[0m").
 
 check_config(_Config) ->
@@ -14,16 +13,17 @@ check_config(_Config) ->
 
 format(Event, Config) ->
     Level = maps:get(level, Event, info),
+    UppercaseLevel = string:to_upper(atom_to_list(Level)),
     Color = case Level of
-                error -> ?RED;
-                info -> ?YELLOW;
-                debug -> ?GREEN;
+                error -> ?ERROR;
+                info -> ?INFO;
                 _ -> ""
             end,
-    Reset = if Color =:= "" -> "";
-               true -> ?RESET
+    Reset = if
+                Color =:= "" -> "";
+                true -> ?RESET
             end,
-    Template = ["==", Color, level, Reset, "== ", time, " ==",
+    Template = ["==", Color, UppercaseLevel, Reset, "== ", time, " ==",
                 {module, [" in ", module, ":", function, "/", arity, " on line ", line, "\n"],
                  [" on line ", line, "\n"]},
                 msg,
