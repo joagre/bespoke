@@ -2,8 +2,6 @@
 
 ## Captive portal mechanics
 
--
-
 ## Web app
 
 * Check iphone
