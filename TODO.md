@@ -10,7 +10,7 @@
 * Verify that the whole enchilda works on Pi
 * Build release
 * Extend reddit extraction to include media
-- /README.md: Add a small video instead of a screenshot
+* /README.md: Add a small video instead of a screenshot
 
 * Add Signal protocol under the hood
 * Add an admin user
