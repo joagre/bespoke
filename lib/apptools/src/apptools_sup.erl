@@ -3,7 +3,7 @@
 -module(apptools_sup).
 -behaviour(supervisor).
 -export([start_link/0]).
--export([init/1]). %% Used by supervisor:start_link/2
+-export([init/1]). % Used by supervisor:start_link/2
 
 %%
 %% Exported: start_link
@@ -24,8 +24,5 @@ start_link() ->
 %%
 
 init([]) ->
-    ServManager =
-	#{id => serv_manager,
-          start => {serv_manager, start_link, []}},
-    {ok, {#{strategy => one_for_all},
-          [ServManager]}}.
+    ServManager = #{id => serv_manager, start => {serv_manager, start_link, []}},
+    {ok, {#{strategy => one_for_all}, [ServManager]}}.

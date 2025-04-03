@@ -3,7 +3,7 @@
 -module(db_sup).
 -behaviour(supervisor).
 -export([start_link/0]).
--export([init/1]). %% Used by supervisor:start_link/2
+-export([init/1]). % Used by supervisor:start_link/2
 
 %%
 %% Exported: start_link

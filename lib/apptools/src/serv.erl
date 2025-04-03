@@ -1,17 +1,11 @@
 % -*- fill-column: 100; -*-
 
 -module(serv).
--export([spawn_server/3, spawn_server/4]).
--export([cast/2, call/2, call/3, reply/2]).
--export([l/1, lm/0, since_system_start/0, since_system_start/1]).
--export([system_code_change/4,
-         system_continue/3,
-         system_get_state/1,
-         system_replace_state/2,
-         system_terminate/4,
-         write_debug/3]).
+-export([spawn_server/3, spawn_server/4, cast/2, call/2, call/3, reply/2, l/1, lm/0,
+         since_system_start/0, since_system_start/1]).
+-export([system_code_change/4, system_continue/3, system_get_state/1, system_replace_state/2,
+         system_terminate/4, write_debug/3]). % System callbacks
 -export([loop/2, init/5]).
-
 -export_type([name/0, spawn_server_result/0]).
 
 -include_lib("apptools/include/log.hrl").

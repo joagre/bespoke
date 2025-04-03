@@ -1,13 +1,9 @@
 % -*- fill-column: 100; -*-
 
 -module(db_user_serv).
--export([start_link/0, stop/0]).
--export([get_user/1, get_user_from_username/1, get_user_from_session_id/1,
-         get_user_from_mac_address/1,
-         search_recipients/3,
-         insert_user/1,
-         login/4, switch_user/2, switch_user/4, change_password/4,
-         user_db_to_list/0]).
+-export([start_link/0, stop/0, get_user/1, get_user_from_username/1, get_user_from_session_id/1,
+         get_user_from_mac_address/1, search_recipients/3, insert_user/1, login/4, switch_user/2,
+         switch_user/4, change_password/4, user_db_to_list/0]).
 -export([message_handler/1]).
 -export_type([session_id/0, mac_address/0, password_salt/0, password_hash/0]).
 

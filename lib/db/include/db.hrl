@@ -22,7 +22,8 @@
          next_message_id = 0 :: db:message_id(),
          next_attachment_id = 0 :: db:attachment_id(),
          next_post_id = 0 :: integer(), %% not db:post_id() by design
-         next_file_id = 0 :: db:file_id()
+         next_file_id = 0 :: db:file_id(),
+         extra = #{} :: map()
         }).
 
 -record(user,
@@ -34,7 +35,8 @@
          password_salt = not_set :: db_user_serv:password_salt() | not_set | '_',
          password_hash = not_set :: db_user_serv:password_hash() | not_set | '_',
          updated :: db:seconds_since_epoch() | '_',
-         messages = [] :: [db:message_id()] | '_'
+         messages = [] :: [db:message_id()] | '_',
+         extra = #{} :: map()
         }).
 
 %% Direct messaging disk layout:
@@ -50,7 +52,8 @@
          %% Note: Disallowed for top messages and mandatory for reply messages
          top_message_id = not_set :: db:message_id() | not_set,
          author = not_set :: db:user_id() | not_set,
-         created = not_set :: db:seconds_since_epoch() | not_set
+         created = not_set :: db:seconds_since_epoch() | not_set,
+         extra = #{} :: map()
         }).
 
 %% Forum disk layout:
@@ -71,7 +74,8 @@
          reply_count = 0 :: integer() | '_',
          replies = [] :: [db:post_id()] | '_',
          likers = [] :: [db:user_id()] | '_',
-         attachments = [] :: [{main:filename(), db:content_type()}] | '_'
+         attachments = [] :: [{main:filename(), db:content_type()}] | '_',
+         extra = #{} :: map()
         }).
 
 %% File sharing disk layout:
@@ -86,7 +90,8 @@
          content_type :: db:content_type(),
          uploader = not_set :: db:user_id() | not_set,
          created = not_set :: db:seconds_since_epoch() | not_set,
-         is_uploading = false :: boolean()
+         is_uploading = false :: boolean(),
+         extra = #{} :: map()
         }).
 
 -endif.
