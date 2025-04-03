@@ -37,18 +37,22 @@ configure_logger() ->
     add_bespoke_logger(file_logger, #{file => ?LOG_FILE}).
 
 add_bespoke_logger(Name, Config) ->
-    logger:add_handler(
-      Name, logger_std_h,
-      #{config => Config,
-        formatter =>
-            {logger_formatter,
-             #{single_line => false,
-               template =>
-                   ["=", level, "==== ", time, " ===",
-                    {module,
-                     [" in ", module,":", function, "/", arity, " on line ", line, "\n"],
-                     [" on line ", line, "\n"]},
-                    msg, {module, ["\n\n"], ["\n"]}]}}}).
+    logger:add_handler(Name, logger_std_h, #{config => Config,
+                                             formatter => {main_logger_formatter, #{}}}).
+
+%% add_bespoke_logger(Name, Config) ->
+%%     logger:add_handler(
+%%       Name, logger_std_h,
+%%       #{config => Config,
+%%         formatter =>
+%%             {logger_formatter,
+%%              #{single_line => false,
+%%                template =>
+%%                    ["=", level, "= ", time, " =",
+%%                     {module,
+%%                      [" in ", module,":", function, "/", arity, " on line ", line, "\n"],
+%%                      [" on line ", line, "\n"]},
+%%                     msg, {module, ["\n\n"], ["\n"]}]}}}).
 
 set_ssid() ->
     {ok, SSID} = lookup_config("SSID", "BespokeBBS"),
