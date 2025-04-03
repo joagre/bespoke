@@ -1,13 +1,13 @@
 % -*- fill-column: 100; -*-
 
 -module(webapp_cache).
--export([open/0, sync/0]).
-%% Message read cache
--export([mark_messages_as_read/2, list_read_messages/1]).
-%% Post read cache
--export([mark_posts_as_read/2, list_read_posts/1]).
-%% Challenge cache
--export([add_challenge/2, get_challenge/1, close/0]).
+-export([open/0, sync/0,
+         %% Message read cache
+         mark_messages_as_read/2, list_read_messages/1,
+         %% Post read cache
+         mark_posts_as_read/2, list_read_posts/1,
+         %% Challenge cache
+         add_challenge/2, get_challenge/1, close/0]).
 
 -include_lib("db/include/db.hrl").
 

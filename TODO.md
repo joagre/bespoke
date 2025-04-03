@@ -2,18 +2,15 @@
 
 ## Captive portal mechanics
 
-## Misc
-
-- /README.md: Add a small video instead of a screenshot
+-
 
 ## Web app
 
-* Refactoring of erl:
-  * Rearrange commenting in erlang files (take inspiration from add_top_message.js etc)
 * Check iphone
 * Verify that the whole enchilda works on Pi
 * Build release
 * Extend reddit extraction to include media
+- /README.md: Add a small video instead of a screenshot
 
 * Add Signal protocol under the hood
 * Add an admin user
@@ -29,4 +26,4 @@
 
 ## Syncing
 
-- Smart database syncing between B3S devices
+* Smart database syncing between B3S devices

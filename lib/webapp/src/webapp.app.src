@@ -3,6 +3,6 @@
  [{description,"Bespoke Web app"},
   {vsn, git},
   {modules, ["@@MODULES@@"]},
-  {registered, []},
+  {registered, [webapp_session_serv]},
   {mod, {webapp_app, []}},
   {applications, [kernel, stdlib, apptools, rester, db]}]}.

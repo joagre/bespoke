@@ -41,7 +41,6 @@ verify_client_response(ClientResponse, Challenge, PasswordHash) ->
 -spec generate_rsa_key(file:filename(), file:filename()) ->
           {file:filename(), file:filename(), file:filename(), file:filename()}.
 
-
 %% https://blog.differentpla.net/blog/2023/02/07/generate-rsa-key-erlang/
 %% webapp_crypto:generate_rsa_key("/home/jocke/.bespoke/keys", "bespoke").
 generate_rsa_key(DirPath, Name) ->
