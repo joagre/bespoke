@@ -4,8 +4,8 @@
 -behaviour(logger_formatter).
 -export([check_config/1, format/2]).
 
--define(ERROR, "\e[1;31m"). % Red
--define(INFO, "\e[1;32m"). % Green
+-define(ERROR, "\e[1;31m"). % Bold/Red
+-define(INFO, "\e[1;32m"). % Bold/Green
 -define(RESET, "\e[0m").
 
 check_config(_Config) ->
