@@ -163,7 +163,7 @@ input {
 /* SPECIFICITY 1,0,1 */
 #top-body p:first-child,
 #parent-body p:first-child {
-    margin-top: 0;
+    margin-top: 0.75em;
 }
 
 #top-body p:last-child,
