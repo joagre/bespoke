@@ -52,16 +52,19 @@
         <div id="top-message">
           <!-- Top title -->
           <div id="top-title"></div>
-          <div class="uk-text-meta" id="top-recipients"></div>
+          <div class="uk-text-meta" id="top-recipients" uk-tooltip="Recipients"></div>
           <!-- Top body -->
           <div id="top-body"></div>
           <div id="top-attachments"></div>
           <div class="uk-flex uk-flex-between uk-flex-middle">
             <!-- Top meta-data -->
-            <div class="message-meta-data uk-text-meta">
-              <span id="top-author"></span> •
-              <span id="top-age"></span> •
-              <span uk-icon="comment"></span> <span id="top-replies"></span>
+            <div class="uk-text-meta message-meta-data meta-data">
+              <span id="top-author" uk-tooltip="Author"></span> •
+              <span id="top-age" uk-tooltip="Created"></span>
+              <span id="top-have-replies" uk-tooltip="Replies" hidden>
+                &nbsp;• <span uk-icon="comment"></span>
+                <span id="top-replies"></span>
+              </span>
             </div>
             <!-- Top actions -->
             <div>
