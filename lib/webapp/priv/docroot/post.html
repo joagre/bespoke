@@ -59,10 +59,13 @@
           <div class="uk-flex uk-flex-between uk-flex-middle">
             <!-- Parent meta-data -->
             <div class="uk-text-meta post-meta-data meta-data">
-              <span id="parent-author"></span> •
-              <span id="parent-age"></span> •
-              <button onclick="Post.toggleLike(event)" class="toolbar-button" id="parent-like-icon" uk-icon="icon: heart"></button> <span id="parent-likes-count"></span> •
-              <span uk-icon="comment"></span> <span id="parent-replies"></span>
+              <span id="parent-author" uk-tooltip="Author"></span> •
+              <span id="parent-age" uk-tooltip="Created"></span> •
+              <button onclick="Post.toggleLike(event)" class="toolbar-button" id="parent-like-icon" uk-icon="icon: heart"></button> <span id="parent-likes-count"></span>
+              <span id="parent-have-replies" uk-tooltip="Replies" hidden>
+                &nbsp;• <span uk-icon="comment"></span>
+                <span id="parent-replies"></span>
+              </span>
             </div>
             <!-- Parent actions -->
             <div>

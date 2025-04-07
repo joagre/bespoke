@@ -145,7 +145,7 @@ input {
 /* SPECIFICITY 0,1,1 */
 .quote-body p:first-child,
 .reply-body p:first-child {
-    margin-top: 0.75;
+    margin-top: 0.25;
 }
 
 .quote-body p:last-child,
@@ -163,7 +163,7 @@ input {
 /* SPECIFICITY 1,0,1 */
 #top-body p:first-child,
 #parent-body p:first-child {
-    margin-top: 0.75em;
+    margin-top: 0.25em;
 }
 
 #top-body p:last-child,
