@@ -1,0 +1,24 @@
+.substring {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.recipient {
+    cursor: pointer;
+}
+
+.no-uppercase {
+  text-transform: none !important;
+}
+
+.attachment-item {
+    border: 1px solid var(--uk-light-muted);
+    border-radius: 0.25em;
+    padding: 0.25em;
+    cursor: pointer;
+}
+
+.attachment-list {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
