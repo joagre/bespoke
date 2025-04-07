@@ -145,7 +145,7 @@ input {
 /* SPECIFICITY 0,1,1 */
 .quote-body p:first-child,
 .reply-body p:first-child {
-    margin-top: 0.25;
+    margin-top: 0.25em;
 }
 
 .quote-body p:last-child,
@@ -231,12 +231,12 @@ a.button-toggle:not([disabled]) {
 
 /* Notification styling */
 
-.uk-border-rounded {
-  border-radius: 0.5em; /* slightly more rounded, adjust to your liking */
+.notification-border-rounded {
+  border-radius: 0.5rem;
 }
 
-.uk-box-shadow-small {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* subtle shadow */
+.notification-box-shadow-small {
+  box-shadow: 0 0.125rem 0.5rem rgb(0 0 0 / 10%);
 }
 
 /* Overlay styling */
