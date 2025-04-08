@@ -292,7 +292,7 @@ message_handler(S) ->
                     UpdatedUser = User#user{session_id = session_id(),
                                             mac_address = MacAddress,
                                             updated = db:seconds_since_epoch()},
-                    ok = dets:insert(?USER_DB, User),
+                    ok = dets:insert(?USER_DB, UpdatedUser),
                     {reply, From, UpdatedUser};
                 %% Create new user *with* password
                 [] ->

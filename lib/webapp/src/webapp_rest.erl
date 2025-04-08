@@ -827,8 +827,8 @@ get_mac_address(Socket) ->
 
 get_mac_address_for_ip_address(IpAddress) ->
     IpAddressString = inet:ntoa(IpAddress),
-    Command = "ping -c 1 " ++ IpAddressString ++ "; ip neigh show | awk '/" ++ IpAddressString ++
-        "/ {print $5}'",
+    Command = "ping -q -c 1 " ++ IpAddressString ++ " > /dev/null 2>&1; ip neigh show | awk '/" ++
+        IpAddressString ++ "/ {print $5}'",
     case string:trim(os:cmd(Command)) of
         "" ->
             {error, not_found};
