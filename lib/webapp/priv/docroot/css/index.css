@@ -1,5 +1,6 @@
 #background-image {
     opacity: 0.5;
+    cursor: pointer;
 }
 
 #unread-messages-counter {

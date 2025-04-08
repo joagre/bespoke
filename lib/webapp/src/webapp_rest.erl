@@ -376,11 +376,17 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                         {error, not_found} ->
                             PasswordSalt = crypto:strong_rand_bytes(?CRYPTO_PWHASH_SALTBYTES)
                     end,
-                    Challenge = webapp_crypto:generate_challenge(),
-                    JsonTerm =
-                        webapp_marshalling:encode(generate_challenge, {PasswordSalt, Challenge}),
-                    ok = webapp_cache:add_challenge(Username, Challenge),
-                    send_response(Socket, Request, {json, JsonTerm})
+                    case PasswordSalt of
+                        not_set ->
+                            send_response(Socket, Request, forbidden);
+                        _ ->
+                            Challenge = webapp_crypto:generate_challenge(),
+                            JsonTerm =
+                                webapp_marshalling:encode(generate_challenge,
+                                                          {PasswordSalt, Challenge}),
+                            ok = webapp_cache:add_challenge(Username, Challenge),
+                            send_response(Socket, Request, {json, JsonTerm})
+                    end
             end;
         ["api", "login"] ->
             case decode(Socket, Request, Body, login, false) of
