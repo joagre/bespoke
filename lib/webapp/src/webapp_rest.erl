@@ -938,14 +938,12 @@ send_response(Socket, Request, Opts, no_content) ->
     rester_http_server:response_r(Socket, Request, 204, "No Content", "", Opts);
 send_response(Socket, Request, Opts, {found, AbsPath}) ->
     ?log_info("Response: Found (~p)", [AbsPath]),
-    rester_http_server:response_r(Socket, Request, 302, "Found", "",
-                                  [{location, "/bootstrap.html"}|Opts]);
+    rester_http_server:response_r(Socket, Request, 302, "Found", "", [{location, AbsPath}|Opts]);
 send_response(Socket, Request, Opts, {found, AbsPath, Body}) ->
     %% Note: Adding a body to a 302 response is not standard, but it works better in practice (at
     %% least for the captive portal)
     ?log_info("Response: Found (~p)", [AbsPath]),
-    rester_http_server:response_r(Socket, Request, 302, "Found", Body,
-                                  [{location, "/bootstrap.html"}|Opts]);
+    rester_http_server:response_r(Socket, Request, 302, "Found", Body, [{location, AbsPath}|Opts]);
 send_response(Socket, Request, Opts, bad_request) ->
     ?log_info("Response: Bad Request"),
     rester_http_server:response_r(Socket, Request, 400, "Bad Request", "", Opts);
