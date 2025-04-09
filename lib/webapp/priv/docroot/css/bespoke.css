@@ -131,7 +131,7 @@ input {
 
 #top-title,
 #parent-title {
-    font-size: 110%;
+    /* font-size: 110%; */
     font-weight: bold;
 }
 

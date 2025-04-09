@@ -1,6 +1,6 @@
 JS_FILES := $(wildcard *.js)
 JS_SIGNATURE_FILES := $(patsubst %.js,../signatures/%.js.sig,$(JS_FILES))
-THIRD_PARTY_JS_FILES=purify.min.js marked.min.js sodium.js uikit.js uikit.min.js uikit-icons.js uikit-icons.min.js uhtml.min.js
+THIRD_PARTY_JS_FILES=purify.min.js marked.min.js sodium.js uikit.js uikit.min.js uikit-icons.js uikit-icons.min.js uhtml.min.js StreamSaver.js sw.js
 THIRD_PARTY_GZ_FILES := $(patsubst %.js,%.js.gz,$(THIRD_PARTY_JS_FILES))
 BESPOKE_JS_FILES := $(filter-out $(THIRD_PARTY_JS_FILES), $(JS_FILES))
 BESPOKE_JS_OK_FILES := $(patsubst %.js,checked/%.js.ok,$(BESPOKE_JS_FILES))
