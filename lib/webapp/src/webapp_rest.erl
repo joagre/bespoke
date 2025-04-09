@@ -272,7 +272,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
             UriPath =
                 case Tokens of
                     [] ->
-                        "/not_found.html";
+                        "/loader.html";
                     _ ->
                         Url#url.path
                 end,
@@ -832,9 +832,9 @@ get_mac_address(Socket) ->
     end.
 
 get_mac_address_for_ip_address(IpAddress) ->
-    IpAddressString = inet:ntoa(IpAddress),
-    Command = "ping -q -c 1 " ++ IpAddressString ++ " > /dev/null 2>&1; ip neigh show | awk '/" ++
-        IpAddressString ++ "/ {print $5}'",
+    %% Ugh! Do better yourself!
+    Command = "ip -o -4 addr show | awk -v ip='" ++ inet:ntoa(IpAddress) ++
+        "' '$4 ~ ip {print $2}' | xargs -I{} ip link show {} | awk '/link\/ether/ {print $2}'",
     case string:trim(os:cmd(Command)) of
         "" ->
             {error, not_found};
