@@ -127,8 +127,7 @@ upload_blob(UserId, {data, Data}) ->
 upload_blob(UserId, FilePath) ->
     OriginFilename = filename:basename(FilePath),
     FilenameSize = byte_size(OriginFilename),
-    {ok, ContentType} =
-        apptools_mime:mime_type(string:slice(filename:extension(OriginFilename), 1)),
+    {ok, ContentType} = apptools_mime:mime_type(OriginFilename),
     ContentTypeSize = byte_size(ContentType),
     Header = <<FilenameSize:16/unsigned-integer,
                ContentTypeSize:16/unsigned-integer,

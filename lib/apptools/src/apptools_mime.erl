@@ -76,7 +76,8 @@ stop() ->
 
 -spec mime_type(binary()) -> {ok, binary()} | {error, not_found}.
 
-mime_type(Extension) ->
+mime_type(Filename) ->
+    Extension = string:slice(filename:extension(Filename), 1),
     case ets:lookup(?MIME_TYPES_DB, Extension) of
         [] ->
             {error, not_found};
