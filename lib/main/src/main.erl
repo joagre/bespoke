@@ -25,7 +25,6 @@ start() ->
     ok = configure_logger(),
     {ok, _} = application:ensure_all_started(ssl),
     ok = application:start(apptools),
-    ok = apptools_mime:start(),
     ok = application:start(rester),
     ok = application:start(db),
     ok = set_ssid(),

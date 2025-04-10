@@ -64,6 +64,7 @@ stop_subscriptions(SessionId) ->
 %%
 
 init(Parent) ->
+    ok = apptools_mime:start(),
     ?log_info("Subscription manager started"),
     {ok, #state{parent = Parent}}.
 

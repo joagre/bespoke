@@ -78,17 +78,6 @@ stop() ->
 
 mime_type(Filename) ->
     Extension = string:slice(filename:extension(Filename), 1),
-
-    io:format("MIME_TYPES_DB: ~p~n", [ets:whereis(?MIME_TYPES_DB)]),
-    io:format("Extension: ~p~n", [Extension]),
-    io:format("MIME_TYPES_DB dump: ~p~n", [ets:tab2list(?MIME_TYPES_DB)]),
-    io:format("LOOKUP: ~p:~p~n", [{?MIME_TYPES_DB, Extension},
-                                  ets:lookup(?MIME_TYPES_DB, Extension)]),
-
-
-
-
-
     case ets:lookup(?MIME_TYPES_DB, Extension) of
         [] ->
             {error, not_found};
