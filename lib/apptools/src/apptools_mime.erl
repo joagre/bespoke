@@ -1,7 +1,7 @@
 % -*- fill-column: 100; -*-
 
 -module(apptools_mime).
--export([start/0, stop/0, mime_type/1]).
+-export([start/0, stop/0, mime_type/1, extension/1]).
 
 -define(MIME_TYPES_FILE, <<"/etc/mime.types">>).
 -define(MIME_TYPES_DB, mime_types_db).
@@ -83,4 +83,20 @@ mime_type(Filename) ->
             {error, not_found};
         [{_, MimeType}] ->
             {ok, MimeType}
+    end.
+
+%%
+%% extension
+%%
+
+-spec extension(binary()) -> binary().
+
+extension(<<"image/jpg">>) ->
+    <<"jpg">>;
+extension(MimeType) ->
+    case ets:match_object(?MIME_TYPES_DB, {'_', MimeType}) of
+        [] ->
+            <<"dat">>;
+        [{Extension, _}|_] ->
+            Extension
     end.

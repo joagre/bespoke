@@ -1,11 +1,16 @@
 % -*- fill-column: 100; -*-
 
 -module(db_tools).
--export([create_subreddit_db/0, purge_subreddit_db/0, dump_subreddit_db/0, create_dummy_db/0]).
+-compile(export_all).
+-export([create_subreddit_db/0, purge_subreddit_db/0, dump_subreddit_db/0]).
 
 -include("../include/db.hrl").
 -include("../../apptools/include/log.hrl").
 -include("../../apptools/include/shorthand.hrl").
+
+-define(SUBREDDIT, filename:join(code:priv_dir(db), "reddit/sweden")).
+-define(SUBMISSIONS, "/media/jocke/EXTERNSL/reddit/subreddits23/sweden_submissions_sorted").
+-define(COMMENTS, "/media/jocke/EXTERNSL/reddit/subreddits23/sweden_comments_sorted").
 
 %%
 %% Exported: dump_subreddit
@@ -32,17 +37,20 @@ create_subreddit_db() ->
     %% Hint: Read about the JSON object format in the Reddit API
     {SubmissionDb, CommentDb} =
         get_cached_subreddit(
-          "/media/jocke/EXTERNSL/reddit/subreddits23/sweden_submissions",
-          "/media/jocke/EXTERNSL/reddit/subreddits23/sweden_comments",
-          _NoSubmissions = 10,
-          _MinNoComments = 25),
+          ?SUBMISSIONS,
+          ?COMMENTS,
+          _NoPlainSubmissions = 10,
+          _NoGallerySubmissions = 5,
+          _NoVideoSubmissions = 5,
+          _MinNoGalleryImages = 2,
+          _MinNoComments = 20),
     [] = insert_subreddit(SubmissionDb, CommentDb),
     close_dbs(SubmissionDb, CommentDb).
 
-get_cached_subreddit(SubmissionsFile, CommentsFile, NoSubmissions,
-                     MinNoComments) ->
-    SubmissionsDbFile = filename:join(code:priv_dir(webapp), "submissions.db"),
-    CommentsDbFile = filename:join(code:priv_dir(webapp), "comments.db"),
+get_cached_subreddit(SubmissionsFile, CommentsFile,  NoPlainSubmissions,  NoGallerySubmissions,
+                     NoVideoSubmissions, MinNoGalleryImages, MinNoComments) ->
+    SubmissionsDbFile = filename:join(?SUBREDDIT, "submissions.db"),
+    CommentsDbFile = filename:join(?SUBREDDIT, "comments.db"),
     %% If there is no submission database just delete the comments
     %% database as well (if it exists)
     case filelib:is_regular(SubmissionsDbFile) of
@@ -79,7 +87,9 @@ get_cached_subreddit(SubmissionsFile, CommentsFile, NoSubmissions,
             {SubmissionDb, CommentDb} = open_dbs(SubmissionsDbFile, CommentsDbFile),
             io:format("** Creating new submission database~n"),
             {NoSubmissions, ParsedSubmissions} =
-                populate_submission_db(SubmissionsFile, SubmissionDb, NoSubmissions, MinNoComments),
+                populate_submission_db(SubmissionsFile, SubmissionDb, NoPlainSubmissions,
+                                       NoGallerySubmissions, NoVideoSubmissions, MinNoGalleryImages,
+                                       MinNoComments),
             io:format("** Total number of submissions = ~p~n", [NoSubmissions]),
             io:format("** Parsed ~p submissions~n", [ParsedSubmissions]),
             io:format("** Creating new comment database~n"),
@@ -100,40 +110,71 @@ close_dbs(SubmissionDb, CommentDb) ->
     dets:close(SubmissionDb),
     dets:close(CommentDb).
 
-populate_submission_db(SubmissionsFile, SubmissionDb, NoSubmissions, MinNoComments) ->
+populate_submission_db(SubmissionsFile, SubmissionDb, NoPlainSubmissions, NoGallerySubmissions,
+                       NoVideoSubmissions, MinNoGalleryImages, MinNoComments) ->
     {ok, SubmissionsFd} = file:open(SubmissionsFile, [read, binary]),
-    populate_submission_db(SubmissionDb, NoSubmissions, MinNoComments, SubmissionsFd,
+    populate_submission_db(SubmissionDb, NoPlainSubmissions, NoGallerySubmissions,
+                           NoVideoSubmissions, MinNoGalleryImages, MinNoComments, SubmissionsFd,
                            _ParsedLines = 0).
 
-populate_submission_db(SubmissionDb, 0, _MinNoComments, SubmissionsFd, ParsedLines) ->
+populate_submission_db(SubmissionDb, 0, 0, 0, _MinNoGalleryImages, _MinNoComments, SubmissionsFd,
+                       ParsedLines) ->
     NoSubmissions = dets:info(SubmissionDb, no_keys),
     dets:sync(SubmissionDb),
     file:close(SubmissionsFd),
     {NoSubmissions, ParsedLines};
-populate_submission_db(SubmissionDb, NoSubmissions, MinNoComments, SubmissionsFd, ParsedLines) ->
+populate_submission_db(SubmissionDb, NoPlainSubmissions, NoGallerySubmissions, NoVideoSubmissions,
+                       MinNoGalleryImages, MinNoComments, SubmissionsFd, ParsedLines) ->
     case file:read_line(SubmissionsFd) of
         {ok, Line} ->
             case parse_submission(Line, MinNoComments) of
                 skipped ->
-                    populate_submission_db(SubmissionDb, NoSubmissions, MinNoComments,
+                    populate_submission_db(SubmissionDb, NoPlainSubmissions, NoGallerySubmissions,
+                                           NoVideoSubmissions, MinNoGalleryImages, MinNoComments,
                                            SubmissionsFd, ParsedLines + 1);
-                #{<<"id">> := Id} = JsonTerm ->
+                #{<<"id">> := Id,
+                  <<"is_gallery">> := true,
+                  <<"gallery_data">> := #{<<"items">> := Items}} = JsonTerm
+                  when NoGallerySubmissions > 0 andalso
+                       length(Items) >= MinNoGalleryImages ->
                     ok = dets:insert(SubmissionDb, {Id, JsonTerm}),
-                    populate_submission_db(SubmissionDb, NoSubmissions - 1, MinNoComments,
-                                           SubmissionsFd, ParsedLines + 1)
+                    populate_submission_db(SubmissionDb, NoPlainSubmissions,
+                                           NoGallerySubmissions - 1, NoVideoSubmissions,
+                                           MinNoGalleryImages, MinNoComments, SubmissionsFd,
+                                           ParsedLines + 1);
+                #{<<"id">> := Id, <<"is_video">> := true} = JsonTerm
+                  when NoVideoSubmissions > 0 ->
+                    ok = dets:insert(SubmissionDb, {Id, JsonTerm}),
+                    populate_submission_db(SubmissionDb, NoPlainSubmissions,
+                                           NoGallerySubmissions, NoVideoSubmissions - 1,
+                                           MinNoGalleryImages, MinNoComments, SubmissionsFd,
+                                           ParsedLines + 1);
+                #{<<"id">> := Id,
+                  <<"is_self">> := true} = JsonTerm
+                  when NoPlainSubmissions > 0 ->
+                    ok = dets:insert(SubmissionDb, {Id, JsonTerm}),
+                    populate_submission_db(SubmissionDb, NoPlainSubmissions - 1,
+                                           NoGallerySubmissions, NoVideoSubmissions,
+                                           MinNoGalleryImages, MinNoComments, SubmissionsFd,
+                                           ParsedLines + 1);
+                _ ->
+                    populate_submission_db(SubmissionDb, NoPlainSubmissions,
+                                           NoGallerySubmissions, NoVideoSubmissions,
+                                           MinNoGalleryImages, MinNoComments, SubmissionsFd,
+                                           ParsedLines + 1)
             end;
         eof ->
             file:close(SubmissionsFd),
-            ParsedLines
+            throw({error, eof})
     end.
 
 parse_submission(Line, MinNoComments) ->
     case json:decode(Line) of
-        #{<<"is_self">> := true,
-          <<"num_comments">> := NumComments,
+        #{<<"num_comments">> := NumComments,
           <<"selftext">> := Selftext} = JsonTerm
-          when (Selftext /= <<"[deleted]">> andalso
-                Selftext /= <<"[removed]">>) andalso
+          when Selftext /= <<"[deleted]">> andalso
+               Selftext /= <<"[removed]">> andalso
+               Selftext /= <<>> andalso
                NumComments > MinNoComments ->
             false = maps:get(<<"replies">>, JsonTerm, false),
             false = maps:get(<<"more">>, JsonTerm, false),
@@ -180,27 +221,69 @@ parse_comment(Line, SubmissionDb) ->
 insert_subreddit(SubmissionDb, CommentDb) ->
     ok = create_all_users(SubmissionDb, CommentDb),
     dets:traverse(
-      SubmissionDb, fun({Id, #{<<"author">> := AuthorUsername,
-                               <<"created_utc">> := Created,
-                               <<"id">> := Id,
-                               <<"selftext">> := Selftext,
-                               <<"title">> := Title}}) ->
-                            io:format("** Inserting submission ~p~n", [Id]),
-                            AuthorId = get_author_id(AuthorUsername),
-                            Post = #post{id = Id,
-                                         title = Title,
-                                         body = Selftext,
-                                         author = AuthorId,
-                                         created = patch_created(Created)},
-                            {ok, _} = db_serv:create_post(Post),
-                            ok = insert_comments(CommentDb, Id),
-                            continue
-                    end).
+      SubmissionDb,
+      fun({Id, #{<<"author">> := AuthorUsername,
+                 <<"created_utc">> := Created,
+                 <<"id">> := Id,
+                 <<"selftext">> := Selftext,
+                 <<"title">> := Title} = Submission}) ->
+              io:format("** Inserting submission ~p~n", [Id]),
+              Attachments = create_attachments(Submission),
+              AuthorId = get_author_id(AuthorUsername),
+              Post = #post{id = Id,
+                           title = Title,
+                           body = Selftext,
+                           author = AuthorId,
+                           created = patch_created(Created),
+                           attachments = Attachments},
+              {ok, _} = db_serv:create_post(Post),
+              ok = insert_comments(CommentDb, Id),
+              continue
+      end).
+
+create_attachments(#{<<"is_gallery">> := true, <<"media_metadata">> := MediaMetadata}) ->
+    maps:fold(
+      fun(ImageHash, #{<<"m">> := ContentType}, Acc) ->
+              Extension = apptools_mime:extension(ContentType),
+              Filename = io_lib:format("~s.~s", [ImageHash, Extension]),
+              FilePath = filename:join(?SUBREDDIT, Filename),
+              case filelib:is_regular(FilePath) of
+                  true ->
+                      io:format("** File ~s already downloaded~n", [FilePath]);
+                  false ->
+                      Url = io_lib:format("https://i.redd.it/~s.~s", [ImageHash, Extension]),
+                      Command = io_lib:format("curl -sq ~s -o ~s", [Url, FilePath]),
+                      io:format("** Downloading ~s~n", [Url]),
+                      "" = os:cmd(Command)
+              end,
+              TmpFilePath = filename:join(?BESPOKE_TMP_PATH, Filename),
+              {ok, _} = file:copy(FilePath, TmpFilePath),
+              [{?l2b(Filename), ContentType}|Acc]
+      end, [], MediaMetadata);
+create_attachments(#{<<"is_video">> := true,
+                     <<"media">> := #{<<"reddit_video">> := #{<<"fallback_url">>:= Url}}}) ->
+    AbsPath = filename:basename(Url),
+    [Filename|_] = string:lexemes(AbsPath, "?"),
+    FilePath = filename:join(?SUBREDDIT, Filename),
+    case filelib:is_regular(FilePath) of
+        true ->
+            io:format("** File ~s already downloaded~n", [FilePath]);
+        false ->
+            Command = io_lib:format("curl -sq ~s -o ~s", [Url, FilePath]),
+            io:format("** Downloading ~s~n", [Url]),
+            "" = os:cmd(Command)
+    end,
+    TmpFilePath = filename:join(?BESPOKE_TMP_PATH, Filename),
+    {ok, _} = file:copy(FilePath, TmpFilePath),
+    {ok, ContentType} = apptools_mime:mime_type(Filename),
+    [{Filename, ContentType}];
+create_attachments(_) ->
+    [].
 
 create_all_users(SubmissionDb, CommentDb) ->
     _ = dets:traverse(
           SubmissionDb, fun({Id, #{<<"author">> := AuthorUsername}}) ->
-                                io:format("** Inserting submission ~p~n", [Id]),
+                                io:format("** Inserting author ~s~n", [AuthorUsername]),
                                 ok = create_author_id(AuthorUsername),
                                 ok = crete_all_comment_users(CommentDb, Id),
                                 continue
@@ -217,7 +300,9 @@ crete_all_comment_users(CommentDb, ParentId) ->
 %% The reddit json api returns the created_utc field as a list!
 patch_created(Created) when is_binary(Created) ->
     ?b2i(Created);
-patch_created(Created) ->
+patch_created(Created) when is_float(Created) ->
+    trunc(Created);
+patch_created(Created) when is_integer(Created) ->
     Created.
 
 insert_comments(CommentDb, ParentId) ->
@@ -244,17 +329,17 @@ insert_comments(CommentDb, ParentId) ->
 %%
 
 dump_subreddit_db() ->
-    SubmissionsDbFile = filename:join(code:priv_dir(webapp), "submissions.db"),
-    CommentsDbFile = filename:join(code:priv_dir(webapp), "comments.db"),
+    SubmissionsDbFile = filename:join(?SUBREDDIT, "submissions.db"),
+    CommentsDbFile = filename:join(?SUBREDDIT, "comments.db"),
     {SubmissionDb, CommentDb} = open_dbs(SubmissionsDbFile, CommentsDbFile),
-    SubmissionsDumpFile = filename:join(code:priv_dir(webapp), "submissions.dump"),
+    SubmissionsDumpFile = filename:join(?SUBREDDIT, "submissions.dump"),
     Submissions = dets:foldl(
                     fun({_Id, JsonTerm}, Acc) ->
                             [JsonTerm|Acc]
                     end, [], SubmissionDb),
     ok = file:write_file(SubmissionsDumpFile,
                          ?l2b(io_lib:format("~p", [Submissions]))),
-    CommentsDumpFile = filename:join(code:priv_dir(webapp), "comments.dump"),
+    CommentsDumpFile = filename:join(?SUBREDDIT, "comments.dump"),
     Comments = dets:foldl(fun({_ParentId, JsonTerm}, Acc) ->
                                   [JsonTerm|Acc]
                           end, [], CommentDb),
@@ -266,58 +351,11 @@ dump_subreddit_db() ->
 %%
 
 purge_subreddit_db() ->
-    SubmissionsDbFile = filename:join(code:priv_dir(webapp), "submissions.db"),
+    SubmissionsDbFile = filename:join(?SUBREDDIT, "submissions.db"),
     _ = file:delete(SubmissionsDbFile),
-    CommentsDbFile = filename:join(code:priv_dir(webapp), "comments.db"),
+    CommentsDbFile = filename:join(?SUBREDDIT, "comments.db"),
     _ = file:delete(CommentsDbFile),
     ok.
-
-%%
-%% Exported: create_dummy_db
-%%
-
-create_dummy_db() ->
-    %% Create some dummy users
-    ok = create_author_id([<<"ginko4711">>, <<"zappeU">>, <<"snuvan">>, <<"harald">>, <<"sminkor">>,
-                           <<"honan">>]),
-    %% Add two top posts
-    AuthorIdGinko4711 = get_author_id(<<"ginko4711">>),
-    TopPost1 = #post{title = <<"Var har sillen tagit vagen?">>,
-                     body = <<"body">>,
-                     author = AuthorIdGinko4711},
-    {ok, CreatedTopPost1} = db_serv:create_post(TopPost1),
-    AuthorIdZappeU = get_author_id(<<"zappeU">>),
-    TopPost2 = #post{title = <<"Republik nu!">>,
-                     body = <<"body">>,
-                     author = AuthorIdZappeU},
-    {ok, _CreatedTopPost2} = db_serv:create_post(TopPost2),
-    %% Add two replies
-    AuthorIdSnuvan = get_author_id(<<"snuvan">>),
-    ReplyPost1 = #post{parent_post_id = CreatedTopPost1#post.id,
-                       top_post_id = CreatedTopPost1#post.id,
-                       body = <<"reply1">>,
-                       author = AuthorIdSnuvan},
-    {ok, CreatedReplyPost1} = db_serv:create_post(ReplyPost1),
-    AuthorIdHarald = get_author_id(<<"harald">>),
-    ReplyPost2 = #post{parent_post_id = CreatedTopPost1#post.id,
-                       top_post_id = CreatedTopPost1#post.id,
-                       body = <<"reply2">>,
-                       author = AuthorIdHarald},
-    {ok, _CreatedReplyPost2} = db_serv:create_post(ReplyPost2),
-    %% Add two replies to the first reply
-    AuthorIdSminkor = get_author_id(<<"sminkor">>),
-    ReplyPost11 = #post{parent_post_id = CreatedReplyPost1#post.id,
-                        top_post_id = CreatedTopPost1#post.id,
-                        body = <<"reply11">>,
-                        author = AuthorIdSminkor},
-    {ok, _CreatedReplyPost11} = db_serv:create_post(ReplyPost11),
-    AuthorIdHonan = get_author_id(<<"honan">>),
-    ReplyPost12 = #post{parent_post_id = CreatedReplyPost1#post.id,
-                        top_post_id = CreatedTopPost1#post.id,
-                        body = <<"reply12">>,
-                        author = AuthorIdHonan},
-    {ok, _CreatedReplyPost12} = db_serv:create_post(ReplyPost12),
-    ok = db_serv:sync().
 
 %%
 %% Utilities

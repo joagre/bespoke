@@ -4,22 +4,15 @@
 
 ## Web app
 
-* Check iphone
-* Verify that the whole enchilda works on Pi
-* Build release
-* Extend reddit extraction to include media
 * /README.md: Add a small video instead of a screenshot
+* Add admin user
+* Add standard mail to all new users
 
+* Build release
 * Add Signal protocol under the hood
 * Add an admin user
 
-* Maybe: Add Contacts - A new top level entry point in index.html
-  - Make it possible to add/remove all username instances to Contacts with a
-    single click
-  - Mark all username instances in Contacts
-  - Only users in Contacts are suggested when writing a new direct message
-* Maybe: Add destructive aging of forum posts, direct messages and files
-* Maybe: Rewrite the post record in db.hrl to not use lists for replies, likers
+* Rewrite the post record in db.hrl to not use lists for replies, likers
   and attachments, i.e. use idets.erl tables instead in db_post_db.erl.
 
 ## Syncing
