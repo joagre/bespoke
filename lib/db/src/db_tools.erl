@@ -33,17 +33,17 @@ create_subreddit_db() ->
     %% * SubsmissionDb is a dets set table with submission in JSON
     %%   object format keyed on id
     %% * CommentDb is a dets bag table with comments in JSON object
-    %%   format  keyed on parent_id
+    %%   format keyed on parent_id
     %% Hint: Read about the JSON object format in the Reddit API
     {SubmissionDb, CommentDb} =
         get_cached_subreddit(
           ?SUBMISSIONS,
           ?COMMENTS,
           _NoPlainSubmissions = 10,
-          _NoGallerySubmissions = 5,
-          _NoVideoSubmissions = 5,
+          _NoGallerySubmissions = 10,
+          _NoVideoSubmissions = 10,
           _MinNoGalleryImages = 2,
-          _MinNoComments = 20),
+          _MinNoComments = 10),
     [] = insert_subreddit(SubmissionDb, CommentDb),
     close_dbs(SubmissionDb, CommentDb).
 
@@ -207,7 +207,7 @@ populate_comment_db(SubmissionDb, CommentDb, CommentsFd, ParsedLines) ->
 
 parse_comment(Line, SubmissionDb) ->
     case json:decode(Line) of
-        #{<<"link_id">> := LinkId} = Comment ->
+        #{<<"link_id">> := <<"t3_", LinkId/binary>>} = Comment ->
             case dets:member(SubmissionDb, LinkId) of
                 true ->
                     Comment;
@@ -291,7 +291,7 @@ create_all_users(SubmissionDb, CommentDb) ->
     ok.
 
 crete_all_comment_users(CommentDb, ParentId) ->
-    Comments = dets:lookup(CommentDb, ParentId),
+    Comments = dets:lookup(CommentDb, <<"t3_", ParentId/binary>>),
     lists:foreach(fun({_, #{<<"author">> := AuthorUsername, <<"id">> := Id}}) ->
                           ok = create_author_id(AuthorUsername),
                           crete_all_comment_users(CommentDb, Id)
@@ -306,7 +306,8 @@ patch_created(Created) when is_integer(Created) ->
     Created.
 
 insert_comments(CommentDb, ParentId) ->
-    Comments = dets:lookup(CommentDb, ParentId),
+    io:format("** Inserting comments for parent ~p~n", [ParentId]),
+    Comments = dets:lookup(CommentDb, <<"t3_", ParentId/binary>>),
     lists:foreach(fun({_, #{<<"author">> := AuthorUsername,
                             <<"body">> := Body,
                             <<"created_utc">> := Created,
