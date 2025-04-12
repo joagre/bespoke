@@ -128,7 +128,7 @@ move_tmp_attachments(TmpAttachments, NewPostId) ->
     lists:map(
       fun({TmpAttachment, ContentType}) ->
               TmpFilePath = filename:join([TmpPath, TmpAttachment]),
-              NewAttachment = string:trim(TmpAttachment, leading, "0123456789-"),
+              NewAttachment = re:replace(TmpAttachment, <<"^[0-9]+-">>, <<>>, [{return, binary}]),
               NewFilePath = filename:join([NewPath, NewAttachment]),
               ?log_info("Moving ~s to ~s", [TmpFilePath, NewFilePath]),
               ok = file:rename(TmpFilePath, NewFilePath),

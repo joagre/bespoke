@@ -241,11 +241,13 @@ insert_subreddit(SubmissionDb, CommentDb) ->
               continue
       end).
 
-create_attachments(#{<<"is_gallery">> := true, <<"media_metadata">> := MediaMetadata}) ->
+create_attachments(#{<<"id">> := Id,
+                     <<"is_gallery">> := true,
+                     <<"media_metadata">> := MediaMetadata}) ->
     maps:fold(
       fun(ImageHash, #{<<"m">> := ContentType}, Acc) ->
               Extension = apptools_mime:extension(ContentType),
-              Filename = io_lib:format("~s.~s", [ImageHash, Extension]),
+              Filename = io_lib:format("~s_~s.~s", [Id, ImageHash, Extension]),
               FilePath = filename:join(?SUBREDDIT, Filename),
               case filelib:is_regular(FilePath) of
                   true ->
@@ -260,22 +262,26 @@ create_attachments(#{<<"is_gallery">> := true, <<"media_metadata">> := MediaMeta
               {ok, _} = file:copy(FilePath, TmpFilePath),
               [{?l2b(Filename), ContentType}|Acc]
       end, [], MediaMetadata);
-create_attachments(#{<<"is_video">> := true,
-                     <<"media">> := #{<<"reddit_video">> := #{<<"fallback_url">>:= Url}}}) ->
-    AbsPath = filename:basename(Url),
-    [Filename|_] = string:lexemes(AbsPath, "?"),
+create_attachments(#{<<"id">> := Id,
+                     <<"is_video">> := true,
+                     <<"media">> :=
+                         #{<<"reddit_video">> := #{<<"fallback_url">>:= FallbackUrl}}}) ->
+    AbsPath = filename:basename(FallbackUrl),
+    [GenericFilename|_] = string:lexemes(AbsPath, "?"),
+    Extension = filename:extension(GenericFilename),
+    Filename = io_lib:format("~s~s", [Id, Extension]),
     FilePath = filename:join(?SUBREDDIT, Filename),
     case filelib:is_regular(FilePath) of
         true ->
             io:format("** File ~s already downloaded~n", [FilePath]);
         false ->
-            Command = io_lib:format("curl -sq ~s -o ~s", [Url, FilePath]),
-            io:format("** Downloading ~s~n", [Url]),
+            Command = io_lib:format("curl -sq ~s -o ~s", [FallbackUrl, FilePath]),
+            io:format("** Downloading ~s~n", [FallbackUrl]),
             "" = os:cmd(Command)
     end,
     TmpFilePath = filename:join(?BESPOKE_TMP_PATH, Filename),
     {ok, _} = file:copy(FilePath, TmpFilePath),
-    {ok, ContentType} = apptools_mime:mime_type(Filename),
+    {ok, ContentType} = apptools_mime:mime_type(?l2b(Filename)),
     [{Filename, ContentType}];
 create_attachments(_) ->
     [].
@@ -312,6 +318,7 @@ insert_comments(CommentDb, ParentId) ->
                             <<"body">> := Body,
                             <<"created_utc">> := Created,
                             <<"id">> := Id,
+                            %% _:3/binary masks out "t1_*" and "t3_*"
                             <<"link_id">> := <<_:3/binary, LinkId/binary>>}}) ->
                           AuthorId = get_author_id(AuthorUsername),
                           Post = #post{id = Id,
