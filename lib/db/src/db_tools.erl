@@ -30,10 +30,10 @@
 %% ** Parsed 9574215 comments
 
 create_subreddit_db() ->
-    %% * SubsmissionDb is a dets set table with submission in JSON
-    %%   object format keyed on id
+    %% * SubmissionDb is a dets set table with submission in JSON
+    %%   object format, keyed on id
     %% * CommentDb is a dets bag table with comments in JSON object
-    %%   format keyed on parent_id
+    %%   format, keyed on parent_id
     %% Hint: Read about the JSON object format in the Reddit API
     {SubmissionDb, CommentDb} =
         get_cached_subreddit(
@@ -193,7 +193,8 @@ populate_comment_db(SubmissionDb, CommentDb, CommentsFd, ParsedLines) ->
             case parse_comment(Line, SubmissionDb) of
                 skipped ->
                     populate_comment_db(SubmissionDb, CommentDb, CommentsFd, ParsedLines + 1);
-                #{<<"parent_id">> := ParentId} = Comment ->
+                %% parent_id is prepended with "t1_" or "t3_"
+                #{<<"parent_id">> := <<_:3/binary, ParentId/binary>>} = Comment ->
                     ok = dets:insert(CommentDb, {ParentId, Comment}),
                     populate_comment_db(SubmissionDb, CommentDb, CommentsFd, ParsedLines + 1)
             end;
@@ -207,6 +208,7 @@ populate_comment_db(SubmissionDb, CommentDb, CommentsFd, ParsedLines) ->
 
 parse_comment(Line, SubmissionDb) ->
     case json:decode(Line) of
+        %% link_id is prepended with "t3_"
         #{<<"link_id">> := <<"t3_", LinkId/binary>>} = Comment ->
             case dets:member(SubmissionDb, LinkId) of
                 true ->
@@ -220,26 +222,24 @@ parse_comment(Line, SubmissionDb) ->
 
 insert_subreddit(SubmissionDb, CommentDb) ->
     ok = create_all_users(SubmissionDb, CommentDb),
-    dets:traverse(
-      SubmissionDb,
-      fun({Id, #{<<"author">> := AuthorUsername,
-                 <<"created_utc">> := Created,
-                 <<"id">> := Id,
-                 <<"selftext">> := Selftext,
-                 <<"title">> := Title} = Submission}) ->
-              io:format("** Inserting submission ~p~n", [Id]),
-              Attachments = create_attachments(Submission),
-              AuthorId = get_author_id(AuthorUsername),
-              Post = #post{id = Id,
-                           title = Title,
-                           body = Selftext,
-                           author = AuthorId,
-                           created = patch_created(Created),
-                           attachments = Attachments},
-              {ok, _} = db_serv:create_post(Post),
-              ok = insert_comments(CommentDb, Id),
-              continue
-      end).
+    dets:traverse(SubmissionDb, fun({Id, #{<<"author">> := AuthorUsername,
+                                           <<"created_utc">> := Created,
+                                           <<"id">> := Id,
+                                           <<"selftext">> := Selftext,
+                                           <<"title">> := Title} = Submission}) ->
+                                        io:format("** Inserting submission ~p~n", [Id]),
+                                        Attachments = create_attachments(Submission),
+                                        AuthorId = get_author_id(AuthorUsername),
+                                        Post = #post{id = Id,
+                                                     title = Title,
+                                                     body = Selftext,
+                                                     author = AuthorId,
+                                                     created = patch_created(Created),
+                                                     attachments = Attachments},
+                                        {ok, _} = db_serv:create_post(Post),
+                                        ok = insert_comments(CommentDb, Id),
+                                        continue
+                                end).
 
 create_attachments(#{<<"id">> := Id,
                      <<"is_gallery">> := true,
@@ -287,17 +287,16 @@ create_attachments(_) ->
     [].
 
 create_all_users(SubmissionDb, CommentDb) ->
-    _ = dets:traverse(
-          SubmissionDb, fun({Id, #{<<"author">> := AuthorUsername}}) ->
-                                io:format("** Inserting author ~s~n", [AuthorUsername]),
-                                ok = create_author_id(AuthorUsername),
-                                ok = crete_all_comment_users(CommentDb, Id),
-                                continue
-                        end),
+    _ = dets:traverse(SubmissionDb, fun({Id, #{<<"author">> := AuthorUsername}}) ->
+                                            io:format("** Inserting author ~s~n", [AuthorUsername]),
+                                            ok = create_author_id(AuthorUsername),
+                                            ok = crete_all_comment_users(CommentDb, Id),
+                                            continue
+                                    end),
     ok.
 
 crete_all_comment_users(CommentDb, ParentId) ->
-    Comments = dets:lookup(CommentDb, <<"t3_", ParentId/binary>>),
+    Comments = dets:lookup(CommentDb, ParentId),
     lists:foreach(fun({_, #{<<"author">> := AuthorUsername, <<"id">> := Id}}) ->
                           ok = create_author_id(AuthorUsername),
                           crete_all_comment_users(CommentDb, Id)
@@ -313,13 +312,13 @@ patch_created(Created) when is_integer(Created) ->
 
 insert_comments(CommentDb, ParentId) ->
     io:format("** Inserting comments for parent ~p~n", [ParentId]),
-    Comments = dets:lookup(CommentDb, <<"t3_", ParentId/binary>>),
+    Comments = dets:lookup(CommentDb, ParentId),
     lists:foreach(fun({_, #{<<"author">> := AuthorUsername,
                             <<"body">> := Body,
                             <<"created_utc">> := Created,
                             <<"id">> := Id,
-                            %% _:3/binary masks out "t1_*" and "t3_*"
-                            <<"link_id">> := <<_:3/binary, LinkId/binary>>}}) ->
+                            %% link_id is prepended with "t3_"
+                            <<"link_id">> := <<"t3_", LinkId/binary>>}}) ->
                           AuthorId = get_author_id(AuthorUsername),
                           Post = #post{id = Id,
                                        parent_post_id = ParentId,
