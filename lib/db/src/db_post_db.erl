@@ -192,13 +192,14 @@ read_post_ids(PostIds, Mode) ->
 
 delete_post(UserId, PostId) ->
     case dets:lookup(?POST_DB, PostId) of
-        [#post{parent_post_id = ParentPostId, author = UserId}] when ParentPostId /= not_set ->
+        [#post{parent_post_id = ParentPostId, author = Author}]
+          when (Author == UserId orelse UserId == 0) andalso ParentPostId /= not_set ->
             [ParentPost] = dets:lookup(?POST_DB, ParentPostId),
             ok = insert_and_inform(
                    ParentPost#post{replies = lists:delete(PostId, ParentPost#post.replies)}),
             N = delete_all([PostId]),
             update_parent_count(ParentPost#post.id, -N);
-        [#post{author = UserId}] ->
+        [#post{author = Author}] when Author == UserId orelse UserId == 0 ->
             _N = delete_all([PostId]),
             ok;
         _ ->
