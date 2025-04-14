@@ -199,12 +199,13 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     send_response(Socket, Request, {found, "/bootstrap.html"});
                 false ->
                     {ok, MacAddress} = get_mac_address(Socket),
-                    User = db_user_serv:get_user_from_mac_address(MacAddress),
+                    {IsNew, User} = db_user_serv:get_user_from_mac_address(MacAddress),
                     PayloadJsonTerm =
                         #{<<"noPassword">> => true,
                           <<"userId">> => User#user.id,
                           <<"username">> => User#user.name,
-                          <<"sessionId">> => base64:encode(User#user.session_id)},
+                          <<"sessionId">> => base64:encode(User#user.session_id),
+                          <<"isNew">> => IsNew},
                     case User#user.password_hash of
                         not_set ->
                             send_response(Socket, Request, {json, PayloadJsonTerm});
@@ -418,7 +419,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
             case decode(Socket, Request, Body, create_message) of
                 {return, Result} ->
                     Result;
-                {ok, #user{id = UserId}, #{message := Message,
+                {ok, #user{id = UserId} = User222, #{message := Message,
                                            body_blobs := BodyBlobs,
                                            attachment_blobs := AttachmentBlobs}} ->
                     UpdatedMessage = Message#message{author = UserId},

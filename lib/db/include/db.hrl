@@ -9,6 +9,7 @@
 -define(BESPOKE_MESSAGE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "message")).
 -define(BESPOKE_POST_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "post")).
 -define(BESPOKE_FILE_PATH, filename:join(?BESPOKE_RUNTIME_DIR, "file")).
+-define(ADMIN_USER_ID, 0).
 
 %% System disk layout:
 %% ?BESPOKE_RUNTIME_DIR/db/

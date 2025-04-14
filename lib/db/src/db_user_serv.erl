@@ -82,7 +82,7 @@ get_user_from_session_id(SessionId) ->
 %% Exported: get_user_from_mac_address
 %%
 
--spec get_user_from_mac_address(mac_address()) -> #user{}.
+-spec get_user_from_mac_address(mac_address()) -> {boolean(), #user{}}.
 
 get_user_from_mac_address(MacAddress) ->
     serv:call(?MODULE, {get_user_from_mac_address, MacAddress}).
@@ -201,14 +201,14 @@ message_handler(S) ->
                                  updated = db:seconds_since_epoch(),
                                  session_id = session_id()},
                     ok = dets:insert(?USER_DB, User),
-                    {reply, From, User};
+                    {reply, From, {true, User}};
                 Users ->
                     [LastUpdatedUser|_] =
                         lists:sort(fun(User1, User2) ->
                                            User1#user.updated > User2#user.updated
                                    end, Users),
                     ok = dets:insert(?USER_DB, LastUpdatedUser),
-                    {reply, From, LastUpdatedUser}
+                    {reply, From, {false, LastUpdatedUser}}
             end;
         {call, From, {search_recipients, IgnoredUsernames, Query, N} = Call} ->
             ?log_debug("Call: ~p", [Call]),
@@ -335,7 +335,18 @@ message_handler(S) ->
 
 open_db() ->
     {ok, _} = dets:open_file(?USER_DB, [{file, ?USER_FILE_PATH}, {keypos, #user.id}]),
-    ok.
+    case dets:info(?USER_DB, no_keys) of
+        0 ->
+            ?log_info("Creating admin user"),
+            AdminUser = #user{id = db_serv:get_user_id(),
+                              name = <<"admin">>,
+                              session_id = session_id(),
+                              updated = db:seconds_since_epoch()},
+            ?ADMIN_USER_ID = AdminUser#user.id, % Assertion
+            dets:insert(?USER_DB, AdminUser);
+        _ ->
+            ok
+    end.
 
 close_db() ->
     _ = dets:close(?USER_DB),
