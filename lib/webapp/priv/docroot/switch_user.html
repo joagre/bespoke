@@ -23,9 +23,9 @@
   <body hidden>
     <!-- Modal full screen overlay -->
     <div id="loading-overlay" class="uk-overlay uk-overlay-default uk-position-cover uk-flex uk-flex-center uk-flex-middle" hidden>
-      <div>
+      <div class="uk-text-center">
         <div uk-spinner="ratio: 3"></div>
-        <p class="uk-text-center">Please wait...</p>
+        <p id="overlay-text">Please wait...</p>
       </div>
     </div>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
@@ -48,16 +48,10 @@
       <!-- Form -->
       <div class="uk-margin-small-left uk-margin-small-right">
         <p>
-          If the user does not exist it will be created, with or without
-          password. If the user exists you must provide a password (if a
-          password has been set).
+          If the user does <b>not</b> exist it will be created, with or without
+            password.
         </p>
-        <p>
-          The user switch will be performed immediately, and when you
-          visit the Bespoke BBS next time (using the same end-user device) it
-          will be as this user.
-        </p>
-        <form class="uk-margin-top">
+        <form class="uk-margin-small-top">
           <!-- Username -->
           <input class="uk-input" placeholder="Enter username" id="form-username" type="text">
           <span id="form-username-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
@@ -67,6 +61,11 @@
             <input class="uk-input" placeholder="Enter password" id="form-password" type="text">
           </div>
           <span class="uk-text-meta">Use a <a href="javascript:void(0)" class="underlined-link" onclick="SwitchUser.generateStrongPassword(event)">strong</a> password with 8+ characters</span>
+          <p class="uk-margin-small-top">
+            <span class="uk-label uk-label-warning">Warning</span> The user
+            switch will be performed immediately and next time you login (using
+            the same end-user device) it will be as this user.
+          </p>
       </div>
     </div>
   </body>

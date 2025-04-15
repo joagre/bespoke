@@ -17,9 +17,17 @@
     <script src="js/uhtml.min.js" defer></script>
     <script src="js/marked.min.js" defer></script>
     <script src="js/bespoke.js" defer></script>
+    <script src="js/crypto.js" defer></script>
     <script src="js/bootstrap.js" defer></script>
   </head>
   <body>
+    <!-- Modal full screen overlay -->
+    <div id="loading-overlay" class="uk-overlay uk-overlay-default uk-position-cover uk-flex uk-flex-center uk-flex-middle" hidden>
+      <div class="uk-text-center">
+        <div uk-spinner="ratio: 3"></div>
+        <p id="overlay-text">Please wait...</p>
+      </div>
+    </div>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle">
@@ -29,7 +37,7 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button id="bootstrap-button" onclick="Bootstrap.bootstrapNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" uk-tooltip="Set SSID" disabled></button>
+          <button id="bootstrap-button" onclick="Bootstrap.bootstrapNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" uk-tooltip="Bootstrap now!" disabled></button>
         </div>
       </div>
       <!-- Form -->
@@ -38,17 +46,32 @@
           Provide an SSID or it will default to <i>BespokeBBS</i>. The SSID
           should typically be descriptive for your purposes.
         </p>
-        <p>
-          <span class="uk-label uk-label-warning">Warning</span> This bootstrap
-          procedure will not be shown again. Hit OK; wait a bit and then
-          reconnect to the new SSID.
-        </p>
-        <form class="uk-margin-top">
+        <form class="uk-margin-small-top">
           <!-- SSID -->
           <div class="uk-inline uk-width-1-1">
             <input class="uk-input" value="BespokeBBS" placeholder="Enter Bespoke SSID" id="form-ssid" type="text">
           </div>
           <span id="form-ssid-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
+          <p class="uk-margin-small-top">
+            Provide a password for the admin account. Remember it!
+          </p>
+          <!-- Admin password 1 -->
+          <div class="uk-inline uk-width-1-1">
+            <a onclick="Bootstrap.togglePassword(event, 1)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password1" role="button"></a>
+            <input class="uk-input" placeholder="Enter new admin password" id="form-password1" type="text">
+          </div>
+          <span class="uk-text-meta">Use a <a href="javascript:void(0)" class="underlined-link" onclick="Bootstrap.generateStrongPassword(event)">strong</a> password with 8+ characters</span>
+          <!-- Admin password 2 -->
+          <div class="uk-margin-small-top uk-inline uk-width-1-1">
+            <a onclick="Bootstrap.togglePassword(event, 2)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password2" role="button"></a>
+            <input class="uk-input" placeholder="Enter new admin password again" id="form-password2" type="text" required>
+          </div>
+          <span id="form-password-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
+          <p>
+            <span class="uk-label uk-label-warning">Note</span> This bootstrap
+            procedure will not be shown again. Hit OK; wait two minutes and then
+            reconnect to the new SSID.
+          </p>
         </form>
       </div>
     </div>

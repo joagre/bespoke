@@ -12,6 +12,7 @@
                        login |
                        switch_user |
                        change_password |
+                       change_admin_password |
                        create_message |
                        read_message |
                        read_reply_messages |
@@ -86,9 +87,11 @@ decode(switch_user, #{<<"username">> := Username,
         false ->
             {error, invalid}
     end;
-decode(change_password, #{<<"passwordSalt">> := PasswordSalt,
-                          <<"passwordHash">> := PasswordHash} = JsonTerm)
-  when is_binary(PasswordHash) andalso is_binary(PasswordSalt) ->
+decode(DecodeType, #{<<"passwordSalt">> := PasswordSalt,
+                     <<"passwordHash">> := PasswordHash} = JsonTerm)
+  when (DecodeType == change_password orelse
+        DecodeType == change_admin_password) andalso
+       is_binary(PasswordHash) andalso is_binary(PasswordSalt) ->
     case valid_keys([<<"passwordSalt">>, <<"passwordHash">>], JsonTerm) of
         true ->
             {ok, {base64:decode(PasswordSalt), base64:decode(PasswordHash)}};

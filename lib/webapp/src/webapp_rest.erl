@@ -350,7 +350,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, no_user, SSID} ->
-                    ok = file:delete(filename:join([?BESPOKE_RUNTIME_DIR, "bootstrap"])),
+                    _ = file:delete(filename:join([?BESPOKE_RUNTIME_DIR, "bootstrap"])),
                     ok = change_ssid(SSID),
                     ok = main:insert_config("SSID", ?b2l(SSID)),
                     send_response(Socket, Request, no_content)
@@ -412,14 +412,27 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, User, {PasswordSalt, PasswordHash}} ->
+
                     change_password(Socket, Request, User, PasswordSalt, PasswordHash)
+            end;
+        ["api", "change_admin_password"] ->
+            case decode(Socket, Request, Body, change_admin_password, false) of
+                {return, Result} ->
+                    Result;
+                {ok, _User, {PasswordSalt, PasswordHash}} ->
+                    case db_user_serv:get_user(?ADMIN_USER_ID) of
+                        {ok, #user{password_salt = not_set, password_hash = not_set} = AdminUser} ->
+                            change_password(Socket, Request, AdminUser, PasswordSalt, PasswordHash);
+                        _ ->
+                            send_response(Socket, Request, forbidden)
+                    end
             end;
         %% Direct messaging
         ["api", "create_message"] ->
             case decode(Socket, Request, Body, create_message) of
                 {return, Result} ->
                     Result;
-                {ok, #user{id = UserId} = User222, #{message := Message,
+                {ok, #user{id = UserId}, #{message := Message,
                                            body_blobs := BodyBlobs,
                                            attachment_blobs := AttachmentBlobs}} ->
                     UpdatedMessage = Message#message{author = UserId},
