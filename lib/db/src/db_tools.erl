@@ -39,9 +39,9 @@ create_subreddit_db() ->
         get_cached_subreddit(
           ?SUBMISSIONS,
           ?COMMENTS,
-          _NoPlainSubmissions = 10,
-          _NoGallerySubmissions = 10,
-          _NoVideoSubmissions = 10,
+          _NoPlainSubmissions = 5,
+          _NoGallerySubmissions = 20,
+          _NoVideoSubmissions = 5,
           _MinNoGalleryImages = 2,
           _MinNoComments = 10),
     [] = insert_subreddit(SubmissionDb, CommentDb),
