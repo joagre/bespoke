@@ -32,7 +32,7 @@
          id :: db:user_id() | '_',
          name :: db:username() | '_',
          session_id = not_set :: db_user_serv:session_id() | not_set | '_',
-         mac_address :: db_user_serv:mac_address() | '_',
+         mac_address = not_set :: db_user_serv:mac_address() | not_set | '_',
          password_salt = not_set :: db_user_serv:password_salt() | not_set | '_',
          password_hash = not_set :: db_user_serv:password_hash() | not_set | '_',
          updated :: db:seconds_since_epoch() | '_',
