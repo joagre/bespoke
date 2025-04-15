@@ -334,10 +334,14 @@ encode(get_ssid, SSID) ->
 encode(generate_challenge, {PasswordSalt, Challenge}) ->
     #{<<"passwordSalt">> => base64:encode(PasswordSalt),
       <<"challenge">> => base64:encode(Challenge)};
-encode(switch_user, #{user_id := UserId, username := Username, session_id := SessionId}) ->
+encode(switch_user, #{user_id := UserId,
+                      username := Username,
+                      session_id := SessionId,
+                      is_new := IsNew}) ->
     #{<<"userId">> => UserId,
       <<"username">> => Username,
-      <<"sessionId">> => base64:encode(SessionId)};
+      <<"sessionId">> => base64:encode(SessionId),
+      <<"isNew">> => IsNew};
 encode(login, #{user_id := UserId, username := Username, session_id := SessionId}) ->
     #{<<"userId">> => UserId,
       <<"username">> => Username,

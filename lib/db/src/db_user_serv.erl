@@ -121,13 +121,13 @@ login(Username, MacAddress, PasswordSalt, PasswordHash) ->
 %%
 
 -spec switch_user(db:username(), mac_address()) ->
-          {ok, #user{}} | {error, failure}.
+          {ok, {boolean(), #user{}}} | {error, failure}.
 
 switch_user(Username, MacAddress) ->
     serv:call(?MODULE, {switch_user, Username, MacAddress}).
 
 -spec switch_user(db:username(), mac_address(), password_salt(), password_hash()) ->
-          #user{}.
+          {ok, {boolean(), #user{}}}.
 
 switch_user(Username, MacAddress, PasswordSalt, PasswordHash) ->
     serv:call(?MODULE, {switch_user, Username, MacAddress, PasswordSalt, PasswordHash}).
@@ -260,7 +260,7 @@ message_handler(S) ->
                                             mac_address = MacAddress,
                                             updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, UpdatedUser),
-                    {reply, From, {ok, UpdatedUser}};
+                    {reply, From, {ok, {false, UpdatedUser}}};
                 %% User *with* password exists
                 [_] ->
                     {reply, From, {error, failure}};
@@ -272,7 +272,7 @@ message_handler(S) ->
                                  mac_address = MacAddress,
                                  updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, User),
-                    {reply, From, {ok, User}}
+                    {reply, From, {ok, {true, User}}}
             end;
         %% Switch to user *with* password
         {call, From, {switch_user, Username, MacAddress, PasswordSalt, PasswordHash} = Call} ->
@@ -286,14 +286,14 @@ message_handler(S) ->
                                             password_hash = PasswordHash,
                                             updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, User),
-                    {reply, From, UpdatedUser};
+                    {reply, From, {ok, {false, UpdatedUser}}};
                 %% User *with* password exists
                 [User] ->
                     UpdatedUser = User#user{session_id = session_id(),
                                             mac_address = MacAddress,
                                             updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, UpdatedUser),
-                    {reply, From, UpdatedUser};
+                    {reply, From, {ok, {false, UpdatedUser}}};
                 %% Create new user *with* password
                 [] ->
                     User = #user{id = db_serv:get_user_id(),
@@ -304,7 +304,7 @@ message_handler(S) ->
                                  password_hash = PasswordHash,
                                  updated = db:seconds_since_epoch()},
                     ok = dets:insert(?USER_DB, User),
-                    {reply, From, User}
+                    {reply, From, {ok, {true, User}}}
             end;
         {call, From, {change_password, Username, MacAddress, PasswordSalt, PasswordHash} = Call} ->
             ?log_debug("Call: ~p", [Call]),

@@ -743,10 +743,11 @@ switch_user(Socket, Request, Username, _PasswordSalt = not_set, _PasswordHash = 
             _ClientResponse = not_set) ->
     {ok, MacAddress} = get_mac_address(Socket),
     case db_user_serv:switch_user(Username, MacAddress) of
-        {ok, #user{id = UserId, session_id = SessionId}} ->
+        {ok, {IsNew, #user{id = UserId, session_id = SessionId}}} ->
             JsonTerm = webapp_marshalling:encode(switch_user, #{user_id => UserId,
                                                                 username => Username,
-                                                                session_id => SessionId}),
+                                                                session_id => SessionId,
+                                                                is_new => IsNew}),
             send_response(Socket, Request, {json, JsonTerm});
         {error, failure} ->
             send_response(Socket, Request, forbidden)
@@ -781,11 +782,12 @@ switch_user(Socket, Request, Username, PasswordSalt, PasswordHash, ClientRespons
     end.
 
 switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt, PasswordHash) ->
-    #user{id = UserId, session_id = SessionId} =
+    {ok, {IsNew, #user{id = UserId, session_id = SessionId}}} =
         db_user_serv:switch_user(Username, MacAddress, PasswordSalt, PasswordHash),
     JsonTerm = webapp_marshalling:encode(switch_user, #{user_id => UserId,
                                                         username => Username,
-                                                        session_id => SessionId}),
+                                                        session_id => SessionId,
+                                                        is_new => IsNew}),
     send_response(Socket, Request, {json, JsonTerm}).
 
 change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordHash) ->
@@ -855,7 +857,8 @@ get_mac_address(Socket) ->
 get_mac_address_for_ip_address(IpAddress) ->
     %% Ugh! Do better yourself!
     Command = "ip -o -4 addr show | awk -v ip='" ++ inet:ntoa(IpAddress) ++
-        "' '$4 ~ ip {print $2}' | xargs -I{} ip link show {} | awk '/link\/ether/ {print $2}'",
+        "' '$4 ~ ip {print $2}' | xargs -I{} ip link show {} | awk '/link\\/ether/ {print $2}'",
+    ?log_info("~p", [lists:flatten(Command)]),
     case string:trim(os:cmd(Command)) of
         "" ->
             {error, not_found};
