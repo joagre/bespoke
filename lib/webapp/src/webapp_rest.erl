@@ -858,14 +858,20 @@ get_mac_address_for_ip_address(IpAddress) ->
     %% Ugh! Do better yourself! Note: The ping must be done on target. #!$@!!
     IpAddressString = inet:ntoa(IpAddress),
     Command =
-        "ping -c 2 " ++ IpAddressString ++ " > /dev/null 2>&1; ip -o -4 addr show | awk -v ip='" ++
-        IpAddressString ++
-        "' '$4 ~ ip {print $2}' | xargs -I{} ip link show {} | awk '/link\\/ether/ {print $2}'",
-    ?log_info("~p", [lists:flatten(Command)]),
+        case main:is_target() of
+            true ->
+                "ping -q -c 1 " ++ IpAddressString ++ " > /dev/null 2>&1; ip neigh show | awk '/" ++
+                    IpAddressString ++ "/ {print $5}'";
+            false ->
+                "ip -o -4 addr show | awk -v ip='" ++ IpAddressString ++
+                    "' '$4 ~ ip {print $2}' | xargs -I{} ip link show {} | awk '/link\\/ether/ {print $2}'"
+        end,
+    ?log_info("Command: ~s", [lists:flatten(Command)]),
     case string:trim(os:cmd(Command)) of
         "" ->
             {error, not_found};
         MacAddress ->
+            ?log_info("MAC address: ~p", [MacAddress]),
             {ok, ?l2b(MacAddress)}
     end.
 
