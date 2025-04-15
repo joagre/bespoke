@@ -83,5 +83,5 @@ insert_config(Key, Value) ->
 -spec is_target() -> boolean().
 
 is_target() ->
-    Target = os:cmd("uname -m"),
+    Target = string:trim(os:cmd("uname -m")),
     Target == "armv6l" orelse Target == "armv7l" orelse Target == "aarch64".
