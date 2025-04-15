@@ -4,6 +4,7 @@
 -export([start_link/0, change_ssid/1]).
 %% rester_http_server callbacks
 -export([init/2, info/3, close/2, error/3, http_request/4]).
+-export([change_ssid/1]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -14,6 +15,7 @@
 -include("webapp_crypto.hrl").
 
 -define(MAX_RECIPIENTS, 10).
+-define(CHANGE_SSID_AFTER, 2000).
 
 -record(state, {
                 subscriptions = [] ::
@@ -60,7 +62,7 @@ change_ssid(SSID) ->
             ScriptPath = filename:join([TargetBinDirPath, "change_ssid.sh"]),
             Command = lists:flatten(io_lib:format("sudo bash ~s \"~s\" 2>&1; echo $?",
                                                   [ScriptPath, SSID])),
-            ?log_info("Calling: ~s", [Command]),
+            ?log_info("Command: ~s", [Command]),
             case string:trim(os:cmd(Command)) of
                 "0" ->
                     main:insert_config("SSID", ?b2l(SSID));
@@ -358,7 +360,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     Result;
                 {ok, no_user, SSID} ->
                     _ = file:delete(filename:join([?BESPOKE_RUNTIME_DIR, "bootstrap"])),
-                    ok = change_ssid(SSID),
+                    {ok, _} = timer:apply_after(?CHANGE_SSID_AFTER, ?MODULE, change_ssid, [SSID]),
                     ok = main:insert_config("SSID", ?b2l(SSID)),
                     send_response(Socket, Request, no_content)
             end;
