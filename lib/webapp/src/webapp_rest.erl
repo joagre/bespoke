@@ -53,17 +53,24 @@ start_link() ->
 -spec change_ssid(binary()) -> ok | {error, string()}.
 
 change_ssid(SSID) ->
-    BaseDirPath = filename:join([code:lib_dir(main), "../.."]),
-    TargetBinDirPath = filename:join([BaseDirPath, "target/bin"]),
-    ScriptPath = filename:join([TargetBinDirPath, "change_ssid.sh"]),
-    Command = lists:flatten(io_lib:format("sudo bash ~s \"~s\" 2>&1; echo $?", [ScriptPath, SSID])),
-    ?log_info("Calling: ~s", [Command]),
-    case string:trim(os:cmd(Command)) of
-        "0" ->
-            main:insert_config("SSID", ?b2l(SSID));
-        UnexpectedOutput ->
-            ?log_error("~s: ~s (this is OK on a developer machine)", [Command, UnexpectedOutput]),
-            {error, UnexpectedOutput}
+    case main:is_target() of
+        true ->
+            BaseDirPath = filename:join([code:lib_dir(main), "../.."]),
+            TargetBinDirPath = filename:join([BaseDirPath, "target/bin"]),
+            ScriptPath = filename:join([TargetBinDirPath, "change_ssid.sh"]),
+            Command = lists:flatten(io_lib:format("sudo bash ~s \"~s\" 2>&1; echo $?",
+                                                  [ScriptPath, SSID])),
+            ?log_info("Calling: ~s", [Command]),
+            case string:trim(os:cmd(Command)) of
+                "0" ->
+                    main:insert_config("SSID", ?b2l(SSID));
+                UnexpectedOutput ->
+                    ?log_error("~s: ~s (this is OK on a developer machine)",
+                               [Command, UnexpectedOutput]),
+                    {error, UnexpectedOutput}
+            end;
+        false ->
+            ok
     end.
 
 %%

@@ -1,7 +1,7 @@
 % -*- fill-column: 100; -*-
 
 -module(main).
--export([start/0, stop/0, lookup_config/2, insert_config/2]).
+-export([start/0, stop/0, lookup_config/2, insert_config/2, is_target/0]).
 -export_type([filename/0, file_path/0, bstring/0]).
 
 -include_lib("apptools/include/shorthand.hrl").
@@ -75,3 +75,13 @@ lookup_config(Key, DefaultValue) ->
 
 insert_config(Key, Value) ->
     apptools_config:insert("Bespoke", ?CONFIG_FILE, Key, Value).
+
+%%
+%% is_target
+%%
+
+-spec is_target() -> boolean().
+
+is_target() ->
+    Target = os:cmd("uname -m"),
+    Target == "armv6l" orelse Target == "armv7l" orelse Target == "aarch64".
