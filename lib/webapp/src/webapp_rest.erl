@@ -855,8 +855,11 @@ get_mac_address(Socket) ->
     end.
 
 get_mac_address_for_ip_address(IpAddress) ->
-    %% Ugh! Do better yourself!
-    Command = "ip -o -4 addr show | awk -v ip='" ++ inet:ntoa(IpAddress) ++
+    %% Ugh! Do better yourself! Note: The ping must be done on target. #!$@!!
+    IpAddressString = inet:ntoa(IpAddress),
+    Command =
+        "ping -c 2 " ++ IpAddressString ++ " > /dev/null 2>&1; ip -o -4 addr show | awk -v ip='" ++
+        IpAddressString ++
         "' '$4 ~ ip {print $2}' | xargs -I{} ip link show {} | awk '/link\\/ether/ {print $2}'",
     ?log_info("~p", [lists:flatten(Command)]),
     case string:trim(os:cmd(Command)) of
