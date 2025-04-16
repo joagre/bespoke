@@ -18,7 +18,7 @@ The modern internet has become overwhelmed by mass surveillance, intrusive algor
 
 B3S runs as a self-contained appliance behind its own WiFi Access Point—no internet connection required. The hardware needed is inexpensive, and setup is straightforward.
 
-Concerned about WiFi range? Typically, with a clear line-of-sight, B3S achieves hundred meters of coverage. If needed, adding a low-cost sector antenna can extend the range significantly.
+Concerned about WiFi range? Typically, with a clear line-of-sight, B3S achieves hundred meters of coverage. If needed, adding a low-cost sector antenna can extend the range.
 
 The appliance frontend is a straightforward web app running directly in your browser, automatically launching as a captive portal when clients connect to the B3S SSID. Users can also install B3S as a Progressive Web App (PWA), making it behave similarly to a native app. PWAs launch from your home screen or app drawer and can support offline capabilities.
 
@@ -58,7 +58,7 @@ That's it.
 
 ### Optional Hardware for Extended Range
 
-To significantly boost your WiFi coverage, consider these affordable additions:
+To boost your WiFi coverage, consider these affordable additions:
 
 - **WiFi USB Adapter (\~\$28):** [Alfa Network AWUS036NHV](https://alfa-network.eu/wi-fi/wi-fi-adapters/awus036nhv) (or similar)
 - **Directional Panel Antenna (\~\$18):** [Alfa Network APA-M25](https://alfa-network.eu/antennas/wi-fi-antennas/apa-m25) (or similar)
