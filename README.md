@@ -69,6 +69,4 @@ Enhance your setup by 3D printing a case for your Raspberry Pi Zero:
 
 - [Raspberry Pi Zero Case on Thingiverse](https://www.thingiverse.com/thing:1167846) (or similar)
 
-/Bespoke team
-
-![The Bespoke team](lib/webapp/priv/docroot/images/the-team.gif)
+![The Bespoke team](lib/webapp/priv/docroot/images/the-team.gif) - The Bespoke Team
