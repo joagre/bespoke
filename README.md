@@ -68,3 +68,5 @@ To significantly boost your WiFi coverage, consider these affordable additions:
 Enhance your setup by 3D printing a case for your Raspberry Pi Zero:
 
 - [Raspberry Pi Zero Case on Thingiverse](https://www.thingiverse.com/thing:1167846) (or similar)
+
+![The Bespoke team](lib/webapp/priv/docroot/images/the-team.gif)
