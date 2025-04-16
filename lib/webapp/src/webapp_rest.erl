@@ -4,7 +4,6 @@
 -export([start_link/0, change_ssid/1]).
 %% rester_http_server callbacks
 -export([init/2, info/3, close/2, error/3, http_request/4]).
--export([change_ssid/1]).
 
 -include_lib("apptools/include/log.hrl").
 -include_lib("apptools/include/shorthand.hrl").
@@ -627,12 +626,11 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, #user{id = UserId}, FileId} ->
-                    {ok, [#file{uploader = UserId}]} = db_serv:read_files([FileId]),
-                    case db_serv:delete_file(FileId) of
+                    case db_serv:delete_file(UserId, FileId) of
                         ok ->
                             send_response(Socket, Request, no_content);
-                        {error, not_found} ->
-                            send_response(Socket, Request, not_found)
+                        {error, access_denied} ->
+                            send_response(Socket, Request, forbidden)
                     end;
                 {ok, _User, _fileId} ->
                     send_response(Socket, Request, forbidden)

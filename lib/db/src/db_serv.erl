@@ -11,7 +11,7 @@
          create_post/1, read_top_posts/0, read_posts/1, read_posts/2, read_post_ids/1,
          read_post_ids/2, delete_post/2, toggle_post_like/2,
          %% File sharing
-         create_file/1, read_files/0, read_files/1, delete_file/1, file_is_uploaded/1,
+         create_file/1, read_files/0, read_files/1, delete_file/2, file_is_uploaded/1,
          %% Subscription management
          subscribe_on_changes/1, unsubscribe_on_changes/1,
          %% Database management
@@ -204,10 +204,10 @@ read_files(FileIds) ->
 %% Exported: delete_file
 %%
 
--spec delete_file(db:file_id()) -> ok | {error, not_found}.
+-spec delete_file(db:user_id(), db:file_id()) -> ok | {error, access_denied}.
 
-delete_file(FileId) ->
-    serv:call(?MODULE, {delete_file, FileId}).
+delete_file(UserId, FileId) ->
+    serv:call(?MODULE, {delete_file, UserId, FileId}).
 
 %%
 %% file_is_uploaded
@@ -310,9 +310,9 @@ message_handler(S) ->
         {call, From, {read_files, FileIds} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_file_db:read_files(FileIds)};
-        {call, From, {delete_file, FileId} = Call} ->
+        {call, From, {delete_file, UserId, FileId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
-            {reply, From, db_file_db:delete_file(FileId)};
+            {reply, From, db_file_db:delete_file(UserId, FileId)};
         {call, From, {file_is_uploaded, FileId} = Call} ->
             ?log_debug("Call: ~p", [Call]),
             {reply, From, db_file_db:file_is_uploaded(FileId)};

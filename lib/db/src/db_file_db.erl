@@ -1,7 +1,7 @@
 % -*- fill-column: 100; -*-
 
 -module(db_file_db).
--export([open/0, dump/0, sync/0, close/0, create_file/1, read_files/0, read_files/1, delete_file/1,
+-export([open/0, dump/0, sync/0, close/0, create_file/1, read_files/0, read_files/1, delete_file/2,
          file_is_uploaded/1]).
 
 -include_lib("kernel/include/file.hrl").
@@ -114,15 +114,16 @@ read_files(FileIds) ->
 %% Exported: delete_file
 %%
 
--spec delete_file(db:file_id()) -> ok | {error, not_found}.
+-spec delete_file(db:user_id(), db:file_id()) -> ok | {error, access_denied}.
 
-delete_file(FileId) ->
+delete_file(UserId, FileId) ->
     case dets:lookup(?FILE_DB, FileId) of
-        [File] ->
+        [#file{uploader = Uploader} = File]
+          when Uploader == UserId orelse UserId == ?ADMIN_USER_ID ->
             ok = dets:delete(?FILE_DB, FileId),
             ok = delete_file_on_disk(File);
-        [] ->
-            {error, not_found}
+        _ ->
+            {error, access_denied}
     end.
 
 delete_file_on_disk(#file{id = FileId, filename = Filename}) ->
