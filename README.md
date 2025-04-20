@@ -47,8 +47,8 @@ You'll need:
 2. Write the downloaded image to your SD card. On Linux:
 
 ```bash
-gunzip bespoke-0.1.0.img.gz
-sudo dd if=bespoke-0.1.0.img of=/dev/mmcblk0 bs=4M status=progress
+gunzip bespoke-0.9.0.img.gz
+sudo dd if=bespoke-0.9.0.img of=/dev/mmcblk0 bs=4M status=progress
 sync
 ```
 

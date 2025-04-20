@@ -231,15 +231,15 @@ Do this on a build machine:
 
 ```
 make release
-scp build/releases/bespoke-0.1.0.tar.gz pi@bespoke.local:/home/pi/
+scp build/releases/bespoke-0.9.0.tar.gz pi@bespoke.local:/home/pi/
 ```
 
 Do this on the Pi:
 
 ```
 sudo ntpdate pool.ntp.org
-tar zxvf bespoke-0.1.0.tar.gz
-cd bespoke-0.1.0
+tar zxvf bespoke-0.9.0.tar.gz
+cd bespoke-0.9.0
 make install
 ```
 
@@ -250,21 +250,21 @@ Done!
 Shrink partition:
 
 ```
-sudo dd if=/dev/mmcblk0 of=/media/jocke/EXTERNSL/bespoke-0.1.0-32GB.img bs=4M status=progress
+sudo dd if=/dev/mmcblk0 of=/media/jocke/EXTERNSL/bespoke-0.9.0-32GB.img bs=4M status=progress
 sync
 sudo apt update && sudo apt install -y wget parted gzip pigz xz-utils udev e2fsprogs
 cd /media/jocke/EXTERNSL
 wget https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
-./pishrink.sh bespoke-0.1.0-32GB.img bespoke-0.1.0-pishrinked.img
+./pishrink.sh bespoke-0.9.0-32GB.img bespoke-0.9.0-pishrinked.img
 sync
-mv bespoke-0.1.0-pishrinked.img bespoke-0.1.0.img
-gzip bespoke-0.1.0.img
+mv bespoke-0.9.0-pishrinked.img bespoke-0.9.0.img
+gzip bespoke-0.9.0.img
 ```
 
 # How to install image on Pi
 
 ```
-gunzip bespoke-0.1.0.img.gz
-sudo dd if=bespoke-0.1.0.img of=/dev/mmcblk0 bs=4M status=progress
+gunzip bespoke-0.9.0.img.gz
+sudo dd if=bespoke-0.9.0.img of=/dev/mmcblk0 bs=4M status=progress
 sync
 ```

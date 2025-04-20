@@ -1,10 +1,11 @@
 # Changelog
 
-## 0.9
+## [0.9.0]
 
-Feature complete in base version
+Base version is feature complete. Blob encryption and database syncing is left
+to implement to reach 1.0.
 
-## 0.2.2
+## [0.2.2]
 
 ### Fixed [0.2.2]
 
