@@ -29,7 +29,7 @@ release:
 		fi; \
 	done
 	@echo "Gzipping js files"
-	@gzip $(JS_DIR)/purify.min.js $(JS_DIR)/uikit.js $(JS_DIR)/uikit.min.js $(JS_DIR)/uikit-icons.js $(JS_DIR)/uikit-icons.min.js $(JS_DIR)/uhtml.min.js $(JS_DIR)/sodium.js
+	@gzip -f $(JS_DIR)/purify.min.js $(JS_DIR)/uikit.js $(JS_DIR)/uikit.min.js $(JS_DIR)/uikit-icons.js $(JS_DIR)/uikit-icons.min.js $(JS_DIR)/uhtml.min.js $(JS_DIR)/sodium.js
 	@echo "Copying target files"
 	@cp -r ../target $(TARGET_DIR)
 	@echo "Copying bin files"
