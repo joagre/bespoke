@@ -247,14 +247,18 @@ Done!
 
 ## Create image
 
+NOTE: Check  that /dev/sda is the SD card on your machine!!!
+
 Shrink partition:
 
 ```
-sudo dd if=/dev/mmcblk0 of=/media/jocke/EXTERNSL/bespoke-0.9.0-full.img bs=4M status=progress
+sudo -s
+dd if=/dev/sda of=/media/jocke/EXTERNSL/bespoke-0.9.0-full.img bs=4M status=progress
 sync
-sudo apt update && sudo apt install -y wget parted gzip pigz xz-utils udev e2fsprogs
+apt update && sudo apt install -y wget parted gzip pigz xz-utils udev e2fsprogs
 cd /media/jocke/EXTERNSL
 wget https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
+chmod +x pishrink.sh
 ./pishrink.sh bespoke-0.9.0-full.img bespoke-0.9.0-pishrinked.img
 sync
 mv bespoke-0.9.0-pishrinked.img bespoke-0.9.0.img
@@ -265,6 +269,6 @@ gzip bespoke-0.9.0.img
 
 ```
 gunzip bespoke-0.9.0.img.gz
-sudo dd if=bespoke-0.9.0.img of=/dev/mmcblk0 bs=4M status=progress
+sudo dd if=bespoke-0.9.0.img of=/dev/sda bs=4M status=progress
 sync
 ```
