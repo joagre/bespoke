@@ -43,7 +43,7 @@ cable is inserted.
 
 * Prepare dhcpcd on the Pi:
 
-```
+```bash
 sudo systemctl stop NetworkManager
 sudo systemctl disable NetworkManager
 sudo systemctl mask NetworkManager
@@ -61,14 +61,14 @@ static domain_name_servers=8.8.8.8 8.8.4.4
 
 * Start dhcpcd on the Pi:
 
-```
+```bash
 sudo systemctl enable dhcpcd
 sudo systemctl start dhcpcd
 ```
 
 * Assign a temporary ip address to `enxdecde80060f0` on the host, e.g.
 
-```
+```bash
 sudo ip addr add 192.168.7.1/24 dev enxdecde80060f0
 sudo ip link set enxdecde80060f0 up
 ```
@@ -86,7 +86,7 @@ Test the connection over USB:
 Make it possible for the Pi to use the host as a default gateway. Do
 this on the host:
 
-```
+```bash
 sudo sysctl -w net.ipv4.ip_forward=1
 sudo iptables -t nat -A POSTROUTING -o wlp2s0 -j MASQUERADE
 sudo iptables -A FORWARD -i wlp2s0 -o enxdecde80060f0 -m state --state RELATED,ESTABLISHED -j ACCEPT
@@ -103,7 +103,7 @@ gateway on the Pi to work. Look in the script for details.
 
 Install hostapd and dnsmasq and stop them temporarily:
 
-```
+```bash
 sudo apt update
 sudo apt install -y hostapd dnsmasq
 sudo systemctl stop hostapd
@@ -126,7 +126,7 @@ nogateway
 
 Restart dhcpcd:
 
-```
+```bash
 sudo service dhcpcd restart
 ```
 
@@ -148,7 +148,7 @@ no-poll
 
 Unmask hostapd and start dnsmasq:
 
-```
+```bash
 sudo systemctl unmask hostapd
 sudo systemctl enable dnsmasq
 sudo systemctl start dnsmasq
@@ -184,7 +184,7 @@ ignore_broadcast_ssid=0
 
 Copy the default (wlan0) hostapd service to `hostapd-wlan1.service`:
 
-```
+```bash
 sudo cp /lib/systemd/system/hostapd.service /etc/systemd/system/hostapd-wlan1.service
 ```
 
@@ -212,7 +212,7 @@ WantedBy=multi-user.target
 
 Remove wpa_supplicant:
 
-```
+```bash
 sudo apt remove --purge -y wpa_supplicant
 sudo rm -f /etc/wpa_supplicant/wpa_supplicant.conf
 sudo systemctl disable wpa_supplicant.service
@@ -220,7 +220,7 @@ sudo systemctl disable wpa_supplicant.service
 
 ## Install and prepare required packages
 
-```
+```bash
 sudo apt install erlang-nox wamerican emacs-nox erlang-mode ntpdate rfkill
 sudo setcap cap_net_bind_service=+ep `find /usr/local/lib/erlang/ -name beam.smp`
 ```
@@ -229,14 +229,14 @@ sudo setcap cap_net_bind_service=+ep `find /usr/local/lib/erlang/ -name beam.smp
 
 Do this on a build machine:
 
-```
+```bash
 make release
 scp build/releases/bespoke-0.9.0.tar.gz pi@bespoke.local:/home/pi/
 ```
 
 Do this on the Pi:
 
-```
+```bash
 sudo ntpdate pool.ntp.org
 tar zxvf bespoke-0.9.0.tar.gz
 cd bespoke-0.9.0
@@ -251,7 +251,7 @@ NOTE: Check  that /dev/sda is the SD card on your machine!!!
 
 Shrink partition:
 
-```
+```bash
 sudo -s
 dd if=/dev/sda of=/media/jocke/EXTERNSL/bespoke-0.9.0-full.img bs=4M status=progress
 sync
@@ -287,7 +287,7 @@ changed (even paying github lots of money)
 
 # How to install image on Pi
 
-```
+```bash
 gunzip bespoke-0.9.0.img.gz
 sudo dd if=bespoke-0.9.0.img of=/dev/sda bs=4M status=progress
 sync
