@@ -10,3 +10,10 @@
 #unread-posts-counter {
     color: var(--uk-warning);
 }
+
+#the-truth-is-in-here {
+  opacity: 0.5;
+  cursor: pointer;
+  width: 25%;
+  height: auto;
+}
