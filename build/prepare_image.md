@@ -265,6 +265,26 @@ mv bespoke-0.9.0-pishrinked.img bespoke-0.9.0.img
 gzip bespoke-0.9.0.img
 ```
 
+## Create a release on github
+
+```bash
+git tag -a v0.9.0 -m "Release v0.9.0"
+git push origin v0.9.0
+```
+
+Go to the github webui and draft a new release.
+
+It is safer to upload a new release image using gh:
+
+```bash
+gh release upload v0.9.0 /media/jocke/EXTERNSL/bespoke-0.9.0.img.gz
+```
+
+Note1: Uploading a release from the github webui is hell.
+
+Note2: There is a 2GB cap on public/free github accounts and that cannot be
+changed (even paying github lots of money)
+
 # How to install image on Pi
 
 ```
