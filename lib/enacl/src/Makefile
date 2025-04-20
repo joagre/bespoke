@@ -22,7 +22,9 @@ all:
 	env ERLC_FLAGS=+debug_info $(MAKE) build
 
 release:
-	$(MAKE) build
+
+#release:
+#	$(MAKE) build
 
 build: $(APP_TARGET) $(ALL_OBJECTS)
 

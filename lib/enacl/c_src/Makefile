@@ -19,9 +19,11 @@ SOURCES=aead.c enacl.c enacl_ext.c enacl_nif.c generichash.c hash.c kdf.c kx.c p
 
 all: ../priv/enacl_nif.so
 
-release: clean
-	$(MAKE) CROSS_COMPILE=aarch64-linux-gnu- LIBSODIUM_INCLUDE=../../../vendor/libsodium-arm/include LIBSODIUM_LIB=../../../vendor/libsodium-arm/lib all
-	aarch64-linux-gnu-$(STRIP) ../priv/enacl_nif.so
+release:
+
+#release: clean
+#	$(MAKE) CROSS_COMPILE=aarch64-linux-gnu- LIBSODIUM_INCLUDE=../../../vendor/libsodium-arm/include LIBSODIUM_LIB=../../../vendor/libsodium-arm/lib all
+#	aarch64-linux-gnu-$(STRIP) ../priv/enacl_nif.so
 
 ../priv/enacl_nif.so: $(SOURCES)
 	$(CC) $(CFLAGS) -o ../priv/enacl_nif.so -fpic $(SOURCES) $(LDFLAGS) -lsodium
