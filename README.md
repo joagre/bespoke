@@ -10,6 +10,8 @@ B3S isn't built for the internet. Instead, it runs locally as a self-contained a
 
 Each user can carry their personal B3S appliance, which automatically synchronizes with all (or selected) B3S appliances that come within range. This means interactions can happen entirely offline, with appliances syncing seamlessly in the background when they meet again.
 
+So in essence, a B3S applicance can be setup as a stationary service or be carried around as a mobile ditto. You can even set up a B3S appliance in your car, allowing you to connect with other users while on the move. This opens up a world of possibilities for local communication, whether you're at home, at work, or on the go.
+
 ## Why Use B3S?
 
 The modern internet has become overwhelmed by mass surveillance, intrusive algorithms, endless spam, and noise. B3S offers a simpler alternative by keeping interactions local, secure, and meaningful.
