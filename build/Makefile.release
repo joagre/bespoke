@@ -12,7 +12,6 @@ install:
 os-install:
 	@echo "Running OS installation..."
 	$(MAKE) -C target os-install
-	$(MAKE) install
 
 clean:
 	@echo "Cleaning up..."

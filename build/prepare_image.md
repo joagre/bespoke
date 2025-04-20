@@ -240,7 +240,7 @@ Do this on the Pi:
 sudo ntpdate pool.ntp.org
 tar zxvf bespoke-0.9.0.tar.gz
 cd bespoke-0.9.0
-make install
+make install os-install
 ```
 
 Done!
@@ -250,12 +250,12 @@ Done!
 Shrink partition:
 
 ```
-sudo dd if=/dev/mmcblk0 of=/media/jocke/EXTERNSL/bespoke-0.9.0-32GB.img bs=4M status=progress
+sudo dd if=/dev/mmcblk0 of=/media/jocke/EXTERNSL/bespoke-0.9.0-full.img bs=4M status=progress
 sync
 sudo apt update && sudo apt install -y wget parted gzip pigz xz-utils udev e2fsprogs
 cd /media/jocke/EXTERNSL
 wget https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
-./pishrink.sh bespoke-0.9.0-32GB.img bespoke-0.9.0-pishrinked.img
+./pishrink.sh bespoke-0.9.0-full.img bespoke-0.9.0-pishrinked.img
 sync
 mv bespoke-0.9.0-pishrinked.img bespoke-0.9.0.img
 gzip bespoke-0.9.0.img
