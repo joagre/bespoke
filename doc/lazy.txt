@@ -22,3 +22,5 @@ HTTPS: www.google.com
   ???
 
 I need to emulate this beahviour and I can do that with careful use of dnsmasq and iptables. A problem still remains though. I cannot see what I need to answer to the HTTPS request to emulate that their is Internet connectivity? I could trey to just return 200 OK but now I'm guessing wildly.
+
+jocke@eve:~/Downloads$ convert giphy.gif -coalesce -rotate 90 -loop 1 -set delay 3 -fill white -colorize 75% -layers Optimize ../projects/bespoke/lib/webapp/priv/docroot/images/rain.gif
