@@ -11,9 +11,11 @@
     color: var(--uk-warning);
 }
 
-#the-truth-is-in-here {
-  opacity: 0.5;
-  cursor: pointer;
-  width: 25%;
-  height: auto;
+#truth {
+    cursor: pointer;
+    width: 30vw;
+    max-width: 300px;
+    height: auto;
+    display: block;
+    margin: 10vh auto;
 }
