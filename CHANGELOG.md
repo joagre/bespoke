@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9
+
+Feature complete in base version
+
 ## 0.2.2
 
 ### Fixed [0.2.2]
