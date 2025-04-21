@@ -1,6 +1,6 @@
 # Bespoke BBS (B3S) – A Location-Based BBS
 
-![Feature Overview](doc/overview.mp4)
+![Feature Overview](/doc/screenshot.png)
 
 ## What is Bespoke BBS (B3S)?
 
