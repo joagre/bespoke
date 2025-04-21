@@ -15,7 +15,7 @@
 %%%            for APP0 segment layout
 %%%
 %%%  The code reads:
-%%%      • PNG: Bytes 16-23 of the IHDR chunk (big-endian 32-bit Wwidth x Height)
+%%%      • PNG: Bytes 16-23 of the IHDR chunk (big-endian 32-bit Width x Height)
 %%%      • JPEG: first SOF0/2/... marker, bytes 3-6 after the marker
 %%%
 %%%  No external libraries; only header bytes are touched.
