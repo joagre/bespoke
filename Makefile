@@ -45,8 +45,13 @@ distclean: mrproper
 # Type checking
 #
 
+typecheck: eslint styleint dialyzer
+
 eslint:
 	$(MAKE) -C lib/webapp/priv/docroot/js eslint
+
+styleint:
+	$(MAKE) -C lib/webapp/priv/docroot/css all
 
 ERL=$(shell which erl)
 ERL_TOP=$(ERL:%/bin/erl=%)
