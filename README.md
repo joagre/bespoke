@@ -33,7 +33,7 @@ All encryption used in direct messaging is handled exclusively within your brows
 - Private keys are securely stored in your browser's built-in key storage.
 - HTML and JavaScript files served from the B3S appliance are cryptographically signed. If any tampering occurs, browsers will refuse to load compromised code.
 
-While you initially trust the B3S appliance during setup, all subsequent software updates require explicit acknowledgment. If a PWA is installed offline, potential attack vectors become even smaller. Although no solution is entirely foolproof, ongoing improvements will continue to strengthen security.
+While you initially trust the B3S appliance during setup, all subsequent software updates require explicit acknowledgment. If a PWA is installed offline, potential attack vectors become even smaller.
 
 ### Installation
 
@@ -71,7 +71,7 @@ To boost your WiFi coverage, consider these affordable additions:
 
 Enhance your setup by 3D printing a case for your Raspberry Pi Zero:
 
-- [Raspberry Pi Zero Case on Thingiverse](https://www.thingiverse.com/thing:1167846) (or similar)
+- [Raspberry Pi Zero Case on Thingiverse](https://www.thingiverse.com/thing:1167846) (or similar)
 
 # Credits (Such as They Are)
 
