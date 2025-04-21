@@ -4,7 +4,7 @@
 -type dimensions() :: {non_neg_integer(), non_neg_integer()}.
 
 %%%-------------------------------------------------------------------
-%%%  Extract width × height from PNG/JPEG files without decoding
+%%%  Extract width and height from PNG/JPEG files without decoding
 %%%
 %%%  References
 %%%    • PNG:  ISO/IEC 15948:2004 - W3C PNG 1.2 Recommendation,
