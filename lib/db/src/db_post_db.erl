@@ -142,7 +142,7 @@ move_tmp_attachments(TmpAttachments, NewPostId) ->
 -spec read_top_posts() -> {ok, [#post{}]}.
 
 read_top_posts() ->
-    {ok, sort_posts(dets:match_object(?POST_DB, #post{top_post_id = not_set, _ = '_'}))}.
+    {ok, reverse_sort_posts(dets:match_object(?POST_DB, #post{top_post_id = not_set, _ = '_'}))}.
 
 %%
 %% Exported: read_posts
@@ -239,6 +239,11 @@ toggle_post_like(PostId, UserId) ->
 %%
 
 sort_posts(Posts) ->
+    lists:sort(fun(PostA, PostB) ->
+                       PostA#post.created < PostB#post.created
+               end, Posts).
+
+reverse_sort_posts(Posts) ->
     lists:sort(fun(PostA, PostB) ->
                        PostA#post.created > PostB#post.created
                end, Posts).
