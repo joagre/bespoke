@@ -1,6 +1,6 @@
 # Bespoke BBS (B3S) – Offline by Design
 
-![Feature Overview](/doc/screenshot.png)
+![Feature Overview](doc/screenshot.png)
 
 ## What is Bespoke BBS (B3S)?
 
@@ -72,5 +72,11 @@ To boost your WiFi coverage, consider these affordable additions:
 Enhance your setup by 3D printing a case for your Raspberry Pi Zero:
 
 - [Raspberry Pi Zero Case on Thingiverse](https://www.thingiverse.com/thing:1167846) (or similar)
+
+# Credits (Such as They Are)
+
+Cobbling by **The Bespoke Team**.
+No new inventions, no shiny breakthroughs – just time‑tested parts bolted together until they blinked.
+If it runs, thank the pioneers who did the real work; if it crashes, enjoy the retro vibes.
 
 ![The Bespoke team](lib/webapp/priv/docroot/images/the-team.gif)

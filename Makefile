@@ -28,7 +28,7 @@ setcap:
 clean:
 	$(MAKE) -C lib clean && \
 	$(MAKE) -C external clean && \
-	rm -f .dialyzer.plt
+	rm -f .dialyzer.plt README.pdf
 
 reset:
 	rm -rf $(BESPOKE_RUNTIME_DIR)/* && \
@@ -40,6 +40,13 @@ mrproper: clean
 distclean: mrproper
 	rm -f .dialyzer_init.plt
 	$(MAKE) -C build clean
+
+#
+# Format README.md
+#
+
+README.pdf: README.md
+	pandoc README.md -o README.pdf --pdf-engine=xelatex --toc --toc-depth=2 --number-sections --highlight-style tango
 
 #
 # Type checking
