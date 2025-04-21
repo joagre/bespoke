@@ -1,4 +1,4 @@
-# Bespoke BBS (B3S) – A Location-Based BBS
+# Bespoke BBS (B3S) – Offline by Design
 
 ![Feature Overview](/doc/screenshot.png)
 
