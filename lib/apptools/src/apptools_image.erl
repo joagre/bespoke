@@ -45,7 +45,7 @@ detect(Fd) ->
         {ok, <<16#89504E470D0A1A0A:64>>} ->
             file:position(Fd, {bof, 0}),
             read_png(Fd);
-        {ok, <<16#FF,16#D8,_/binary>>} ->
+        {ok, <<16#FF,16#D8, _/binary>>} ->
             file:position(Fd, {bof, 0}),
             read_jpeg(Fd);
         _ ->
@@ -92,7 +92,7 @@ scan(Fd) ->
         eof  ->
             {error, no_sof};
         16#D9 ->
-            {error,no_sof}; %% Hit EOI first
+            {error, no_sof}; %% Hit EOI first
         M when ?IS_SOF(M) ->
             %% seg-len(2) | precision(1) | height(2) | width(2)
             case file:read(Fd, 7) of
@@ -110,7 +110,7 @@ scan(Fd) ->
                     ok = skip(Fd, SegLen - 2),
                     scan(Fd);
                 _ ->
-                    {error,corrupt_jpeg}
+                    {error, corrupt_jpeg}
             end
     end.
 
@@ -125,12 +125,12 @@ next_marker(Fd) ->
     end.
 
 consume_ff(Fd) ->
-    case file:read(Fd,1) of
+    case file:read(Fd, 1) of
         eof ->
             eof;
         {ok, <<16#FF>>} ->
             consume_ff(Fd); %% Padding: 0xFF FF FF ...
-        {ok,<<M>>} ->
+        {ok, <<M>>} ->
             M %% Real marker (including 0x00)
     end.
 
