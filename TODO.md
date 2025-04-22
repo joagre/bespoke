@@ -8,7 +8,9 @@
 
 ## Web app
 
-* Add Signal protocol under the hood
+* Investigate client SSL warnings in the Erlang node
+* Add width and height to image attachmens to avoid re-rendering during lazy loading of images
+* Add public-key infra structire under the hood ala Signal
 * Rewrite the post record in db.hrl to not use lists for replies, likers
   and attachments, i.e. use idets.erl tables instead in db_post_db.erl.
 

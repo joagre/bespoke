@@ -1,7 +1,4 @@
--module(apptools_image).
--export([dimensions/1]).
-
--type dimensions() :: {non_neg_integer(), non_neg_integer()}.
+% -*- fill-column: 100; -*-
 
 %%%-------------------------------------------------------------------
 %%%  Extract width and height from PNG/JPEG files without decoding
@@ -20,6 +17,11 @@
 %%%
 %%%  No external libraries; only header bytes are touched.
 %%%-------------------------------------------------------------------
+
+-module(apptools_image).
+-export([dimensions/1]).
+
+-type dimensions() :: {non_neg_integer(), non_neg_integer()}.
 
 %%
 %% Exported: dimensions
