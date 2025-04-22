@@ -13,6 +13,8 @@
 * Add public-key infra structire under the hood ala Signal
 * Rewrite the post record in db.hrl to not use lists for replies, likers
   and attachments, i.e. use idets.erl tables instead in db_post_db.erl.
+* Development has only been performed on Chrome/Android, Chrome/Debian and
+  Safari/Iphone, i.e. more testing is needed. :-)
 
 Later:
 
