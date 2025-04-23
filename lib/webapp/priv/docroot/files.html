@@ -28,7 +28,7 @@
         <div class="sticky-header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-background-default">
           <!-- Go back -->
           <div>
-            <button onclick="Bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
+            <button onclick="Bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left" title="Go back"></button>
           </div>
           <!-- Title -->
           <div class="uk-width-expand">
@@ -37,8 +37,8 @@
           </div>
           <!-- Toolbar -->
           <div uk-form-custom>
-            <input id="file-upload" type="file" multiple>
-            <button id="add-button" class="uk-icon-button" type="button" uk-icon="icon: plus" uk-tooltip="Upload file"></button>
+            <input id="file-upload" type="file" tabindex="-1" multiple>
+            <button id="add-button" class="uk-icon-button" type="button" uk-icon="icon: plus" title="Upload file"></button>
           </div>
         </div>
       </div>

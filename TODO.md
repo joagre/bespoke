@@ -18,7 +18,6 @@ Client:
 J Remove Truth Social vibes
 J Verify that Firefox/Linux works
 L Make it possible to use uploaded files as attachments
-J Extend tab-indexing to target the OK button
 
 Server:
 

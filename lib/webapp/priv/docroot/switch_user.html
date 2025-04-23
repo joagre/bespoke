@@ -37,7 +37,7 @@
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
         <div>
-          <button onclick="Bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
+          <button onclick="Bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left" title="Go back"></button>
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
@@ -46,7 +46,7 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button id="switch-button" onclick="SwitchUser.switchNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" uk-tooltip="Switch user" disabled></button>
+          <button id="switch-button" onclick="SwitchUser.switchNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" title="Switch user" tabindex="100" disabled></button>
         </div>
       </div>
       <!-- Form -->
@@ -57,14 +57,14 @@
         </p>
         <form class="uk-margin-small-top">
           <!-- Username -->
-          <input class="uk-input" placeholder="Enter username" id="form-username" type="text">
+          <input class="uk-input" placeholder="Enter username" id="form-username" type="text" tabindex="1">
           <span id="form-username-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
           <!-- Password -->
           <div class="uk-margin-small-top uk-inline uk-width-1-1">
-            <a onclick="SwitchUser.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password" role="button"></a>
-            <input class="uk-input" placeholder="Enter password" id="form-password" type="text">
+            <a onclick="SwitchUser.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password" role="button" tabindex="-1"></a>
+            <input class="uk-input" placeholder="Enter password" id="form-password" type="text" tabindex="2">
           </div>
-          <span class="uk-text-meta">Use a <a href="javascript:void(0)" class="underlined-link" onclick="SwitchUser.generateStrongPassword(event)">strong</a> password with 8+ characters</span>
+          <span class="uk-text-meta">Use a <a href="javascript:void(0)" class="underlined-link" onclick="SwitchUser.generateStrongPassword(event)" tabindex="-1">strong</a> password with 8+ characters</span>
           <p class="uk-margin-small-top">
             <span class="uk-label uk-label-warning">Warning</span> The user
             switch will be performed immediately and next time you login (using

@@ -32,7 +32,7 @@
         <div class="sticky-header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between uk-background-default">
           <!-- Go back -->
           <div>
-            <button  onclick="Bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
+            <button onclick="Bespoke.gotoPage(event, 'post.html', -1)" data-back-destination="post.html" class="uk-icon-button" uk-icon="arrow-left" title="Go back"></button>
           </div>
           <!-- Title -->
           <div class="uk-width-expand">
@@ -42,7 +42,7 @@
           </div>
           <!-- Toolbar -->
           <div>
-            <a href="#top" class="uk-icon-button" uk-icon="chevron-up" role="button" uk-tooltip="Scroll to top" uk-scroll></a>
+            <a href="#top" class="uk-icon-button" uk-icon="chevron-up" role="button" title="Scroll to top" uk-scroll></a>
           </div>
         </div>
       </div>
@@ -60,18 +60,18 @@
           <div class="uk-flex uk-flex-between uk-flex-middle">
             <!-- Parent meta-data -->
             <div class="uk-text-meta post-meta-data meta-data">
-              <span id="parent-author" uk-tooltip="Author"></span> •
-              <span id="parent-age" uk-tooltip="Created"></span> •
+              <span id="parent-author" title="Author"></span> •
+              <span id="parent-age" title="Created"></span> •
               <button onclick="Post.toggleLike(event)" class="toolbar-button" id="parent-like-icon" uk-icon="icon: heart"></button> <span id="parent-likes-count"></span>
-              <span id="parent-have-replies" uk-tooltip="Replies" hidden>
+              <span id="parent-have-replies" title="Replies" hidden>
                 &nbsp;• <span uk-icon="comment"></span>
                 <span id="parent-replies"></span>
               </span>
             </div>
             <!-- Parent actions -->
             <div>
-              <button id="parent-delete" onclick="Post.openDeletePostDialog(event)" data-post-id="0" class="toolbar-button" uk-icon="trash" uk-tooltip="Delete"></button>
-              <button onclick="Bespoke.gotoPage(event, 'add_reply_post.html')" class="toolbar-button" uk-icon="reply" uk-tooltip="Reply"></button>
+              <button id="parent-delete" onclick="Post.openDeletePostDialog(event)" data-post-id="0" class="toolbar-button" uk-icon="trash" title="Delete"></button>
+              <button onclick="Bespoke.gotoPage(event, 'add_reply_post.html')" class="toolbar-button" uk-icon="reply" title="Reply"></button>
             </div>
           </div>
           <hr class="uk-margin-small parent-post-divider">

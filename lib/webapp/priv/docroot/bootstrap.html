@@ -37,7 +37,7 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button id="bootstrap-button" onclick="Bootstrap.bootstrapNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" uk-tooltip="Bootstrap now!" disabled></button>
+          <button id="bootstrap-button" onclick="Bootstrap.bootstrapNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" title="Bootstrap now!" tabindex="100" disabled></button>
         </div>
       </div>
       <!-- Form -->
@@ -49,7 +49,7 @@
         <form class="uk-margin-small-top">
           <!-- SSID -->
           <div class="uk-inline uk-width-1-1">
-            <input class="uk-input" value="BespokeBBS" placeholder="Enter Bespoke SSID" id="form-ssid" type="text">
+            <input class="uk-input" value="BespokeBBS" placeholder="Enter Bespoke SSID" id="form-ssid" type="text" tabindex="1">
           </div>
           <span id="form-ssid-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
           <p class="uk-margin-small-top">
@@ -57,14 +57,14 @@
           </p>
           <!-- Admin password 1 -->
           <div class="uk-inline uk-width-1-1">
-            <a onclick="Bootstrap.togglePassword(event, 1)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password1" role="button"></a>
-            <input class="uk-input" placeholder="Enter new admin password" id="form-password1" type="text">
+            <a onclick="Bootstrap.togglePassword(event, 1)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password1" role="button" tabindex="-1"></a>
+            <input class="uk-input" placeholder="Enter new admin password" id="form-password1" type="text" tabindex="2">
           </div>
-          <span class="uk-text-meta">Use a <a href="javascript:void(0)" class="underlined-link" onclick="Bootstrap.generateStrongPassword(event)">strong</a> password with 8+ characters</span>
+          <span class="uk-text-meta">Use a <a href="javascript:void(0)" class="underlined-link" onclick="Bootstrap.generateStrongPassword(event)" tabindex="-1">strong</a> password with 8+ characters</span>
           <!-- Admin password 2 -->
           <div class="uk-margin-small-top uk-inline uk-width-1-1">
-            <a onclick="Bootstrap.togglePassword(event, 2)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password2" role="button"></a>
-            <input class="uk-input" placeholder="Enter new admin password again" id="form-password2" type="text" required>
+            <a onclick="Bootstrap.togglePassword(event, 2)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password2" role="button" tabindex="-1"></a>
+            <input class="uk-input" placeholder="Enter new admin password again" id="form-password2" type="text" tabindex="3" required>
           </div>
           <span id="form-password-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
           <p>

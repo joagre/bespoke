@@ -38,19 +38,19 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button id="login-button" onclick="Login.loginNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" uk-tooltip="Login" disabled></button>
+          <button id="login-button" onclick="Login.loginNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" title="Login" disabled tabindex="100"></button>
         </div>
       </div>
       <!-- Form -->
       <div class="uk-margin-small-left uk-margin-small-right rain-background">
         <form class="uk-margin-small-top">
           <!-- Username -->
-          <input class="uk-input" placeholder="Enter username" id="form-username" type="text">
+          <input class="uk-input" placeholder="Enter username" id="form-username" type="text" tabindex="1">
           <span id="form-username-error" class="uk-text-meta uk-text-danger" style="display: none;"></span>
           <!-- Password -->
           <div class="uk-margin-small-top uk-inline uk-width-1-1">
             <a onclick="Login.togglePassword(event)" class="uk-form-icon uk-form-icon-flip" href="javascript:void(0)" uk-icon="icon: unlock" id="toggle-password" role="button"></a>
-            <input class="uk-input" placeholder="Enter password" id="form-password" type="text" required>
+            <input class="uk-input" placeholder="Enter password" id="form-password" type="text" tabindex="2" required>
           </div>
         </form>
       </div>

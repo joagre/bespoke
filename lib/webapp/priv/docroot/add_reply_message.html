@@ -41,7 +41,7 @@
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
         <div>
-          <button onclick="Bespoke.gotoPage(event, 'message.html')" data-back-destination="message.html" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
+          <button onclick="Bespoke.gotoPage(event, 'message.html')" data-back-destination="message.html" class="uk-icon-button" uk-icon="arrow-left" title="Go back"></button>
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
@@ -50,9 +50,9 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="AddReplyMessage.gotoAddAttachments(event)" uk-tooltip="Add attachments"></button>
+          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="AddReplyMessage.gotoAddAttachments(event)" title="Add attachments"></button>
           <span id="attachment-counter" class="uk-text-meta uk-margin-small-right"></span>
-          <button id="add-button" onclick="AddReplyMessage.addNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" uk-tooltip="Add reply" disabled></button>
+          <button id="add-button" onclick="AddReplyMessage.addNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" title="Add reply" tabindex="100" disabled></button>
         </div>
       </div>
       <div class="uk-flex uk-flex-1 uk-flex-column uk-margin-small-left uk-margin-small-right rain-background">
@@ -60,7 +60,7 @@
         <div id="parent-title" class="uk-text-bold"></div>
         <!-- Top quote -->
         <div class="uk-text-meta">
-          <div class="quote" onclick="AddReplyMessage.toggleQuote(event)" uk-tooltip="Quote">
+          <div class="quote" onclick="AddReplyMessage.toggleQuote(event)" title="Quote">
             <span id="quote-action" class="uk-icon-link" uk-icon="chevron-right"></span>
             In reply to <span id="parent-author"></span>
           </div>
@@ -83,7 +83,7 @@
           </div>
           <div id="form-selected-recipients" class="uk-margin-small-top" hidden></div>
           <!-- Body text -->
-          <textarea class="uk-flex-1 uk-margin-small-top uk-textarea uk-margin-small-bottom" placeholder="Enter body" id="form-body" style="flex-grow: 1; min-height: 0;"></textarea>
+          <textarea class="uk-flex-1 uk-margin-small-top uk-textarea uk-margin-small-bottom" placeholder="Enter body" id="form-body" style="flex-grow: 1; min-height: 0;" tabindex="1"></textarea>
         </form>
       </div>
     </div>

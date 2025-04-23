@@ -40,7 +40,7 @@
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
         <!-- Go back -->
         <div>
-          <button onclick="Bespoke.gotoPage(event, 'top_messages.html')" data-back-destination="top_messages.html" class="uk-icon-button" uk-icon="arrow-left" uk-tooltip="Go back"></button>
+          <button onclick="Bespoke.gotoPage(event, 'top_messages.html')" data-back-destination="top_messages.html" class="uk-icon-button" uk-icon="arrow-left" title="Go back"></button>
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
@@ -49,9 +49,9 @@
         </div>
         <!-- Toolbar -->
         <div>
-          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="AddTopMessage.gotoAddAttachments(event)" uk-tooltip="Add attachments"></button>
+          <button class="uk-icon-button uk-margin-small-left" uk-icon="image" onclick="AddTopMessage.gotoAddAttachments(event)" title="Add attachments"></button>
           <span id="attachment-counter" class="uk-text-meta uk-margin-small-right"></span>
-          <button id="add-button" onclick="AddTopMessage.addNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" uk-tooltip="Add message" disabled></button>
+          <button id="add-button" onclick="AddTopMessage.addNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" title="Add message" tabindex="100" disabled></button>
         </div>
       </div>
       <!-- Form -->
@@ -71,7 +71,7 @@
           <!-- Title text -->
           <input class="uk-input uk-margin-small-top" placeholder="Enter title" id="form-title" type="text">
           <!-- Body text -->
-          <textarea class="uk-flex-1 uk-margin-small-top uk-textarea uk-margin-small-bottom" placeholder="Enter body" id="form-body" style="flex-grow: 1; min-height: 0;"></textarea>
+          <textarea class="uk-flex-1 uk-margin-small-top uk-textarea uk-margin-small-bottom" placeholder="Enter body" id="form-body" style="flex-grow: 1; min-height: 0;" tabindex="1"></textarea>
         </form>
       </div>
     </div>

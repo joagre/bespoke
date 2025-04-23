@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1]
+
+### Fixed [0.9.1]
+
+- Made sure that tab indexing always is sane in the browser, i.e. ensuring that
+it as straight forward as possible to touch the mouse as seldom as possible.
+
 ## [0.9.0]
 
 Base version is feature complete. Blob encryption and database syncing is left
