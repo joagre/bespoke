@@ -105,6 +105,11 @@ input {
 
 /* Post styling */
 
+.active-post {
+    border-left: 0.2em solid var(--uk-muted);
+    padding-left: 0.25em;
+}
+
 .unread {
     color: var(--uk-warning);
 }

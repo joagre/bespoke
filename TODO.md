@@ -18,6 +18,7 @@ Client:
 J Remove Truth Social vibes
 J Verify that Firefox/Linux works
 L Make it possible to use uploaded files as attachments
+L Refactor bespoke.js into several distinct singletons
 
 Server:
 
