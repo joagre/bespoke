@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.2]
+
+### Added [0.9.2]
+
+- Made it possible to browse through forum post/replies using arrow keys only
+
 ## [0.9.1]
 
 ### Fixed [0.9.1]

@@ -15,8 +15,6 @@ L = Later
 
 Client:
 
-J Remove Truth Social vibes
-J Verify that Firefox/Linux works
 L Make it possible to use uploaded files as attachments
 L Refactor bespoke.js into several distinct singletons
 
@@ -35,9 +33,9 @@ Both:
 J Add a settings menu item when logged in as admin:
   - Configurable: Title text (Use a nice generic title)
   - Configurable: About text (Use a nice generic text)
-J Add width and height to image attachments to avoid re-rendering of the DOM
+L Add width and height to image attachments to avoid re-rendering of the DOM
   during lazy loading of images in the Forum
-J Add public-key infra structire under the hood ala Signal
+J Add public-key infra structure under the hood ala Signal
 
 ## Syncing
 
