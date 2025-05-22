@@ -44,9 +44,11 @@ html, body {
 }
 
 .rain-background {
+    /*
     background-image: url("/images/rain.gif");
     background-repeat: repeat;
     background-position: center;
+    */
 }
 
 p {
