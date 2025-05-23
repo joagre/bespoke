@@ -2,10 +2,11 @@
 
 -module(db).
 -export([dets_dump/1, seconds_since_epoch/0, seconds_since_epoch/1]).
--export_type([host/0, user_id/0, message_id/0, attachment_id/0, file_id/0, post_id/0, username/0,
-              title/0, body/0, content_type/0, file_size/0, seconds_since_epoch/0]).
+-export_type([host/0, bbs_name/0, user_id/0, message_id/0, attachment_id/0, file_id/0, post_id/0,
+              username/0, title/0, body/0, content_type/0, file_size/0, seconds_since_epoch/0]).
 
 -type host() :: binary().
+-type bbs_name() :: binary().
 -type user_id() :: integer().
 -type message_id() :: integer().
 -type attachment_id() :: integer().

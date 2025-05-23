@@ -28,6 +28,7 @@ start() ->
     ok = application:start(rester),
     ok = application:start(db),
     ok = set_ssid(),
+    ok = set_bbs_name(),
     ok = application:start(webapp).
 
 configure_logger() ->
@@ -40,11 +41,17 @@ add_bespoke_logger(Name, Config) ->
                                              formatter => {main_logger_formatter, #{}}}).
 
 set_ssid() ->
-    {ok, SSID} = lookup_config("SSID", "BespokeBBS"),
+    {ok, SSID} = lookup_config("SSID", "AcmeHub"),
     %% In case the SSID is not set in the config file, we set it to the default
     ok = insert_config("SSID", SSID),
     _ = webapp_rest:change_ssid(?l2b(SSID)),
     ok.
+
+set_bbs_name() ->
+    {ok, BBSName} = lookup_config("BBSName", "Acme Hub"),
+    %% In case BBS name is not set in the config file, we set it to the default
+    ok = insert_config("BBSName", BBSName),
+    db_serv:set_bbs_name(?l2b(BBSName)).
 
 %%
 %% Exported: stop

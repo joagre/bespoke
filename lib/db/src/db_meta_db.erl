@@ -3,7 +3,7 @@
 -module(db_meta_db).
 -export([open/0, dump/0, sync/0, close/0,
          read_host/0, read_next_user_id/0, read_next_message_id/0, read_next_attachment_id/0,
-         read_next_post_id/0, read_next_file_id/0]).
+         read_next_post_id/0, read_next_file_id/0, read_bbs_name/0, update_bbs_name/1]).
 
 -include("../include/db.hrl").
 
@@ -107,6 +107,26 @@ read_next_post_id() ->
 
 read_next_file_id() ->
     step_meta_id(#meta.next_file_id).
+
+%%
+%% Exported: read_bbs_name
+%%
+
+-spec read_bbs_name() -> db:bbs_name().
+
+read_bbs_name() ->
+    [#meta{extra = #{bbs_name := BBSName}}] = dets:lookup(?META_DB, basic),
+    BBSName.
+
+%%
+%% Exported: update_bbs_name
+%%
+
+-spec update_bbs_name(db:bbs_name()) -> ok.
+
+update_bbs_name(BBSName) ->
+    [#meta{extra = Extra} = Meta] = dets:lookup(?META_DB, basic),
+    dets:insert(?META_DB, Meta#meta{extra = Extra#{bbs_name => BBSName}}).
 
 %%
 %% Utilities

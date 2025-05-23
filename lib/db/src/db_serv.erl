@@ -2,7 +2,9 @@
 
 -module(db_serv).
 -export([start_link/0, stop/0,
-         %% User management
+         %% Meta management
+         set_bbs_name/1,
+         get_bbs_name/0,
          get_user_id/0,
          %% Direct messaging
          create_message/3, read_top_messages/1, read_messages/1, read_reply_messages/2,
@@ -42,6 +44,24 @@ start_link() ->
 
 stop() ->
     serv:call(?MODULE, stop).
+
+%%
+%% Exported: set_bbs_name
+%%
+
+-spec set_bbs_name(binary()) -> ok.
+
+set_bbs_name(Name) ->
+    serv:cast(?MODULE, {set_bbs_name, Name}).
+
+%%
+%% Exported: get_bbs_name
+%%
+
+-spec get_bbs_name() -> db:bbs_name().
+
+get_bbs_name() ->
+    serv:call(?MODULE, get_bbs_name).
 
 %%
 %% Exported: get_user_id
@@ -260,7 +280,13 @@ message_handler(S) ->
             ?log_debug("Call: ~p", [Call]),
             ok = close_dbs(),
             {reply, From, ok};
-        %% User management
+        %% Meta management
+        {cast, {set_bbs_name, Name}} ->
+            ok = db_meta_db:update_bbs_name(Name),
+            noreply;
+        {call, From, get_bbs_name = Call} ->
+            ?log_debug("Call: ~p", [Call]),
+            {reply, From, db_meta_db:read_bbs_name()};
         {call, From, get_user_id = Call} ->
             ?log_debug("Call: ~p", [Call]),
             NextUserId = db_meta_db:read_next_user_id(),

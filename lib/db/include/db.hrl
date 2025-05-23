@@ -24,7 +24,7 @@
          next_attachment_id = 0 :: db:attachment_id(),
          next_post_id = 0 :: integer(), %% not db:post_id() by design
          next_file_id = 0 :: db:file_id(),
-         extra = #{} :: map()
+         extra = #{bbs_name => <<"">>} :: #{bbs_name => db:bbs_name()}
         }).
 
 -record(user,

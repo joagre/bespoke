@@ -210,6 +210,7 @@ http_get(Socket, Request, Url, Tokens, Body, _State, v1) ->
                     {IsNew, User} = db_user_serv:get_user_from_mac_address(MacAddress),
                     PayloadJsonTerm =
                         #{<<"noPassword">> => true,
+                          <<"bbsName">> => db_serv:get_bbs_name(),
                           <<"userId">> => User#user.id,
                           <<"username">> => User#user.name,
                           <<"sessionId">> => base64:encode(User#user.session_id),
@@ -369,7 +370,7 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                 {return, Result} ->
                     Result;
                 {ok, _User, _Body} ->
-                    {ok, SSID} = main:lookup_config("SSID", "BespokeBBS"),
+                    {ok, SSID} = main:lookup_config("SSID", "AcmeHub"),
                     JsonTerm = webapp_marshalling:encode(get_ssid, SSID),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
@@ -730,7 +731,8 @@ login(Socket, Request, Username, ClientResponse) ->
         {ok, MacAddress} = get_mac_address(Socket),
         {ok, #user{id = UserId, session_id = SessionId}} ?=
             db_user_serv:login(Username, MacAddress, PasswordSalt, PasswordHash),
-        JsonTerm = webapp_marshalling:encode(login, #{user_id => UserId,
+        JsonTerm = webapp_marshalling:encode(login, #{bbs_name => db_serv:get_bbs_name(),
+                                                      user_id => UserId,
                                                       username => Username,
                                                       session_id => SessionId}),
         send_response(Socket, Request, {json, JsonTerm})
@@ -744,7 +746,8 @@ switch_user(Socket, Request, Username, _PasswordSalt = not_set, _PasswordHash = 
     {ok, MacAddress} = get_mac_address(Socket),
     case db_user_serv:switch_user(Username, MacAddress) of
         {ok, {IsNew, #user{id = UserId, session_id = SessionId}}} ->
-            JsonTerm = webapp_marshalling:encode(switch_user, #{user_id => UserId,
+            JsonTerm = webapp_marshalling:encode(switch_user, #{bbs_name => db_serv:get_bbs_name(),
+                                                                user_id => UserId,
                                                                 username => Username,
                                                                 session_id => SessionId,
                                                                 is_new => IsNew}),
@@ -784,7 +787,8 @@ switch_user(Socket, Request, Username, PasswordSalt, PasswordHash, ClientRespons
 switch_user_now(Socket, Request, Username, MacAddress, PasswordSalt, PasswordHash) ->
     {ok, {IsNew, #user{id = UserId, session_id = SessionId}}} =
         db_user_serv:switch_user(Username, MacAddress, PasswordSalt, PasswordHash),
-    JsonTerm = webapp_marshalling:encode(switch_user, #{user_id => UserId,
+    JsonTerm = webapp_marshalling:encode(switch_user, #{bbs_name => db_serv:get_bbs_name(),
+                                                        user_id => UserId,
                                                         username => Username,
                                                         session_id => SessionId,
                                                         is_new => IsNew}),
@@ -804,7 +808,7 @@ change_password(Socket, Request, #user{name = Username}, PasswordSalt, PasswordH
 %%
 
 redirect_to_loader(Socket, Request) ->
-    {ok, SSID} = main:lookup_config("SSID", "BespokeBBS"),
+    {ok, SSID} = main:lookup_config("SSID", "AcmeHub"),
     Host = string:lowercase(SSID),
     Url = ?l2b(io_lib:format("https://~s.b3s.zone/loader.html", [Host])),
     Body = io_lib:format("<!DOCTYPE html><html><head><body><a href=\"~s\" target=\"_blank\">Click here</a></body></head></html>", [Url]),

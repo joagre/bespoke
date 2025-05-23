@@ -16,6 +16,7 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
+    <script src="js/purify.min.js" defer></script>
     <script src="js/marked.min.js" defer></script>
     <script src="js/bespoke.js" defer></script>
     <script src="js/index.js" defer></script>
@@ -27,7 +28,7 @@
         <!-- Title -->
         <div class="uk-width-expand">
           <span id="insecure-warning" hidden></span>
-          <span class="uk-text-bold">Bespoke BBS</span>
+          <span id="header-title" class="uk-text-bold">Acme Hub</span>
           <span class="uk-text-meta">(<span id="title-username"></span>)</span>
         </div>
         <!-- Dropdown menu -->
@@ -44,9 +45,12 @@
           </div>
         </div>
       </div>
-      <!-- Intro -->
+      <!-- Logotype -->
       <div class="uk-flex uk-flex-1 uk-flex-center uk-flex-middle rain-background">
         <img id="logotype" class="uk-animation-fade uk-animation-fast" src="/images/b.png" alt="Bespoke BBS (B3S)" onclick="Bespoke.gotoPage(event, 'top_posts.html')">
+      </div>
+      <!-- About -->
+      <div id="about" class="uk-margin-small-left uk-margin-small-right rain-background" hidden>
       </div>
       <!-- Footer -->
       <div class="footer uk-margin-auto-top uk-box-shadow-small">

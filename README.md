@@ -56,7 +56,7 @@ sudo dd if=bespoke-0.9.0.img of=/dev/sda bs=4M status=progress
 sync
 ```
 
-3. Insert the SD card into your Raspberry Pi, power it up, connect to the `BespokeBBS` WiFi network, and follow the setup instructions provided.
+3. Insert the SD card into your Raspberry Pi, power it up, connect to the `AcmeHub` WiFi network, and follow the setup instructions provided.
 
 That's it.
 
