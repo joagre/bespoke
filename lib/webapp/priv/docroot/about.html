@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>About Bespoke BBS</title>
+    <title>Bespoke BBS</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/uikit.min.css" />
@@ -15,10 +15,12 @@
     <script src="js/uikit.min.js" defer></script>
     <script src="js/uikit-icons.min.js" defer></script>
     <script src="js/uhtml.min.js" defer></script>
+    <script src="js/purify.min.js" defer></script>
     <script src="js/marked.min.js" defer></script>
     <script src="js/bespoke.js" defer></script>
+    <script src="js/about.js" defer></script>
   </head>
-  <body>
+  <body hidden>
     <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
       <!-- Header -->
       <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
@@ -28,28 +30,11 @@
         </div>
         <!-- Title -->
         <div class="uk-width-expand">
-          <span class="uk-text-bold">About Bespoke BBS</span>
+          <span id="header-title" class="uk-text-bold">Acme Hub</span>
         </div>
       </div>
       <!-- About -->
-      <div class="uk-margin-small-left uk-margin-small-right rain-background">
-        <p class="uk-text-bold">Offline by Design</p>
-        <p>
-          Bespoke BBS (<dfn title="Bespoke BBS">B3S</dfn>) is a local, offline communication hub inspired by traditional Bulletin Board Systems. It runs on a small standalone appliance and includes a <i>Forum</i>, encrypted <i>Direct Messaging</i>, and simple <i>File Sharing</i>.
-        </p>
-        <p>
-          B3S appliances form their own private WiFi networks—no internet required. When two or more appliances come into range, they sync (if configured to do so) with each other automatically. This means you can post or message completely offline, and your data will eventually propagate when appliances meet. The modern internet is noisy, invasive, and bloated. B3S keeps things local, private, and simple.
-        </p>
-        <p>
-          The frontend runs in your browser and can be installed as a Progressive Web App (PWA) for a more native feel. Direct messages are end-to-end encrypted using keys stored securely in your browser. Even if the appliance is accessed directly, messages remain unreadable.
-        </p>
-        <p>
-          <span class="uk-label">Note</span>
-          B3S is experimental, but everything you see should work. If it doesn't, assume it's a bug. Report it in the forum. Thanks.
-        </p>
-        <p>Use it, test it, bend it a little. And please—be decent to each other.</p>
-        <p><img src="/images/the-team.gif" alt="The Bespoke team" title="The Bespoke team"></p>
-      </div>
+      <div id="about" class="uk-margin-small-left uk-margin-small-right rain-background"></div>
     </div>
   </body>
 </html>
