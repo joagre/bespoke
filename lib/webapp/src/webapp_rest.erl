@@ -374,6 +374,19 @@ http_post(Socket, Request, _Url, Tokens, Body, State, v1) ->
                     JsonTerm = webapp_marshalling:encode(get_ssid, SSID),
                     send_response(Socket, Request, {json, JsonTerm})
             end;
+        %% Settings
+        ["api", "save_settings"] ->
+            case decode(Socket, Request, Body, save_settings) of
+                {return, Result} ->
+                    Result;
+                {ok, #user{id = UserId}, {BBSName, About}} when UserId == ?ADMIN_USER_ID ->
+                    ok = main:insert_config("BBSName", BBSName),
+                    AboutFilename = filename:join([?BESPOKE_RUNTIME_DIR, "local", "about.md"]),
+                    ok = file:write_file(AboutFilename, About),
+                    send_response(Socket, Request, no_content);
+                {ok, _, _} ->
+                    send_response(Socket, Request, forbidden)
+            end;
         %% Authentication
         ["api", "generate_challenge"] ->
             case decode(Socket, Request, Body, generate_challenge, false) of

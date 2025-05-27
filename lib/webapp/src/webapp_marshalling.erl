@@ -8,6 +8,7 @@
 -include_lib("db/include/db.hrl").
 
 -type decode_type() :: bootstrap |
+                       save_settings |
                        generate_challenge |
                        login |
                        switch_user |
@@ -57,6 +58,9 @@
 
 decode(bootstrap, #{<<"ssid">> := SSID}) when is_binary(SSID) ->
     {ok, SSID};
+decode(save_settings, #{<<"bbsName">> := BBSName, <<"about">> := About})
+  when is_binary(BBSName) andalso is_binary(About) ->
+    {ok, {?b2l(BBSName), About}};
 decode(generate_challenge, JsonTerm) ->
     decode_binary(JsonTerm);
 decode(login, #{<<"username">> := Username, <<"clientResponse">> := ClientResponse} = JsonTerm)

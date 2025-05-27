@@ -4,6 +4,8 @@
 
 ### Added [0.9.2]
 
+- Added an admin settings menu to make it possible to update BBS name and
+  About/Splash text
 - Made it possible to browse through forum post/replies using arrow keys only
 
 ## [0.9.1]

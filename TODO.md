@@ -30,9 +30,6 @@ L Show image attachments in the Inbox as thumbnails (must be generated on the
 
 Both:
 
-J Add a settings menu item when logged in as admin:
-  - Configurable: Title text (Use a nice generic title)
-  - Configurable: About text (Use a nice generic text)
 L Add width and height to image attachments to avoid re-rendering of the DOM
   during lazy loading of images in the Forum
 J Add public-key infra structure under the hood ala Signal
