@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Bespoke BBS</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/bespoke.css" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Bespoke BBS" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+    <script src="js/uikit.min.js" defer></script>
+    <script src="js/uikit-icons.min.js" defer></script>
+    <script src="js/uhtml.min.js" defer></script>
+    <script src="js/bespoke.js" defer></script>
+    <script src="js/settings.js" defer></script>
+  </head>
+  <body hidden>
+    <div class="top-container uk-container uk-container-xsmall uk-padding-remove uk-flex uk-flex-column">
+      <!-- Header -->
+      <div class="header uk-box-shadow-small uk-text-center uk-flex uk-flex-middle uk-flex-between">
+        <!-- Go back -->
+        <div>
+          <button onclick="Bespoke.gotoPage(event, 'index.html')" data-back-destination="index.html" class="uk-icon-button" uk-icon="arrow-left" title="Go back"></button>
+        </div>
+        <!-- Title -->
+        <div class="uk-width-expand">
+          <span class="uk-text-bold">Settings</span>
+          <span class="uk-text-meta">(<span id="title-username"></span>)</span>
+        </div>
+        <!-- Toolbar -->
+        <div>
+          <button id="save-button" onclick="Settings.saveNow(event)" class="uk-icon-button button-toggle needs-action" uk-icon="bespoke-ok" title="Save settings" tabindex="100" disabled></button>
+        </div>
+      </div>
+      <!-- Form -->
+      <div class="uk-flex uk-flex-1 uk-margin-small-left uk-margin-small-right rain-background">
+        <form class="uk-flex uk-flex-1 uk-flex-column">
+          <!-- BBS name -->
+          <input class="uk-input" placeholder="Enter BBS name" id="form-bbs-name" type="text" tabindex="1">
+          <!-- About text -->
+          <textarea class="uk-flex-1 uk-margin-small-top uk-textarea uk-margin-small-bottom" placeholder="Enter About text" id="form-about" style="flex-grow: 1; min-height: 0;" tabindex="2"></textarea>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
