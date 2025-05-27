@@ -8,8 +8,8 @@ all:
 	mkdir -p $(BESPOKE_RUNTIME_DIR)/file && \
 	mkdir -p $(BESPOKE_RUNTIME_DIR)/log && \
 	touch $(BESPOKE_RUNTIME_DIR)/bespoke.conf && \
-	if [ ! -f $(BESPOKE_RUNTIME_DIR)/about.md ]; then \
-		cp lib/webapp/priv/about.md $(BESPOKE_RUNTIME_DIR)/about.md; \
+	if [ ! -d $(BESPOKE_RUNTIME_DIR)/local ]; then \
+		cp -fr lib/webapp/priv/local $(BESPOKE_RUNTIME_DIR)/; \
 	fi && \
 	$(MAKE) -C external all && \
 	$(MAKE) -C lib all
