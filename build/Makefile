@@ -3,6 +3,7 @@ EXTERNAL_DIRS := $(shell find ../external/ -mindepth 2 -maxdepth 2 -type d)
 RELEASE_DIR="bespoke-$(shell cat ../VERSION)"
 TARGET_DIR="releases/$(RELEASE_DIR)"
 JS_DIR=$(TARGET_DIR)/lib/webapp/priv/docroot/js
+CSS_DIR=$(TARGET_DIR)/lib/webapp/priv/docroot/css
 
 release:
 	@echo "Cleaning up"
@@ -22,14 +23,20 @@ release:
 		cp -r $$lib/ebin/*.beam $$lib/ebin/*.app $(TARGET_DIR)/external/$$app/ebin; \
 	done
 	@echo "Copying priv files"
-	@for lib in $(LIBS); do \
-		if [ -d ../lib/$$lib/priv ]; then \
-			mkdir -p $(TARGET_DIR)/lib/$$lib; \
-			cp -r ../lib/$$lib/priv $(TARGET_DIR)/lib/$$lib; \
-		fi; \
-	done
-	@echo "Gzipping js files"
+	@cp -r ../lib/webapp/priv/b3s.zone $(TARGET_DIR)/lib/webapp/priv
+	@mkdir -p $(TARGET_DIR)/lib/webapp/priv/docroot
+	@cp ../lib/webapp/priv/docroot/*.html $(TARGET_DIR)/lib/webapp/priv/docroot
+	@cp ../lib/webapp/priv/docroot/*.js $(TARGET_DIR)/lib/webapp/priv/docroot
+	@mkdir -p $(TARGET_DIR)/lib/webapp/priv/docroot/css
+	@cp ../lib/webapp/priv/docroot/css/*.css $(TARGET_DIR)/lib/webapp/priv/docroot/css
+	@cp -r ../lib/webapp/priv/docroot/favicon $(TARGET_DIR)/lib/webapp/priv/docroot
+	@mkdir -p $(TARGET_DIR)/lib/webapp/priv/docroot/js
+	@cp ../lib/webapp/priv/docroot/js/*.js $(TARGET_DIR)/lib/webapp/priv/docroot/js
+	@cp ../lib/webapp/priv/docroot/js/*.map $(TARGET_DIR)/lib/webapp/priv/docroot/js
+	@cp -r ../lib/webapp/priv/docroot/signatures $(TARGET_DIR)/lib/webapp/priv/docroot
+	@echo "Gzipping files"
 	@gzip -f $(JS_DIR)/purify.min.js $(JS_DIR)/uikit.js $(JS_DIR)/uikit.min.js $(JS_DIR)/uikit-icons.js $(JS_DIR)/uikit-icons.min.js $(JS_DIR)/uhtml.min.js $(JS_DIR)/sodium.js
+	@gzip -f $(CSS_DIR)/uikit*.css
 	@echo "Copying target files"
 	@cp -r ../target $(TARGET_DIR)
 	@echo "Copying bin files"
