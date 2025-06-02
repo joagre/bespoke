@@ -8,6 +8,10 @@
   About/Splash text
 - Made it possible to browse through forum post/replies using arrow keys only
 
+### Fixed [0.9.2]
+
+- tab-indexing is now sane
+
 ## [0.9.1]
 
 ### Fixed [0.9.1]

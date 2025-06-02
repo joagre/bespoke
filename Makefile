@@ -1,16 +1,24 @@
 BESPOKE_RUNTIME_DIR=/var/tmp/bespoke
 
 all:
+	: # Create the runtime directory structure
 	mkdir -p $(BESPOKE_RUNTIME_DIR)/db && \
 	mkdir -p $(BESPOKE_RUNTIME_DIR)/tmp && \
 	mkdir -p $(BESPOKE_RUNTIME_DIR)/message && \
 	mkdir -p $(BESPOKE_RUNTIME_DIR)/post && \
 	mkdir -p $(BESPOKE_RUNTIME_DIR)/file && \
 	mkdir -p $(BESPOKE_RUNTIME_DIR)/log && \
-	touch $(BESPOKE_RUNTIME_DIR)/bespoke.conf && \
+	: # Create the runtime configuration file
+	if [ ! -f $(BESPOKE_RUNTIME_DIR)/bespoke.conf ]; then \
+		echo "BespokeVersion=\"`cat VERSION`\"" > $(BESPOKE_RUNTIME_DIR)/bespoke.conf; \
+	else \
+		sed -i "s/^BespokeVersion=.*/BespokeVersion=\"`cat VERSION`\"/" $(BESPOKE_RUNTIME_DIR)/bespoke.conf; \
+	fi && \
+	: # Create the runtime directory for the webapp
 	if [ ! -d $(BESPOKE_RUNTIME_DIR)/local ]; then \
 		cp -fr lib/webapp/priv/local $(BESPOKE_RUNTIME_DIR)/; \
 	fi && \
+	: # Build
 	$(MAKE) -C external all && \
 	$(MAKE) -C lib all
 
