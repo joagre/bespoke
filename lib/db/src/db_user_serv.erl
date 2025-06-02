@@ -17,7 +17,7 @@
 -define(USER_DB, user_db).
 
 -define(WORD_LIST_PATH, "/usr/share/dict/words").
--define(MAX_USERNAME_LENGTH, 12).
+-define(MAX_USERNAME_LENGTH, 8).
 -define(SESSION_ID_SIZE, 16).
 
 -type session_id() :: binary().
