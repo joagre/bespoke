@@ -37,7 +37,7 @@ release:
 	@echo "Copying top Makefile"
 	@cp Makefile.release $(TARGET_DIR)/Makefile
 	@echo "Copying VERSION file"
-	@cp VERSION $(TARGET_DIR)
+	@cp ../VERSION $(TARGET_DIR)
 	@echo "Removing spurious files"
 	@rm -f $(TARGET_DIR)/bin/run_test.sh
 	@rm -f $(TARGET_DIR)/bin/usbeth_setup.sh

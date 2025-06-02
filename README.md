@@ -79,4 +79,4 @@ Cobbling by **The Bespoke Team**.
 No new inventions, no shiny breakthroughs – just time‑tested parts bolted together until they blinked.
 If it runs, thank the pioneers who did the real work; if it crashes, enjoy the retro vibes.
 
-![The Bespoke team](lib/webapp/priv/docroot/images/the-team.gif)
+![The Bespoke team](doc/the-team.gif)
