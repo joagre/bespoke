@@ -11,6 +11,13 @@
 ### Fixed [0.9.2]
 
 - tab-indexing is now sane
+- Always show active post using a left grey bar (previously it just appeared an
+  up/down arrow key was pressed)
+- Hitting enter Enter key now adds a post/message reply or adds a new new top
+  post/message (on the Formum and Inbox pages). Previously the Enter key behaved
+  as a right arrow key.
+- Attachments are now removed frome the tabindex sequence
+- Top-level post/message is now reachable with the arrow keys
 
 ## [0.9.1]
 
