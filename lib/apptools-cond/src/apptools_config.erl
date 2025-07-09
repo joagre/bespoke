@@ -91,12 +91,12 @@ unescape([]) ->
     [];
 unescape([$\\, Next|Rest]) ->
     case Next of
-        $"  -> [$"| unescape(Rest)];
-        $\\ -> [$\\| unescape(Rest)];
-        $$  -> [$$ | unescape(Rest)];
-        $`  -> [$` | unescape(Rest)];
+        $"  -> [$"|unescape(Rest)];
+        $\\ -> [$\\|unescape(Rest)];
+        $$  -> [$$|unescape(Rest)];
+        $`  -> [$`|unescape(Rest)];
         $\n -> unescape(Rest);
-        _   -> [$\\, Next | unescape(Rest)]
+        _   -> [$\\, Next|unescape(Rest)]
     end;
 unescape([C|Rest]) ->
     [C|unescape(Rest)].
